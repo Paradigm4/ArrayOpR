@@ -1,0 +1,20 @@
+Package: arrayop
+Title: Toolset for Object-Oriented SciDB Operations/Operands
+Description: What the package does (one paragraph).
+Version: 0.1.0
+Author: Paradigm4, Inc
+Copyright: Paradigm4, Inc.
+Maintainer: Paradigm4, Inc <support@paradigm4.com>
+BugReports: https://github.com/Paradigm4/ArrayOpR/issues
+URL: https://github.com/Paradigm4/ArrayOpR
+License: AGPL-3
+Encoding: UTF-8
+LazyData: true
+Suggests: 
+    testthat,
+    data.table
+Imports: 
+    scidb,
+    rlang,
+    methods,
+    plyr
