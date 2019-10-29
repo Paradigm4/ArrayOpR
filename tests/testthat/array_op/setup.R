@@ -3,21 +3,29 @@
 # Here we use AnyArrayOp to mimic any potentail sub-classes of ArrayOpBase and
 #   to the basic behavior that ArrayOpBase provides disregard of sub-class details.
 
-AnyArrayOp  <- setRefClass("AnyArrayOp",
-  contains = "ArrayOpBase",
-  fields = c('array_expr', 'dims', 'attrs', 'selected'),
-  methods = list(
+AnyArrayOp  <- R6::R6Class("AnyArrayOp",
+  inherit = ArrayOpBase,
+  private = list(array_expr = NULL, .dims = NULL, .attrs = NULL, .selected = NULL),
+  
+  active = list(
+    dims = function() private$.dims,
+    attrs = function() private$.attrs,
+    selected = function() private$.selected
+  ),
+  
+  public = list(
     initialize = function(array_expr, dims, attrs, selected = NULL) {
-      callSuper(array_expr = array_expr, dims = dims, attrs = attrs, selected = selected, .info = NULL)
-      fields = .self$get_field_names(.OWN)
+      private$array_expr = array_expr
+      private$.dims = dims
+      private$.attrs = attrs
+      private$.selected = selected
+      
+      fields = self$dims_n_attrs
       dtypes = as.list(sapply(fields, function(x) sprintf("dt_%s", x)), USE.NAMES = TRUE)
-      .self$.info  = structure(list(dtypes), names = .DT)
-    },
-    .get_dimension_names = function() dims,
-    .get_attribute_names = function() attrs,
-    .get_selected_names = function() selected,
-
-    .raw_afl = function() .self$array_expr
+      super$initialize(info = structure(list(dtypes), names = .DT))
+    }
+    ,
+    .raw_afl = function() private$array_expr
   )
 )
 
@@ -31,7 +39,7 @@ assert_afl_equal <- function(actual, expected) {
 
 DEP$df_to_arrayop_func = function(df){
   address = data.table::address(df)
-  ArraySchema(address, namespace = NULL, dims = 'i', attrs = names(df))
+  ArraySchema$new(address, namespace = NULL, dims = 'i', attrs = names(df))
 }
 
 

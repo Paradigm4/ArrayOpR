@@ -5,11 +5,17 @@
 #   - 'template' can be an R data frame or another ArrayOp
 #   - Can be implemented in differnt modes to optimize performance
 #
-MatchOp <- setRefClass("MatchOp",
-  contains = 'ArrayOpBase',
-  fields = c("operand", "afl"),
+MatchOp <- R6::R6Class("MatchOp",
+  inherit = ArrayOpBase,
+  private = list(operand = NULL, afl = NULL),
+  
+  active = list(
+    dims = function() private$operand$dims,
+    attrs = function() private$operand$attrs,
+    selected = function() private$operand$selected
+  ), 
 
-  methods = list(
+  public = list(
     # The ... arg can be used to pass customized setting in each op_mode where applicable
     initialize = function(mainOperand, template, op_mode = 'filter', on_left, on_right, ...) {
       assert(inherits(mainOperand, 'ArrayOpBase'),
@@ -24,18 +30,23 @@ MatchOp <- setRefClass("MatchOp",
 
       converted = func(mainOperand, template, op_mode = 'filter', on_left, on_right, ...)
 
-      callSuper(operand = converted[['operand']], afl = converted[['afl_literal']],
-                .info = converted[['operand']]$.info)
+      # super$initialize(operand = converted[['operand']], afl = converted[['afl_literal']],
+      #           .info = converted[['operand']]$.info)
+      
+      private$operand = converted$operand
+      private$afl = converted$afl_literal
 
     }
+    ,
+    get_field_types = function(...) private$operand$get_field_types(...)
+    ,
+    .raw_afl = function() private$afl
 
-    , .raw_afl = function() afl
-
-    #' MatchOp has the same schema as its operand. So all field queries are delegated to its operand.
-    , get_field_names = function(...) operand$get_field_names(...)
-    , .get_dimension_names = function() operand$.get_dimension_names()
-    , .get_attribute_names = function() operand$.get_attribute_names()
-    , .get_selected_names = function() operand$.get_dimension_names()
+    #' #' MatchOp has the same schema as its operand. So all field queries are delegated to its operand.
+    #' , get_field_names = function(...) operand$get_field_names(...)
+    #' , .get_dimension_names = function() operand$.get_dimension_names()
+    #' , .get_attribute_names = function() operand$.get_attribute_names()
+    #' , .get_selected_names = function() operand$.get_dimension_names()
 
   )
 )
@@ -49,7 +60,7 @@ MatchOp <- setRefClass("MatchOp",
 .filter_mode = function(mainOperand, template, op_mode = 'filter', on_left, on_right, ...){
   assert(inherits(template, 'data.frame'),
     "JoinOp filter mode only works with R data.frame template, but got: %s", class(template))
-  unmatchedCols = base::setdiff(names(template), mainOperand$get_field_names(.OWN))
+  unmatchedCols = base::setdiff(names(template), mainOperand$dims_n_attrs)
   assert_not_has_len(unmatchedCols, "MatchOp template fields '%s' missing in the main operand.",
     paste(unmatchedCols, collapse = ','))
 
@@ -88,17 +99,17 @@ MatchOp <- setRefClass("MatchOp",
   templateSchema = if(inherits(template, 'data.frame')) DEP$df_to_arrayop_func(template)
   else if(inherits(template, 'ArrayOpBase')) template
   else stopf("MatchOp: unknown template class '%s' in join mode", class(template))
-  if(.has_len(templateSchema$get_field_names(.SEL)))
+  if(.has_len(templateSchema$selected))
     templateSchema = templateSchema$select_copy(NULL, replace = TRUE)
   if(methods::hasArg('on_left') && methods::hasArg('on_right')){
-    joinOp = JoinOp(mainOperand, templateSchema, on_left = on_left, on_right = on_right, ...)
+    joinOp = JoinOp$new(mainOperand, templateSchema, on_left = on_left, on_right = on_right, ...)
   }
   else{
-    keys = base::intersect(templateSchema$get_field_names(.OWN), mainOperand$get_field_names(.OWN))
+    keys = base::intersect(templateSchema$dims_n_attrs, mainOperand$dims_n_attrs)
     assert_has_len(keys,
       "MatchOp join mode: none of the template fields matches the main operand: '%s'",
-      paste(templateSchema$get_field_names(.OWN), collapse = ','))
-    joinOp = JoinOp(mainOperand, templateSchema, on_left = keys, on_right = keys, ...)
+      paste(templateSchema$dims_n_attrs, collapse = ','))
+    joinOp = JoinOp$new(mainOperand, templateSchema, on_left = keys, on_right = keys, ...)
   }
   afl_literal = joinOp$.raw_afl()
   return(list(operand = joinOp, afl_literal = afl_literal))
@@ -115,20 +126,20 @@ MatchOp <- setRefClass("MatchOp",
 
   explicit = methods::hasArg('on_left') && methods::hasArg('on_right')
 
-  mainDims = mainOperand$get_field_names(.DIM)
+  mainDims = mainOperand$dims
 
   if(explicit){
     dimMatchMarks = mainDims %in% on_left
     matchedDims = structure(on_right, names = on_left)
   } else {
-    dimMatchMarks = mainDims %in% templateSchema$get_field_names(.OWN)
-    matchedDims = base::intersect(templateSchema$get_field_names(.OWN), mainDims)
+    dimMatchMarks = mainDims %in% templateSchema$dims_n_attrs
+    matchedDims = base::intersect(templateSchema$dims_n_attrs, mainDims)
     matchedDims = structure(matchedDims, names = matchedDims)
   }
 
   assert_has_len(matchedDims,
     "MatchOp cross_between: none of the template fields matches the main operand's dimensions: '%s'",
-    paste(templateSchema$get_field_names(.OWN), collapse = ','))
+    paste(templateSchema$dims_n_attrs, collapse = ','))
 
   # get region array's attr values
   getRegionArrayAttrValue = function(default){

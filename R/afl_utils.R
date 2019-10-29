@@ -5,6 +5,7 @@
 # Here we only deal with these three types of R Expressions: call, name/symbol, literal
 ##########################################
 
+#' @export
 afl_filter_from_expr <- function(e) {
 
   # If 'e' is an ExprsList, then we merge it with 'AND' call by default

@@ -7,24 +7,23 @@ context("Test ArrayOpBase class")
 
 test_that("ArrayOpBase provides no fields by default.
 Subclasses should implement fields differently depending on use cases", {
-  sc = ArrayOpBase()
-  for(type in c(.DIM, .ATR, .OWN, .SEL)) {
-    # Note: To be consistent in data types, get_fields_names() returns an empty character instead of NULL/c()
-    expect_identical(sc$get_field_names(type), as.character(c()))
-  }
+  sc = ArrayOpBase$new()
+  expect_identical(sc$dims, as.character(c()))
+  expect_identical(sc$attrs, as.character(c()))
+  expect_identical(sc$selected, as.character(c()))
 })
 
 test_that("Owned fields are a union of dimensions and attributes", {
-  sc = AnyArrayOp(array_expr = 'operand', dims = c('da', 'db'), attrs = c('aa', 'ab'), selected = c('sa', 'sb'))
-  expect_identical(sc$get_field_names(.OWN), c('da', 'db', 'aa', 'ab'))
+  sc = AnyArrayOp$new(array_expr = 'operand', dims = c('da', 'db'), attrs = c('aa', 'ab'), selected = c('sa', 'sb'))
+  expect_identical(sc$dims_n_attrs, c('da', 'db', 'aa', 'ab'))
 })
 
 
 # Field types -----------------------------------------------------------------------------------------------------
 
 test_that("Owned fields are a union of dimensions and attributes", {
-  sc = AnyArrayOp(array_expr = 'operand', dims = c('da', 'db'), attrs = c('aa', 'ab'), selected = c('sa', 'sb'))
-  expect_identical(sc$get_field_types(sc$get_field_names(.OWN)), list(da = 'dt_da', db = 'dt_db', aa = 'dt_aa', ab = 'dt_ab'))
+  sc = AnyArrayOp$new(array_expr = 'operand', dims = c('da', 'db'), attrs = c('aa', 'ab'), selected = c('sa', 'sb'))
+  expect_identical(sc$get_field_types(sc$dims_n_attrs), list(da = 'dt_da', db = 'dt_db', aa = 'dt_aa', ab = 'dt_ab'))
   expect_identical(sc$get_field_types('da'), list(da = 'dt_da'))
   expect_identical(sc$get_field_types('aa'), list(aa = 'dt_aa'))
   expect_identical(sc$get_field_types(c()), EMPTY_NAMED_LIST)
@@ -37,13 +36,13 @@ test_that("Owned fields are a union of dimensions and attributes", {
 # The function relies on fields in sub-class
 #
 test_that("Base class has no fields, so any field is absent", {
-  base = ArrayOpBase()
+  base = ArrayOpBase$new()
   expect_identical(base$get_absent_fields(c('a', 'b', 'c')), c('a', 'b', 'c'))
   expect_identical(base$get_absent_fields(c()), c())
 })
 
 test_that("Subclass with fields", {
-  sc = AnyArrayOp(array_expr = 'operand', dims = c('da', 'db'), attrs = c('aa', 'ab'))
+  sc = AnyArrayOp$new(array_expr = 'operand', dims = c('da', 'db'), attrs = c('aa', 'ab'))
   expect_identical(sc$get_absent_fields(c('a', 'b')), c('a', 'b'))
   expect_identical(sc$get_absent_fields(c('da', 'non')), c('non'))
   expect_identical(sc$get_absent_fields(c('aa', 'db', 'non')), c('non'))
@@ -54,7 +53,7 @@ test_that("Subclass with fields", {
 # Validate filter expressions -------------------------------------------------------------------------------------
 
 test_that("Valid filter expression", {
-  sc = AnyArrayOp(array_expr = 'operand', dims = c('da', 'db'), attrs = c('aa', 'ab'))
+  sc = AnyArrayOp$new(array_expr = 'operand', dims = c('da', 'db'), attrs = c('aa', 'ab'))
   for(filterExpr in list(
     e_merge(e(da == 1, aa == 'val'))
     # %like% is a special function that will translate to 'rsub' Scidb function
@@ -68,7 +67,7 @@ test_that("Valid filter expression", {
 })
 
 test_that("Cannot filter on non-existent fields", {
-  sc = AnyArrayOp(array_expr = 'operand', dims = c('da', 'db'), attrs = c('aa', 'ab'))
+  sc = AnyArrayOp$new(array_expr = 'operand', dims = c('da', 'db'), attrs = c('aa', 'ab'))
   for(status in list(
     sc$validate_filter_expr(e_merge(e(non == 1))),
     sc$validate_filter_expr(e_merge(e(non == 1, aa == 'val'))),
@@ -80,12 +79,12 @@ test_that("Cannot filter on non-existent fields", {
 })
 
 test_that("Cannot compare to non-atomic values", {
-  sc = AnyArrayOp(array_expr = 'operand', dims = c('da', 'db'), attrs = c('aa', 'ab'))
+  sc = AnyArrayOp$new(array_expr = 'operand', dims = c('da', 'db'), attrs = c('aa', 'ab'))
 
   for(status in list(
     sc$validate_filter_expr(e_merge(e(da > !!list(1)))),
     sc$validate_filter_expr(e_merge(e(aa == !!list('val')))),
-    sc$validate_filter_expr(e_merge(e(ab != !!ArrayOpBase())))
+    sc$validate_filter_expr(e_merge(e(ab != !!ArrayOpBase$new())))
   )){
 
     expect_false(status$success)
@@ -97,7 +96,7 @@ test_that("Cannot compare to non-atomic values", {
 # AFL -------------------------------------------------------------------------------------------------------------
 
 test_that("to_join_operand_afl and to_df_afl both detaul to to_afl", {
-  x = AnyArrayOp('x', c('da', 'db', 'dc', 'dd'), c('aa', 'ab', 'ac', 'ad'))
+  x = AnyArrayOp$new('x', c('da', 'db', 'dc', 'dd'), c('aa', 'ab', 'ac', 'ad'))
   expect_identical(x$to_afl(), 'x')
   expect_identical(x$to_df_afl(), 'x')
   assert_afl_equal(x$to_join_operand_afl('da'), "x")

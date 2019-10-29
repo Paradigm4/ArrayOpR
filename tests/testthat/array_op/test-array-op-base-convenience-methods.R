@@ -4,17 +4,17 @@ context("Test ArrayOpBase's convenience methods")
 # transform_unpack ------------------------------------------------------------------------------------------------
 
 test_that("Select a subset of existing fields", {
-  x = AnyArrayOp('x', c('da', 'db'), c('aa', 'ab'))
+  x = AnyArrayOp$new('x', c('da', 'db'), c('aa', 'ab'))
   t = x$transform_unpack(list('aa'), unpack_dim_name = 'z')
-  expect_identical(t$get_field_names(.OWN), c('z', 'aa'))
+  expect_identical(t$dims_n_attrs, c('z', 'aa'))
   expect_identical(t$get_field_types('aa'), list(aa='dt_aa'))
   assert_afl_equal(t$to_afl(), "project(unpack(x, z), aa)")
 })
 
 test_that("Select new fields", {
-  x = AnyArrayOp('x', c('da', 'db'), c('aa', 'ab'))
+  x = AnyArrayOp$new('x', c('da', 'db'), c('aa', 'ab'))
   t = x$transform_unpack(list(newField = 'aa + ab', newConstant = "42", newStringField = "'value'"), unpack_dim_name = 'z')
-  expect_identical(t$get_field_names(.OWN), c('z', 'newField', 'newConstant', 'newStringField'))
+  expect_identical(t$dims_n_attrs, c('z', 'newField', 'newConstant', 'newStringField'))
   assert_afl_equal(t$to_afl(),
       "project(
         apply(unpack(x, z), newField, aa+ab, newConstant, 42, newStringField, 'value'),
@@ -23,10 +23,10 @@ test_that("Select new fields", {
 })
 
 test_that("Select new fields and existing fields", {
-  x = AnyArrayOp('x', c('da', 'db'), c('aa', 'ab'))
+  x = AnyArrayOp$new('x', c('da', 'db'), c('aa', 'ab'))
   # Notice 'da', 'ab' are existing fields
   t = x$transform_unpack(list(newField = 'aa + ab', newConstant = "42", 'da', 'ab'), unpack_dim_name = 'z')
-  expect_identical(t$get_field_names(.OWN), c('z', 'newField', 'newConstant', 'da', 'ab'))
+  expect_identical(t$dims_n_attrs, c('z', 'newField', 'newConstant', 'da', 'ab'))
   assert_afl_equal(t$to_afl(),
       "project(
         apply(unpack(x, z), newField, aa+ab, newConstant, 42),
@@ -35,7 +35,7 @@ test_that("Select new fields and existing fields", {
 })
 
 test_that("Result field types inherits from the operand, and can be specified", {
-  x = AnyArrayOp('x', c('da', 'db'), c('aa', 'ab'))
+  x = AnyArrayOp$new('x', c('da', 'db'), c('aa', 'ab'))
   fields = c('z', 'newField', 'newConstant', 'da', 'ab')
   # Without a 'dtypes' arg, only existing fields inherit their field types from the operand
   t = x$transform_unpack(list(newField = 'aa + ab', newConstant = "42", 'da', 'ab'), unpack_dim_name = 'z')
@@ -49,7 +49,7 @@ test_that("Result field types inherits from the operand, and can be specified", 
 # convert_df ------------------------------------------------------------------------------------------------------
 
 test_that("Build data.frame content for WriteOp", {
-  target = CustomizedOp('target', c('da', 'db'), c('aa', 'ab'),
+  target = CustomizedOp$new('target', c('da', 'db'), c('aa', 'ab'),
                         field_types = list(da='int64', db='int64', aa='string', ab='int32'))
 
   df = data.frame(da = c(1,2), aa=c('aa1', 'aa2'), ab=c(3,4), db = c(5, 6))
@@ -61,7 +61,7 @@ test_that("Build data.frame content for WriteOp", {
 })
 
 test_that("Build data.frame content for WriteOp with customized dimension name", {
-  target = CustomizedOp('target', c('da', 'db'), c('aa', 'ab'),
+  target = CustomizedOp$new('target', c('da', 'db'), c('aa', 'ab'),
                         field_types = list(da='int64', db='int64', aa='string', ab='int32'))
 
   df = data.frame(da = c(1,2), aa=c('aa1', 'aa2'), ab=c(3,4), db = c(5, 6))
@@ -73,7 +73,7 @@ test_that("Build data.frame content for WriteOp with customized dimension name",
 })
 
 test_that("Build data.frame content with NULL values", {
-  target = CustomizedOp('target', 'da', c('aa', 'ab'),
+  target = CustomizedOp$new('target', 'da', c('aa', 'ab'),
                         field_types = list(da='int64', aa='string', ab='int32'))
 
   df = data.frame(da = c(1,2, NA, 4), aa=c('aa1', NA, NA, 'aa2'), ab=c(NA,4,NA, 5))
@@ -86,7 +86,7 @@ test_that("Build data.frame content with NULL values", {
 })
 
 test_that("Missing fields in dataset assigned with 'missing_values'", {
-  target = CustomizedOp('target', c('da', 'db'), c('aa', 'ab'),
+  target = CustomizedOp$new('target', c('da', 'db'), c('aa', 'ab'),
                         field_types = list(da='int64', db='int64', aa='string', ab='int32'))
 
   df = data.frame(da = c(1,2), aa=c('aa1', 'aa2'), ab=c(3,4))
@@ -100,7 +100,7 @@ test_that("Missing fields in dataset assigned with 'missing_values'", {
 })
 
 test_that("Missing fields in dataset but without arg 'missing_values'", {
-  target = CustomizedOp('target', c('da', 'db'), c('aa', 'ab'),
+  target = CustomizedOp$new('target', c('da', 'db'), c('aa', 'ab'),
                         field_types = list(da='int64', db='int64', aa='string', ab='int32'))
 
   df = data.frame(da = 1, aa='aa', ab=2)
@@ -114,14 +114,14 @@ test_that("Missing fields in dataset but without arg 'missing_values'", {
 })
 
 test_that("Extra columns in df causes an error", {
-  target = CustomizedOp('target', 'da', 'aa', field_types = list(da='int64', aa='string'))
+  target = CustomizedOp$new('target', 'da', 'aa', field_types = list(da='int64', aa='string'))
 
   df = data.frame(da = 1, aa='aa', ab=2, extra = 4)
   expect_error(target$convert_df(df, mode = 'build', validate_fields = F), 'extra')
 })
 
 test_that("Multiple missing fields in dataset assigned with 'missing_values'", {
-  target = CustomizedOp('target', c('da', 'db'), c('aa', 'ab'),
+  target = CustomizedOp$new('target', c('da', 'db'), c('aa', 'ab'),
                         field_types = list(da='int64', db='int64', aa='string', ab='int32'))
 
   df = data.frame(da = c(1,2), aa=c('aa1', 'aa2'))
@@ -140,31 +140,31 @@ test_that("Multiple missing fields in dataset assigned with 'missing_values'", {
 # rename_fields ---------------------------------------------------------------------------------------------------
 
 test_that("Rename dimensions", {
-   template = CustomizedOp('target', c('da', 'db'), c('aa', 'ab'),
+   template = CustomizedOp$new('target', c('da', 'db'), c('aa', 'ab'),
                         field_types = list(da='int64', db='int64', aa='string', ab='int32'))
    renamed = template$rename_fields(list(da = 'DA'))
    newFields = c('DA', 'db', 'aa', 'ab')
-   expect_identical(renamed$get_field_names(.OWN), newFields)
+   expect_identical(renamed$dims_n_attrs, newFields)
    expect_identical(renamed$get_field_types(newFields), list(DA='int64', db='int64', aa='string', ab='int32'))
    expect_identical(renamed$to_afl(), 'target')
 })
 
 test_that("Rename attributes", {
-   template = CustomizedOp('target', c('da', 'db'), c('aa', 'ab'),
+   template = CustomizedOp$new('target', c('da', 'db'), c('aa', 'ab'),
                         field_types = list(da='int64', db='int64', aa='string', ab='int32'))
    renamed = template$rename_fields(list(ab = 'AB', aa = 'AA'))
    newFields = c('da', 'db', 'AA', 'AB')
-   expect_identical(renamed$get_field_names(.OWN), newFields)
+   expect_identical(renamed$dims_n_attrs, newFields)
    expect_identical(renamed$get_field_types(newFields), list(da='int64', db='int64', AA='string', AB='int32'))
    expect_identical(renamed$to_afl(), 'target')
 })
 
 test_that("Rename dimensions and attributes", {
-   template = CustomizedOp('target', c('da', 'db'), c('aa', 'ab'),
+   template = CustomizedOp$new('target', c('da', 'db'), c('aa', 'ab'),
                         field_types = list(da='int64', db='int64', aa='string', ab='int32'))
    renamed = template$rename_fields(list(ab = 'AB', da = 'DA'))
    newFields = c('DA', 'db', 'aa', 'AB')
-   expect_identical(renamed$get_field_names(.OWN), newFields)
+   expect_identical(renamed$dims_n_attrs, newFields)
    expect_identical(renamed$get_field_types(newFields), list(DA='int64', db='int64', aa='string', AB='int32'))
    expect_identical(renamed$to_afl(), 'target')
 })

@@ -1,19 +1,24 @@
-WriteOp  <- setRefClass(
-  "WriteOp",
-  contains = "ArrayOpBase",
-  fields = c('target', 'dataset', 'append', 'redimension'),
-  methods = list(
+WriteOp  <- R6::R6Class("WriteOp",
+  inherit = ArrayOpBase,
+  private = list(target = NULL, dataset = NULL, append = NULL, redimension = NULL),
+  active = NULL,
+  
+  public = list(
     initialize = function(target, dataset, append = TRUE, redimension = TRUE) {
       # Validate dataset fields match
-      missingTargetFields = dataset$get_absent_fields(target$get_field_names(.OWN))
+      missingTargetFields = dataset$get_absent_fields(target$dims_n_attrs)
       assert(!.has_len(missingTargetFields), "WriteOp dataset doesn't have target fields: %s", paste(missingTargetFields, collapse = ', '))
-
-      callSuper(target = target, dataset = dataset, append = append, redimension = redimension)
+      
+      private$target = target
+      private$dataset = dataset
+      private$append = append
+      private$redimension = redimension
+      # callSuper(target = target, dataset = dataset, append = append, redimension = redimension)
     }
     , .raw_afl = function(){
-      targetArray = target$to_afl()
-      inner = if(redimension) .afl(dataset$to_afl() %redimension% targetArray) else dataset$to_afl()
-      if(append)
+      targetArray = private$target$to_afl()
+      inner = if(private$redimension) .afl(private$dataset$to_afl() %redimension% targetArray) else private$dataset$to_afl()
+      if(private$append)
         .afl(inner %insert% targetArray)
       else
         .afl(inner %store% targetArray)
@@ -39,7 +44,7 @@ get_aio_op = function(filepath, template, aio_settings = list(), field_conversio
   if(methods::hasArg('template')){
     assert(inherits(template, c('ArrayOpBase')),
            "get_aio_op: unknown template class '%s'. Must be ArrayOpBase sub-class", class(template))
-    fieldTypes = template$get_field_types(template$get_field_names(.OWN))
+    fieldTypes = template$get_field_types(template$dims_n_attrs)
   } else {
     fieldTypes = field_types
   }
@@ -63,7 +68,7 @@ get_aio_op = function(filepath, template, aio_settings = list(), field_conversio
   aioExpr = sprintf("aio_input(%s)", .afl_join_fields(settingItems))
   applyExpr = .afl(aioExpr %apply% .afl_join_fields(names(fieldTypes), castedItems))
   projectedExpr = .afl(applyExpr %project% .afl_join_fields(names(fieldTypes)))
-  return(CustomizedOp(projectedExpr))
+  return(CustomizedOp$new(projectedExpr))
 }
 
 # private functions -----------------------------------------------------------------------------------------------
