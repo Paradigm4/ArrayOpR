@@ -123,11 +123,11 @@ Repo <- R6::R6Class("Repo",
       )
       array = self[[alias]]
       if (methods::hasArg('version_id')) {
-        afl = afl(array$to_afl() %remove_versions% version_id)
+        afl = afl(array %remove_versions% version_id)
       } else if (methods::hasArg('keep')) {
-        afl = afl(array$to_afl() %remove_versions% sprintf("keep: %s", keep))
+        afl = afl(array %remove_versions% sprintf("keep: %s", keep))
       } else {
-        afl = afl(array$to_afl() %remove_versions% NULL)
+        afl = afl(array %remove_versions% NULL)
       }
       run_only(afl)
     }

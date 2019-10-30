@@ -137,11 +137,11 @@ ArrayOpBase <- R6::R6Class("ArrayOpBase",
       # drop_dims = F. All dims are preserved in parent operations, we can only select/drop attrs.
       selectedAttrs = base::intersect(selected_fields, self$attrs)
       if(.has_len(selectedAttrs))  # If some attributes selected
-        return(afl(self$.raw_afl() %project% afl_join_fields(selectedAttrs)))
+        return(afl(self$.raw_afl() %project% selectedAttrs))
 
       # If no attributes selected, we have to create an artificial attribute, then project it.
       # Because 'apply' doesn't work on array dimensions
-      return(afl(self$.raw_afl() %apply% afl_join_fields(artificial_attr, 'null')
+      return(afl(self$.raw_afl() %apply% c(artificial_attr, 'null')
             %project% artificial_attr))
     },
 
@@ -193,15 +193,15 @@ ArrayOpBase <- R6::R6Class("ArrayOpBase",
 
       # case-1: When no attrs projected && selected dimensions, we need to create an artificial attr to project on.
       if(.has_len(specialList) && !.has_len(projectList) && .has_len(selectedFields)){
-        res = afl(arrName %apply% afl_join_fields(artificial_attr, 'null') %project% artificial_attr)
+        res = afl(arrName %apply% c(artificial_attr, 'null') %project% artificial_attr)
       }
       # case-2: Regular mode. Just 'apply'/'project' for dimensions/attributes when needed.
       else{
         applyExpr = if(.has_len(applyList))
-          afl(arrName %apply% paste(applyList, applyList, sep = ',', collapse = ','))
+          afl(arrName %apply% afl_join_fields(applyList, applyList))
         else arrName
         res =  if(.has_len(projectList))
-          afl(applyExpr %project% afl_join_fields(projectList))
+          afl(applyExpr %project% projectList)
         else applyExpr
       }
       return(res)
@@ -223,7 +223,7 @@ ArrayOpBase <- R6::R6Class("ArrayOpBase",
       assert(!.has_len(dtypes) || all(names(dtypes) != ''),
         "ArrayOpBase$transform 'dytypes' arg, if provided, must be a named list, i.e. list(newFieldName='newFieldType',...)")
       
-      rawAfl = afl(self$to_afl() %unpack% unpack_dim_name)
+      rawAfl = afl(self %unpack% unpack_dim_name)
       
       newFields = fields[names(fields) != '']
       if(.has_len(newFields)){
@@ -235,7 +235,7 @@ ArrayOpBase <- R6::R6Class("ArrayOpBase",
           if(name == '') value else name
         }, names(fields), fields, USE.NAMES = F)
       )
-      rawAfl = afl(rawAfl %project% afl_join_fields(projectedFieldNames))
+      rawAfl = afl(rawAfl %project% projectedFieldNames)
       return(CustomizedOp$new(rawAfl, dims = unpack_dim_name, attrs = projectedFieldNames
         ,field_types = c(self$get_field_types(projectedFieldNames), dtypes)
         ,validate_fields = TRUE)
