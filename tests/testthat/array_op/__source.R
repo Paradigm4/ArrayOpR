@@ -3,6 +3,8 @@
 # Set up shared code for all tests
 source(relative_path('setup.R'), local = TRUE)
 
+source(relative_path('test-afl-util.R'), local = TRUE)
+
 source(relative_path('test-array-op-base.R'), local = TRUE)
 source(relative_path('test-array-op-base-convenience-methods.R'), local = TRUE)
 source(relative_path('test-subset-op.R'), local = TRUE)

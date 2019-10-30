@@ -17,11 +17,11 @@ WriteOp  <- R6::R6Class("WriteOp",
     }
     , .raw_afl = function(){
       targetArray = private$target$to_afl()
-      inner = if(private$redimension) .afl(private$dataset$to_afl() %redimension% targetArray) else private$dataset$to_afl()
+      inner = if(private$redimension) afl(private$dataset$to_afl() %redimension% targetArray) else private$dataset$to_afl()
       if(private$append)
-        .afl(inner %insert% targetArray)
+        afl(inner %insert% targetArray)
       else
-        .afl(inner %store% targetArray)
+        afl(inner %store% targetArray)
     }
   )
 )
@@ -65,9 +65,9 @@ get_aio_op = function(filepath, template, aio_settings = list(), field_conversio
       sprintf(fmt, attrName)
   }, fieldTypes, 1:length(fieldTypes) - 1, names(fieldTypes))
 
-  aioExpr = sprintf("aio_input(%s)", .afl_join_fields(settingItems))
-  applyExpr = .afl(aioExpr %apply% .afl_join_fields(names(fieldTypes), castedItems))
-  projectedExpr = .afl(applyExpr %project% .afl_join_fields(names(fieldTypes)))
+  aioExpr = sprintf("aio_input(%s)", afl_join_fields(settingItems))
+  applyExpr = afl(aioExpr %apply% afl_join_fields(names(fieldTypes), castedItems))
+  projectedExpr = afl(applyExpr %project% afl_join_fields(names(fieldTypes)))
   return(CustomizedOp$new(projectedExpr))
 }
 

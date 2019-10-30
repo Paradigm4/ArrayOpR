@@ -175,19 +175,28 @@ e <- function(...) {
 # Any "a %op_name% b" call will be translated to %op_name%(a, b) in R, then translated to AFL:
 #   op_name(a, b)
 # Using this syntax, we can chain multiple AFL operators
-# E.g. 'array' %filter% 'a > 3 and b < 4' %project% .afl_join_fields('a', 'b')
+# E.g. 'array' %filter% 'a > 3 and b < 4' %project% afl_join_fields('a', 'b')
 # will be translated into: project(filter(array, a > 3 and b < 4), 'a', 'b')
 # Use NULL if no 2nd operand is needed. E.g. 'array' %op_count% NULL => op_count(array)
-.afl <- function(...) {
+afl <- function(...) {
   e = rlang::expr(...)
   envir = parent.frame()
 
-  convert_call <- function(callObj){
+  # convert_call <- function(callObj){
+  #   func = callObj[[1]]
+  #   # func can be another function call or just any regular user functions (ie. no %)
+  #   if(!is.name(func) || substr(as.character(func), 1, 1) != '%')
+  #     return(eval(callObj, envir = envir))
+  # 
+  #   # Here 'func' is a Scidb operator
+  #   rawName = as.character(func)
+  #   callName = gsub('%', '', rawName)
+  #   operatorArgs = plyr::compact(sapply(callObj[-1], convert_operand))
+  #   sprintf("%s(%s)", callName, paste(operatorArgs, collapse = ','))
+  # }
+  
+  convert_operator_call <- function(callObj){
     func = callObj[[1]]
-    # func can be another function call or just any regular user functions (ie. no %)
-    if(!is.name(func) || substr(as.character(func), 1, 1) != '%')
-      return(eval(callObj, envir = envir))
-
     # Here 'func' is a Scidb operator
     rawName = as.character(func)
     callName = gsub('%', '', rawName)
@@ -196,15 +205,30 @@ e <- function(...) {
   }
 
   convert_operand <- function(obj) {
-    if(is.call(obj))
-      return(convert_call(obj))
-    return(eval(obj, envir = envir))
+    if(is.call(obj)){
+      func = obj[[1]]
+      if(is.name(func) && substr(as.character(func), 1, 1) == '%'){ # an R infix function as a scidb operator
+        return(convert_operator_call(obj))
+      }
+    }
+    evaluated = eval(obj, envir = envir)
+    assert(inherits(evaluated, c('character', 'numeric', 'logical', 'ArrayOpBase')) || is.null(evaluated), 
+      "afl(...): unsupported operand data type. 
+      Operand must be (or inherit) character, numeric, logical, or ArrayOpBase, but class(%s) = '%s'", 
+      deparse(obj), class(evaluated))
+    if(inherits(evaluated, 'ArrayOpBase')){
+      evaluated = evaluated$to_afl()
+    } else if(is.logical(evaluated)) {
+      evaluated = tolower(paste(evaluated, collapse = ','))
+    } else if(!is.null(evaluated)) {
+      evaluated = paste(evaluated, collapse = ',')
+    }
+    return(evaluated)
   }
 
-  res = convert_operand(e)
-  return(res)
+  return(convert_operand(e))
 }
 
-.afl_join_fields <- function(..., sep = ',') {
+afl_join_fields <- function(..., sep = ',') {
   paste(..., sep = sep, collapse = sep)
 }

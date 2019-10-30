@@ -256,7 +256,7 @@ test_that("Customized AFL in place of the main operand", {
   for(op in c(matchOp1, matchOp2)){
     expect_identical(op$dims_n_attrs, s$dims_n_attrs)
     expect_identical(op$selected, s$selected)
-    expect_identical(op$to_afl() , .afl(afl %project% 'ab') )
+    expect_identical(op$to_afl() , afl(afl %project% 'ab') )
   }
 })
 

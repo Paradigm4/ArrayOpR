@@ -58,7 +58,7 @@ SubsetOp <- R6::R6Class("SubsetOp",
     .raw_afl = function(){
       if(is.null(private$filter_expr))
         return(private$operand$to_afl())
-      return(.afl(private$operand$to_afl() %filter% afl_filter_from_expr(private$filter_expr)))
+      return(afl(private$operand$to_afl() %filter% afl_filter_from_expr(private$filter_expr)))
     }
     ,
     select_copy = function(fields, replace = TRUE) {

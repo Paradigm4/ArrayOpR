@@ -162,10 +162,10 @@ MatchOp <- R6::R6Class("MatchOp",
   # apply new attributes as the region array in 'cross_between'
   applyExpr = paste(regionLowAttrNames, regionLowAttrValues, regionHighAttrNames, regionHighAttrValues,
     sep = ',', collapse = ',')
-  afl_literal = .afl(
+  afl_literal = afl(
     mainOperand$to_afl() %cross_between%
-      .afl(templateSchema$to_afl() %apply% applyExpr %project%
-          .afl_join_fields(c(regionLowAttrNames, regionHighAttrNames)))
+      afl(templateSchema$to_afl() %apply% applyExpr %project%
+          afl_join_fields(c(regionLowAttrNames, regionHighAttrNames)))
   )
   return(list(operand = mainOperand, afl_literal = afl_literal))
 }
