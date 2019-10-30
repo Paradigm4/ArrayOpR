@@ -87,12 +87,20 @@ Repo <- R6::R6Class("Repo",
     }
     ,
     #' @description 
+    #' Load schema from Repo's cache
+    #' @param schema_alias Alias of the array, not actual array name
+    #' @return Cached ArraySchema or NULL if not found
+    load_schema_from_cache = function(schema_alias){
+      private$schema_registry[[schema_alias]]
+    }
+    ,
+    #' @description 
     #' Load an array schema from scidb.
     #' NOTE: No caching involved, always load from scidb
     #'
-    #' @param array_name Array name without namespace
+    #' @param array_name Array name without namespace. Not array alias.
     #' @param namespace Scidb namespace, which defaults to the Repo's namespace
-    load_schema = function(array_name, ns = self$namespace) {
+    load_schema_from_db = function(array_name, ns = self$namespace) {
       fullName <- sprintf("%s.%s", ns, array_name)
       attributes = dbAccess$load_schema_attrs(fullName)
       dimensions = dbAccess$load_schema_dimensions(fullName)
@@ -141,11 +149,11 @@ Repo <- R6::R6Class("Repo",
 `[[.Repo` <- function(x, schema_alias, force_reload = FALSE) {
   item = x$cached_schemas[[schema_alias]]
   if (is.null(item) || force_reload) {
-    arrayName = x$schema_registry[[schema_alias]]
+    arrayName = x$load_schema_from_cache(schema_alias)
     assert(length(arrayName) == 1,
       "Schema '%s' not found in Repo",
       schema_alias)
-    item = x$load_schema(arrayName)
+    item = x$load_schema_from_db(arrayName)
     x$cached_schemas[[schema_alias]] <- item
   }
   return(item)
