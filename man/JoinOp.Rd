@@ -4,12 +4,9 @@
 \alias{JoinOp}
 \title{Model a sql-like join oepration.}
 \description{
-Model a sql-like join oepration.
-
-Model a sql-like join oepration.
+Join on two operands whose class is SubsetOp or JoinOp. Join on another JoinOp enables multiple equi_join operations.
 }
 \details{
-Join on two operands whose class is SubsetOp or JoinOp. Join on another JoinOp enables multiple equi_join operations.
 The constructor function performs validation.
 }
 \section{Super class}{

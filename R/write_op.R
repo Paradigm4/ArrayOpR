@@ -1,7 +1,7 @@
 #' WriteOp
-#' 
+#' @description 
 #' Write content to an array
-#' 
+#' @details 
 #' WriteOp is implemented with scidb `insert` or `store` operator.
 #' @export
 WriteOp  <- R6::R6Class("WriteOp",
@@ -10,6 +10,7 @@ WriteOp  <- R6::R6Class("WriteOp",
   active = NULL,
   
   public = list(
+    #' @description Create a new WriteOp instance
     initialize = function(target, dataset, append = TRUE, redimension = TRUE) {
       # Validate dataset fields match
       missingTargetFields = dataset$get_absent_fields(target$dims_n_attrs)
@@ -32,17 +33,18 @@ WriteOp  <- R6::R6Class("WriteOp",
   )
 )
 
+#' Get an CustomizedOp that generates AFL for aio_input
+#'
+#' @param filepath A single file path
+#' @param template An ArrayOp sub-class used as an template for fields detection and matching
+#' @param aio_settings Customized settings of aio_input
+#' @param field_conversion If NULL (default), use template's field type to convert aio_input attributes; Or provide
+#' a list for customized field conversion
+#' @param field_types Instead of using a template, explicitly specify a field_types list. Cannot be used with template
+#'
+#' @return CustomizedOp ready to be used in a WriteOp as the dataset
+#' @export
 get_aio_op = function(filepath, template, aio_settings = list(), field_conversion = NULL, field_types){
-  #' Get an CustomizedOp that generates AFL for aio_input
-  #'
-  #' @param filepath A single file path
-  #' @param template An ArrayOp sub-class used as an template for fields detection and matching
-  #' @param aio_settings Customized settings of aio_input
-  #' @param field_conversion If NULL (default), use template's field type to convert aio_input attributes; Or provide
-  #' a list for customized field conversion
-  #' @param field_types Instead of using a template, explicitly specify a field_types list. Cannot be used with template
-  #'
-  #' @return CustomizedOp ready to be used in a WriteOp as the dataset
 
   assert(xor(methods::hasArg('template'), methods::hasArg('field_types')),
          "Only one of the 'template' and 'field_types' argument can exist!")
@@ -76,6 +78,4 @@ get_aio_op = function(filepath, template, aio_settings = list(), field_conversio
   projectedExpr = afl(applyExpr %project% names(fieldTypes))
   return(CustomizedOp$new(projectedExpr))
 }
-
-# private functions -----------------------------------------------------------------------------------------------
 

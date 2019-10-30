@@ -4,9 +4,9 @@
 .DT = 'field_data_types'
 
 #' Base class of all ArrayOp classes
-#' 
+#' @description 
 #' ArrayOp classes denote scidb array operations and operands, hence the name. 
-#' 
+#' @details 
 #' One operation consists of an scidb operator and [1..*] operands, of which the result can be used as an operand 
 #' in another operation. Operands and Opreration results can all be denoted by ArrayOp.
 #' @export
@@ -26,7 +26,9 @@ ArrayOpBase <- R6::R6Class("ArrayOpBase",
   # Public ----------------------------------------------------------------------------------------------------------
 
   public = list(
-    
+    #' @description 
+    #' Base class initialize function, to be called in sub-class 
+    #' @param info A list that stores ArrayOp meta data, e.g. field types 
     initialize = function(info = NULL) {
       private$info = info  
     }

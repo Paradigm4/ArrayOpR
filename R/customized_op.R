@@ -1,5 +1,7 @@
 #' CustomizedOp
-#' 
+#' @description  
+#' An ArrayOp sub-class with all properties customized for flexibility
+#' @details 
 #' An ArrayOp sub-class with all properties customized for flexibility
 #' @export
 CustomizedOp  <- R6::R6Class("CustomizedOp",

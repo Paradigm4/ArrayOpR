@@ -2,10 +2,9 @@
 #' @description 
 #' A repository for ArraySchemas that reside in one scidb installation
 #' @details 
-#' Repo class depends on a package-level dependency object `DEP`
+#' Repo class depends on a package-level dependency object 'DEP'
 #' @export
 Repo <- R6::R6Class("Repo",
-  
   private = list(
     namespace = NULL,
     dbAccess = NULL,
@@ -15,16 +14,17 @@ Repo <- R6::R6Class("Repo",
   active = NULL,
   
   public = list(
+    #' @description
     #' Initialize function
     #'
     #' Create a new Repo instance
     #' @param namespace The default namespace
     #' @param dbAccess A DbAccess instantance that manages scidb connection
     initialize = function(namespace, dbAccess = NULL) {
-      self$namespace = namespace
-      self$dbAccess = dbAccess
-      self$cached_schemas = list()
-      self$schema_registry = list()
+      private$namespace = namespace
+      private$dbAccess = dbAccess
+      private$cached_schemas = list()
+      private$schema_registry = list()
     }
     ,
     #' @description 
@@ -68,7 +68,7 @@ Repo <- R6::R6Class("Repo",
       else
         what
       tryCatch({
-        df <- dbAccess$run_afl(afl, ...)
+        df <- private$dbAccess$run_afl(afl, ...)
       },
         error = function(e) {
           # Print out AFL only when error occurs.
@@ -134,13 +134,10 @@ Repo <- R6::R6Class("Repo",
   )
 )
 
-
-
-
-
 #' Return a registered array schema
 #'
 #' Load on first access, then use the cached entry.
+#' @export
 `[[.Repo` <- function(x, schema_alias, force_reload = FALSE) {
   item = x$cached_schemas[[schema_alias]]
   if (is.null(item) || force_reload) {
@@ -155,44 +152,3 @@ Repo <- R6::R6Class("Repo",
 }
 
 
-#' R6 Class Representing a Person
-#'
-#' @description
-#' A person has a name and a hair color.
-#'
-#' @details
-#' A person can also greet you.
-Person <- R6::R6Class("Person",
-  public = list(
-    #' @field name First or full name of the person.
-    name = NULL,
-    #' @field hair Hair color of the person.
-    hair = NULL,
-    #' @description
-    #' Create a new person object.
-    #' @param name Name.
-    #' @param hair Hair color.
-    #' @return A new `Person` object.
-    initialize = function(name = NA, hair = NA) {
-      self$name <- name
-      self$hair <- hair
-      self$greet()
-    },
-    #' @description
-    #' Change hair color.
-    #' @param val New hair color.
-    #' @examples
-    #' P <- Person("Ann", "black")
-    #' P$hair
-    #' P$set_hair("red")
-    #' P$hair
-    set_hair = function(val) {
-      self$hair <- val
-    },
-    #' @description
-    #' Say hi.
-    greet = function() {
-      cat(paste0("Hello, my name is ", self$name, ".\n"))
-    }
-  )
-)

@@ -4,13 +4,9 @@
 \alias{ArrayOpBase}
 \title{Base class of all ArrayOp classes}
 \description{
-Base class of all ArrayOp classes
-
-Base class of all ArrayOp classes
+ArrayOp classes denote scidb array operations and operands, hence the name.
 }
 \details{
-ArrayOp classes denote scidb array operations and operands, hence the name.
-
 One operation consists of an scidb operator and \link{1..*} operands, of which the result can be used as an operand
 in another operation. Operands and Opreration results can all be denoted by ArrayOp.
 }
@@ -34,10 +30,18 @@ in another operation. Operands and Opreration results can all be denoted by Arra
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-new"></a>}}
 \subsection{Method \code{new()}}{
+Base class initialize function, to be called in sub-class
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$new(info = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{info}}{A list that stores ArrayOp meta data, e.g. field types}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-get_field_types"></a>}}

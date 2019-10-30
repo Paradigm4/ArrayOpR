@@ -7,7 +7,7 @@
 A repository for ArraySchemas that reside in one scidb installation
 }
 \details{
-Repo class depends on a package-level dependency object \code{DEP}
+Repo class depends on a package-level dependency object 'DEP'
 }
 \section{Methods}{
 \subsection{Public methods}{
@@ -23,6 +23,9 @@ Repo class depends on a package-level dependency object \code{DEP}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-new"></a>}}
 \subsection{Method \code{new()}}{
+Initialize function
+
+Create a new Repo instance
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Repo$new(namespace, dbAccess = NULL)}\if{html}{\out{</div>}}
 }

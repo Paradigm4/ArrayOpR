@@ -58,7 +58,6 @@ DbAccess <- function(db) {
     colnames(dfAttrs)[colnames(dfAttrs) == 'type_id'] <- 'type'
 
     # Convert query results to a list of NumberField/TextField
-    # fields <- apply(dfAttrs, 1, .rowToField)
     return(dfAttrs[, c('name', 'type')])
   }
 
@@ -69,8 +68,6 @@ DbAccess <- function(db) {
     # {0} 'i',0,4611686018427387904,1,0,0,2,'int64'
     getDimensionQuery <- sprintf("project(dimensions(%s), name, type)", fullArrayName)
     dfDimensions <- dbquery(query = getDimensionQuery, return = TRUE)
-    # Convert query results to a list of NumberField/TextField
-    # fields <- apply(dfDimensions, 1, .rowToField)
     return(dfDimensions[, c('name', 'type')])
   }
 
@@ -83,20 +80,4 @@ DbAccess <- function(db) {
     dbquery(afl, return = FALSE, ...)
   }
 
-# private methods ---------------------------------------------------------
-
-  .rowToField <- function(row) {
-    # assume row has two fields: name, and typeid, both string
-    name <- row['name']
-    type <- row['type']   # SciDB type_id can be various C types, including 'string' and other numerical types
-
-    # Treat all non-string field as NumberField. May need to consider other types such as date
-    if(type == 'string'){
-      return(TextField(name, scidb_type = type))
-    } else {
-      return(NumberField(name, scidb_type = type))
-    }
-  }
-
-  return(environment())
 }

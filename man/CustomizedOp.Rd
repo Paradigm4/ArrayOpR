@@ -6,6 +6,9 @@
 \description{
 An ArrayOp sub-class with all properties customized for flexibility
 }
+\details{
+An ArrayOp sub-class with all properties customized for flexibility
+}
 \section{Super class}{
 \code{\link[arrayop:ArrayOpBase]{arrayop::ArrayOpBase}} -> \code{CustomizedOp}
 }

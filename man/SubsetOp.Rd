@@ -6,6 +6,9 @@
 \description{
 Subset array content by 1. filtering cells 2. select only desired dimensions/attributes
 }
+\details{
+SubsetOp details to be added here
+}
 \section{Super class}{
 \code{\link[arrayop:ArrayOpBase]{arrayop::ArrayOpBase}} -> \code{SubsetOp}
 }
@@ -57,9 +60,21 @@ Subset array content by 1. filtering cells 2. select only desired dimensions/att
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-select_copy"></a>}}
 \subsection{Method \code{select_copy()}}{
+Create a new SubsetOp using self as a template.
+
+Nothing except the \code{selected_fields} is changed.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{SubsetOp$select_copy(fields, replace = TRUE)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{fields}}{selected_fields in the new SubsetOp}
+
+\item{\code{replace}}{whehter \code{fields} replaces or supplements the \code{selected_fields}}
+}
+\if{html}{\out{</div>}}
+}
 }
 }

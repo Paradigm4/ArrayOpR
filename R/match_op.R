@@ -1,7 +1,7 @@
 #' MatchOp
-#' 
+#' @description 
 #' MatchOp filter an ArrayOp's row records (or cells in Scidb term) by a 'template'.
-#' 
+#' @details 
 #' Features:
 #' - No schema change (ie. same set of attrs/dims)
 #' - 'template' can be an R data frame or another ArrayOp
@@ -31,9 +31,6 @@ MatchOp <- R6::R6Class("MatchOp",
       assert(!is.call(func), "MatchOp: unknown op_mode '%s' ", op_mode)
 
       converted = func(mainOperand, template, op_mode = 'filter', on_left, on_right, ...)
-
-      # super$initialize(operand = converted[['operand']], afl = converted[['afl_literal']],
-      #           .info = converted[['operand']]$.info)
       
       private$operand = converted$operand
       private$afl = converted$afl_literal
@@ -43,13 +40,6 @@ MatchOp <- R6::R6Class("MatchOp",
     get_field_types = function(...) private$operand$get_field_types(...)
     ,
     .raw_afl = function() private$afl
-
-    #' #' MatchOp has the same schema as its operand. So all field queries are delegated to its operand.
-    #' , get_field_names = function(...) operand$get_field_names(...)
-    #' , .get_dimension_names = function() operand$.get_dimension_names()
-    #' , .get_attribute_names = function() operand$.get_attribute_names()
-    #' , .get_selected_names = function() operand$.get_dimension_names()
-
   )
 )
 

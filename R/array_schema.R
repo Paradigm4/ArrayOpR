@@ -1,7 +1,7 @@
 #' Model of a scidb array schema
-#' 
+#' @description 
 #' ArraySchema represents an array shcema consist of dimensions, attributes and meta info
-#' 
+#' @details 
 #' ArraySchema is normally loaded from an existing scidb database. 
 #' It can be also constructed manually for test or array creation.
 #' @export

@@ -1,6 +1,8 @@
 #' SubsetOp
-#' 
+#' @description 
 #' Subset array content by 1. filtering cells 2. select only desired dimensions/attributes
+#' @details 
+#' SubsetOp details to be added here
 #' @export
 SubsetOp <- R6::R6Class("SubsetOp",
   inherit = ArrayOpBase,
@@ -65,12 +67,13 @@ SubsetOp <- R6::R6Class("SubsetOp",
       return(afl(private$operand %filter% afl_filter_from_expr(private$filter_expr)))
     }
     ,
+    #' @description 
+    #' Create a new SubsetOp using self as a template.
+    #'
+    #' Nothing except the `selected_fields` is changed.
+    #' @param fields selected_fields in the new SubsetOp
+    #' @param replace whehter `fields` replaces or supplements the `selected_fields`
     select_copy = function(fields, replace = TRUE) {
-      #' Create a new SubsetOp using self as a template.
-      #'
-      #' Nothing except the `selected_fields` is changed.
-      #' @param fields selected_fields in the new SubsetOp
-      #' @param replace whehter `fields` replaces or supplements the `selected_fields`
       
       extraFields = fields[!is.element(fields, selected_fields)]
       combinedFields = if(replace) fields else c(selected_fields, extraFields)
