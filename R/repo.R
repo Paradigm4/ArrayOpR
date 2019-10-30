@@ -106,7 +106,7 @@ Repo <- R6::R6Class("Repo",
       dimensions = private$dbAccess$load_schema_dimensions(fullName)
       fieldTypes = structure(as.list(c(dimensions$type, attributes$type)),
         names = c(dimensions$name, attributes$name))
-      schema = ArraySchema(
+      schema = ArraySchema$new(
         array_name,
         attributes$name,
         dimensions$name,

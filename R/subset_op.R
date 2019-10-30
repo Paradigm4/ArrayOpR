@@ -77,7 +77,7 @@ SubsetOp <- R6::R6Class("SubsetOp",
       
       extraFields = fields[!is.element(fields, selected_fields)]
       combinedFields = if(replace) fields else c(selected_fields, extraFields)
-      return(SubsetOp(private$operand, private$filter_expr, combinedFields))
+      return(SubsetOp$new(private$operand, private$filter_expr, combinedFields))
     }
   )
 )
