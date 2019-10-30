@@ -61,7 +61,7 @@ test_that('Dected args are stored for [[ access', {
 
 test_that('Args can be converted to an ExprsList', {
   # Triple dots can include flexible field search patterns, e.g. _contains, _range,
-  # implemented in .args_to_expressions(...)
+  # implemented in args_to_expressions(...)
 
   expect_identical(api_func()$to_exprs_list(), e(cc == 3, y == FALSE))
   expect_identical(api_func(a = 42)$to_exprs_list(), e(a == 42, cc == 3, y == FALSE))

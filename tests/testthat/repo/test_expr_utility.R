@@ -104,7 +104,7 @@ test_that("Identity of expressions is only defined by the abstract syntax tree (
 
 test_that("Convert a named list to an ExprsList", {
   check <- function(argsList, expectedExprList) {
-    converted <- do.call(.args_to_expressions, argsList)
+    converted <- do.call(args_to_expressions, argsList)
     expect_identical(converted, expectedExprList)
   }
 

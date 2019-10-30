@@ -75,7 +75,8 @@ afl_filter_from_expr <- function(e) {
 # Convert search criteria in function argument format to a list of expressions
 # Eg. name_contains = 'str' => name %contains% 'str'
 # Eg. value_range = c(1, 9) => c(value >= 1, value <= 9)
-.args_to_expressions <- function(...) {
+#' @export
+args_to_expressions <- function(...) {
   rangeExpr <- function(name, value) {
     if (is.numeric(value)) {
       concateExprs <- c()

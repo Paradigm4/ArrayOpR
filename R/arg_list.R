@@ -84,7 +84,7 @@ ArgList <- setRefClass('ArgList',
     },
 
     to_exprs_list = function(explicit = FALSE) {
-      do.call(.args_to_expressions, .choose_list(explicit))
+      do.call(args_to_expressions, .choose_list(explicit))
     }
   )
 )
