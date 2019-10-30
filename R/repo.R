@@ -45,7 +45,7 @@ Repo <- R6::R6Class("Repo",
         what
       
       tryCatch({
-        df <- dbAccess$load_df_from_afl(afl, ...)
+        df <- private$dbAccess$load_df_from_afl(afl, ...)
       },
         error = function(e) {
           # Print out AFL only when error occurs.
@@ -102,8 +102,8 @@ Repo <- R6::R6Class("Repo",
     #' @param namespace Scidb namespace, which defaults to the Repo's namespace
     load_schema_from_db = function(array_name, ns = self$namespace) {
       fullName <- sprintf("%s.%s", ns, array_name)
-      attributes = dbAccess$load_schema_attrs(fullName)
-      dimensions = dbAccess$load_schema_dimensions(fullName)
+      attributes = private$dbAccess$load_schema_attrs(fullName)
+      dimensions = private$dbAccess$load_schema_dimensions(fullName)
       fieldTypes = structure(as.list(c(dimensions$type, attributes$type)),
         names = c(dimensions$name, attributes$name))
       schema = ArraySchema(
