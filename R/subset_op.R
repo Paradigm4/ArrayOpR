@@ -70,13 +70,13 @@ SubsetOp <- R6::R6Class("SubsetOp",
     #' @description 
     #' Create a new SubsetOp using self as a template.
     #'
-    #' Nothing except the `selected_fields` is changed.
-    #' @param fields selected_fields in the new SubsetOp
-    #' @param replace whehter `fields` replaces or supplements the `selected_fields`
+    #' Nothing except the `self$selected` is changed.
+    #' @param fields self$selected in the new SubsetOp
+    #' @param replace whehter `fields` replaces or supplements the `self$selected`
     select_copy = function(fields, replace = TRUE) {
       
-      extraFields = fields[!is.element(fields, selected_fields)]
-      combinedFields = if(replace) fields else c(selected_fields, extraFields)
+      extraFields = fields[!is.element(fields, self$selected)]
+      combinedFields = if(replace) fields else c(self$selected, extraFields)
       return(SubsetOp$new(private$operand, private$filter_expr, combinedFields))
     }
   )
