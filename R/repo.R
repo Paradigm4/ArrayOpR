@@ -8,12 +8,13 @@ Repo <- R6::R6Class("Repo",
   private = list(
     namespace = NULL,
     dbAccess = NULL,
-    schema_registry = NULL,
-    cached_schemas = NULL
+    schema_registry = NULL
   ),
   active = NULL,
   
   public = list(
+    cached_schemas = NULL
+    ,
     #' @description
     #' Initialize function
     #'
@@ -21,9 +22,9 @@ Repo <- R6::R6Class("Repo",
     #' @param namespace The default namespace
     #' @param dbAccess A DbAccess instantance that manages scidb connection
     initialize = function(namespace, dbAccess = NULL) {
+      self$cached_schemas = list()
       private$namespace = namespace
       private$dbAccess = dbAccess
-      private$cached_schemas = list()
       private$schema_registry = list()
     }
     ,
