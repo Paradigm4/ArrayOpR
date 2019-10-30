@@ -79,5 +79,6 @@ DbAccess <- function(db) {
     # Run AFL without returning any result
     dbquery(afl, return = FALSE, ...)
   }
-
+  
+  return(environment())
 }
