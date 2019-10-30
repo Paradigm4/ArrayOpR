@@ -1,4 +1,10 @@
-# Model an array in SciDB
+#' Model of a scidb array schema
+#' 
+#' ArraySchema represents an array shcema consist of dimensions, attributes and meta info
+#' 
+#' ArraySchema is normally loaded from an existing scidb database. 
+#' It can be also constructed manually for test or array creation.
+#' @export
 ArraySchema <- R6::R6Class("ArraySchema",
   inherit = ArrayOpBase,
   

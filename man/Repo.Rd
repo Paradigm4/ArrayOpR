@@ -6,11 +6,8 @@
 \description{
 A repository for ArraySchemas that reside in one scidb installation
 }
-\note{
+\details{
 Repo class depends on a package-level dependency object \code{DEP}
-Initialize function
-
-Create a new Repo instance
 }
 \section{Methods}{
 \subsection{Public methods}{

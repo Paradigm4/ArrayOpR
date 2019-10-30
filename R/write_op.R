@@ -1,3 +1,9 @@
+#' WriteOp
+#' 
+#' Write content to an array
+#' 
+#' WriteOp is implemented with scidb `insert` or `store` operator.
+#' @export
 WriteOp  <- R6::R6Class("WriteOp",
   inherit = ArrayOpBase,
   private = list(target = NULL, dataset = NULL, append = NULL, redimension = NULL),

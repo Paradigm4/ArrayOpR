@@ -1,13 +1,3 @@
-# Given a list of Fields, convert to a named list whose names are Field names.
-.makeNamedFieldList <- function(fields) {
-  # Ensure every field is inherited from Field class
-  allInheritField <- all(sapply(fields, inherits, "Field"))
-  stopifnot(allInheritField)
-  fieldNames <- sapply(fields, function(x) x$name)
-  return(structure(fields, names = fieldNames))
-}
-
-
 # System and validation -------------------------------------------------------------------------------------------
 
 # Here we use R's naming convention.

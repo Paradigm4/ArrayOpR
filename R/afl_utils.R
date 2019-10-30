@@ -5,6 +5,10 @@
 # Here we only deal with these three types of R Expressions: call, name/symbol, literal
 ##########################################
 
+#' Convert filter expression(s) to AFL filter
+#' 
+#' @param e An R expression vector of length 1 or more
+#' @return An AFL filter string
 #' @export
 afl_filter_from_expr <- function(e) {
 
@@ -72,9 +76,18 @@ afl_filter_from_expr <- function(e) {
   walkThru(e)
 }
 
-# Convert search criteria in function argument format to a list of expressions
-# Eg. name_contains = 'str' => name %contains% 'str'
-# Eg. value_range = c(1, 9) => c(value >= 1, value <= 9)
+#' Convert API ... args to an R expression vector
+#' 
+#' Some API functions include ... arg to represent arbitrary search criteria. 
+#' This provides flexibility and simplifies API function signatures, but only supports limited advanced search,
+#' e.g. xxx_contains, xxx_range, xxx_not.
+#' 
+#' 
+#' Eg. name_contains = 'str' => name %contains% 'str'
+#' Eg. value_range = c(1, 9) => c(value >= 1, value <= 9)
+#' @seealso See \code{\link{e}} for more.
+#' @param ... API ellipsis arg
+#' @return R expression vector
 #' @export
 args_to_expressions <- function(...) {
   rangeExpr <- function(name, value) {
@@ -143,8 +156,14 @@ Make sure you passed in a named list: %s", str(optionalArgs)))
 
 # AFL Expressions denoted by R Expressions ------------------------------------------------------------------------
 
-# Merge an ExprsList into a single Expression so that we can create hiararchical expressions,
-# which is useful in complex queries.
+
+#' Merge multiple R expressions into one
+#' 
+#' Merge an ExprsList into a single Expression so that it can be used as a FilterExpr
+#' @param el A list of R expressions
+#' @param mode 'AND' | 'OR'. Logical relationships when merging the expressions.
+#' @return R expression
+#' @export
 e_merge <- function(el, mode = 'AND'){
   if(length(el) == 0) return(NULL)
   if(length(el) == 1) return(el[[1]])  # If only one expression, then no need to embed it in 'AND'/'OR'
@@ -156,9 +175,19 @@ e_merge <- function(el, mode = 'AND'){
   stop(sprintf(".el_merge error: mode must be 'AND' or 'OR', but got %s", mode))
 }
 
-# Return a list of FilterExpr from ..., only the unmaed args will be used
-# The ... args have to be literal, ie. no variable substitution occurs,
-#   Unless an variable is prefixed with !! (e.g. !!v), in which case !!v will be subsituted with eval(v)
+#' Create a list of R expressions
+#' 
+#' The ... ellipsis arg can include arbitrary expressions, where all names are preserved in their literal forms,
+#' **except** for those prefixed with !! (double exclamation marks) which will be evaluated to their actual values 
+#' in the calling environment.
+#' 
+#' Besides common comparison operators including `==`, `>`, `<`, `>=`, `<=`, `!=`, there are a few special operators
+#' supported to ease AFL generation:
+#'   - `%in%` semantically similar to R. `a %in% !!c(1,2,3)` will be translated to `(a == 1 or a == 2 or a == 3)`
+#'   - `%like%` for string regex matching. 
+#' @param ... The ellipsis arg can have multiple items as expressions, but NO named items as in a named list.
+#' @return A list of R expressions
+#' @export
 e <- function(...) {
   allExprs <- rlang::exprs(...)
   # No named args allowed here to avoid confusion.
@@ -172,29 +201,27 @@ e <- function(...) {
 
 # Construct AFL expressions ---------------------------------------------------------------------------------------
 
-# Create AFL expressions from R expressions
-# Any "a %op_name% b" call will be translated to %op_name%(a, b) in R, then translated to AFL:
-#   op_name(a, b)
-# Using this syntax, we can chain multiple AFL operators
-# E.g. 'array' %filter% 'a > 3 and b < 4' %project% afl_join_fields('a', 'b')
-# will be translated into: project(filter(array, a > 3 and b < 4), 'a', 'b')
-# Use NULL if no 2nd operand is needed. E.g. 'array' %op_count% NULL => op_count(array)
+#' Create AFL expressions from R expressions
+#' 
+#' This is a convenience function for AFL generation.
+#' 
+#' Any ```a %op_name% b``` call will be translated to `%op_name%(a, b)` in R, then translated to AFL:
+#'   `op_name(a, b)`
+#'   
+#' Using this syntax, we can chain multiple AFL operators
+#' 
+#' E.g. `'array' %filter% 'a > 3 and b < 4' %project% c('a', 'b')`
+#' will be translated into: `project(filter(array, a > 3 and b < 4), 'a', 'b')`
+#' Use NULL if no 2nd operand is needed. E.g. 'array' %op_count% NULL => op_count(array)
+#' @param ... In the ellipsis arg, only R infix functions `%name%` are converted to operators, 
+#' All regular functions are first evaluated in the calling environment, and then convereted to strings 
+#' depending on the result types. ArrayOp => ArrayOp$to_afl(), v:NonEmptyVector => paste(v, collapse=','), 
+#' NULL is ignored.
+#' @return AFL string
+#' @export
 afl <- function(...) {
   e = rlang::expr(...)
   envir = parent.frame()
-
-  # convert_call <- function(callObj){
-  #   func = callObj[[1]]
-  #   # func can be another function call or just any regular user functions (ie. no %)
-  #   if(!is.name(func) || substr(as.character(func), 1, 1) != '%')
-  #     return(eval(callObj, envir = envir))
-  # 
-  #   # Here 'func' is a Scidb operator
-  #   rawName = as.character(func)
-  #   callName = gsub('%', '', rawName)
-  #   operatorArgs = plyr::compact(sapply(callObj[-1], convert_operand))
-  #   sprintf("%s(%s)", callName, paste(operatorArgs, collapse = ','))
-  # }
   
   convert_operator_call <- function(callObj){
     func = callObj[[1]]
@@ -230,6 +257,15 @@ afl <- function(...) {
   return(convert_operand(e))
 }
 
+#' Just multple fields with sep = ','
+#' 
+#' Default behavior: `paste(..., sep = sep, collapse = sep)` where `sep = ','`
+#' 
+#' afl(...) will convert vectors to joined strings separated by `,`. 
+#' This function is useful in concatenating multiple vectors in parallel, 
+#' e.g. joining a new field vector and expression vector for the `apply` operator.
+#' @param ... Multiple string vectors
+#' @export
 afl_join_fields <- function(..., sep = ',') {
   paste(..., sep = sep, collapse = sep)
 }

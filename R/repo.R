@@ -1,9 +1,9 @@
-
-
 #' Repo class which manages ArraySchemas that reside in one scidb installation
 #' @description 
 #' A repository for ArraySchemas that reside in one scidb installation
-#' @note Repo class depends on a package-level dependency object `DEP`
+#' @details 
+#' Repo class depends on a package-level dependency object `DEP`
+#' @export
 Repo <- R6::R6Class("Repo",
   
   private = list(

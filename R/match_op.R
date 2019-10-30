@@ -1,10 +1,12 @@
-#
-# MatchOp filter an ArrayOp's row records (or cells in Scidb term) by a 'template'.
-# Features:
-#   - No schema change (ie. same set of attrs/dims)
-#   - 'template' can be an R data frame or another ArrayOp
-#   - Can be implemented in differnt modes to optimize performance
-#
+#' MatchOp
+#' 
+#' MatchOp filter an ArrayOp's row records (or cells in Scidb term) by a 'template'.
+#' 
+#' Features:
+#' - No schema change (ie. same set of attrs/dims)
+#' - 'template' can be an R data frame or another ArrayOp
+#' - Can be implemented in differnt modes to optimize performance
+#' @export
 MatchOp <- R6::R6Class("MatchOp",
   inherit = ArrayOpBase,
   private = list(operand = NULL, afl = NULL),

@@ -1,3 +1,12 @@
+
+#' An environment for scidb access
+#' 
+#' DbAccess shield the `arrayop` package from depending directly on `scidb`
+#' 
+#' Within `arrayop` package, all scidb transcactions are done via DbAccess. 
+#' No calls to `scidb::iquery` so that ArrayOp classes will not be affected by future scidb upgrade.
+#' @param db scidb database connection object
+#' @export
 DbAccess <- function(db) {
 
   .dbquery_impl <- function(db,
@@ -53,7 +62,6 @@ DbAccess <- function(db) {
     return(dfAttrs[, c('name', 'type')])
   }
 
-
   load_schema_dimensions <- function(fullArrayName) {
     # Get array dimensions
     # Actual dimensions include more than we currently need
@@ -71,7 +79,7 @@ DbAccess <- function(db) {
   }
 
   run_afl <- function(afl, ...) {
-    #' Run AFL without returning any result
+    # Run AFL without returning any result
     dbquery(afl, return = FALSE, ...)
   }
 

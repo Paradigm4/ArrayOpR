@@ -16,4 +16,5 @@ ArrayOpDep <- setRefClass("ArrayOpDep",
 }
 
 # Client code needs to inject 'db' to DEP instance
+#' @export
 DEP = ArrayOpDep(df_to_arrayop_func = .df_to_arrayop_func, db = NULL)

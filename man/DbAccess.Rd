@@ -2,10 +2,17 @@
 % Please edit documentation in R/db_access.R
 \name{DbAccess}
 \alias{DbAccess}
-\title{Run AFL without returning any result}
+\title{An environment for scidb access}
 \usage{
 DbAccess(db)
 }
+\arguments{
+\item{db}{scidb database connection object}
+}
 \description{
-Run AFL without returning any result
+DbAccess shield the \code{arrayop} package from depending directly on \code{scidb}
+}
+\details{
+Within \code{arrayop} package, all scidb transcactions are done via DbAccess.
+No calls to \code{scidb::iquery} so that ArrayOp classes will not be affected by future scidb upgrade.
 }

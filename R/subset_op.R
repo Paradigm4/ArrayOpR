@@ -1,3 +1,7 @@
+#' SubsetOp
+#' 
+#' Subset array content by 1. filtering cells 2. select only desired dimensions/attributes
+#' @export
 SubsetOp <- R6::R6Class("SubsetOp",
   inherit = ArrayOpBase,
 

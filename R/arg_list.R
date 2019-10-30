@@ -103,6 +103,13 @@ ArgList <- setRefClass('ArgList',
 }
 
 # Envir defaults to its caller's envir.
+#' Create a ArgList isntance
+#' 
+#' Create a ArgList isntance from the calling environment
+#' @param envir an environment, default as the calling environment
+#' @param default_args A list of default arguments
+#' @return ArgList instance
+#' @export
 newArgList = function(envir = parent.frame(), default_args = list()) {
   # Get explicitly passed-in args from parent's match.call() formals
   explicitArgs = as.list(do.call(match.call, list(), envir = envir)[-1])

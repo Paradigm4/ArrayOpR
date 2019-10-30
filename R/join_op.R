@@ -1,8 +1,8 @@
-
-
-# Model a sql-like join oepration.
-# Join on two operands whose class is SubsetOp or JoinOp. Join on another JoinOp enables multiple equi_join operations.
-# The constructor function performs validation.
+#' Model a sql-like join oepration.
+#' 
+#' Join on two operands whose class is SubsetOp or JoinOp. Join on another JoinOp enables multiple equi_join operations.
+#' The constructor function performs validation.
+#' @export
 JoinOp <- R6::R6Class("JoinOp", 
   inherit = ArrayOpBase,
   

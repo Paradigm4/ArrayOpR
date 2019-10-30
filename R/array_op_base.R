@@ -1,17 +1,15 @@
 # A base class for other specialized array operands/operations, e.g. SubsetOp, JoinOp, ArraySchema
 
 # Field type constants
-.DIM = 'dimension'
-.ATR = 'attribute'
-.OWN = 'owned: dimension + attribute'
-.AD = 'attribute + dimension'
-.SEL = 'selected'
 .DT = 'field_data_types'
 
 #' Base class of all ArrayOp classes
 #' 
-#' @export ArrayOpBase
-#' @exportClass ArrayOpBase
+#' ArrayOp classes denote scidb array operations and operands, hence the name. 
+#' 
+#' One operation consists of an scidb operator and [1..*] operands, of which the result can be used as an operand 
+#' in another operation. Operands and Opreration results can all be denoted by ArrayOp.
+#' @export
 ArrayOpBase <- R6::R6Class("ArrayOpBase",
   private = list(
     info = NULL
