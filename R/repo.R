@@ -100,7 +100,7 @@ Repo <- R6::R6Class("Repo",
     #'
     #' @param array_name Array name without namespace. Not array alias.
     #' @param namespace Scidb namespace, which defaults to the Repo's namespace
-    load_schema_from_db = function(array_name, ns = self$namespace) {
+    load_schema_from_db = function(array_name, ns = private$namespace) {
       fullName <- sprintf("%s.%s", ns, array_name)
       attributes = private$dbAccess$load_schema_attrs(fullName)
       dimensions = private$dbAccess$load_schema_dimensions(fullName)
