@@ -138,7 +138,7 @@ Repo <- R6::R6Class("Repo",
       } else {
         afl = afl(array %remove_versions% NULL)
       }
-      run_only(afl)
+      self$run_only(afl)
     }
   )
 )
