@@ -38,6 +38,7 @@ WriteOp is implemented with scidb \code{insert} or \code{store} operator.
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-new"></a>}}
 \subsection{Method \code{new()}}{
+Create a new WriteOp instance
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{WriteOp$new(target, dataset, append = TRUE, redimension = TRUE)}\if{html}{\out{</div>}}
 }

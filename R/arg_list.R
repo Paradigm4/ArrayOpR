@@ -1,15 +1,33 @@
-ArgList <- setRefClass('ArgList',
+#' ArgList
+#' 
+#' Encapsulate arg list of function calls
+#' 
+#' Encapsulate arg list of function calls to avoid length argument passing among R functions
+#' @export 
+ArgList <- R6::R6Class('ArgList',
   # explicit_args: a named list that stores explicitly passed-in args
   # effective_args: a named list that stores effective args in caller's function
   # including those missing but with a default value
-
-  fields = c('explicit_args', 'effective_args'),
-  methods = list(
-
+  active = NULL,
+  portable = FALSE, # sacrifice portability for simplicity (ie. no self/private object references)
+  
+  private = list(
+    .choose_list = function(explicit) if(explicit) explicit_args else effective_args
+  )
+  ,
+  
+  public = list(
+    
+    explicit_args = NULL, 
+    effective_args = NULL,
+    
+    initialize = function(explicit_args, effective_args){
+      self$explicit_args = explicit_args
+      self$effective_args = effective_args
+    }
+    ,
     # All functions with an explicit arg, if set true, only checking on explicitly pass-in args;
     # If set false, checking on all effective args in caller's function scope.
-
-    .choose_list = function(explicit) if(explicit) explicit_args else effective_args,
 
     get_len = function(explicit = FALSE) {
       length(.choose_list(explicit))
@@ -36,11 +54,11 @@ ArgList <- setRefClass('ArgList',
     },
 
     has_scalar_args = function(argNames, explicit = FALSE) {
-      has_all_args(argNames, explicit) && all(lapply(.self[argNames], length) == 1)
+      has_all_args(argNames, explicit) && all(lapply(self[argNames], length) == 1)
     },
 
     has_multi_len_args = function(argNames, explicit = FALSE) {
-      has_all_args(argNames, explicit) && all(lapply(.self[argNames], length) > 1)
+      has_all_args(argNames, explicit) && all(lapply(self[argNames], length) > 1)
     },
 
     # Return how many args in 'argNames' are present in the ArgList
@@ -52,7 +70,7 @@ ArgList <- setRefClass('ArgList',
     subset = function(argNames, inverse = FALSE) {
        mask1 = if(!inverse) names(explicit_args) %in% argNames else ! names(explicit_args) %in% argNames
        mask2 = if(!inverse) names(effective_args) %in% argNames else ! names(effective_args) %in% argNames
-       return(ArgList(explicit_args = explicit_args[mask1], effective_args = effective_args[mask2]))
+       return(ArgList$new(explicit_args = explicit_args[mask1], effective_args = effective_args[mask2]))
     },
 
     # Return a new ArgList with renamed fields. Triple-dot args should an even number of strings, consist of
@@ -72,7 +90,7 @@ ArgList <- setRefClass('ArgList',
       newNames = names(effective_args)
       newNames[na.omit(match(originals, newNames))] <- replaced
       newEffectiveArgs = structure(effective_args, names = newNames)
-      return(ArgList(effective_args = newEffectiveArgs, explicit_args = newExplicitArgs))
+      return(ArgList$new(effective_args = newEffectiveArgs, explicit_args = newExplicitArgs))
     },
 
     assert_exclusive_args = function(argNames, errorTemplate = "Argument '%s' cannot be specified with '%s'"){
@@ -89,23 +107,24 @@ ArgList <- setRefClass('ArgList',
   )
 )
 
+#' @export
 `[[.ArgList` <- function(x, argName) {
   x$effective_args[[argName]]
 }
 
-
+#' @export
 `[.ArgList` <- function(x, argNames) {
   x$effective_args[argNames]
 }
 
+#' @export
 `names.ArgList` <- function(x) {
   names(x$effective_args)
 }
 
-# Envir defaults to its caller's envir.
 #' Create a ArgList isntance
 #' 
-#' Create a ArgList isntance from the calling environment
+#' Create a ArgList isntance from the calling environment, normally within an api function with a lengthy argument list.
 #' @param envir an environment, default as the calling environment
 #' @param default_args A list of default arguments
 #' @return ArgList instance
@@ -137,6 +156,6 @@ newArgList = function(envir = parent.frame(), default_args = list()) {
   }
   # Find non-explicit default args (ie. missing args but with a default value)
   defaultArgs = default_args[!names(default_args) %in% names(explicitArgs)]
-  return(ArgList(explicit_args = explicitArgs,
+  return(ArgList$new(explicit_args = explicitArgs,
                  effective_args = c(explicitArgs, defaultArgs)))
 }

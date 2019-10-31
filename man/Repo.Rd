@@ -16,7 +16,8 @@ Repo class depends on a package-level dependency object 'DEP'
 \item \href{#method-to_df}{\code{Repo$to_df()}}
 \item \href{#method-run_only}{\code{Repo$run_only()}}
 \item \href{#method-register_schema}{\code{Repo$register_schema()}}
-\item \href{#method-load_schema}{\code{Repo$load_schema()}}
+\item \href{#method-load_schema_from_cache}{\code{Repo$load_schema_from_cache()}}
+\item \href{#method-load_schema_from_db}{\code{Repo$load_schema_from_db()}}
 \item \href{#method-remove_array_versions}{\code{Repo$remove_array_versions()}}
 }
 }
@@ -97,18 +98,37 @@ Register an array schema into the Repo
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-load_schema"></a>}}
-\subsection{Method \code{load_schema()}}{
-Load an array schema from scidb.
-NOTE: No caching involved, always load from scidb
+\if{html}{\out{<a id="method-load_schema_from_cache"></a>}}
+\subsection{Method \code{load_schema_from_cache()}}{
+Load schema from Repo's cache
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Repo$load_schema(array_name, ns = self$namespace)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Repo$load_schema_from_cache(schema_alias)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{array_name}}{Array name without namespace}
+\item{\code{schema_alias}}{Alias of the array, not actual array name}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Cached ArraySchema or NULL if not found
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-load_schema_from_db"></a>}}
+\subsection{Method \code{load_schema_from_db()}}{
+Load an array schema from scidb.
+NOTE: No caching involved, always load from scidb
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Repo$load_schema_from_db(array_name, ns = private$namespace)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{array_name}}{Array name without namespace. Not array alias.}
 
 \item{\code{namespace}}{Scidb namespace, which defaults to the Repo's namespace}
 }

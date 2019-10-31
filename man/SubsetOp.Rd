@@ -62,7 +62,7 @@ SubsetOp details to be added here
 \subsection{Method \code{select_copy()}}{
 Create a new SubsetOp using self as a template.
 
-Nothing except the \code{selected_fields} is changed.
+Nothing except the \code{self$selected} is changed.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{SubsetOp$select_copy(fields, replace = TRUE)}\if{html}{\out{</div>}}
 }
@@ -70,9 +70,9 @@ Nothing except the \code{selected_fields} is changed.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{fields}}{selected_fields in the new SubsetOp}
+\item{\code{fields}}{self$selected in the new SubsetOp}
 
-\item{\code{replace}}{whehter \code{fields} replaces or supplements the \code{selected_fields}}
+\item{\code{replace}}{whehter \code{fields} replaces or supplements the \code{self$selected}}
 }
 \if{html}{\out{</div>}}
 }
