@@ -15,5 +15,5 @@ newArgList(envir = parent.frame(), default_args = list())
 ArgList instance
 }
 \description{
-Create a ArgList isntance from the calling environment
+Create a ArgList isntance from the calling environment, normally within an api function with a lengthy argument list.
 }

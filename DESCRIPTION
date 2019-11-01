@@ -36,3 +36,4 @@ Collate:
     'write_op.R'
     'repo.R'
     'package.R'
+    'repo_base.R'

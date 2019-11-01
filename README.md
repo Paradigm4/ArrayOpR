@@ -3,10 +3,10 @@ R package for object-oriented scidb operations/operands
 
 ## Installation
 ```{r}
-devtools::install_github("Paradigm4/ArrayOpR", ref = 'dev_v18')
+devtools::install_github("Paradigm4/ArrayOpR", ref = 'v19_v18')
 ```
 
-To remove arrayop,
+To remove `arrayop`,
 ```{r}
 remove.packages('arrayop')
 ```

@@ -12,7 +12,7 @@ Encapsulate arg list of function calls to avoid length argument passing among R 
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-.choose_list}{\code{ArgList$.choose_list()}}
+\item \href{#method-new}{\code{ArgList$new()}}
 \item \href{#method-get_len}{\code{ArgList$get_len()}}
 \item \href{#method-has_args}{\code{ArgList$has_args()}}
 \item \href{#method-has_all_args}{\code{ArgList$has_all_args()}}
@@ -28,10 +28,10 @@ Encapsulate arg list of function calls to avoid length argument passing among R 
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-.choose_list"></a>}}
-\subsection{Method \code{.choose_list()}}{
+\if{html}{\out{<a id="method-new"></a>}}
+\subsection{Method \code{new()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArgList$.choose_list(explicit)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ArgList$new(explicit_args, effective_args)}\if{html}{\out{</div>}}
 }
 
 }
