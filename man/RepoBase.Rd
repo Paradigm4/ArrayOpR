@@ -17,20 +17,17 @@ Version-specific logic/behaviors should be implemented in RepoBase sub-classes.
 \item \href{#method-new}{\code{RepoBase$new()}}
 \item \href{#method-query}{\code{RepoBase$query()}}
 \item \href{#method-execute}{\code{RepoBase$execute()}}
-\item \href{#method-to_df}{\code{RepoBase$to_df()}}
-\item \href{#method-run_only}{\code{RepoBase$run_only()}}
-\item \href{#method-register_schema}{\code{RepoBase$register_schema()}}
-\item \href{#method-load_schema_from_cache}{\code{RepoBase$load_schema_from_cache()}}
-\item \href{#method-load_schema_from_db}{\code{RepoBase$load_schema_from_db()}}
-\item \href{#method-remove_array_versions}{\code{RepoBase$remove_array_versions()}}
+\item \href{#method-clone}{\code{RepoBase$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-new"></a>}}
 \subsection{Method \code{new()}}{
-Initialize function
+Initialize function.
 
 Create a new Repo instance
+
+Do NOT call this \code{initialize} function directly. Call \code{newRepo} instead to get a new Repo instance.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RepoBase$new(default_namespace, dependency_object = NULL)}\if{html}{\out{</div>}}
 }
@@ -48,130 +45,55 @@ Create a new Repo instance
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-query"></a>}}
 \subsection{Method \code{query()}}{
+Run a query and expect results
+
+Delegate to Repo's \code{dep$query} function
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RepoBase$query(afl, ...)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{afl}}{Scidb AFL statement}
+
+\item{\code{...}}{Extra settings passed to \code{dep$query} function}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-execute"></a>}}
 \subsection{Method \code{execute()}}{
+Run a command and do not expect results
+
+Delegate to Repo's \code{dep$execute} function
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RepoBase$execute(afl, ...)}\if{html}{\out{</div>}}
 }
 
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-to_df"></a>}}
-\subsection{Method \code{to_df()}}{
-Get a data frame from any ArrayOp instance or raw AFL
-
-\strong{NOTE} if \code{only_attributes = T}, then \code{op$to_afl(drop_dims = T)} which may differ from the default \code{op$to_afl()}
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RepoBase$to_df(what, ...)}\if{html}{\out{</div>}}
-}
-
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{what}}{An ArrayOp instance or raw AFL}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-a data.frame
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-run_only"></a>}}
-\subsection{Method \code{run_only()}}{
-Run scidb statements without expecting results
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RepoBase$run_only(what, ...)}\if{html}{\out{</div>}}
-}
+\item{\code{afl}}{Scidb AFL statement}
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{what}}{An ArrayOp instance or raw AFL
-If \code{what} is an \code{ArrayOp} instance, \code{what$to_afl()} will be used as the raw AFL}
+\item{\code{...}}{Extra settings passed to \code{dep$execute} function}
 }
 \if{html}{\out{</div>}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-register_schema"></a>}}
-\subsection{Method \code{register_schema()}}{
-Register an array schema into the Repo
+\if{html}{\out{<a id="method-clone"></a>}}
+\subsection{Method \code{clone()}}{
+The objects of this class are cloneable with this method.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RepoBase$register_schema(alias, array_name)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RepoBase$clone(deep = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{alias}}{a user friendly name for a scidb array}
-
-\item{\code{array_name}}{the actual array name in scidb}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-load_schema_from_cache"></a>}}
-\subsection{Method \code{load_schema_from_cache()}}{
-Load schema from Repo's cache
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RepoBase$load_schema_from_cache(schema_alias)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{schema_alias}}{Alias of the array, not actual array name}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Cached ArraySchema or NULL if not found
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-load_schema_from_db"></a>}}
-\subsection{Method \code{load_schema_from_db()}}{
-Load an array schema from scidb.
-NOTE: No caching involved, always load from scidb
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RepoBase$load_schema_from_db(array_name, ns = private$namespace)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{array_name}}{Array name without namespace. Not array alias.}
-
-\item{\code{namespace}}{Scidb namespace, which defaults to the Repo's namespace}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-remove_array_versions"></a>}}
-\subsection{Method \code{remove_array_versions()}}{
-Remove versions of array snapshots
-If only \code{alias} is specified, remove all but the most recent version.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RepoBase$remove_array_versions(alias, version_id, keep)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{alias}}{a user friendly name for a scidb array}
-
-\item{\code{version_id}}{remove all versions up the \code{version_id}}
-
-\item{\code{keep}}{remove all but the last \code{keep} versions}
+\item{\code{deep}}{Whether to make a deep clone.}
 }
 \if{html}{\out{</div>}}
 }

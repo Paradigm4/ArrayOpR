@@ -18,6 +18,7 @@ The constructor function performs validation.
 \item \href{#method-new}{\code{JoinOp$new()}}
 \item \href{#method-.raw_afl}{\code{JoinOp$.raw_afl()}}
 \item \href{#method-.keep_dimensions}{\code{JoinOp$.keep_dimensions()}}
+\item \href{#method-clone}{\code{JoinOp$clone()}}
 }
 }
 \if{html}{
@@ -72,5 +73,21 @@ e.g. equi_join creates two artificial dimensions and discard any existing dimens
 \if{html}{\out{<div class="r">}}\preformatted{JoinOp$.keep_dimensions()}\if{html}{\out{</div>}}
 }
 
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-clone"></a>}}
+\subsection{Method \code{clone()}}{
+The objects of this class are cloneable with this method.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{JoinOp$clone(deep = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{deep}}{Whether to make a deep clone.}
+}
+\if{html}{\out{</div>}}
+}
 }
 }

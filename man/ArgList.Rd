@@ -25,6 +25,7 @@ Encapsulate arg list of function calls to avoid length argument passing among R 
 \item \href{#method-rename}{\code{ArgList$rename()}}
 \item \href{#method-assert_exclusive_args}{\code{ArgList$assert_exclusive_args()}}
 \item \href{#method-to_exprs_list}{\code{ArgList$to_exprs_list()}}
+\item \href{#method-clone}{\code{ArgList$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -133,5 +134,21 @@ Encapsulate arg list of function calls to avoid length argument passing among R 
 \if{html}{\out{<div class="r">}}\preformatted{ArgList$to_exprs_list(explicit = FALSE)}\if{html}{\out{</div>}}
 }
 
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-clone"></a>}}
+\subsection{Method \code{clone()}}{
+The objects of this class are cloneable with this method.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArgList$clone(deep = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{deep}}{Whether to make a deep clone.}
+}
+\if{html}{\out{</div>}}
+}
 }
 }

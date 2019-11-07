@@ -17,6 +17,7 @@ WriteOp is implemented with scidb \code{insert} or \code{store} operator.
 \itemize{
 \item \href{#method-new}{\code{WriteOp$new()}}
 \item \href{#method-.raw_afl}{\code{WriteOp$.raw_afl()}}
+\item \href{#method-clone}{\code{WriteOp$clone()}}
 }
 }
 \if{html}{
@@ -51,5 +52,21 @@ Create a new WriteOp instance
 \if{html}{\out{<div class="r">}}\preformatted{WriteOp$.raw_afl()}\if{html}{\out{</div>}}
 }
 
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-clone"></a>}}
+\subsection{Method \code{clone()}}{
+The objects of this class are cloneable with this method.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{WriteOp$clone(deep = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{deep}}{Whether to make a deep clone.}
+}
+\if{html}{\out{</div>}}
+}
 }
 }

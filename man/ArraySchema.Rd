@@ -18,6 +18,7 @@ It can be also constructed manually for test or array creation.
 \itemize{
 \item \href{#method-new}{\code{ArraySchema$new()}}
 \item \href{#method-.raw_afl}{\code{ArraySchema$.raw_afl()}}
+\item \href{#method-clone}{\code{ArraySchema$clone()}}
 }
 }
 \if{html}{
@@ -51,5 +52,21 @@ It can be also constructed manually for test or array creation.
 \if{html}{\out{<div class="r">}}\preformatted{ArraySchema$.raw_afl()}\if{html}{\out{</div>}}
 }
 
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-clone"></a>}}
+\subsection{Method \code{clone()}}{
+The objects of this class are cloneable with this method.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArraySchema$clone(deep = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{deep}}{Whether to make a deep clone.}
+}
+\if{html}{\out{</div>}}
+}
 }
 }

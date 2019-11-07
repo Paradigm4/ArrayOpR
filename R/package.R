@@ -20,6 +20,8 @@ NULL
 
 #' @include db_access.R
 #' @include repo.R
+#' @include repo_v19.R
+#' @include repo_v18.R
 #' @include repo_base.R
 NULL
 

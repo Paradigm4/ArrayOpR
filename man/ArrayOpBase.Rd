@@ -25,6 +25,7 @@ in another operation. Operands and Opreration results can all be denoted by Arra
 \item \href{#method-transform_unpack}{\code{ArrayOpBase$transform_unpack()}}
 \item \href{#method-convert_df}{\code{ArrayOpBase$convert_df()}}
 \item \href{#method-rename_fields}{\code{ArrayOpBase$rename_fields()}}
+\item \href{#method-clone}{\code{ArrayOpBase$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -283,6 +284,22 @@ Create a new CustomizedOp using the same schema data type but renamed fields (ie
 }
 \subsection{Returns}{
 A Customized instance
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-clone"></a>}}
+\subsection{Method \code{clone()}}{
+The objects of this class are cloneable with this method.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$clone(deep = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{deep}}{Whether to make a deep clone.}
+}
+\if{html}{\out{</div>}}
 }
 }
 }

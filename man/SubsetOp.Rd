@@ -18,6 +18,7 @@ SubsetOp details to be added here
 \item \href{#method-new}{\code{SubsetOp$new()}}
 \item \href{#method-.raw_afl}{\code{SubsetOp$.raw_afl()}}
 \item \href{#method-select_copy}{\code{SubsetOp$select_copy()}}
+\item \href{#method-clone}{\code{SubsetOp$clone()}}
 }
 }
 \if{html}{
@@ -73,6 +74,22 @@ Nothing except the \code{self$selected} is changed.
 \item{\code{fields}}{self$selected in the new SubsetOp}
 
 \item{\code{replace}}{whehter \code{fields} replaces or supplements the \code{self$selected}}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-clone"></a>}}
+\subsection{Method \code{clone()}}{
+The objects of this class are cloneable with this method.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SubsetOp$clone(deep = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{deep}}{Whether to make a deep clone.}
 }
 \if{html}{\out{</div>}}
 }

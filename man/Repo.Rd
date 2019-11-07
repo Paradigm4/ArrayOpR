@@ -19,6 +19,7 @@ Repo class depends on a package-level dependency object 'DEP'
 \item \href{#method-load_schema_from_cache}{\code{Repo$load_schema_from_cache()}}
 \item \href{#method-load_schema_from_db}{\code{Repo$load_schema_from_db()}}
 \item \href{#method-remove_array_versions}{\code{Repo$remove_array_versions()}}
+\item \href{#method-clone}{\code{Repo$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -152,6 +153,22 @@ If only \code{alias} is specified, remove all but the most recent version.
 \item{\code{version_id}}{remove all versions up the \code{version_id}}
 
 \item{\code{keep}}{remove all but the last \code{keep} versions}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-clone"></a>}}
+\subsection{Method \code{clone()}}{
+The objects of this class are cloneable with this method.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Repo$clone(deep = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{deep}}{Whether to make a deep clone.}
 }
 \if{html}{\out{</div>}}
 }

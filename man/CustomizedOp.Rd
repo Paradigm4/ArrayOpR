@@ -18,6 +18,7 @@ An ArrayOp sub-class with all properties customized for flexibility
 \item \href{#method-new}{\code{CustomizedOp$new()}}
 \item \href{#method-.raw_afl}{\code{CustomizedOp$.raw_afl()}}
 \item \href{#method-get_absent_fields}{\code{CustomizedOp$get_absent_fields()}}
+\item \href{#method-clone}{\code{CustomizedOp$clone()}}
 }
 }
 \if{html}{
@@ -66,5 +67,21 @@ An ArrayOp sub-class with all properties customized for flexibility
 \if{html}{\out{<div class="r">}}\preformatted{CustomizedOp$get_absent_fields(fieldNames)}\if{html}{\out{</div>}}
 }
 
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-clone"></a>}}
+\subsection{Method \code{clone()}}{
+The objects of this class are cloneable with this method.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{CustomizedOp$clone(deep = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{deep}}{Whether to make a deep clone.}
+}
+\if{html}{\out{</div>}}
+}
 }
 }
