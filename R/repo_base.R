@@ -78,14 +78,15 @@ newRepo = function(default_namespace = 'ns', dependency_obj){
     "newRepo 'dependency_obj' param is missing function(s): '%s'", paste(missingNames, collapse = ', '))
   
   # Check scidb version
-  scidbVersion = dependency_obj$get_version()
+  fullScidbVersion = dependency_obj$get_version()
   # Use major version for now
-  scidbVersion = gsub("\\..+", '', scidbVersion)
+  scidbVersion = gsub("\\..+", '', fullScidbVersion)
   
   repoClass = switch (scidbVersion,
     '18' = RepoV18,
     '19' = RepoV19
   )
+  assert(!is.null(repoClass), "ERROR in newRepo: unsupported scidb version %s", fullScidbVersion)
   repoClass$new(default_namespace, dependency_obj)
 }
 

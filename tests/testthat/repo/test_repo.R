@@ -49,3 +49,8 @@ test_that("DB dependency delegation", {
   expect_identical(repo$query('afl', times = 3), 'aflaflafl')
   expect_identical(repo$execute('afl'), 'Cmd: afl')
 })
+
+test_that("No matched version", {
+  dep = list(get_version = function() '20.1', query = identity, execute = identity)
+  expect_error(newRepo('ns', dependency_obj = dep), 'unsupported scidb version')
+})
