@@ -1,10 +1,7 @@
 # A base class for other specialized array operands/operations, e.g. SubsetOp, JoinOp, ArraySchema
 
-# Meta key constants
-# KEY.DIM = 'dims'
-# KEY.ATR = 'attrs'
-# KEY.SEL = 'selected'
-
+# Field type constants
+.DT = 'field_data_types'
 
 #' Base class of all ArrayOp classes
 #' @description 
@@ -13,26 +10,14 @@
 #' One operation consists of an scidb operator and [1..*] operands, of which the result can be used as an operand 
 #' in another operation. Operands and Opreration results can all be denoted by ArrayOp.
 #' @export
-ArrayOp <- R6::R6Class("ArrayOp",
+ArrayOpBase <- R6::R6Class("ArrayOpBase",
   private = list(
-    raw_afl = NULL
-    ,
-    validate_fields = NULL
-    ,
-    metaList = NULL
-    ,
-    set_meta = function(key, value) {
-      private$metaList[[key]] <- value
-    }
-    ,
-    get_meta = function(key) {
-      private$metaList[[key]]
-    }
+    info = NULL
   ),
   active = list(
-    dims = function() private$get_meta('dims'),
-    attrs = function() private$get_meta('attrs'),
-    selected = function() private$get_meta('selected'),
+    dims = function() as.character(c()),
+    attrs = function() as.character(c()),
+    selected = function() as.character(c()),
     dims_n_attrs = function() c(self$dims, self$attrs),
     attrs_n_dims = function() c(self$attrs, self$dims)
   ),
@@ -44,17 +29,8 @@ ArrayOp <- R6::R6Class("ArrayOp",
     #' @description 
     #' Base class initialize function, to be called in sub-class 
     #' @param info A list that stores ArrayOp meta data, e.g. field types 
-    initialize = function(
-      raw_afl,
-      dims = as.character(c()), 
-      attrs = as.character(c()),
-      validate_fields = TRUE,
-      dtypes = list(),
-      ... 
-    ) {
-      private$raw_afl = raw_afl
-      private$validate_fields = validate_fields
-      private$metaList = list(dims = dims, attrs = attrs, dtypes = dtypes, ...)  
+    initialize = function(info = NULL) {
+      private$info = info  
     }
     ,
     #' @description 
@@ -64,7 +40,7 @@ ArrayOp <- R6::R6Class("ArrayOp",
     #' @param field_names R character
     #' @return a named list as `field_names`, where absent fields or fields without data types are dropped silently.
     get_field_types = function(field_names){
-      dtypes = private$get_meta('dtypes')[field_names]
+      dtypes = private$info[[.DT]][field_names]
       return(plyr::compact(dtypes))
     }
     ,
@@ -75,8 +51,6 @@ ArrayOp <- R6::R6Class("ArrayOp",
     #    1. whether fields are valid for 'select' or 'filter';
     #    2. whether fields can be used as keys in JoinOp
     get_absent_fields = function(fieldNames) {
-      if(!private$validate_fields)
-        return(NULL)
       absentMarks = !(fieldNames %in% self$dims_n_attrs)
       return(fieldNames[absentMarks])
     }
@@ -146,7 +120,7 @@ ArrayOp <- R6::R6Class("ArrayOp",
 
       # No intent to select fields
       if(!.has_len(selected_fields))
-        return(private$raw_afl)
+        return(self$.raw_afl())
 
       # 'selected_fields' is specified in sub-classes.
       # We need to ensure selected fields are passed on in parent operations.
@@ -245,9 +219,9 @@ ArrayOp <- R6::R6Class("ArrayOp",
     #' @return A CustomizedOp instance
     transform_unpack = function(fields, dtypes = list(), unpack_dim_name = 'z') {
       
-      assert(is.list(fields) && .has_len(fields), "ArrayOp$transform 'fields' arg must be a non-empty list")
+      assert(is.list(fields) && .has_len(fields), "ArrayOpBase$transform 'fields' arg must be a non-empty list")
       assert(!.has_len(dtypes) || all(names(dtypes) != ''),
-        "ArrayOp$transform 'dytypes' arg, if provided, must be a named list, i.e. list(newFieldName='newFieldType',...)")
+        "ArrayOpBase$transform 'dytypes' arg, if provided, must be a named list, i.e. list(newFieldName='newFieldType',...)")
       
       rawAfl = afl(self %unpack% unpack_dim_name)
       

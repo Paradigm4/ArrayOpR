@@ -13,5 +13,5 @@ relative_path <- function(filename, n = 3) {
 
 # When runnning devtools::test(), the working directory is (package root)/tests/testthat/
 
-source("array_op/__source.R", local = TRUE)
+# source("array_op/__source.R", local = TRUE)
 source("repo/__source.R", local = TRUE)
