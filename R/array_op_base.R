@@ -28,6 +28,10 @@ ArrayOp <- R6::R6Class("ArrayOp",
     get_meta = function(key) {
       private$metaList[[key]]
     }
+    ,
+    create_new = function(...){
+      ArrayOp$new(...)
+    }
   ),
   active = list(
     dims = function() private$get_meta('dims'),
@@ -63,9 +67,22 @@ ArrayOp <- R6::R6Class("ArrayOp",
     #' NOTE: private$info has to be defined, otherwise returns NULL
     #' @param field_names R character
     #' @return a named list as `field_names`, where absent fields or fields without data types are dropped silently.
-    get_field_types = function(field_names){
-      dtypes = private$get_meta('dtypes')[field_names]
-      return(plyr::compact(dtypes))
+    get_field_types = function(field_names = NULL){
+      if(is.null(field_names))
+        field_names = self$dims_n_attrs
+      missingFields = base::setdiff(field_names, self$dims_n_attrs)
+      assert_not_has_len(missingFields, 
+        "ERROR: ArrayOp$get_field_types: field_names: Field(s) '%s' invalid in ArrayOp: %s", 
+        paste(missingFields, collapse = ','),
+        private$raw_afl
+      )
+      missingFields = base::setdiff(field_names, names(private$get_meta('dtypes')))
+      assert_not_has_len(missingFields, 
+        "ERROR: ArrayOp$get_field_types: Field(s) '%s' not annotated with dtype in ArrayOp: %s", 
+        paste(missingFields, collapse = ','),
+        private$raw_afl
+      )
+      return(private$get_meta('dtypes')[field_names])
     }
     ,
     #' @description 
@@ -80,6 +97,27 @@ ArrayOp <- R6::R6Class("ArrayOp",
       absentMarks = !(fieldNames %in% self$dims_n_attrs)
       return(fieldNames[absentMarks])
     }
+    # Functions that creat new ArrayOps -------------------------------------------------------------------------------
+    ,
+    where = function(..., expr, missing_fields_error_template = NULL) {
+      
+      filterExpr = if(methods::hasArg('expr')) expr else e_merge(e(...))
+      status = validate_filter_expr(filterExpr, self$dims_n_attrs)
+      if(!status$success){
+        if(.has_len(status$absent_fields)){
+          if(is.null(missing_fields_error_template))
+            missing_fields_error_template = 
+              sprintf("ERROR: ArrayOp$where: Field(s) '%%s' not found in ArrayOp: %s", private$raw_afl)
+          stopf(missing_fields_error_template, paste(status$absent_fields, collapse = ','))
+        }
+        stop(paste(status$error_msgs, collapse = '\n'))
+      }
+      newRawAfl = afl(private$raw_afl %filter% afl_filter_from_expr(filterExpr))
+      private$create_new(newRawAfl, self$dims, self$attrs, 
+        private$validate_fields, dtypes = private$get_meta('dtypes'))
+    }
+
+    # Old -------------------------------------------------------------------------------------------------------------
     ,
     #' @description 
     #' Validate a filter expression ('filterExpr' must be a single R call expression)

@@ -66,20 +66,13 @@ test_that("Reigstered schemas are stored in schema registry", {
   expect_identical(repo$meta$schema_registry, list(a = 'ns.A', b = 'ns.B'))
 })
 
-test_that("Can not get an schema from an un-registered alias", {
+test_that("Create ArrayOp instance for registered array schema aliases", {
   dep = list(get_scidb_version = function() '18.1', query = function(x) 42, execute = function(x) 'cmd', 
     get_schema_df = function(x) data.frame(name = 'a', dtype = 'string', is_dimension = F))
   repo = newRepo('ns', dep)
   repo$register_schema_alias_by_array_name('a', 'A')
   schema = repo$get_alias_schema('a')
   expect_identical(schema$to_afl(), 'ns.A')
+  expect_error(repo$get_alias_schema('non-existent'), 'not registered')
 })
 
-test_that("Can not get an schema from an un-registered alias", {
-  dep = list(get_scidb_version = function() '18.1', query = function(x) 42, execute = function(x) 'cmd', 
-    get_schema_df = identity)
-  repo = newRepo('ns', dep)
-  repo$register_schema_alias_by_array_name('a', 'A')
-  repo$register_schema_alias_by_array_name('b', 'public.B', is_full_name = T)
-  expect_error(repo$get_alias_schema('d'), 'not registered')
-})

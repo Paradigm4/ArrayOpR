@@ -11,6 +11,12 @@ relative_path <- function(filename, n = 3) {
   return(file.path(this.dir, filename))
 }
 
+assert_afl_equal <- function(actual, expected) {
+  actual <- gsub('\\s+', '', actual)
+  expected <- gsub('\\s+', '', expected)
+  testthat::expect_identical(actual, expected)
+}
+
 # When runnning devtools::test(), the working directory is (package root)/tests/testthat/
 
 # source("array_op/__source.R", local = TRUE)

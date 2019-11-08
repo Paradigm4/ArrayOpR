@@ -197,7 +197,45 @@ e <- function(...) {
   assert_not_has_len(namedArgs, "Please use == for equality tests with args: %s", paste(namedArgs, collapse = ', '))
   return(structure(allExprs, names = NULL))
 }
+#' Validate a filter expression ('filterExpr' must be a single R call expression)
+    #'
+    #' Current only report errors on:
+    #'   1. Name symbols that are not existing schema fields
+    #'   2. Non-atomic 'values'
+    #' @param filterExpr An rlang::expr
+    #' @return A list object with named elements:
+    #   success:bool, absent_fields: c(''), error_msgs: c('')
+validate_filter_expr = function(filterExpr, allFieldNames) {
+      absentFields = c()
+      errorMsgs = c()
 
+      # a recurrsive function that traverses every element in filterExpr
+      traverseSingleExpr <- function(rExpr) {
+        if (is.name(rExpr)) {
+          symbolName <- as.character(rExpr)
+          if (!is.element(symbolName, allFieldNames)) {
+            assign('absentFields', c(absentFields, symbolName), inherits = TRUE)
+          }
+        } else if (is.call(rExpr)) {
+          # rExpr is a call, then traverse its args
+          lapply(rExpr[-1], traverseSingleExpr)
+        } else {
+          # Neither a name symbol nor a call node, then must be an atomic vector, e.g. 42, c(3, 4), 'abc'
+          if (!is.atomic(rExpr)) {
+            assign('errorMsgs',
+              c(errorMsgs, sprintf("Non-atomic '%s' object can not be used in filter expression", class(rExpr))),
+              inherits = TRUE)
+          }
+        }
+      }
+
+      traverseSingleExpr(filterExpr)
+
+      return(list(
+        success = !.has_len(absentFields) && !.has_len(errorMsgs),
+        absent_fields = absentFields, error_msgs = errorMsgs
+      ))
+    }
 
 # Construct AFL expressions ---------------------------------------------------------------------------------------
 

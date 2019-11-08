@@ -29,11 +29,6 @@ AnyArrayOp  <- R6::R6Class("AnyArrayOp",
   )
 )
 
-assert_afl_equal <- function(actual, expected) {
-  actual <- gsub('\\s+', '', actual)
-  expected <- gsub('\\s+', '', expected)
-  testthat::expect_identical(actual, expected)
-}
 
 # Mock scidb upload and return an ArraySchema
 
