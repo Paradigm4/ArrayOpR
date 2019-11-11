@@ -29,8 +29,11 @@ ArrayOp <- R6::R6Class("ArrayOp",
       private$metaList[[key]]
     }
     ,
-    create_new = function(...){
-      ArrayOp$new(...)
+    # Return the class constructor function. 
+    # Should work in sub-class without requiring class names or constructor function.
+    new = function(...){
+      classConstructor = get(class(self))$new
+      classConstructor(...)
     }
   ),
   active = list(
@@ -54,11 +57,18 @@ ArrayOp <- R6::R6Class("ArrayOp",
       attrs = as.character(c()),
       validate_fields = TRUE,
       dtypes = list(),
-      ... 
+      ...,
+      metaList
     ) {
+      assert(
+        xor(methods::hasArg('metaList'), 
+              methods::hasArg('dims') || methods::hasArg('attrs') || 
+              methods::hasArg('validate_fields') || methods::hasArg('dtypes')
+        ),
+      "ERROR: ArrayOp:initialze: metaList cannot be provided with any of the args: dims, attrs, validate_fields, dtypes")
       private$raw_afl = raw_afl
-      private$validate_fields = validate_fields
-      private$metaList = list(dims = dims, attrs = attrs, dtypes = dtypes, ...)  
+      private$metaList = if(methods::hasArg('metaList')) metaList else
+        private$metaList = list(dims = dims, attrs = attrs, dtypes = dtypes, validate_fields = validate_fields, ...)
     }
     ,
     #' @description 
@@ -92,12 +102,20 @@ ArrayOp <- R6::R6Class("ArrayOp",
     #    1. whether fields are valid for 'select' or 'filter';
     #    2. whether fields can be used as keys in JoinOp
     get_absent_fields = function(fieldNames) {
-      if(!private$validate_fields)
+      if(!private$get_meta('validate_fields'))
         return(NULL)
       absentMarks = !(fieldNames %in% self$dims_n_attrs)
       return(fieldNames[absentMarks])
     }
     # Functions that creat new ArrayOps -------------------------------------------------------------------------------
+    ,
+    #' @description 
+    #' Create a new ArrayOp instance of the same class
+    #' 
+    #' The new instance shares all meta data with the template
+    duplicate_with_same_specs = function(new_afl) {
+      private$new(new_afl, metaList = private$metaList)
+    }
     ,
     where = function(..., expr, missing_fields_error_template = NULL) {
       
@@ -112,11 +130,10 @@ ArrayOp <- R6::R6Class("ArrayOp",
         }
         stop(paste(status$error_msgs, collapse = '\n'))
       }
-      newRawAfl = afl(private$raw_afl %filter% afl_filter_from_expr(filterExpr))
-      private$create_new(newRawAfl, self$dims, self$attrs, 
-        private$validate_fields, dtypes = private$get_meta('dtypes'))
+      newRawAfl = afl(self %filter% afl_filter_from_expr(filterExpr))
+      self$duplicate_with_same_specs(newRawAfl)
     }
-
+    
     # Old -------------------------------------------------------------------------------------------------------------
     ,
     #' @description 

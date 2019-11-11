@@ -1,5 +1,9 @@
 context("Test ArrayOp base class")
 
+
+# Scidb array basics ----------------------------------------------------------------------------------------------
+
+
 test_that("Raw afl, dimensions, attributes work as expected", {
   op = ArrayOp$new("rawafl", c("da", "db"), c("ac", "ad"))
   expect_identical(op$to_afl(), "rawafl")
@@ -36,6 +40,9 @@ test_that("Where an Array using filter expressions", {
   assert_afl_equal(op$where(da < 0, ad == 42)$to_afl(), "filter(rawafl, da < 0 and ad = 42)")
   # Use special functions AND/OR to compose complex filter expressions
   assert_afl_equal(op$where(OR(da != 0, db == 3))$to_afl(), "filter(rawafl, da <> 0 or db = 3)")
+  
+  # Error if filter on non-existent fields
+  expect_error(op$where(nonExistent == 42), 'not found')
 })
 
 test_that("Resultant ArrayOp has the same schema as the original", {
@@ -46,3 +53,13 @@ test_that("Resultant ArrayOp has the same schema as the original", {
   expect_identical(result$attrs, c('ac', 'ad'))
   expect_identical(result$get_field_types(), op$get_field_types())
 })
+
+
+# Select ----------------------------------------------------------------------------------------------------------
+
+# test_that("", {
+#   op = ArrayOp$new("rawafl", c("da", "db"), c("ac", "ad"), 
+#     dtypes = list(ac='string', ad='int32', da='int64', db='int64'))
+#   result = op$select('ac')
+#   assert_afl_equal(result$to_afl(), "project(rawafl, ac)")
+# })
