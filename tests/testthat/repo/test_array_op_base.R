@@ -82,3 +82,140 @@ test_that("Cannot select non-existent fields", {
   expect_error(op$select('non-existent'))
   expect_error(op$select('da', 'non-exis tent'))
 })
+
+
+# Reshape ---------------------------------------------------------------------------------------------------------
+
+Source = ArrayOp$new("s", c("da", "db"), c("ac", "ad"), dtypes = list(ac='dtac', ad='dtad', da='dtda', db='dtdb'))
+
+# 
+# dim_mode = 'keep' by default
+# 
+test_that("Select one attr", {
+  for(t in c(
+    Source$reshape('ac')
+    , Source$reshape(list('ac', 'da'))
+    , Source$reshape(c('ac', 'da', 'db'))
+    , Source$reshape(c('da', 'ac'))
+    , Source$reshape(c('ac', 'da', 'db'), dim_mode = 'keep')
+  )){
+    expect_identical(t$attrs, 'ac')
+    expect_identical(t$dims, c('da', 'db'))
+    expect_identical(t$get_field_types('ac'), list(ac='dtac'))
+    assert_afl_equal(t$to_afl(), "project(s, ac)")
+  }
+})
+test_that("Select two attrs", {
+  for(t in c(
+    Source$reshape(c('ad', 'ac'))
+    , Source$reshape(list('ad', 'ac', 'da'))
+    , Source$reshape(c('ad', 'ac', 'da', 'db'))
+    , Source$reshape(c('ad', 'da', 'ac'))
+    , Source$reshape(c('ad', 'ac', 'da', 'db'), dim_mode = 'keep')
+  )){
+    expect_identical(t$attrs, c('ad', 'ac'))
+    expect_identical(t$dims, c('da', 'db'))
+    expect_identical(t$get_field_types(c('ad', 'ac')), list(ad='dtad', ac='dtac'))
+    assert_afl_equal(t$to_afl(), "project(s, ad, ac)")
+  }
+})
+test_that("Select dims only", {
+  for(t in c(
+    Source$reshape(c('da'), artificial_field = 'z')
+    , Source$reshape(list('da', 'db'), artificial_field = 'z')
+    , Source$reshape(list('db', 'da'), artificial_field = 'z')
+    , Source$reshape(c('da', 'db'), dim_mode = 'keep', artificial_field = 'z')
+  )){
+    expect_identical(t$attrs, 'z')
+    expect_identical(t$dims, c('da', 'db'))
+    expect_identical(t$get_field_types(c('da', 'db')), list(da='dtda', db='dtdb'))
+    assert_afl_equal(t$to_afl(), "project(apply(s, z, null), z)")
+  }
+})
+
+# 
+# dim_mode = 'drop' 
+# 
+test_that("Select existing attributes/dimensions in dim_mode = 'drop'", {
+  # Select attrs
+  t = Source$reshape('ac', dim_mode = 'drop', artificial_field = 'z')
+  expect_identical(t$dims, 'z')
+  expect_identical(t$attrs, 'ac')
+  expect_identical(t$dims_n_attrs, c('z', 'ac'))
+  expect_identical(t$get_field_types(), list(z = 'int64', ac = 'dtac'))
+  assert_afl_equal(t$to_afl(), "project(unpack(s, z), ac)")
+  # Select dims
+  t = Source$reshape('da', dim_mode = 'drop', artificial_field = 'z')
+  expect_identical(t$dims, 'z')
+  expect_identical(t$attrs, 'da')
+  expect_identical(t$dims_n_attrs, c('z', 'da'))
+  expect_identical(t$get_field_types(), list(z = 'int64', da = 'dtda'))
+  assert_afl_equal(t$to_afl(), "project(unpack(s, z), da)")
+  # Select dims and attrs
+  t = Source$reshape(c('ac', 'da'), dim_mode = 'drop', artificial_field = 'z')
+  expect_identical(t$dims, 'z')
+  expect_identical(t$attrs, c('ac', 'da'))
+  expect_identical(t$dims_n_attrs, c('z', 'ac', 'da'))
+  expect_identical(t$get_field_types(), list(z = 'int64', ac = 'dtac', da = 'dtda'))
+  assert_afl_equal(t$to_afl(), "project(unpack(s, z), ac, da)")
+})
+
+test_that("Select new fields in dim_mode = 'drop'", {
+  # Select new fields only
+  t = Source$reshape(list(nfa = 'strlen(ad)', nfb = '42'), 
+    dtypes = list(nfa='int32', nfb='int64'), dim_mode = 'drop', artificial_field = 'z')
+  expect_identical(t$dims, 'z')
+  expect_identical(t$attrs, c('nfa', 'nfb'))
+  expect_identical(t$get_field_types(), list(z = 'int64', nfa = 'int32', nfb = 'int64'))
+  assert_afl_equal(t$to_afl(), "project(apply(unpack(s, z), nfa, strlen(ad), nfb, 42), nfa, nfb)")
+  
+  # Select new fields and existing attrs
+  t = Source$reshape(list('ac', nfa = 'strlen(ad)'), dtypes = list(nfa='int32'), dim_mode = 'drop', artificial_field = 'z')
+  expect_identical(t$dims, 'z')
+  expect_identical(t$attrs, c('ac', 'nfa'))
+  expect_identical(t$get_field_types(), list(z = 'int64', ac = 'dtac', nfa = 'int32'))
+  assert_afl_equal(t$to_afl(), "project(apply(unpack(s, z), nfa, strlen(ad)), ac, nfa)")
+  
+  # Select new fields and existing dims
+  t = Source$reshape(list(nfa = 'strlen(ad)', 'da'), dtypes = list(nfa='int32'), dim_mode = 'drop', artificial_field = 'z')
+  expect_identical(t$dims, 'z')
+  expect_identical(t$attrs, c('nfa', 'da'))
+  expect_identical(t$get_field_types(), list(z = 'int64', nfa = 'int32', da = 'dtda'))
+  assert_afl_equal(t$to_afl(), "project(apply(unpack(s, z), nfa, strlen(ad)), nfa, da)")
+})
+
+# test_that("Select new fields", {
+#   x = ArrayOp$new('x', c('da', 'db'), c('aa', 'ab'))
+#   t = x$reshape(list(newField = 'aa + ab', newConstant = "42", newStringField = "'value'"), unpack_dim_name = 'z')
+#   expect_identical(t$dims_n_attrs, c('z', 'newField', 'newConstant', 'newStringField'))
+#   assert_afl_equal(t$to_afl(),
+#     "project(
+#         apply(unpack(x, z), newField, aa+ab, newConstant, 42, newStringField, 'value'),
+#         newField, newConstant, newStringField
+#       )")
+# })
+# 
+# test_that("Select new fields and existing fields", {
+#   x = ArrayOp$new('x', c('da', 'db'), c('aa', 'ab'))
+#   # Notice 'da', 'ab' are existing fields
+#   t = x$reshape(list(newField = 'aa + ab', newConstant = "42", 'da', 'ab'), unpack_dim_name = 'z')
+#   expect_identical(t$dims_n_attrs, c('z', 'newField', 'newConstant', 'da', 'ab'))
+#   assert_afl_equal(t$to_afl(),
+#     "project(
+#         apply(unpack(x, z), newField, aa+ab, newConstant, 42),
+#         newField, newConstant, da, ab
+#       )")
+# })
+# 
+# test_that("Result field types inherits from the operand, and can be specified", {
+#   x = ArrayOp$new('x', c('da', 'db'), c('aa', 'ab'))
+#   fields = c('z', 'newField', 'newConstant', 'da', 'ab')
+#   # Without a 'dtypes' arg, only existing fields inherit their field types from the operand
+#   t = x$reshape(list(newField = 'aa + ab', newConstant = "42", 'da', 'ab'), unpack_dim_name = 'z')
+#   expect_identical(t$get_field_types(fields), list(da='dt_da', ab='dt_ab'))
+#   # Provide a 'dtypes' for new fields
+#   t = x$reshape(list(newField = 'aa + ab', newConstant = "42", 'da', 'ab'),
+#     dtypes = list(newConstant='int64', newField='string'), unpack_dim_name = 'z')
+#   expect_identical(t$get_field_types(fields), list(newField='string', newConstant='int64', da='dt_da', ab='dt_ab'))
+# })
+

@@ -17,8 +17,6 @@ ArrayOp <- R6::R6Class("ArrayOp",
   private = list(
     raw_afl = NULL
     ,
-    validate_fields = NULL
-    ,
     metaList = NULL
     ,
     set_meta = function(key, value) {
@@ -41,6 +39,7 @@ ArrayOp <- R6::R6Class("ArrayOp",
     dims = function() private$get_meta('dims'),
     attrs = function() private$get_meta('attrs'),
     selected = function() private$get_meta('selected'),
+    dtypes = function() private$get_meta('dtypes'),
     dims_n_attrs = function() c(self$dims, self$attrs),
     attrs_n_dims = function() c(self$attrs, self$dims)
   ),
@@ -56,8 +55,8 @@ ArrayOp <- R6::R6Class("ArrayOp",
       raw_afl,
       dims = as.character(c()), 
       attrs = as.character(c()),
-      validate_fields = TRUE,
       dtypes = list(),
+      validate_fields = TRUE,
       ...,
       metaList
     ) {
@@ -83,17 +82,17 @@ ArrayOp <- R6::R6Class("ArrayOp",
         field_names = self$dims_n_attrs
       missingFields = base::setdiff(field_names, self$dims_n_attrs)
       assert_not_has_len(missingFields, 
-        "ERROR: ArrayOp$get_field_types: field_names: Field(s) '%s' invalid in ArrayOp: %s", 
+        "ERROR: ArrayOp$get_field_types: field_names: Field(s) '%s' not found in ArrayOp: %s", 
         paste(missingFields, collapse = ','),
         private$raw_afl
       )
-      missingFields = base::setdiff(field_names, names(private$get_meta('dtypes')))
+      missingFields = base::setdiff(field_names, names(self$dtypes))
       assert_not_has_len(missingFields, 
         "ERROR: ArrayOp$get_field_types: Field(s) '%s' not annotated with dtype in ArrayOp: %s", 
         paste(missingFields, collapse = ','),
         private$raw_afl
       )
-      return(private$get_meta('dtypes')[field_names])
+      return(self$dtypes[field_names])
     }
     ,
     #' @description 
@@ -162,6 +161,64 @@ ArrayOp <- R6::R6Class("ArrayOp",
       newMeta[['selected']] <- fieldNames
       self$new(private$raw_afl, metaList = newMeta)
     }
+    ,
+    #' @description 
+    #' Create a new ArrayOp instance with a different schema/shape
+    #' 
+    #' @param select a non-empty list, where named items are new derived attributes and
+    #' unamed string values are existing dimensions/attributes.
+    #' @param dtypes
+    reshape = function(select, dtypes = NULL, dim_mode = 'keep', artificial_field = .random_attr_name()) {
+      
+      assert_has_len(select,
+        "ERROR: ArrayOp$reshape: 'select' param must be a non-empty character list, but got: %s", select)
+      
+      existingFields = if(.has_len(names(select))) select[names(select) == ''] else {
+        as.character(select)
+      }
+      
+      selectFieldNames = .ifelse(!.has_len(names(select)), as.character(select),
+        mapply(function(name, value){
+          if(name == '') value else name
+        }, names(select), select, USE.NAMES = F)
+      )
+      newFields = select[names(select) != '']
+      newFieldNames = names(newFields)
+      mergedDtypes = c(self$dtypes, dtypes)
+      
+      keep = function(){
+        selectedOldAttrs = base::intersect(existingFields, self$attrs)
+        attrs = c(selectedOldAttrs, newFieldNames)
+        inner = if(.has_len(newFieldNames)) afl(self, afl_join_fields(newFieldNames, newFields)) else self$to_afl()
+        
+        newAfl = if(.has_len(attrs)) afl(inner %project% attrs) 
+          else {
+            attrs = artificial_field
+            afl(inner %apply% c(artificial_field, 'null') %project% artificial_field)
+          }
+        self$new(newAfl, self$dims, attrs, mergedDtypes, validate_fields = private$get_meta('validate_fields'))
+      }
+      
+      drop = function() {
+        unpacked = afl(self %unpack% artificial_field)
+        newAfl = if(.has_len(newFieldNames)) 
+          afl(unpacked %apply% afl_join_fields(newFieldNames, newFields) %project% selectFieldNames) 
+        else afl(unpacked %project% selectFieldNames)
+        newDtypes = c(mergedDtypes[selectFieldNames], structure('int64', names = artificial_field))
+        self$new(newAfl, artificial_field, selectFieldNames, newDtypes, validate_fields = private$get_meta('validate_fields'))
+      }
+      
+      ignore_in_parent = function() {
+        identity
+      }
+      
+      switch (dim_mode,
+        'keep' = keep,
+        'drop' = drop,
+        'ignore_in_parent' = ignore_in_parent,
+        stopf("ERROR: ArrayOp$reshape: invalid 'dim_mode' %s.", dim_mode)
+      ) ()
+    }
     
 
     # AFL -------------------------------------------------------------------------------------------------------------
@@ -191,49 +248,6 @@ ArrayOp <- R6::R6Class("ArrayOp",
     
     # Old -------------------------------------------------------------------------------------------------------------
     ,
-    #' @description 
-    #' Validate a filter expression ('filterExpr' must be a single R call expression)
-    #'
-    #' Current only report errors on:
-    #'   1. Name symbols that are not existing schema fields
-    #'   2. Non-atomic 'values'
-    #' @param filterExpr An rlang::expr
-    #' @return A list object with named elements:
-    #   success:bool, absent_fields: c(''), error_msgs: c('')
-    validate_filter_expr = function(filterExpr) {
-      allFieldNames <- self$dims_n_attrs
-
-      absentFields = c()
-      errorMsgs = c()
-
-      # a recurrsive function that traverses every element in filterExpr
-      traverseSingleExpr <- function(rExpr) {
-        if (is.name(rExpr)) {
-          symbolName <- as.character(rExpr)
-          if (!is.element(symbolName, allFieldNames)) {
-            assign('absentFields', c(absentFields, symbolName), inherits = TRUE)
-          }
-        } else if (is.call(rExpr)) {
-          # rExpr is a call, then traverse its args
-          lapply(rExpr[-1], traverseSingleExpr)
-        } else {
-          # Neither a name symbol nor a call node, then must be an atomic vector, e.g. 42, c(3, 4), 'abc'
-          if (!is.atomic(rExpr)) {
-            assign('errorMsgs',
-              c(errorMsgs, sprintf("Non-atomic '%s' object can not be used in filter expression", class(rExpr))),
-              inherits = TRUE)
-          }
-        }
-      }
-
-      traverseSingleExpr(filterExpr)
-
-      return(list(
-        success = !.has_len(absentFields) && !.has_len(errorMsgs),
-        absent_fields = absentFields, error_msgs = errorMsgs
-      ))
-    },
-
     #' @description 
     #' Functions below translate array operations into SciDb AFL expressions/statements.
     #'
