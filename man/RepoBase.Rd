@@ -17,6 +17,9 @@ Version-specific logic/behaviors should be implemented in RepoBase sub-classes.
 \item \href{#method-new}{\code{RepoBase$new()}}
 \item \href{#method-query}{\code{RepoBase$query()}}
 \item \href{#method-execute}{\code{RepoBase$execute()}}
+\item \href{#method-register_schema_alias_by_array_name}{\code{RepoBase$register_schema_alias_by_array_name()}}
+\item \href{#method-get_alias_schema}{\code{RepoBase$get_alias_schema()}}
+\item \href{#method-load_schema_from_db}{\code{RepoBase$load_schema_from_db()}}
 \item \href{#method-clone}{\code{RepoBase$clone()}}
 }
 }
@@ -81,6 +84,35 @@ Delegate to Repo's \code{dep$execute} function
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-register_schema_alias_by_array_name"></a>}}
+\subsection{Method \code{register_schema_alias_by_array_name()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RepoBase$register_schema_alias_by_array_name(
+  alias,
+  array_name,
+  is_full_name = FALSE
+)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-get_alias_schema"></a>}}
+\subsection{Method \code{get_alias_schema()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RepoBase$get_alias_schema(alias)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-load_schema_from_db"></a>}}
+\subsection{Method \code{load_schema_from_db()}}{
+Load Array Schema directly from scidb
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RepoBase$load_schema_from_db(full_array_name)}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-clone"></a>}}

@@ -29,11 +29,12 @@ ArrayOp <- R6::R6Class("ArrayOp",
       private$metaList[[key]]
     }
     ,
-    # Return the class constructor function. 
-    # Should work in sub-class without requiring class names or constructor function.
-    new = function(...){
-      classConstructor = get(class(self))$new
-      classConstructor(...)
+    assert_fields_exist = function(field_names, 
+      errorMsgTemplate = sprintf("ERROR: Field(s) '%%s' not found in ArrayOp: %s", private$raw_afl)) {
+      missingFields = base::setdiff(field_names, self$dims_n_attrs)
+      assert_not_has_len(missingFields, 
+        errorMsgTemplate, paste(missingFields, collapse = ',')
+      )
     }
   ),
   active = list(
@@ -109,16 +110,28 @@ ArrayOp <- R6::R6Class("ArrayOp",
     }
     # Functions that creat new ArrayOps -------------------------------------------------------------------------------
     ,
+    # Return the class constructor function. 
+    # Should work in sub-class without requiring class names or constructor function.
+    new = function(...){
+      classConstructor = get(class(self))$new
+      classConstructor(...)
+    }
+    ,
     #' @description 
     #' Create a new ArrayOp instance of the same class
     #' 
     #' The new instance shares all meta data with the template
     duplicate_with_same_specs = function(new_afl) {
-      private$new(new_afl, metaList = private$metaList)
+      self$new(new_afl, metaList = private$metaList)
     }
     ,
+    #' @description 
+    #' Create a new ArrayOp instance by using a filter expression on the parent ArrayOp
+    #' 
+    #' Similar to SQL where clause.
+    #' @param missing_fields_error_template Error template for missing fields. 
+    #' Only one %s is allowed which is substituted with an concatnation of the missing fields separated by commas.
     where = function(..., expr, missing_fields_error_template = NULL) {
-      
       filterExpr = if(methods::hasArg('expr')) expr else e_merge(e(...))
       status = validate_filter_expr(filterExpr, self$dims_n_attrs)
       if(!status$success){
@@ -132,6 +145,48 @@ ArrayOp <- R6::R6Class("ArrayOp",
       }
       newRawAfl = afl(self %filter% afl_filter_from_expr(filterExpr))
       self$duplicate_with_same_specs(newRawAfl)
+    }
+    ,
+    #' @description 
+    #' Create a new ArrayOp instance with selected fields
+    #' 
+    #' NOTE: this does NOT change the to_afl output, but explicitly state which field(s) are retained if used in
+    #' a parent operation that changes its schema, e.g. equi_join or to_df(only_attributes = T)
+    #' @param ... Which field(s) are retained during a schema-change operation
+    select = function(...) {
+      fieldNames = c(...)
+      assert(is.character(fieldNames) || is.null(fieldNames), 
+        "ERROR: ArrayOp$select: ... must be a character or NULL, but got: %s", fieldNames)
+      private$assert_fields_exist(fieldNames, "ArrayOp$select")
+      newMeta = private$metaList
+      newMeta[['selected']] <- fieldNames
+      self$new(private$raw_afl, metaList = newMeta)
+    }
+    
+
+    # AFL -------------------------------------------------------------------------------------------------------------
+    ,
+    #' @description 
+    #' Return AFL when self used as an operand in another parent operation.
+    #' 
+    #' Implemented by calling to_afl_explicit with `selected_fields = self$selected`
+    #'
+    #' @param drop_dims Whether self dimensions will be dropped in parent operations
+    #' By default, dimensions are not dropped in parent operation
+    #' But in some operations, dimensions are dropped or converted to attributes
+    #' e.g. equi_join creates two artificial dimensions and discard any existing dimensions of two operands.
+    to_afl = function() {
+      return(private$raw_afl)
+    }
+    ,
+    #' @description 
+    #' Return AFL suitable for retrieving data.frame.
+    #'
+    #' scidb::iquery has a param `only_attributes`, which, if set TRUE, will effectively drop all dims.
+    #' @param drop_dims Whether self's dimensions are dropped when generating AFL for data.frame conversion
+    #' @return AFL string
+    to_df_afl = function(drop_dims = FALSE, artificial_attr = .random_attr_name()) {
+      return(self$to_afl(drop_dims, artificial_attr = artificial_attr))
     }
     
     # Old -------------------------------------------------------------------------------------------------------------
@@ -187,7 +242,7 @@ ArrayOp <- R6::R6Class("ArrayOp",
     #' Doing so equips sub-classes with sensible behavior defined below.
     #' @return  AFL when self used as an operand in another parent operation without considering fields selection
     .raw_afl = function() {
-      stopf('raw_afl function NOT implemented in %s class', class(self))
+      private$raw_afl
     },
 
     #' @description 
@@ -224,30 +279,9 @@ ArrayOp <- R6::R6Class("ArrayOp",
       # Because 'apply' doesn't work on array dimensions
       return(afl(self$.raw_afl() %apply% c(artificial_attr, 'null')
             %project% artificial_attr))
-    },
+    }
 
-    #' @description 
-    #' Return AFL when self used as an operand in another parent operation.
-    #' 
-    #' Implemented by calling to_afl_explicit with `selected_fields = self$selected`
-    #'
-    #' @param drop_dims Whether self dimensions will be dropped in parent operations
-    #' By default, dimensions are not dropped in parent operation
-    #' But in some operations, dimensions are dropped or converted to attributes
-    #' e.g. equi_join creates two artificial dimensions and discard any existing dimensions of two operands.
-    to_afl = function(drop_dims = FALSE, artificial_attr = .random_attr_name()) {
-      return(self$.to_afl_explicit(drop_dims, self$selected, artificial_attr = artificial_attr))
-    },
-
-    #' @description 
-    #' Return AFL suitable for retrieving data.frame.
-    #'
-    #' scidb::iquery has a param `only_attributes`, which, if set TRUE, will effectively drop all dims.
-    #' @param drop_dims Whether self's dimensions are dropped when generating AFL for data.frame conversion
-    #' @return AFL string
-    to_df_afl = function(drop_dims = FALSE, artificial_attr = .random_attr_name()) {
-      return(self$to_afl(drop_dims, artificial_attr = artificial_attr))
-    },
+    ,
 
     #' @description 
     #' Generate afl for ArrayOp used in a join context (equi_join).

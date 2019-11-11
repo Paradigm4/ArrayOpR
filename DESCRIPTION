@@ -25,6 +25,7 @@ Collate:
     'afl_utils.R'
     'arg_list.R'
     'array_op_base.R'
+    'array_op_base_old.R'
     'array_schema.R'
     'customized_op.R'
     'db_access.R'

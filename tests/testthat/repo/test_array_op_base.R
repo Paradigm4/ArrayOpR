@@ -57,9 +57,28 @@ test_that("Resultant ArrayOp has the same schema as the original", {
 
 # Select ----------------------------------------------------------------------------------------------------------
 
-# test_that("", {
-#   op = ArrayOp$new("rawafl", c("da", "db"), c("ac", "ad"), 
-#     dtypes = list(ac='string', ad='int32', da='int64', db='int64'))
-#   result = op$select('ac')
-#   assert_afl_equal(result$to_afl(), "project(rawafl, ac)")
-# })
+test_that("Select fields do not change afl output", {
+  op = ArrayOp$new("rawafl", c("da", "db"), c("ac", "ad"), dtypes = list(ac='string', ad='int32', da='int64', db='int64'))
+  for(result in c(
+    op$select('ac'),
+    op$select('ad'),
+    op$select('da', 'db', 'ac', 'ad'),
+    op$select()
+  )){
+    # The original op will not be changed
+    expect_equal(length(op$selected), 0)
+    resultSelected = result$selected
+    assert_afl_equal(result$to_afl(), "rawafl")
+    # Derive another op
+    another = result$select('da', 'ad')
+    assert_afl_equal(another$to_afl(), 'rawafl')
+    expect_identical(another$selected, c('da', 'ad'))
+    expect_identical(result$selected, resultSelected)  # result's selected fields are not changed
+  }
+})
+
+test_that("Cannot select non-existent fields", {
+  op = ArrayOp$new("rawafl", c("da", "db"), c("ac", "ad"), dtypes = list(ac='string', ad='int32', da='int64', db='int64'))
+  expect_error(op$select('non-existent'))
+  expect_error(op$select('da', 'non-exis tent'))
+})
