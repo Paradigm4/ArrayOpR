@@ -34,6 +34,16 @@ ArrayOp <- R6::R6Class("ArrayOp",
         errorMsgTemplate, paste(missingFields, collapse = ',')
       )
     }
+    ,
+    validate_join_operand = function(side, operand, keys){
+      assert(inherits(operand, class(self)),
+        "JoinOp arg '%s' must be class of [%s], but got '%s' instead.",
+        side, 'ArrayOpBase', class(operand))
+      assert(is.character(keys) && .has_len(keys),
+        "Join arg 'on_%s' must be a non-empty R character, but got '%s' instead", side, class(keys))
+      absentKeys = operand$get_absent_fields(keys)
+      assert_not_has_len(absentKeys, "JoinOp arg 'on_%s' has invalid fields: %s", side, paste(absentKeys, collapse = ', '))
+    }
   ),
   active = list(
     dims = function() private$get_meta('dims'),
@@ -215,11 +225,93 @@ ArrayOp <- R6::R6Class("ArrayOp",
       switch (dim_mode,
         'keep' = keep,
         'drop' = drop,
-        'ignore_in_parent' = ignore_in_parent,
+        # 'ignore_in_parent' = ignore_in_parent,
         stopf("ERROR: ArrayOp$reshape: invalid 'dim_mode' %s.", dim_mode)
       ) ()
     }
-    
+    ,
+    #' @description 
+    #' Create a new ArrayOp instance by joining with another ArrayOp 
+    #' 
+    #' Currently implemented with scidb `equi_join` operator.
+    #' @param right The other ArrayOp instance to join with.
+    #' @param on_left R character vector. Join keys from the left (self).
+    #' @param on_right R character vector. Join keys from the `right`. Must be of the same length as `on_left`
+    #' @param settings `equi_join` settings, a named list where both key and values are strings. 
+    #' @param dim_mode How to reshape the resultant ArrayOp. Same meaning as in `ArrayOp$reshape` function. 
+    #' By default, dim_mode = 'keep', the artificial dimensions, namely `instance_id` and `value_no` from `equi_join`
+    #' are retained. If set to 'drop', the artificial dimensions will be removed. See `ArrayOp$reshape` for more details.
+    #' @param artificial_field As in `ArrayOp$reshpae`, it defaults to a random field name. It can be safely ignored in
+    #' client code. It exists only for test purposes. 
+    join = function(right, on_left, on_right, settings = NULL, 
+      .dim_mode = 'keep', .artificial_field = .random_attr_name()) {
+      # Validate left and right
+      left = self
+      private$validate_join_operand('left', left, on_left)
+      private$validate_join_operand('right', right, on_right)
+      
+      # Assert left and right keys lengths match
+      assert(length(on_left) == length(on_right),
+        "ERROR: ArrayOp$join: on_left[%s field(s)] and on_right[%s field(s)] must have the same length.",
+        length(on_left), length(on_right))
+      
+      # Validate settings
+      if(.has_len(settings)){
+        settingKeys <- names(settings)
+        if(!.has_len(settingKeys) || any(settingKeys == '')){
+          stop("ERROR: ArrayOp$join: Settings must be a named list and each setting item must have a non-empty name when creating a JoinOp")
+        }
+      }
+      # Validate selected fields
+      hasSelected = .has_len(left$selected) || .has_len(right$selected)
+      if(hasSelected && !.has_len(left$selected))
+        assert(right$selected != on_right, 
+          "ERROR: ArrayOp$join: Right operand's selected field(s) '%s' cannot be its join key(s) '%s' when there is no left operand fields selected.
+Please select on left operand's fields OR do not select on either operand. Look into 'equi_join' documentation for more details.",
+          paste(right$selected, collapse = ','), paste(on_right, collapse = ','))
+      
+      # Create setting items
+      
+      mergedSettings <- c(list(left_names = on_left, right_names = on_right), settings)
+      # Values of setting items cannot be quoted.
+      # But the whole 'key=value' needs single quotation according to equi_join plugin specs
+      settingItems = mapply(private$to_setting_item_str, names(mergedSettings), mergedSettings)
+
+      keep_dimensions = (function(){
+        val = settings[['keep_dimensions']]
+        .has_len(val) && val == 1
+      })()
+      
+      # Join two operands
+      joinExpr <- sprintf("equi_join(%s, %s, %s)",
+        left$to_join_operand_afl(on_left, keep_dimensions = keep_dimensions, artificial_attr = .artificial_field), 
+        right$to_join_operand_afl(on_right, keep_dimensions = keep_dimensions, artificial_attr = .artificial_field),
+        paste(settingItems, collapse = ', '))
+      
+      
+      dims = list(instance_id = 'int64', value_no = 'int64')
+      attrs = (function() {
+        if(hasSelected){
+          rightSelected = base::setdiff(right$selected, on_right)  # Right key(s) are ignored/masked in equi_join
+          as.character(unique(c(left$selected, rightSelected)))
+        }
+        else{
+          leftRetained = if(keep_dimensions) left$attrs_n_dims else left$attrs
+          rightRetained = if(keep_dimensions) right$attrs_n_dims else right$attrs
+          return(c(on_left,
+            base::setdiff(leftRetained, on_left),
+            base::setdiff(rightRetained, on_right)
+          ))
+        }
+      }) ()
+      dtypes = plyr::compact(c(dims, c(left$dtypes, right$dtypes)[attrs]))
+      selectedFields = if(hasSelected) attrs else NULL
+      joinedOp = self$new(joinExpr, names(dims), attrs, dtypes = dtypes)
+      if(hasSelected) {
+        joinedOp$reshape(select = selectedFields, dim_mode = .dim_mode, artificial_field = .artificial_field)
+      }
+      else joinedOp
+    }
 
     # AFL -------------------------------------------------------------------------------------------------------------
     ,

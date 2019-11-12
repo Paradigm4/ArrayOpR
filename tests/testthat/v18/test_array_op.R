@@ -55,10 +55,10 @@ test_that("Join on selected attr", {
   expect_identical(joinOp$get_field_types(c('laa')), list(laa = 'dt_laa'))
 })
 
-test_that("Join on single attribute with dim_mode = 'drop'", {
+test_that("Join on single attribute with .dim_mode = 'drop'", {
   
   joinOp = arrL$select('laa')$join(arrR, on_left = 'laa', on_right = 'raa', 
-    dim_mode = 'drop', artificial_field = 'z')
+    .dim_mode = 'drop', .artificial_field = 'z')
   assert_afl_equal(joinOp$to_afl(), "
   project(unpack(
     equi_join(
@@ -94,7 +94,7 @@ test_that("Join on multiple attrs", {
   
   joinOp = left$join(right, 
     on_left = c('laa', 'lab'), on_right = c('raa', 'rac'), 
-    dim_mode = 'drop', artificial_field = 'z')
+    .dim_mode = 'drop', .artificial_field = 'z')
 
   assert_afl_equal(joinOp$to_afl(), "project(unpack(
   equi_join(
@@ -229,7 +229,7 @@ test_that("Join on dims and select attrs", {
 })
 
 test_that("Special case when operand's selected fields are all join keys", {
-  joinOp = arrL$select('lda')$join(arrR, on_left = 'lda', on_right = 'raa', artificial_field = 'x')
+  joinOp = arrL$select('lda')$join(arrR, on_left = 'lda', on_right = 'raa', .artificial_field = 'x')
   assert_afl_equal(joinOp$to_afl(), "
   project(
     equi_join(
@@ -239,7 +239,7 @@ test_that("Special case when operand's selected fields are all join keys", {
     ), lda
   )
   ")
-  joinOp = arrL$select('lda', 'ldb')$join(arrR, on_left = 'lda', on_right = 'raa', artificial_field = 'x')
+  joinOp = arrL$select('lda', 'ldb')$join(arrR, on_left = 'lda', on_right = 'raa', .artificial_field = 'x')
   assert_afl_equal(joinOp$to_afl(), "
   project(
     equi_join(
@@ -248,7 +248,7 @@ test_that("Special case when operand's selected fields are all join keys", {
         'left_names=lda', 'right_names=raa'
     ), lda, ldb
   )")
-  joinOp = arrL$select('lda', 'laa')$join(arrR, on_left = 'lda', on_right = 'raa', artificial_field = 'x')
+  joinOp = arrL$select('lda', 'laa')$join(arrR, on_left = 'lda', on_right = 'raa', .artificial_field = 'x')
   assert_afl_equal(joinOp$to_afl(), "
   project(
     equi_join(
@@ -260,7 +260,7 @@ test_that("Special case when operand's selected fields are all join keys", {
   ")
   
   # Keep_dimensions = 1
-  joinOp = arrL$select('lda')$join(arrR, on_left = 'lda', on_right = 'raa', artificial_field = 'x', 
+  joinOp = arrL$select('lda')$join(arrR, on_left = 'lda', on_right = 'raa', .artificial_field = 'x', 
     setting = list(keep_dimensions = 1))
   assert_afl_equal(joinOp$to_afl(), "
   project(
@@ -271,7 +271,7 @@ test_that("Special case when operand's selected fields are all join keys", {
     ), lda
   )
   ")
-  joinOp = arrL$select('lda', 'ldb')$join(arrR, on_left = 'lda', on_right = 'raa', artificial_field = 'x', 
+  joinOp = arrL$select('lda', 'ldb')$join(arrR, on_left = 'lda', on_right = 'raa', .artificial_field = 'x', 
     setting = list(keep_dimensions = 1))
   assert_afl_equal(joinOp$to_afl(), "
   project(
@@ -282,7 +282,7 @@ test_that("Special case when operand's selected fields are all join keys", {
     ), lda, ldb
   )
   ")
-  joinOp = arrL$select('lda', 'laa')$join(arrR, on_left = 'lda', on_right = 'raa', artificial_field = 'x', 
+  joinOp = arrL$select('lda', 'laa')$join(arrR, on_left = 'lda', on_right = 'raa', .artificial_field = 'x', 
     setting = list(keep_dimensions = 1))
   assert_afl_equal(joinOp$to_afl(), "
   project(
@@ -395,7 +395,7 @@ test_that("When left has selected_fields, JoinOp will project on equi_join which
   i = 1
   for(lSelected in leftSelected){
     left = do.call(arrL$select, as.list(lSelected))
-    joinOp = left$join(arrR, on_left = 'ldc', on_right = 'raa', artificial_field = 'xxx', settings=list(keep_dimensions=1))
+    joinOp = left$join(arrR, on_left = 'ldc', on_right = 'raa', .artificial_field = 'xxx', settings=list(keep_dimensions=1))
     expect_identical(joinOp$dims, c('instance_id', 'value_no'))
     expect_identical(joinOp$selected, NULL)
     expect_identical(joinOp$attrs, lSelected)

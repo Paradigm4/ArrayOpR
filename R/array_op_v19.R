@@ -15,18 +15,18 @@
 #' @export
 ArrayOpV19 <- R6::R6Class("ArrayOpV19",
   inherit = ArrayOp,
-  private = NULL,
-  active = NULL,
-  
-  # Public ----------------------------------------------------------------------------------------------------------
-  public = list(
-    initialize = function(...) {
-      super$initialize(...)
-    }
-    ,
-    join = function(right, on_left, on_right, settings = NULL) {
-      'join_v19'
+  private = list(
+    to_setting_item_str = function(key, value) {
+      valueStr = if(length(value) > 1) sprintf("(%s)", paste(value, collapse = ',')) else value
+      sprintf("%s:%s", key, valueStr)
     }
   )
+  ,
+  active = NULL
+  ,
+  # Public ----------------------------------------------------------------------------------------------------------
+  public = list(
+    
+    
+  )
 )
-
