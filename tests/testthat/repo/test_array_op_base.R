@@ -1,11 +1,12 @@
-context("Test ArrayOp base class")
+context("Test newArrayOp base class")
 
+newArrayOp = function(...) ArrayOpBase$new(...)
 
 # Scidb array basics ----------------------------------------------------------------------------------------------
 
 
 test_that("Raw afl, dimensions, attributes work as expected", {
-  op = ArrayOp$new("rawafl", c("da", "db"), c("ac", "ad"))
+  op = newArrayOp("rawafl", c("da", "db"), c("ac", "ad"))
   expect_identical(op$to_afl(), "rawafl")
   expect_identical(op$dims, c("da", "db"))
   expect_identical(op$attrs, c("ac", "ad"))
@@ -14,7 +15,7 @@ test_that("Raw afl, dimensions, attributes work as expected", {
 })
 
 test_that("Raw afl, dimensions, attributes work as expected with data types", {
-  op = ArrayOp$new("rawafl", c("da", "db"), c("ac", "ad"), 
+  op = newArrayOp("rawafl", c("da", "db"), c("ac", "ad"), 
     dtypes = list(ac='string', ad='int32', da='int64', db='int64'))
   expect_identical(op$to_afl(), "rawafl")
   expect_identical(op$dims, c("da", "db"))
@@ -31,7 +32,7 @@ test_that("Raw afl, dimensions, attributes work as expected with data types", {
 # Where ----------------------------------------------------------------------------------------------------------
 
 test_that("Where an Array using filter expressions", {
-  op = ArrayOp$new("rawafl", c("da", "db"), c("ac", "ad"), 
+  op = newArrayOp("rawafl", c("da", "db"), c("ac", "ad"), 
     dtypes = list(ac='string', ad='int32', da='int64', db='int64'))
   # Original op won't be affected
   expect_identical(op$to_afl(), 'rawafl')
@@ -45,8 +46,8 @@ test_that("Where an Array using filter expressions", {
   expect_error(op$where(nonExistent == 42), 'not found')
 })
 
-test_that("Resultant ArrayOp has the same schema as the original", {
-  op = ArrayOp$new("rawafl", c("da", "db"), c("ac", "ad"), 
+test_that("Resultant newArrayOp has the same schema as the original", {
+  op = newArrayOp("rawafl", c("da", "db"), c("ac", "ad"), 
     dtypes = list(ac='string', ad='int32', da='int64', db='int64'))
   result = op$where(da <0 , ad == 42)
   expect_identical(result$dims, c('da', 'db'))
@@ -58,7 +59,7 @@ test_that("Resultant ArrayOp has the same schema as the original", {
 # Select ----------------------------------------------------------------------------------------------------------
 
 test_that("Select fields do not change afl output", {
-  op = ArrayOp$new("rawafl", c("da", "db"), c("ac", "ad"), dtypes = list(ac='string', ad='int32', da='int64', db='int64'))
+  op = newArrayOp("rawafl", c("da", "db"), c("ac", "ad"), dtypes = list(ac='string', ad='int32', da='int64', db='int64'))
   for(result in c(
     op$select('ac'),
     op$select('ad'),
@@ -78,7 +79,7 @@ test_that("Select fields do not change afl output", {
 })
 
 test_that("Cannot select non-existent fields", {
-  op = ArrayOp$new("rawafl", c("da", "db"), c("ac", "ad"), dtypes = list(ac='string', ad='int32', da='int64', db='int64'))
+  op = newArrayOp("rawafl", c("da", "db"), c("ac", "ad"), dtypes = list(ac='string', ad='int32', da='int64', db='int64'))
   expect_error(op$select('non-existent'))
   expect_error(op$select('da', 'non-exis tent'))
 })
@@ -86,7 +87,7 @@ test_that("Cannot select non-existent fields", {
 
 # Reshape ---------------------------------------------------------------------------------------------------------
 
-Source = ArrayOp$new("s", c("da", "db"), c("ac", "ad"), dtypes = list(ac='dtac', ad='dtad', da='dtda', db='dtdb'))
+Source = newArrayOp("s", c("da", "db"), c("ac", "ad"), dtypes = list(ac='dtac', ad='dtad', da='dtda', db='dtdb'))
 
 # 
 # dim_mode = 'keep' by default

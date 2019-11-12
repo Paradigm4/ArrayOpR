@@ -31,13 +31,18 @@ Features:
 \itemize{
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id=".to_afl_explicit">}\href{../../arrayop/html/ArrayOpBase.html#method-.to_afl_explicit}{\code{arrayop::ArrayOpBase$.to_afl_explicit()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="convert_df">}\href{../../arrayop/html/ArrayOpBase.html#method-convert_df}{\code{arrayop::ArrayOpBase$convert_df()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="create_new">}\href{../../arrayop/html/ArrayOpBase.html#method-create_new}{\code{arrayop::ArrayOpBase$create_new()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="duplicate_with_same_specs">}\href{../../arrayop/html/ArrayOpBase.html#method-duplicate_with_same_specs}{\code{arrayop::ArrayOpBase$duplicate_with_same_specs()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="get_absent_fields">}\href{../../arrayop/html/ArrayOpBase.html#method-get_absent_fields}{\code{arrayop::ArrayOpBase$get_absent_fields()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="join">}\href{../../arrayop/html/ArrayOpBase.html#method-join}{\code{arrayop::ArrayOpBase$join()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="rename_fields">}\href{../../arrayop/html/ArrayOpBase.html#method-rename_fields}{\code{arrayop::ArrayOpBase$rename_fields()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="reshape">}\href{../../arrayop/html/ArrayOpBase.html#method-reshape}{\code{arrayop::ArrayOpBase$reshape()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="select">}\href{../../arrayop/html/ArrayOpBase.html#method-select}{\code{arrayop::ArrayOpBase$select()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="to_afl">}\href{../../arrayop/html/ArrayOpBase.html#method-to_afl}{\code{arrayop::ArrayOpBase$to_afl()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="to_df_afl">}\href{../../arrayop/html/ArrayOpBase.html#method-to_df_afl}{\code{arrayop::ArrayOpBase$to_df_afl()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="to_join_operand_afl">}\href{../../arrayop/html/ArrayOpBase.html#method-to_join_operand_afl}{\code{arrayop::ArrayOpBase$to_join_operand_afl()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="transform_unpack">}\href{../../arrayop/html/ArrayOpBase.html#method-transform_unpack}{\code{arrayop::ArrayOpBase$transform_unpack()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="validate_filter_expr">}\href{../../arrayop/html/ArrayOpBase.html#method-validate_filter_expr}{\code{arrayop::ArrayOpBase$validate_filter_expr()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="where">}\href{../../arrayop/html/ArrayOpBase.html#method-where}{\code{arrayop::ArrayOpBase$where()}}\out{</span>}
 }
 \out{</details>}
 }

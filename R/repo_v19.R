@@ -9,10 +9,8 @@
 RepoV19 <- R6::R6Class("RepoV19",
   inherit = RepoBase,
   private = NULL,
-  active = list(
-    ArrayOp = function() ArrayOpV19$new
-  ),
-  
+  active = NULL
+  ,
   public = list(
     #' @description
     #' Initialize function.
@@ -26,6 +24,8 @@ RepoV19 <- R6::R6Class("RepoV19",
       super$initialize(...)
       private$set_meta('repo_version', "RepoV19")
     }
+    ,
+    ArrayOp = function(...) ArrayOpV19$new(...)
   )
 )
 

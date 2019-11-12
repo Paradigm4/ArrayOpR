@@ -21,14 +21,12 @@ RepoBase <- R6::R6Class("RepoBase",
     get_meta = function(key) {
       private$metaList[[key]]
     }
-  ),
+  )
+  ,
   active = list(
     meta = function() private$metaList
-    ,
-    ArrayOp = function(...) 
-      stop("RepoBase$ArrayOp function should be overriden by sub-classes. Cannot be called directly in the base class.")
-  ),
-  
+  )
+  ,
   public = list(
     #' @description
     #' Initialize function.
@@ -69,6 +67,13 @@ RepoBase <- R6::R6Class("RepoBase",
     execute = function(afl, ...) {
       private$dep$execute(afl, ...)
     }
+    ,
+    #' @description 
+    #' Create a new ArrayOp instance with the proper scidb version
+    #' 
+    #' Should be overriden by sub-classes
+    ArrayOp = function(...) 
+      stop("RepoBase$ArrayOp function should be overriden by sub-classes. Cannot be called directly in the base class.")
 
     # Schema management -----------------------------------------------------------------------------------------------
     ,

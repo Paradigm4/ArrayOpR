@@ -14,7 +14,7 @@
 #' in another operation. Operands and Opreration results can all be denoted by ArrayOp.
 #' @export
 ArrayOpV19 <- R6::R6Class("ArrayOpV19",
-  inherit = ArrayOp,
+  inherit = ArrayOpBase,
   private = list(
     to_setting_item_str = function(key, value) {
       valueStr = if(length(value) > 1) sprintf("(%s)", paste(value, collapse = ',')) else value

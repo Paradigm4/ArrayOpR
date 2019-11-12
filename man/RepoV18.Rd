@@ -18,6 +18,7 @@ Version-specific logic/behaviors should be implemented in RepoBase sub-classes.
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-new}{\code{RepoV18$new()}}
+\item \href{#method-ArrayOp}{\code{RepoV18$ArrayOp()}}
 \item \href{#method-clone}{\code{RepoV18$clone()}}
 }
 }
@@ -53,6 +54,14 @@ Do NOT call this \code{initialize} function directly. Call \code{newRepo} instea
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-ArrayOp"></a>}}
+\subsection{Method \code{ArrayOp()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RepoV18$ArrayOp(...)}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-clone"></a>}}

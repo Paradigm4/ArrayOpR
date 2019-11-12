@@ -17,6 +17,7 @@ Version-specific logic/behaviors should be implemented in RepoBase sub-classes.
 \item \href{#method-new}{\code{RepoBase$new()}}
 \item \href{#method-query}{\code{RepoBase$query()}}
 \item \href{#method-execute}{\code{RepoBase$execute()}}
+\item \href{#method-ArrayOp}{\code{RepoBase$ArrayOp()}}
 \item \href{#method-register_schema_alias_by_array_name}{\code{RepoBase$register_schema_alias_by_array_name()}}
 \item \href{#method-get_alias_schema}{\code{RepoBase$get_alias_schema()}}
 \item \href{#method-load_schema_from_db}{\code{RepoBase$load_schema_from_db()}}
@@ -84,6 +85,17 @@ Delegate to Repo's \code{dep$execute} function
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-ArrayOp"></a>}}
+\subsection{Method \code{ArrayOp()}}{
+Create a new ArrayOp instance with the proper scidb version
+
+Should be overriden by sub-classes
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RepoBase$ArrayOp(...)}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-register_schema_alias_by_array_name"></a>}}

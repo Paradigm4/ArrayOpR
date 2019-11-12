@@ -26,6 +26,8 @@ Collate:
     'arg_list.R'
     'array_op_base.R'
     'array_op_base_old.R'
+    'array_op_v18.R'
+    'array_op_v19.R'
     'array_schema.R'
     'customized_op.R'
     'db_access.R'

@@ -278,11 +278,11 @@ afl <- function(...) {
       }
     }
     evaluated = eval(obj, envir = envir)
-    assert(inherits(evaluated, c('character', 'numeric', 'logical', 'ArrayOp')) || is.null(evaluated), 
+    assert(inherits(evaluated, c('character', 'numeric', 'logical', 'ArrayOpBase')) || is.null(evaluated), 
       "afl(...): unsupported operand data type. 
-      Operand must be (or inherit) character, numeric, logical, or ArrayOp, but class(%s) = '%s'", 
+      Operand must be (or inherit) character, numeric, logical, or ArrayOpBase, but class(%s) = '%s'", 
       deparse(obj), class(evaluated))
-    if(inherits(evaluated, 'ArrayOp')){
+    if(inherits(evaluated, 'ArrayOpBase')){
       evaluated = evaluated$to_afl()
     } else if(is.logical(evaluated)) {
       evaluated = tolower(paste(evaluated, collapse = ','))

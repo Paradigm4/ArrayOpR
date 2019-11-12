@@ -13,7 +13,7 @@
 #' One operation consists of an scidb operator and [1..*] operands, of which the result can be used as an operand 
 #' in another operation. Operands and Opreration results can all be denoted by ArrayOp.
 #' @export
-ArrayOp <- R6::R6Class("ArrayOp",
+ArrayOpBase <- R6::R6Class("ArrayOpBase",
   private = list(
     raw_afl = NULL
     ,
@@ -121,7 +121,7 @@ ArrayOp <- R6::R6Class("ArrayOp",
     ,
     # Return the class constructor function. 
     # Should work in sub-class without requiring class names or constructor function.
-    new = function(...){
+    create_new = function(...){
       classConstructor = get(class(self))$new
       classConstructor(...)
     }
@@ -131,7 +131,7 @@ ArrayOp <- R6::R6Class("ArrayOp",
     #' 
     #' The new instance shares all meta data with the template
     duplicate_with_same_specs = function(new_afl) {
-      self$new(new_afl, metaList = private$metaList)
+      self$create_new(new_afl, metaList = private$metaList)
     }
     ,
     #' @description 
@@ -169,7 +169,7 @@ ArrayOp <- R6::R6Class("ArrayOp",
       private$assert_fields_exist(fieldNames, "ArrayOp$select")
       newMeta = private$metaList
       newMeta[['selected']] <- fieldNames
-      self$new(private$raw_afl, metaList = newMeta)
+      self$create_new(private$raw_afl, metaList = newMeta)
     }
     ,
     #' @description 
@@ -206,7 +206,7 @@ ArrayOp <- R6::R6Class("ArrayOp",
             attrs = artificial_field
             afl(inner %apply% c(artificial_field, 'null') %project% artificial_field)
           }
-        self$new(newAfl, self$dims, attrs, mergedDtypes, validate_fields = private$get_meta('validate_fields'))
+        self$create_new(newAfl, self$dims, attrs, mergedDtypes, validate_fields = private$get_meta('validate_fields'))
       }
       
       drop = function() {
@@ -215,7 +215,7 @@ ArrayOp <- R6::R6Class("ArrayOp",
           afl(unpacked %apply% afl_join_fields(newFieldNames, newFields) %project% selectFieldNames) 
         else afl(unpacked %project% selectFieldNames)
         newDtypes = c(mergedDtypes[selectFieldNames], structure('int64', names = artificial_field))
-        self$new(newAfl, artificial_field, selectFieldNames, newDtypes, validate_fields = private$get_meta('validate_fields'))
+        self$create_new(newAfl, artificial_field, selectFieldNames, newDtypes, validate_fields = private$get_meta('validate_fields'))
       }
       
       ignore_in_parent = function() {
@@ -306,7 +306,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
       }) ()
       dtypes = plyr::compact(c(dims, c(left$dtypes, right$dtypes)[attrs]))
       selectedFields = if(hasSelected) attrs else NULL
-      joinedOp = self$new(joinExpr, names(dims), attrs, dtypes = dtypes)
+      joinedOp = self$create_new(joinExpr, names(dims), attrs, dtypes = dtypes)
       if(hasSelected) {
         joinedOp$reshape(select = selectedFields, dim_mode = .dim_mode, artificial_field = .artificial_field)
       }
