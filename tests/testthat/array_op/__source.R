@@ -1,3 +1,4 @@
+context('old array op tests')
 
 .old_func = DEP$df_to_arrayop_func
 # Set up shared code for all tests

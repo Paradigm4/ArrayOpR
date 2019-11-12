@@ -1,4 +1,5 @@
 library(testthat)
+context('test entry')
 
 # Order of sourced files matter. First sourced is loaded into package namespace first.
 
@@ -21,3 +22,5 @@ assert_afl_equal <- function(actual, expected) {
 
 # source("array_op/__source.R", local = TRUE)
 source("repo/__source.R", local = TRUE)
+source("v18/__source.R", local = TRUE)
+source("v19/__source.R", local = TRUE)

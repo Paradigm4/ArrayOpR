@@ -20,3 +20,7 @@ assert_not_has_len <- function(obj, ...) { assert(!rlang::has_length(obj), ...) 
   sprintf("_%s", rawToChar(as.raw(sample(c(65:90,97:122), n, replace=TRUE))))
 }
 
+
+`%u%` = function(lhs, rhs) base::union(lhs, rhs)
+`%-%` = function(lhs, rhs) base::setdiff(lhs, rhs)
+`%n%` = function(lhs, rhs) base::intersect(lhs, rhs)

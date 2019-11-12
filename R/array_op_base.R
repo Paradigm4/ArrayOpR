@@ -314,12 +314,19 @@ ArrayOp <- R6::R6Class("ArrayOp",
 
       dimensions = self$dims
       attributes = self$attrs
-      arrName  = self$.raw_afl()
+      arrName  = self$to_afl()
 
-      applyList <-base::intersect(selectedFields, base::setdiff(dimensions, keyFields))
-      projectList <- base::union(applyList, base::intersect(attributes, selectedFields))
-      specialList <- base::intersect(dimensions, keyFields)   # for joined-on dimensions which we also we want to keep in result
-
+      applyList <- selectedFields %n% (dimensions %-% keyFields)
+      projectList <-  applyList %u% (attributes %n% selectedFields)
+      specialList <- dimensions %n% keyFields   # for joined-on dimensions which we also we want to keep in result
+      # applyList <-base::intersect(selectedFields, base::setdiff(dimensions, keyFields))
+      # projectList <- base::union(applyList, base::intersect(attributes, selectedFields))
+      # specialList <- base::intersect(dimensions, keyFields)   # for joined-on dimensions which we also we want to keep in result
+      if(keep_dimensions){
+        applyList = applyList %-% self$dims
+        projectList = projectList %-% self$dims
+        # specialList = specialList %-% self$dims
+      } 
       # case-1: When no attrs projected && selected dimensions, we need to create an artificial attr to project on.
       if(.has_len(specialList) && !.has_len(projectList) && .has_len(selectedFields)){
         res = afl(arrName %apply% c(artificial_attr, 'null') %project% artificial_attr)

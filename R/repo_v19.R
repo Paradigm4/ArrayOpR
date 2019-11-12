@@ -10,7 +10,7 @@ RepoV19 <- R6::R6Class("RepoV19",
   inherit = RepoBase,
   private = NULL,
   active = list(
-    ArrayOp = function() ArrayOp$new
+    ArrayOp = function() ArrayOpV19$new
   ),
   
   public = list(

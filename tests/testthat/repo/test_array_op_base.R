@@ -184,38 +184,3 @@ test_that("Select new fields in dim_mode = 'drop'", {
   assert_afl_equal(t$to_afl(), "project(apply(unpack(s, z), nfa, strlen(ad)), nfa, da)")
 })
 
-# test_that("Select new fields", {
-#   x = ArrayOp$new('x', c('da', 'db'), c('aa', 'ab'))
-#   t = x$reshape(list(newField = 'aa + ab', newConstant = "42", newStringField = "'value'"), unpack_dim_name = 'z')
-#   expect_identical(t$dims_n_attrs, c('z', 'newField', 'newConstant', 'newStringField'))
-#   assert_afl_equal(t$to_afl(),
-#     "project(
-#         apply(unpack(x, z), newField, aa+ab, newConstant, 42, newStringField, 'value'),
-#         newField, newConstant, newStringField
-#       )")
-# })
-# 
-# test_that("Select new fields and existing fields", {
-#   x = ArrayOp$new('x', c('da', 'db'), c('aa', 'ab'))
-#   # Notice 'da', 'ab' are existing fields
-#   t = x$reshape(list(newField = 'aa + ab', newConstant = "42", 'da', 'ab'), unpack_dim_name = 'z')
-#   expect_identical(t$dims_n_attrs, c('z', 'newField', 'newConstant', 'da', 'ab'))
-#   assert_afl_equal(t$to_afl(),
-#     "project(
-#         apply(unpack(x, z), newField, aa+ab, newConstant, 42),
-#         newField, newConstant, da, ab
-#       )")
-# })
-# 
-# test_that("Result field types inherits from the operand, and can be specified", {
-#   x = ArrayOp$new('x', c('da', 'db'), c('aa', 'ab'))
-#   fields = c('z', 'newField', 'newConstant', 'da', 'ab')
-#   # Without a 'dtypes' arg, only existing fields inherit their field types from the operand
-#   t = x$reshape(list(newField = 'aa + ab', newConstant = "42", 'da', 'ab'), unpack_dim_name = 'z')
-#   expect_identical(t$get_field_types(fields), list(da='dt_da', ab='dt_ab'))
-#   # Provide a 'dtypes' for new fields
-#   t = x$reshape(list(newField = 'aa + ab', newConstant = "42", 'da', 'ab'),
-#     dtypes = list(newConstant='int64', newField='string'), unpack_dim_name = 'z')
-#   expect_identical(t$get_field_types(fields), list(newField='string', newConstant='int64', da='dt_da', ab='dt_ab'))
-# })
-
