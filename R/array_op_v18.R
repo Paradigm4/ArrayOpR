@@ -38,35 +38,21 @@ ArrayOpV18 <- R6::R6Class("ArrayOpV18",
     #'
     #' @return CustomizedOp ready to be used in a WriteOp as the dataset
     #' @export
-    load_file = function(filepath, aio_settings = list(), field_conversion = NULL, skip_cols = NULL){
+    load_file = function(filepath, aio_settings = list(), field_conversion = NULL, file_headers = NULL){
       
-      # if(methods::hasArg('template')){
-      #   assert(inherits(template, c('ArrayOpBase')),
-      #     "get_aio_op: unknown template class '%s'. Must be ArrayOpBase sub-class", class(template))
-      #   fieldTypes = template$get_field_types(template$dims_n_attrs)
-      # } else {
-      #   fieldTypes = field_types
-      # }
-      
-      fieldTypes = self$get_field_types(self$dims_n_attrs)
+      if(!.has_len(file_headers))
+        file_headers = self$dims_n_attrs
+
+      lookup = structure(0:(length(file_headers) - 1), names = file_headers)
+      colIndexes = vapply(self$dims_n_attrs, function(x) lookup[x], integer(1))
+      colIndexes = colIndexes[!is.na(colIndexes)]
+
+      fieldTypes = self$get_field_types(names(colIndexes))
       
       # Populate aio settings
-      aio_settings = c(list(path = filepath, num_attributes = length(fieldTypes)), aio_settings)
+      aio_settings = c(list(path = filepath, num_attributes = max(colIndexes) + 1), aio_settings)
       settingItems = mapply(private$to_setting_item_str, names(aio_settings), aio_settings)
       
-      # Calulate column indexes in input file
-      colIndexes = 1:length(fieldTypes) - 1
-      if(.has_len(skip_cols)){
-        lastIndex = 0
-        for(i in 1:length(colIndexes)){
-          j = lastIndex
-          while(j %in% skip_cols){
-            j = j + 1
-          }
-          colIndexes[[i]] <- j
-          lastIndex = j + 1
-        }
-      }
       # cast raw attributes
 
       castedItems = mapply(function(ft, index, name){

@@ -5,67 +5,60 @@ context("Scidb V18.x ArrayOp")
 test_that("Load array from file", {
   template = newArrayOp('L', c('da', 'db'), c('aa', 'ab'), 
     dtypes = list(da='int64', db='int64', aa='string', ab='double'))
-  loaded = template$load_file('file_path')
-  assert_afl_equal(loaded$to_afl(),
+  for(loaded  in c(
+    template$load_file('file_path'),
+    template$load_file('file_path', file_headers = c('da', 'db', 'aa', 'ab'))
+  )){
+    assert_afl_equal(loaded$to_afl(),
+      "project(
+        apply(
+          aio_input('path=file_path', 'num_attributes=4'),
+          da, int64(a0), db, int64(a1), aa, a2, ab, double(a3)
+        ),
+      da, db, aa, ab)")
+  }
+  assert_afl_equal(
+    template$load_file('file_path', file_headers = c('aa', 'ab'))$to_afl(),
     "project(
-      apply(
-        aio_input('path=file_path', 'num_attributes=4'),
-        da, int64(a0), db, int64(a1), aa, a2, ab, double(a3)
-      ),
-    da, db, aa, ab)")
+        apply(
+          aio_input('path=file_path', 'num_attributes=2'),
+          aa, a0, ab, double(a1)
+        ),
+    aa, ab)"
+  )
+  # apply/project'ed fields order follows the template schema, ie. dims + attrs
+  assert_afl_equal(
+    template$load_file('file_path', file_headers = c('aa', 'db'))$to_afl(),
+    "project(
+        apply(
+          aio_input('path=file_path', 'num_attributes=2'),
+          db, int64(a1), aa, a0
+        ),
+    db, aa)"
+  )
 })
 
 test_that("Load array from file with skipped file columns", {
   template = newArrayOp('L', c('da', 'db'), c('aa', 'ab'), 
     dtypes = list(da='int64', db='int64', aa='string', ab='double'))
-  loaded = template$load_file('file_path', skip_cols = 0)
+  loaded = template$load_file('file_path', file_headers = c('skip', 'da', 'db', 'aa', 'ab'))
   assert_afl_equal(loaded$to_afl(),
     "project(
       apply(
-        aio_input('path=file_path', 'num_attributes=4'),
+        aio_input('path=file_path', 'num_attributes=5'),
         da, int64(a1), db, int64(a2), aa, a3, ab, double(a4)
       ),
     da, db, aa, ab)")
-  loaded = template$load_file('file_path', skip_cols = c(1, 2))
+  
+  loaded = template$load_file('file_path', file_headers = c('da', 'skip', 'skip', 'db'))
   assert_afl_equal(loaded$to_afl(),
     "project(
       apply(
         aio_input('path=file_path', 'num_attributes=4'),
-        da, int64(a0), db, int64(a3), aa, a4, ab, double(a5)
+        da, int64(a0), db, int64(a3)
       ),
-    da, db, aa, ab)")
-  loaded = template$load_file('file_path', skip_cols = c(1, 3))
-  assert_afl_equal(loaded$to_afl(),
-    "project(
-      apply(
-        aio_input('path=file_path', 'num_attributes=4'),
-        da, int64(a0), db, int64(a2), aa, a4, ab, double(a5)
-      ),
-    da, db, aa, ab)")
-  loaded = template$load_file('file_path', skip_cols = c(1, 3, 5))
-  assert_afl_equal(loaded$to_afl(),
-    "project(
-      apply(
-        aio_input('path=file_path', 'num_attributes=4'),
-        da, int64(a0), db, int64(a2), aa, a4, ab, double(a6)
-      ),
-    da, db, aa, ab)")
-  loaded = template$load_file('file_path', skip_cols = c(1, 3, 6))
-  assert_afl_equal(loaded$to_afl(),
-    "project(
-      apply(
-        aio_input('path=file_path', 'num_attributes=4'),
-        da, int64(a0), db, int64(a2), aa, a4, ab, double(a5)
-      ),
-    da, db, aa, ab)")
-  loaded = template$load_file('file_path', skip_cols = c(0, 3))
-  assert_afl_equal(loaded$to_afl(),
-    "project(
-      apply(
-        aio_input('path=file_path', 'num_attributes=4'),
-        da, int64(a1), db, int64(a2), aa, a4, ab, double(a5)
-      ),
-    da, db, aa, ab)")
+    da, db)")
+  
 })
 
 test_that("Load array from file with customized field conversion", {
