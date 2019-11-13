@@ -20,6 +20,13 @@ ArrayOpV19 <- R6::R6Class("ArrayOpV19",
       valueStr = if(length(value) > 1) sprintf("(%s)", paste(value, collapse = ',')) else value
       sprintf("%s:%s", key, valueStr)
     }
+    ,
+    to_aio_setting_item_str = function(key, value) {
+      if(is.character(value))
+        value = sprintf("'%s'", value)  # Quote string value(s)
+      valueStr = if(length(value) > 1) sprintf("(%s)", paste(value, collapse = ',')) else value
+      sprintf("%s:%s", key, valueStr)
+    }
   )
   ,
   active = NULL
