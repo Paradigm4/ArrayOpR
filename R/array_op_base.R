@@ -197,9 +197,10 @@ ArrayOpBase <- R6::R6Class("ArrayOpBase",
       mergedDtypes = c(self$dtypes, dtypes)
       
       keep = function(){
-        selectedOldAttrs = base::intersect(existingFields, self$attrs)
-        attrs = c(selectedOldAttrs, newFieldNames)
-        inner = if(.has_len(newFieldNames)) afl(self, afl_join_fields(newFieldNames, newFields)) else self$to_afl()
+        selectedOldAttrs = existingFields %-% self$attrs
+        attrs = selectFieldNames %-% self$dims
+        inner = if(.has_len(newFieldNames)) 
+          afl(self %apply% afl_join_fields(newFieldNames, newFields)) else self$to_afl()
         
         newAfl = if(.has_len(attrs)) afl(inner %project% attrs) 
           else {
