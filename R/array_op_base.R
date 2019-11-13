@@ -1,9 +1,7 @@
 # A base class for other specialized array operands/operations, e.g. SubsetOp, JoinOp, ArraySchema
 
-# Meta key constants
-# KEY.DIM = 'dims'
-# KEY.ATR = 'attrs'
-# KEY.SEL = 'selected'
+MAX_DIM = '4611686018427387903'
+MIN_DIM = '-4611686018427387902'
 
 
 #' Base class of all ArrayOp classes
@@ -130,7 +128,7 @@ ArrayOpBase <- R6::R6Class("ArrayOpBase",
     #' Create a new ArrayOp instance of the same class
     #' 
     #' The new instance shares all meta data with the template
-    duplicate_with_same_specs = function(new_afl) {
+    create_new_with_same_schema = function(new_afl) {
       self$create_new(new_afl, metaList = private$metaList)
     }
     ,
@@ -153,7 +151,7 @@ ArrayOpBase <- R6::R6Class("ArrayOpBase",
         stop(paste(status$error_msgs, collapse = '\n'))
       }
       newRawAfl = afl(self %filter% afl_filter_from_expr(filterExpr))
-      self$duplicate_with_same_specs(newRawAfl)
+      self$create_new_with_same_schema(newRawAfl)
     }
     ,
     #' @description 
@@ -363,6 +361,118 @@ Please select on left operand's fields OR do not select on either operand. Look 
       projectedExpr = afl(applyExpr %project% names(fieldTypes))
       return(self$create_new(projectedExpr, metaList = list()))
     }
+    ,
+    #' @description 
+    #' Create a new ArrayOp by matching a template against a source (self). 
+    #' 
+    #' The result has the same schema with the source.
+    #' All fields in the template are compared to their matching source fields by equality, except for thos in 
+    #' lower_bound/upper_bound which will be used as a range `[lower_bound, upper_bound]`.
+    #' @param template A data.frame or ArrayOp used to reduce the number of source cells without changing its schema
+    #' @param op_mode ['filter', 'cross_between', 'customized']
+    #' @param lower_bound Field names as lower bounds. 
+    #' @param upper_bound Field names as upper bounds.
+    #' @param field_mapping A named list where name is source field name and value is template field name.
+    #' Default NULL: fields are mapped between template and source by field names only. 
+    #' @return A new ArrayOp instance which has the same schema as the source. 
+    match = function(template, op_mode, lower_bound = NULL, upper_bound = NULL, field_mapping = NULL, ...){
+      assert_not_has_len(names(lower_bound) %n% names(field_mapping), 
+        "ERROR: ArrayOp$match: Field names in param 'lower_bound' and 'field_mapping' cannot overlap: '%s'",
+        paste(names(lower_bound) %n% names(field_mapping), collapse = ','))
+      assert_not_has_len(names(upper_bound) %n% names(field_mapping), 
+        "ERROR: ArrayOp$match: Field names in param 'upper_bound' and 'field_mapping' cannot overlap: '%s'",
+        paste(names(upper_bound) %n% names(field_mapping), collapse = ','))
+      
+      filter_mode = function(...){
+        assert(inherits(template, 'data.frame'), 
+          "ERROR: ArrayOp$match: filter mode: template must be a data.frame, but got: %s", class(template))
+        unmatchedCols = names(template) %-% self$dims_n_attrs
+        assert_not_has_len(unmatchedCols, 
+          "ERROR: ArrayOp$match: filter mode: template field(s) not matching the source: '%s'",
+          paste(unmatchedCols, collapse = ','))
+        
+        colTypes = sapply(template, class)
+        needQuotes = colTypes != 'numeric'
+        valueStrTemplates = lapply(needQuotes, .ifelse, "'%s'", "%s")
+        
+        convertRow = function(eachRow, colNames) {
+          rowValues = mapply(sprintf, valueStrTemplates, eachRow)
+          rowItems = mapply(function(name, val){
+            if(name %in% lower_bound) operator = '>='
+            else if(name %in% upper_bound) operator = '<='
+            else operator = '='
+            sprintf("%s%s%s", name, operator, val)
+          }, colNames, rowValues)
+          sprintf(
+            .ifelse(length(rowValues) > 1, "(%s)", "%s"), # String template for a row
+            paste(rowItems, collapse = ' and ')
+          )
+        }
+        
+        filter_afl = paste( apply(template, 1, convertRow, names(template)), collapse = ' or ' )
+        return(afl(self %filter% filter_afl))
+      }
+      
+      cross_between_mode = function(...){
+        assert(inherits(template, 'ArrayOpBase'), 
+          "ERROR: ArrayOp$match: cross_between mode: template must be a ArrayOp instance, but got: %s", class(template))
+        
+        if(!.has_len(field_mapping)){
+          dimMatchMarks = self$dims %in% template$dims_n_attrs
+          matchedDims = template$dims_n_attrs %n% self$dims
+          field_mapping = as.list(structure(matchedDims, names = matchedDims))
+        }
+        else {
+          matchedDims = names(field_mapping)
+          dimMatchMarks = self$dims %in% names(field_mapping)
+        }
+        
+        assert_has_len(matchedDims,
+          "ERROR: ArrayOp$match: cross_between mode: none of the template fields matches the source's dimensions: '%s'",
+          paste(template$dims_n_attrs, collapse = ','))
+        
+        # get region array's attr values
+        getRegionArrayAttrValue = function(default, low){
+          res = rep(default, length(self$dims))
+          for(i in 1:length(self$dims)){
+            mainDimKeyName = self$dims[[i]]
+            if(dimMatchMarks[[i]]){
+              res[[i]] <- sprintf("int64(%s)", field_mapping[[mainDimKeyName]])
+            } 
+            else if(low && mainDimKeyName %in% names(lower_bound)){
+              res[[i]] <- lower_bound[[mainDimKeyName]]
+            }
+            else if(!low && mainDimKeyName %in% names(upper_bound)){
+              res[[i]] <- upper_bound[[mainDimKeyName]]
+            }
+          }
+          return(res)
+        }
+        
+        regionLowAttrValues = getRegionArrayAttrValue(MIN_DIM, low = TRUE)
+        regionHighAttrValues = getRegionArrayAttrValue(MAX_DIM, low = FALSE)
+        
+        regionLowAttrNames = sprintf('_%s_low', self$dims)
+        regionHighAttrNames = sprintf('_%s_high', self$dims)
+        
+        # apply new attributes as the region array in 'cross_between'
+        applyExpr = afl_join_fields(regionLowAttrNames, regionLowAttrValues, regionHighAttrNames, regionHighAttrValues)
+        afl_literal = afl(
+          self %cross_between%
+            afl(template %apply% applyExpr %project%
+                c(regionLowAttrNames, regionHighAttrNames))
+        )
+        return(afl_literal)
+      }
+        
+      aflExpr = switch(op_mode,
+        'filter' = filter_mode,
+        'cross_between' = cross_between_mode,
+        stopf("ERROR: ArrayOp$match: unknown op_mode '%s'.", op_mode)
+      )(...)
+      self$create_new_with_same_schema(aflExpr)
+    }
+
 
     # AFL -------------------------------------------------------------------------------------------------------------
     ,
