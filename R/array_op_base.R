@@ -176,6 +176,8 @@ ArrayOpBase <- R6::R6Class("ArrayOpBase",
     #' @param select a non-empty list, where named items are new derived attributes and
     #' unamed string values are existing dimensions/attributes.
     #' @param dtypes
+    #' @param artificial_field A field name used as the artificial dimension name in `unpack` scidb operator
+    #' By default, a random string is generated.
     reshape = function(select, dtypes = NULL, dim_mode = 'keep', artificial_field = .random_attr_name()) {
       
       assert_has_len(select,
@@ -473,7 +475,47 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       )(...)
       self$create_new_with_same_schema(aflExpr)
     }
-
+    ,
+    #' @description 
+    #' Create a new ArrayOp instance from 'build'ing a data.frame
+    #' 
+    #' All matching fields are built as attributes of the result ArrayOp.
+    #' @param df a data.frame, where all column names must all validate template fields.
+    #' @param artificial_field A field name used as the artificial dimension name in `build` scidb operator
+    #' By default, a random string is generated.
+    #' @return A new ArrayOp instance whose attributes share the same name and data types with the template's fields.
+    build_new = function(df,  artificial_field = .random_attr_name()) {
+      
+      assert(inherits(df, c('data.frame')), "ERROR: ArrayOp$build_new: unknown df class '%s'. 
+Only data.frame is supported", class(df))
+      
+      builtAttrs = names(df)
+      
+      dfNonMatchingCols = builtAttrs %-% self$dims_n_attrs
+      assert_not_has_len(dfNonMatchingCols, "ERROR: ArrayOp$build_new: df column(s) '%s' not found in template %s",
+        paste(dfNonMatchingCols, collapse = ','), self$to_afl())
+      
+      builtDtypes = self$get_field_types(builtAttrs)
+      # Convert a single value to its proper string representation in `build` expressions.
+      stringify_in_build = function(single_value) {
+        if(is.na(single_value) || is.null(single_value))
+          "" # Return an empty string for NA or NULL
+        else if(is.character(single_value) || is.factor(single_value))
+          sprintf("\\'%s\\'", single_value)  # String literals
+        else sprintf("%s", single_value)  # Other types
+      }
+     
+      #' Create a build expression from a data.frame and specified scidb data types
+      attrStr = paste(builtAttrs, builtDtypes, collapse = ',', sep = ':')
+      rowStrs = by(df, 1:nrow(df), function(row){
+        sprintf("(%s)", paste(lapply(row[1,], stringify_in_build), collapse = ','))
+      })
+      afl_literal = sprintf("build(<%s>[%s], '[%s]', true)", 
+        attrStr, artificial_field, paste(rowStrs, collapse = ','))
+      
+      return(self$create_new(afl_literal, artificial_field, builtAttrs, 
+        dtypes = c(list(artificial_field = 'int64'), builtDtypes)))
+    }
 
     # AFL -------------------------------------------------------------------------------------------------------------
     ,
