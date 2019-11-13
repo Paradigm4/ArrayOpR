@@ -485,7 +485,6 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' By default, a random string is generated.
     #' @return A new ArrayOp instance whose attributes share the same name and data types with the template's fields.
     build_new = function(df,  artificial_field = .random_attr_name()) {
-      
       assert(inherits(df, c('data.frame')), "ERROR: ArrayOp$build_new: unknown df class '%s'. 
 Only data.frame is supported", class(df))
       
@@ -515,6 +514,47 @@ Only data.frame is supported", class(df))
       
       return(self$create_new(afl_literal, artificial_field, builtAttrs, 
         dtypes = c(list(artificial_field = 'int64'), builtDtypes)))
+    }
+    ,
+    #' @description 
+    #' Create a new ArrayOp instance that represents a writing data operation
+    #' 
+    #' If the dimension count, attribute count and data types match between the source(self) and target, 
+    #' then no redimension will be performed, otherwise redimension on the source first.
+    #'
+    #' Redimension mode requires all target fields exist on the source disregard of being attributes or dimensions.
+    #' Redimension mode does not check on whether source data types match the target because auto data conversion 
+    #' occurs within scidb where necessary/applicable. 
+    #' @param target A target ArrayOp the source data is written to. 
+    #' @param append Append to existing target array if set to TRUE (default). 
+    #' Otherwise replace the whole target array with the source.
+    write_to = function(target, append = TRUE) {
+      assert(inherits(target, 'ArrayOpBase'),
+        "ERROR: ArrayOp$write_to: param target must be ArrayOp, but got '%s' instead.", class(target))
+      
+      # If exact field dtype match
+      
+      exactDtypeMatch = 
+        length(self$dims) == length(target$dims) &&
+        length(self$attrs) == length(target$attrs) && {
+          srcDtypes = self$get_field_types(self$dims_n_attrs)
+          targetDtypes = target$get_field_types(target$dims_n_attrs)
+          length(srcDtypes) == length(targetDtypes) && 
+            all(as.character(srcDtypes) == as.character(targetDtypes))
+        }
+      
+      src = self
+      if(!exactDtypeMatch){
+        # If data types do not exactly match, redimension is required
+        missingFields = target$dims_n_attrs %-% self$dims_n_attrs
+        assert_not_has_len(missingFields, 
+          "ERROR: ArrayOp$write_to: redimension mode: Source field(s) '%s' not found in Target", 
+          paste(missingFields, collapse = ','))
+        src = afl(self %redimension% target)
+      }
+      
+      afl_literal = if(append) afl(src %insert% target) else afl(src %store% target)
+      return(self$create_new(afl_literal, c(), c()))
     }
 
     # AFL -------------------------------------------------------------------------------------------------------------
