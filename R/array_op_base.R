@@ -423,13 +423,14 @@ Please select on left operand's fields OR do not select on either operand. Look 
           field_mapping = as.list(structure(matchedDims, names = matchedDims))
         }
         else {
-          matchedDims = names(field_mapping)
+          matchedDims = names(field_mapping) %n% self$dims
           dimMatchMarks = self$dims %in% names(field_mapping)
         }
         
         assert_has_len(matchedDims,
-          "ERROR: ArrayOp$match: cross_between mode: none of the template fields matches the source's dimensions: '%s'",
-          paste(template$dims_n_attrs, collapse = ','))
+          "ERROR: ArrayOp$match: cross_between mode: none of the template fields '%s' matches the source's dimensions: '%s'.
+Only dimensions are matched in this mode. Attributes are ignored even if they are provided.",
+          paste(template$dims_n_attrs, collapse = ','), paste(self$dims, collapse = ','))
         
         # get region array's attr values
         getRegionArrayAttrValue = function(default, low){
