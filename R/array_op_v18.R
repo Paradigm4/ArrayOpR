@@ -38,7 +38,7 @@ ArrayOpV18 <- R6::R6Class("ArrayOpV18",
     #'
     #' @return CustomizedOp ready to be used in a WriteOp as the dataset
     #' @export
-    load_file = function(filepath, aio_settings = list(), field_conversion = NULL){
+    load_file = function(filepath, aio_settings = list(), field_conversion = NULL, skip_cols = NULL){
       
       # if(methods::hasArg('template')){
       #   assert(inherits(template, c('ArrayOpBase')),
@@ -54,7 +54,21 @@ ArrayOpV18 <- R6::R6Class("ArrayOpV18",
       aio_settings = c(list(path = filepath, num_attributes = length(fieldTypes)), aio_settings)
       settingItems = mapply(private$to_setting_item_str, names(aio_settings), aio_settings)
       
+      # Calulate column indexes in input file
+      colIndexes = 1:length(fieldTypes) - 1
+      if(.has_len(skip_cols)){
+        lastIndex = 0
+        for(i in 1:length(colIndexes)){
+          j = lastIndex
+          while(j %in% skip_cols){
+            j = j + 1
+          }
+          colIndexes[[i]] <- j
+          lastIndex = j + 1
+        }
+      }
       # cast raw attributes
+
       castedItems = mapply(function(ft, index, name){
         fmt = if(ft == 'string') "%s" else paste0(ft, "(%s)")
         # If there is customized field conversion, use it
@@ -64,7 +78,7 @@ ArrayOpV18 <- R6::R6Class("ArrayOpV18",
           gsub('@', attrName, field_conversion[[name]])  # Replace all @ occurences in template
         else # Otherwise just directly 'cast' it to the right data type if needed.
           sprintf(fmt, attrName)
-      }, fieldTypes, 1:length(fieldTypes) - 1, names(fieldTypes))
+      }, fieldTypes, colIndexes, names(fieldTypes))
       
       aioExpr = afl(afl_join_fields(settingItems) %aio_input% NULL)
       applyExpr = afl(aioExpr %apply% afl_join_fields(names(fieldTypes), castedItems))
