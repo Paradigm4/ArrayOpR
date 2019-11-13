@@ -347,15 +347,6 @@ test_that("cross_between with customized lower/upper bounds (padding)", {
   )")
 })
 
-test_that("upper/lower bound can not overlap with field_mapping", {
-  expect_error(MatchSource$match(t, op_mode = 'cross_between', field_mapping = list(da = 'da', db = 'db_hi'),
-    lower_bound = list(db = 'db_low'), upper_bound = list(db = 'db_hi')), "cannot overlap")
-  expect_error(MatchSource$match(t, op_mode = 'cross_between', field_mapping = list(da = 'da', db = 'db_hi'),
-    upper_bound = list(db = 'db_hi')), "cannot overlap")
-  expect_error(MatchSource$match(t, op_mode = 'cross_between', field_mapping = list(da = 'da', db = 'db_hi'),
-    lower_bound = list(db = 'db_low')), "cannot overlap")
-})
-
 test_that("explicitly specify field match between the main operand and the template", {
   s = newArrayOp('operand', dims = c('da', 'db'), attrs = c('aa', 'ab'))
   t = newArrayOp('template', dims = c('tda', 'tdb'), attrs = c('taa', 'tab'))
@@ -424,4 +415,21 @@ test_that("explicitly specify field match between the main operand and the templ
       )
     )"
   )
+})
+
+test_that("upper/lower bound can not overlap with field_mapping", {
+  t = newArrayOp('template', dims = c('da'), attrs = c('db_hi', 'db_low'))
+  expect_error(MatchSource$match(t, op_mode = 'cross_between', field_mapping = list(da = 'da', db = 'db_hi'),
+    lower_bound = list(db = 'db_low'), upper_bound = list(db = 'db_hi')), "cannot overlap")
+  expect_error(MatchSource$match(t, op_mode = 'cross_between', field_mapping = list(da = 'da', db = 'db_hi'),
+    upper_bound = list(db = 'db_hi')), "cannot overlap")
+  expect_error(MatchSource$match(t, op_mode = 'cross_between', field_mapping = list(da = 'da', db = 'db_hi'),
+    lower_bound = list(db = 'db_low')), "cannot overlap")
+})
+
+test_that("cross_between mode only works on dimensions", {
+  MatchSource = newArrayOp("s", c("da", "db"), c("aa", "ab"))
+  t = newArrayOp('template', dims = c('x'), attrs = c('aa', 'ab'))
+  expect_error(MatchSource$match(t, op_mode = 'cross_between'), "source's dimensions")
+  expect_error(MatchSource$match(t, op_mode = 'cross_between', field_mapping = list(aa = 'aa')), "source's dimensions")
 })
