@@ -81,3 +81,24 @@ simple_load = function(db, VariantArray) {
   loaded = V$load_file(initVcf, aio_settings = list(header = 1), file_headers = c('chrom', 'pos', 'ref', 'alt', 'extra'))
   repo$execute(loaded$write_to(V))
 }
+
+auto_increment_load = function(db, VariantArray) {
+  try(repo$execute(afl(VariantArray %remove% NULL)))
+  repo$execute(
+    sprintf("create array %s <
+                            vid: int64,
+                            ref:string,
+                            alt:string,
+                            extra:string> [chrom=1:24:0:1;
+                            pos=1:*:0:1000000]", VariantArray)
+  )
+  repo$register_schema_alias_by_array_name('V', VariantArray, is_full_name = T)
+  V = repo$get_alias_schema('V')
+  initVcf = system.file('extdata', 'init.vcf', package = 'arrayopTemp', mustWork = T)
+  loaded = V$load_file(initVcf, aio_settings = list(header = 1), file_headers = c('chrom', 'pos', 'ref', 'alt', 'extra'))
+  repo$execute(
+    loaded$
+      reshape(select = loaded$dims_n_attrs, dim_mode = 'drop', artificial_field = 'z')$
+      write_to(V, source_auto_increment = c(z=0), target_auto_increment = c(vid = 10))
+  )
+}
