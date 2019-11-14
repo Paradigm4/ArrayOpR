@@ -28,6 +28,36 @@ test_that("Raw afl, dimensions, attributes work as expected with data types", {
 
 })
 
+test_that("to_df_afl calls to_afl_explict internally", {
+  op = newArrayOp("rawafl", c("da", "db"), c("ac", "ad"), 
+    dtypes = list(ac='string', ad='int32', da='int64', db='int64'))
+  assert_afl_equal(op$.to_afl_explicit(), "rawafl")
+  assert_afl_equal(op$.to_afl_explicit(drop_dims = T), "rawafl")
+  
+  # With selected fields
+  assert_afl_equal(op$select('ac')$to_df_afl(), "project(rawafl, ac)")
+  assert_afl_equal(op$select('ac')$to_df_afl(T), "project(rawafl, ac)")
+  assert_afl_equal(op$select(c('da', 'ac'))$to_df_afl(), "project(rawafl, ac)")
+  assert_afl_equal(op$select(c('da', 'ac'))$to_df_afl(T), "project(apply(rawafl, da, da), da, ac)")
+  
+  assert_afl_equal(op$select('da')$to_df_afl(artificial_field = 'x'), 
+                   "project(apply(rawafl, x, null), x)")
+  assert_afl_equal(op$select('da')$to_df_afl(T, artificial_field = 'x'), 
+                   "project(apply(rawafl, da, da), da)")
+  
+  # With selected fields
+  assert_afl_equal(op$.to_afl_explicit(selected_fields = 'ac'), "project(rawafl, ac)")
+  assert_afl_equal(op$.to_afl_explicit(T, selected_fields = 'ac'), "project(rawafl, ac)")
+  assert_afl_equal(op$.to_afl_explicit(selected_fields = c('da', 'ac')), "project(rawafl, ac)")
+  assert_afl_equal(op$.to_afl_explicit(T, selected_fields = c('da', 'ac')), "project(apply(rawafl, da, da), da, ac)")
+  
+  assert_afl_equal(op$.to_afl_explicit(selected_fields = c('da'), artificial_field = 'x'), 
+                   "project(apply(rawafl, x, null), x)")
+  assert_afl_equal(op$.to_afl_explicit(T, selected_fields = c('da'), artificial_field = 'x'), 
+                   "project(apply(rawafl, da, da), da)")
+
+})
+
 
 # Where ----------------------------------------------------------------------------------------------------------
 

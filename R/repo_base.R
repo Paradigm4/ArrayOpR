@@ -52,20 +52,56 @@ RepoBase <- R6::R6Class("RepoBase",
     #' Run a query and expect results
     #' 
     #' Delegate to Repo's `dep$query` function
-    #' @param afl Scidb AFL statement
+    #' Get a data frame from any ArrayOp instance or raw AFL
+    #' 
+    #' **NOTE** if `only_attributes = T`, then `op$to_afl(drop_dims = T)` which may differ from the default `op$to_afl()`
+    #' @param what An ArrayOp instance or raw AFL 
     #' @param ... Extra settings passed to `dep$query` function
-    query = function(afl, ...) {
-      private$dep$query(afl, ...)
+    query = function(what, ...) {
+      assert(inherits(what, c('ArrayOpBase', 'character')),
+             "Repo$to_df 'what' argument must be a character or ArrayOp")
+      # If ... contains only_attributes = TRUE, then op's dimensions are effectively dropped.
+      drop_dims = methods::hasArg('only_attributes') &&
+        list(...)[['only_attributes']]
+      afl = if (inherits(what, 'ArrayOpBase'))
+        what$to_df_afl(drop_dims)
+      else
+        what
+      
+      tryCatch({
+        df <- private$dep$query(afl, ...)
+      },
+      error = function(e) {
+        # Print out AFL only when error occurs.
+        print(afl)
+        stop(e)
+      })
+      return(df)
+      # private$dep$query(afl, ...)
     }
     ,
     #' @description 
     #' Run a command and do not expect results
     #' 
     #' Delegate to Repo's `dep$execute` function
-    #' @param afl Scidb AFL statement
+    #' @param what An ArrayOp instance or raw AFL 
     #' @param ... Extra settings passed to `dep$execute` function
-    execute = function(afl, ...) {
-      private$dep$execute(afl, ...)
+    execute = function(what, ...) {
+      assert(inherits(what, c('ArrayOpBase', 'character')),
+             "Repo$execute 'what' argument must be a character or ArrayOp")
+      afl = if (inherits(what, 'ArrayOpBase'))
+        what$to_afl()
+      else
+        what
+      tryCatch({
+        return(private$dep$execute(afl, ...))
+      },
+      error = function(e) {
+        # Print out AFL only when error occurs.
+        print(afl)
+        stop(e)
+      })
+      # private$dep$execute(afl, ...)
     }
     ,
     #' @description 
@@ -109,7 +145,7 @@ RepoBase <- R6::R6Class("RepoBase",
       attrs = schemaDf[!schemaDf$is_dimension, ]
       dims = schemaDf[schemaDf$is_dimension, ]
       dtypes = as.list(structure(schemaDf$dtype, names = schemaDf$name))
-      arrayOp = self$ArrayOp(full_array_name, attrs$name, dims$name, dtypes = dtypes)
+      arrayOp = self$ArrayOp(full_array_name, dims$name, attrs$name, dtypes = dtypes)
       return(arrayOp)
     }
   )
