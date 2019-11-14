@@ -122,10 +122,16 @@ RepoBase <- R6::R6Class("RepoBase",
 #' 
 #' This should be only way to create a new Repo instance, 
 #' unless a specific Repo version is known/desired beforehand, which is useful in test cases.
+#' @param dependency_obj A named list that contains 4 functions: get_scidb_version, query, execute and get_schema_df
+#' If left NULL, will require a scidb connection 'db' to create the dependency_obj automatically.
+#' @param db a scidb connection returned by scidb::scidbconnect
 #' @export
-newRepo = function(default_namespace = 'ns', dependency_obj){
+newRepo = function(default_namespace = 'ns', dependency_obj = NULL, db){
   # Validate dependency_obj has all required methods
   requiredNames = c('get_scidb_version', 'query', 'execute', 'get_schema_df')
+  if(!.has_len(dependency_obj) && methods::hasArg('db')){
+    dependency_obj = default_dep_obj(db)
+  }
   missingNames = base::setdiff(requiredNames, names(dependency_obj))
   assert_not_has_len(missingNames, 
     "newRepo 'dependency_obj' param is missing function(s): '%s'", paste(missingNames, collapse = ', '))
@@ -141,6 +147,35 @@ newRepo = function(default_namespace = 'ns', dependency_obj){
   )
   assert(!is.null(repoClass), "ERROR in newRepo: unsupported scidb version %s", fullScidbVersion)
   repoClass$new(default_namespace, dependency_obj)
+}
+
+default_dep_obj = function(db) {
+  runQuery = function(query, ...) scidb::iquery(db, query, return = TRUE, ...)
+  runCmd = function(query, ...) scidb::iquery(db, query, return = FALSE, ...)
+  list(
+    get_scidb_version = function() {
+      df = runQuery("op_scidbversion()", only_attributes = T)[1, c('major', 'minor')]
+      sprintf("%s.%s", df[['major']], df[['minor']])
+    }
+    ,
+    query = runQuery
+    ,
+    execute = runCmd
+    ,
+    # Should return a data.frame with columns: name, dtype, is_dimension
+    get_schema_df = function(array_name) {
+      # Get dimensions
+      dimDf = runQuery(sprintf("project(dimensions(%s), name, type)", array_name))
+      # Get attributes
+      attrDf = runQuery(sprintf("project(attributes(%s), name, type_id)", array_name))
+      data.frame(
+        name = c(dimDf$name, attrDf$name),
+        dtype = c(dimDf$type, attrDf$type_id),
+        is_dimension = c(rep(T, nrow(dimDf)), rep(F, nrow(attrDf))),
+        stringsAsFactors = FALSE
+      )
+    }
+  )
 }
 
 
