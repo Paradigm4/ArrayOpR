@@ -1,7 +1,7 @@
-Package: arrayop
+Package: arrayopTemp
 Title: Toolset for Object-Oriented SciDB Array Operations/Operands
 Description: ArrayOp abstracts away AFL generation by unifying array operations and array operands.
-Version: 0.1.0
+Version: 0.2
 Author: Paradigm4, Inc
 Copyright: Paradigm4, Inc.
 Maintainer: Paradigm4, Inc <support@paradigm4.com>
@@ -27,7 +27,6 @@ Collate:
     'array_op_base.R'
     'array_op_v18.R'
     'array_op_v19.R'
-    'dependency.R'
     'utils.R'
     'repo_base.R'
     'repo_v18.R'
