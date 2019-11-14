@@ -21,6 +21,6 @@ assert_afl_equal <- function(actual, expected) {
 # When runnning devtools::test(), the working directory is (package root)/tests/testthat/
 
 # source("array_op/__source.R", local = TRUE)
-source("repo/__source.R", local = TRUE)
+source("base/__source.R", local = TRUE)
 source("v18/__source.R", local = TRUE)
 source("v19/__source.R", local = TRUE)

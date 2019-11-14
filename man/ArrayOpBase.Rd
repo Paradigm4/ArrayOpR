@@ -17,11 +17,15 @@ in another operation. Operands and Opreration results can all be denoted by Arra
 \item \href{#method-get_field_types}{\code{ArrayOpBase$get_field_types()}}
 \item \href{#method-get_absent_fields}{\code{ArrayOpBase$get_absent_fields()}}
 \item \href{#method-create_new}{\code{ArrayOpBase$create_new()}}
-\item \href{#method-duplicate_with_same_specs}{\code{ArrayOpBase$duplicate_with_same_specs()}}
+\item \href{#method-create_new_with_same_schema}{\code{ArrayOpBase$create_new_with_same_schema()}}
 \item \href{#method-where}{\code{ArrayOpBase$where()}}
 \item \href{#method-select}{\code{ArrayOpBase$select()}}
 \item \href{#method-reshape}{\code{ArrayOpBase$reshape()}}
 \item \href{#method-join}{\code{ArrayOpBase$join()}}
+\item \href{#method-load_file}{\code{ArrayOpBase$load_file()}}
+\item \href{#method-match}{\code{ArrayOpBase$match()}}
+\item \href{#method-build_new}{\code{ArrayOpBase$build_new()}}
+\item \href{#method-write_to}{\code{ArrayOpBase$write_to()}}
 \item \href{#method-to_afl}{\code{ArrayOpBase$to_afl()}}
 \item \href{#method-to_df_afl}{\code{ArrayOpBase$to_df_afl()}}
 \item \href{#method-.raw_afl}{\code{ArrayOpBase$.raw_afl()}}
@@ -98,13 +102,13 @@ This function is useful for validating fields in use cases:
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-duplicate_with_same_specs"></a>}}
-\subsection{Method \code{duplicate_with_same_specs()}}{
+\if{html}{\out{<a id="method-create_new_with_same_schema"></a>}}
+\subsection{Method \code{create_new_with_same_schema()}}{
 Create a new ArrayOp instance of the same class
 
 The new instance shares all meta data with the template
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$duplicate_with_same_specs(new_afl)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$create_new_with_same_schema(new_afl)}\if{html}{\out{</div>}}
 }
 
 }
@@ -164,6 +168,11 @@ Create a new ArrayOp instance with a different schema/shape
 \describe{
 \item{\code{select}}{a non-empty list, where named items are new derived attributes and
 unamed string values are existing dimensions/attributes.}
+
+\item{\code{dtypes}}{a named list to provide field data types for newly derived fields}
+
+\item{\code{artificial_field}}{A field name used as the artificial dimension name in \code{unpack} scidb operator
+By default, a random string is generated.}
 }
 \if{html}{\out{</div>}}
 }
@@ -202,6 +211,140 @@ are retained. If set to 'drop', the artificial dimensions will be removed. See \
 
 \item{\code{artificial_field}}{As in \code{ArrayOp$reshpae}, it defaults to a random field name. It can be safely ignored in
 client code. It exists only for test purposes.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-load_file"></a>}}
+\subsection{Method \code{load_file()}}{
+Create a new ArrayOp instance by loading a file and checking it against an ArrayOp template (self).
+
+The ArrayOp instance where this function is called from serves as a template. By defulat, it assumes file
+column headers match the template's dims and attrs; otherwise an explicit file_headers can be provided and will
+be used to match the template's schema.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$load_file(
+  filepath,
+  aio_settings = list(),
+  field_conversion = NULL,
+  file_headers = NULL
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{filepath}}{A single file path}
+
+\item{\code{aio_settings}}{Customized settings of aio_input}
+
+\item{\code{field_conversion}}{If NULL (default), use template's field type to convert aio_input attributes; Or provide
+a list for customized field conversion}
+
+\item{\code{file_headers}}{Column headers of the input file regardless of whether there is a header line in the file.
+Default NULL assumes file headers match self$dims_n_attrs. If the headers order are different or there are
+columns to skip, please provide a string vector, in which case only columns with matching template field are
+loaded. Names of the unmatching column headers are irrelevant.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A new ArrayOp instance with matching fields
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-match"></a>}}
+\subsection{Method \code{match()}}{
+Create a new ArrayOp by matching a template against a source (self).
+
+The result has the same schema with the source.
+All fields in the template are compared to their matching source fields by equality, except for thos in
+lower_bound/upper_bound which will be used as a range \verb{[lower_bound, upper_bound]}.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$match(
+  template,
+  op_mode,
+  lower_bound = NULL,
+  upper_bound = NULL,
+  field_mapping = NULL,
+  ...
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{template}}{A data.frame or ArrayOp used to reduce the number of source cells without changing its schema}
+
+\item{\code{op_mode}}{\link{'filter', 'cross_between', 'customized'}}
+
+\item{\code{lower_bound}}{Field names as lower bounds.}
+
+\item{\code{upper_bound}}{Field names as upper bounds.}
+
+\item{\code{field_mapping}}{A named list where name is source field name and value is template field name.
+Default NULL: fields are mapped between template and source by field names only.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A new ArrayOp instance which has the same schema as the source.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-build_new"></a>}}
+\subsection{Method \code{build_new()}}{
+Create a new ArrayOp instance from 'build'ing a data.frame
+
+All matching fields are built as attributes of the result ArrayOp.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$build_new(df, artificial_field = .random_attr_name())}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{df}}{a data.frame, where all column names must all validate template fields.}
+
+\item{\code{artificial_field}}{A field name used as the artificial dimension name in \code{build} scidb operator
+By default, a random string is generated, and the dimension starts from 0.
+A customized dimension can be provided e.g. 'z=42:\emph{' or 'z=0:}:0:1000'.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A new ArrayOp instance whose attributes share the same name and data types with the template's fields.
+Create a build expression from a data.frame and specified scidb data types
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-write_to"></a>}}
+\subsection{Method \code{write_to()}}{
+Create a new ArrayOp instance that represents a writing data operation
+
+If the dimension count, attribute count and data types match between the source(self) and target,
+then no redimension will be performed, otherwise redimension on the source first.
+
+Redimension mode requires all target fields exist on the source disregard of being attributes or dimensions.
+Redimension mode does not check on whether source data types match the target because auto data conversion
+occurs within scidb where necessary/applicable.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$write_to(
+  target,
+  append = TRUE,
+  source_auto_increment = NULL,
+  target_auto_increment = NULL
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{target}}{A target ArrayOp the source data is written to.}
+
+\item{\code{append}}{Append to existing target array if set to TRUE (default).
+Otherwise replace the whole target array with the source.}
 }
 \if{html}{\out{</div>}}
 }

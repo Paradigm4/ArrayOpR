@@ -1,6 +1,6 @@
 context("Test AFL utility functions")
 
-arrayop = AnyArrayOp$new(array_expr = 'array', dims = c('da', 'db'), attrs = c('aa', 'ab'))
+anArray = ArrayOpBase$new('array', dims = c('da', 'db'), attrs = c('aa', 'ab'))
 
 # afl(...)  -------------------------------------------------------------------------------------------------------
 # R special infix functions %...% are translated to scidb operators
@@ -23,9 +23,9 @@ test_that("Supported operand types: character, numeric, logical, NULL and ArrayO
 
 test_that("ArrayOp instance automatically converted to string with to_afl() method", {
   # ArrayOp is evaluted to character with its `to_afl()` method
-  expect_identical(afl(arrayop %filter% 'true'), "filter(array,true)")
+  expect_identical(afl(anArray %filter% 'true'), "filter(array,true)")
   # Or call ArrayOp$to_afl() explicitly
-  expect_identical(afl(arrayop$to_afl() %filter% 'true'), "filter(array,true)")
+  expect_identical(afl(anArray$to_afl() %filter% 'true'), "filter(array,true)")
 })
 
 test_that("Unsupported data types", {
@@ -36,22 +36,22 @@ test_that("Unsupported data types", {
 test_that("Use case for common scidb operators", {
   newFields = c('a', 'b')
   newFiledExpressions = c('a_expr', 'b_expr')
-  expect_identical(afl(arrayop %apply% afl_join_fields(newFields, newFiledExpressions)), 
+  expect_identical(afl(anArray %apply% afl_join_fields(newFields, newFiledExpressions)), 
     "apply(array,a,a_expr,b,b_expr)")
   
   projectedFields = c('a', 'b')
-  expect_identical(afl(arrayop %project% projectedFields), "project(array,a,b)")
+  expect_identical(afl(anArray %project% projectedFields), "project(array,a,b)")
   
   # Add NULL for unary operator
-  expect_identical(afl(arrayop %op_count% NULL), "op_count(array)")
+  expect_identical(afl(anArray %op_count% NULL), "op_count(array)")
   
-  expect_identical(afl(arrayop %grouped_aggregate% c('count(*)', 'chrom', 'pos', 'ref', 'alt')),
+  expect_identical(afl(anArray %grouped_aggregate% c('count(*)', 'chrom', 'pos', 'ref', 'alt')),
     "grouped_aggregate(array,count(*),chrom,pos,ref,alt)")
 })
 
 test_that("Compose complex AFL by chaining operators and nesting afl(...)", {
   assert_afl_equal(afl(
-    arrayop %apply% c('a', 'a', 'b', 'b') 
+    anArray %apply% c('a', 'a', 'b', 'b') 
       %filter% "a > 1 and b = 'bval'"
       %project% c('a', 'b')
     %equi_join%

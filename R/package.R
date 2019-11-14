@@ -13,31 +13,20 @@
 #' @name arrayop
 NULL
 
-
 # Set source file loading order -----------------------------------------------------------------------------------
 
 # Global utility functions/classes
 
-#' @include db_access.R
-#' @include repo.R
+
 #' @include array_op_v19.R
 #' @include array_op_v18.R
 #' @include repo_v19.R
 #' @include repo_v18.R
+#' @include array_op_base.R
 #' @include repo_base.R
 NULL
 
-#' @include write_op.R
-#' @include match_op.R
-#' @include customized_op.R
-#' @include join_op.R
-#' @include subset_op.R
-#' @include array_schema.R
-#' @include array_op_base.R
-#' @include dependency.R
 #' @include afl_utils.R
-NULL
-
 #' @include arg_list.R
 #' @include utils.R 
 NULL

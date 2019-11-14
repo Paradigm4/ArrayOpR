@@ -175,7 +175,7 @@ ArrayOpBase <- R6::R6Class("ArrayOpBase",
     #' 
     #' @param select a non-empty list, where named items are new derived attributes and
     #' unamed string values are existing dimensions/attributes.
-    #' @param dtypes
+    #' @param dtypes a named list to provide field data types for newly derived fields
     #' @param artificial_field A field name used as the artificial dimension name in `unpack` scidb operator
     #' By default, a random string is generated.
     reshape = function(select, dtypes = NULL, dim_mode = 'keep', artificial_field = .random_attr_name()) {
