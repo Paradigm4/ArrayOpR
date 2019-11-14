@@ -211,6 +211,18 @@ test_that("New ArrayOp from building a data.frame with partial field match", {
   expect_identical(built$get_field_types(built$attrs), Template$get_field_types(built$attrs))
 })
 
+test_that("Build with a customized dimension", {
+  df = data.frame(aa=c('aa1', 'aa2'), ab=c(3,4))
+  built = Template$build_new(df, artificial_field = 'z=5:*')
+  assert_afl_equal(built$to_afl(),
+    "build(<aa:string, ab:int32>[z=5:*],
+        '[(\\'aa1\\', 3), (\\'aa2\\', 4)]', true)")
+  built = Template$build_new(df, artificial_field = 'z=1:*:0:1234')
+  assert_afl_equal(built$to_afl(),
+    "build(<aa:string, ab:int32>[z=1:*:0:1234],
+        '[(\\'aa1\\', 3), (\\'aa2\\', 4)]', true)")
+})
+
 test_that("New ArrayOp from building a data.frame with NULL values", {
   template = newArrayOp('template', 'da', c('aa', 'ab'), dtypes = list(da='int64', aa='string', ab='int32'))
   

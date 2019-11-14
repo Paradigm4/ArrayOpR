@@ -483,7 +483,8 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' All matching fields are built as attributes of the result ArrayOp.
     #' @param df a data.frame, where all column names must all validate template fields.
     #' @param artificial_field A field name used as the artificial dimension name in `build` scidb operator
-    #' By default, a random string is generated.
+    #' By default, a random string is generated, and the dimension starts from 0. 
+    #' A customized dimension can be provided e.g. 'z=42:*' or 'z=0:*:0:1000'.
     #' @return A new ArrayOp instance whose attributes share the same name and data types with the template's fields.
     build_new = function(df,  artificial_field = .random_attr_name()) {
       assert(inherits(df, c('data.frame')), "ERROR: ArrayOp$build_new: unknown df class '%s'. 
