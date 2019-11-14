@@ -529,12 +529,11 @@ Only data.frame is supported", class(df))
     #' @param target A target ArrayOp the source data is written to. 
     #' @param append Append to existing target array if set to TRUE (default). 
     #' Otherwise replace the whole target array with the source.
-    write_to = function(target, append = TRUE) {
+    write_to = function(target, append = TRUE, source_auto_increment = NULL, target_auto_increment = NULL) {
       assert(inherits(target, 'ArrayOpBase'),
         "ERROR: ArrayOp$write_to: param target must be ArrayOp, but got '%s' instead.", class(target))
       
       # If exact field dtype match
-      
       exactDtypeMatch = 
         length(self$dims) == length(target$dims) &&
         length(self$attrs) == length(target$attrs) && {
@@ -548,10 +547,47 @@ Only data.frame is supported", class(df))
       if(!exactDtypeMatch){
         # If data types do not exactly match, redimension is required
         missingFields = target$dims_n_attrs %-% self$dims_n_attrs
-        assert_not_has_len(missingFields, 
-          "ERROR: ArrayOp$write_to: redimension mode: Source field(s) '%s' not found in Target", 
-          paste(missingFields, collapse = ','))
-        src = afl(self %redimension% target)
+        # If no auto increment set, then all target fields should be matched
+        if(!.has_len(target_auto_increment)){
+          assert_not_has_len(missingFields, 
+            "ERROR: ArrayOp$write_to: redimension mode: Source field(s) '%s' not found in Target", 
+            paste(missingFields, collapse = ','))
+        }
+        # 
+        else{
+          assert(length(source_auto_increment) == 1 && length(target_auto_increment) == 1,
+            "ERROR: ArrayOp$write_to: both source and target auto increment params should be ONE-element named list, 
+where name is field name and value is the starting number.")
+          # source/target auto increment field: saif/taif
+          saif = names(source_auto_increment)
+          taif = names(target_auto_increment)
+          # assert() # Ensure source/target auto incremented fields exist.
+          assert(saif %in% self$dims_n_attrs, 
+            "ERROR: ArrayOp$write_to: source auto incremented field '%s' does not exist.", saif)
+          assert(taif %in% target$dims_n_attrs, 
+            "ERROR: ArrayOp$write_to: target auto incremented field '%s' does not exist.", taif)
+          missingFields = missingFields %-% taif
+          assert_not_has_len(missingFields, 
+            "ERROR: ArrayOp$write_to: redimension mode: Source field(s) '%s' not found in Target", 
+            paste(missingFields, collapse = ','))
+          
+          initialOffset = target_auto_increment - source_auto_increment
+          existingOffset = 1 - source_auto_increment
+          max_taif = sprintf("max_%s", taif)
+          agg = afl(
+            .ifelse(taif %in% target$dims,
+              afl(target %apply% c(taif, taif)),
+              target) 
+            %aggregate% 
+              sprintf("max(%s) as %s", taif, max_taif)
+          )
+          iif = sprintf("iif(%s is null, %s%+d, %s+%s%+d)", # %+d output signed integers
+            max_taif, saif, initialOffset, max_taif, saif, existingOffset)
+          src = afl(
+            self %cross_join% agg %apply% c(taif, iif)
+          )
+        }
+        src = afl(src %redimension% target)
       }
       
       afl_literal = if(append) afl(src %insert% target) else afl(src %store% target)
