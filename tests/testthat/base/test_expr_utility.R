@@ -60,7 +60,7 @@ test_that('API functions can combine e(...) and a pre-defined ExprsList', {
   expect_identical(combinedFilterExpr, c(expr(score > 90), expr(ans == 42)))
 })
 
-# e and .el_opts_from_triple_dots convert ... to ExprsList -------------------------------------
+# e convert ... to ExprsList -------------------------------------
 
 test_that('e(...) returns a list of expressions', {
   expect_identical(e(a == 3), list(expr(a == 3)))
@@ -99,7 +99,6 @@ test_that("Identity of expressions is only defined by the abstract syntax tree (
 })
 
 
-
 # .arg_to_expressions ---------------------------------------------------------------------------------------------
 
 test_that("Convert a named list to an ExprsList", {
@@ -116,3 +115,17 @@ test_that("Convert a named list to an ExprsList", {
   # If a range bound is NA, do not create an expression.
   check(list(a_range = c(NA, 2), b_range = c(1, NA)), e(a <= 2, b >= 1))
 })
+
+
+# afl_filter_from_expr --------------------------------------------------------------------------------------------
+
+test_that("Generate afl filter expressions from R expressions", {
+  assert_afl_equal(afl_filter_from_expr(e(a == 42)), "a = 42")
+  assert_afl_equal(afl_filter_from_expr(e(is_null(a))), "a is null")
+  assert_afl_equal(afl_filter_from_expr(e(not_null(a))), "a is not null")
+  assert_afl_equal(afl_filter_from_expr(e(is_null(a), b != 0)), "a is null and b <> 0")
+  
+  assert_afl_equal(afl_filter_from_expr(e(a %in% !!c(1,2,3))), "(a = 1 or a = 2 or a = 3)")
+  assert_afl_equal(afl_filter_from_expr(e(a %like% '.+a.+')), "(a <> '' and (rsub(a, 's/.+a.+//i') = ''))")
+})
+

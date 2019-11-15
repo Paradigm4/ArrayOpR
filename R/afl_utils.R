@@ -51,6 +51,14 @@ afl_filter_from_expr <- function(e) {
         subExprs = paste0(sprintf("%s <> %s", fieldName, compared), collapse = ' and ')
         return(sprintf("(%s)", subExprs))
       }
+      
+      if(operator == 'is_null'){
+        return(sprintf("%s is null", fieldName))
+      }
+      
+      if(operator == 'not_null'){
+        return(sprintf("%s is not null", fieldName))
+      }
 
       # Regular operators are treated recursively
       operands <- sapply(node[-1], walkThru)
