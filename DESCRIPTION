@@ -19,7 +19,7 @@ Imports:
     methods,
     plyr,
     R6
-RoxygenNote: 6.1.99.9001
+RoxygenNote: 7.0.0
 Roxygen: list(markdown = TRUE)
 Collate: 
     'afl_utils.R'
@@ -32,4 +32,4 @@ Collate:
     'repo_v18.R'
     'repo_v19.R'
     'package.R'
-    'repo.R'
+    'test_db.R'

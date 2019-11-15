@@ -52,14 +52,17 @@ Do NOT call this \code{initialize} function directly. Call \code{newRepo} instea
 Run a query and expect results
 
 Delegate to Repo's \code{dep$query} function
+Get a data frame from any ArrayOp instance or raw AFL
+
+\strong{NOTE} if \code{only_attributes = T}, then \code{op$to_afl(drop_dims = T)} which may differ from the default \code{op$to_afl()}
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RepoBase$query(afl, ...)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RepoBase$query(what, ...)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{afl}}{Scidb AFL statement}
+\item{\code{what}}{An ArrayOp instance or raw AFL}
 
 \item{\code{...}}{Extra settings passed to \code{dep$query} function}
 }
@@ -73,13 +76,13 @@ Run a command and do not expect results
 
 Delegate to Repo's \code{dep$execute} function
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RepoBase$execute(afl, ...)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RepoBase$execute(what, ...)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{afl}}{Scidb AFL statement}
+\item{\code{what}}{An ArrayOp instance or raw AFL}
 
 \item{\code{...}}{Extra settings passed to \code{dep$execute} function}
 }

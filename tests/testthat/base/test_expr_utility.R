@@ -127,5 +127,34 @@ test_that("Generate afl filter expressions from R expressions", {
   
   assert_afl_equal(afl_filter_from_expr(e(a %in% !!c(1,2,3))), "(a = 1 or a = 2 or a = 3)")
   assert_afl_equal(afl_filter_from_expr(e(a %like% '.+a.+')), "(a <> '' and (rsub(a, 's/.+a.+//i') = ''))")
+ 
+  
+})
+
+test_that("Generate complex filter expression with logical operators", {
+  # NOTE: &&/& takes precedence over ||/|  
+  assert_afl_equal(afl_filter_from_expr(e(a == 3, b == 'val')), "a = 3 and b = 'val'")
+  assert_afl_equal(afl_filter_from_expr(e(a == 3 && b == 'val')), "a = 3 and b = 'val'")
+  assert_afl_equal(afl_filter_from_expr(e(a == 3 & b == 'val')), "a = 3 and b = 'val'")
+  assert_afl_equal(afl_filter_from_expr(e(a == 3 || b == 'val')), "a = 3 or b = 'val'")
+  assert_afl_equal(afl_filter_from_expr(e(a == 3 | b == 'val')), "a = 3 or b = 'val'")
+  
+  assert_afl_equal(afl_filter_from_expr(
+    e(AND(a == 3, b == 4, c == 5))), 
+    "a = 3 and b = 4 and c = 5")
+  
+  assert_afl_equal(afl_filter_from_expr(
+    e(OR(a == 3, b == 4, c == 5))), 
+    "a = 3 or b = 4 or c = 5")
+  
+  # Use paranthese to change operands association
+  assert_afl_equal(afl_filter_from_expr(
+    e( a == 3 & (b == 4 | c == 5) )),
+    "a = 3 and (b = 4 or c = 5)")
+  # More verbose way to do the same as above. Notice the parathenses around OR operator. 
+  # If ommitted, no paratheses are generated
+  assert_afl_equal(afl_filter_from_expr(
+    e( AND(a == 3,  (OR(b == 4 | c == 5))) )),
+    "a = 3 and (b = 4 or c = 5)")
 })
 

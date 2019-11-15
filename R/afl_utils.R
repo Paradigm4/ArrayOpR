@@ -18,7 +18,8 @@ afl_filter_from_expr <- function(e) {
     e = e_merge(e)
   }
 
-  operatorList <- list(AND = 'and', OR = 'or', `==` = '=', `!=` = '<>')
+  operatorList <- list(AND = 'and', OR = 'or', `==` = '=', `!=` = '<>', 
+                       '&&' = 'and', '&' = 'and', '||' = 'or', '|' = 'or')
 
   walkThru <- function(node){
     if(is.call(node)){
@@ -27,7 +28,6 @@ afl_filter_from_expr <- function(e) {
       if(!is.null(lookup)){
         operator <- lookup # Convert to AFL compliant operator if found in operatorList
       }
-
 
       fieldName = as.character(node[[2]])
       # Special operators are treated specially. E.g. %like%, %in%
@@ -58,6 +58,10 @@ afl_filter_from_expr <- function(e) {
       
       if(operator == 'not_null'){
         return(sprintf("%s is not null", fieldName))
+      }
+      
+      if(operator == '('){
+        return(sprintf("(%s)", walkThru(node[[2]])))
       }
 
       # Regular operators are treated recursively

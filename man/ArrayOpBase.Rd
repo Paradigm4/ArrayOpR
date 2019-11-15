@@ -28,12 +28,8 @@ in another operation. Operands and Opreration results can all be denoted by Arra
 \item \href{#method-write_to}{\code{ArrayOpBase$write_to()}}
 \item \href{#method-to_afl}{\code{ArrayOpBase$to_afl()}}
 \item \href{#method-to_df_afl}{\code{ArrayOpBase$to_df_afl()}}
-\item \href{#method-.raw_afl}{\code{ArrayOpBase$.raw_afl()}}
 \item \href{#method-.to_afl_explicit}{\code{ArrayOpBase$.to_afl_explicit()}}
-\item \href{#method-to_join_operand_afl}{\code{ArrayOpBase$to_join_operand_afl()}}
-\item \href{#method-transform_unpack}{\code{ArrayOpBase$transform_unpack()}}
-\item \href{#method-convert_df}{\code{ArrayOpBase$convert_df()}}
-\item \href{#method-rename_fields}{\code{ArrayOpBase$rename_fields()}}
+\item \href{#method-.to_join_operand_afl}{\code{ArrayOpBase$.to_join_operand_afl()}}
 \item \href{#method-clone}{\code{ArrayOpBase$clone()}}
 }
 }
@@ -377,7 +373,10 @@ Return AFL suitable for retrieving data.frame.
 
 scidb::iquery has a param \code{only_attributes}, which, if set TRUE, will effectively drop all dims.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$to_df_afl(drop_dims = FALSE, artificial_attr = .random_attr_name())}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$to_df_afl(
+  drop_dims = FALSE,
+  artificial_field = .random_attr_name()
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -392,22 +391,6 @@ AFL string
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-.raw_afl"></a>}}
-\subsection{Method \code{.raw_afl()}}{
-Functions below translate array operations into SciDb AFL expressions/statements.
-
-NOTE: this method do not take into acount field selection
-Sub-classes should override this function.
-Doing so equips sub-classes with sensible behavior defined below.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$.raw_afl()}\if{html}{\out{</div>}}
-}
-
-\subsection{Returns}{
-AFL when self used as an operand in another parent operation without considering fields selection
-}
-}
-\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-.to_afl_explicit"></a>}}
 \subsection{Method \code{.to_afl_explicit()}}{
 Returns AFL when self used as an operand in another parent operation.
@@ -417,7 +400,7 @@ By default, 1. dimensions are not dropped in parent operation; 2. no intent to s
 \if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$.to_afl_explicit(
   drop_dims = FALSE,
   selected_fields = NULL,
-  artificial_attr = .random_attr_name()
+  artificial_field = .random_attr_name()
 )}\if{html}{\out{</div>}}
 }
 
@@ -433,14 +416,14 @@ If NULL, self fields will pass on by default depending on the parent operation.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-to_join_operand_afl"></a>}}
-\subsection{Method \code{to_join_operand_afl()}}{
+\if{html}{\out{<a id="method-.to_join_operand_afl"></a>}}
+\subsection{Method \code{.to_join_operand_afl()}}{
 Generate afl for ArrayOp used in a join context (equi_join).
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$to_join_operand_afl(
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$.to_join_operand_afl(
   keyFields,
   keep_dimensions = FALSE,
-  artificial_attr = .random_attr_name()
+  artificial_field = .random_attr_name()
 )}\if{html}{\out{</div>}}
 }
 
@@ -452,86 +435,6 @@ Generate afl for ArrayOp used in a join context (equi_join).
 \item{\code{keep_dimensiosn}}{If \code{keep_dimensions} is specified in scidb \code{equi_join} operator}
 }
 \if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-transform_unpack"></a>}}
-\subsection{Method \code{transform_unpack()}}{
-Create a CustomizedOp with a changed schema. Implemented with scidb \code{unpack} operator
-
-**NOTE:**Allow adding new fields
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$transform_unpack(fields, dtypes = list(), unpack_dim_name = "z")}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{fields}}{A non-empty list where named items are new attributes and
-string values without names are existing dim/attribute}
-
-\item{\code{dtypes}}{A named list of fieldName:fieldType for newly create fields}
-
-\item{\code{unpack_dim_name}}{Customized dimension name in scidb \code{unpack} operator.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A CustomizedOp instance
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-convert_df"></a>}}
-\subsection{Method \code{convert_df()}}{
-Convert a data.frame to a CustomizedOp that matches self's fields
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$convert_df(
-  operand,
-  mode,
-  missing_values = list(),
-  validate_fields = TRUE,
-  build_dimension = "j"
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{operand}}{a data.frame}
-
-\item{\code{mode}}{'build' or 'upload'.
-'build' mode is implemented with scidb \code{build} operator;
-'upload' mode first upload the data.frame as an array, then add missing fields if needed.}
-
-\item{\code{build_dimension}}{A string used as the dimension name of \code{build} operation. Only applicable in 'build' mode.}
-
-\item{\code{missing_fields}}{A named list specifying missing field expressions}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A CustomizedOp that can be used in WriteOp
-Create a build expression from a data.frame and specified scidb data types
-Convert a single value to its proper string representation in \code{build} expressions.
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-rename_fields"></a>}}
-\subsection{Method \code{rename_fields()}}{
-Create a new CustomizedOp using the same schema data type but renamed fields (ie. dimensions and/or attributes)
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$rename_fields(name_list)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{name_list}}{A named list. list(old_field_name = 'new_field_name', ...)}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A Customized instance
 }
 }
 \if{html}{\out{<hr>}}
