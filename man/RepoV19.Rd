@@ -12,7 +12,7 @@ Common ogic/behaviors across all supported scidb versions are placed here.
 Version-specific logic/behaviors should be implemented in RepoBase sub-classes.
 }
 \section{Super class}{
-\code{\link[arrayopTemp:RepoBase]{arrayopTemp::RepoBase}} -> \code{RepoV19}
+\code{\link[arrayop:RepoBase]{arrayop::RepoBase}} -> \code{RepoV19}
 }
 \section{Methods}{
 \subsection{Public methods}{
@@ -25,11 +25,11 @@ Version-specific logic/behaviors should be implemented in RepoBase sub-classes.
 \if{html}{
 \out{<details open ><summary>Inherited methods</summary>}
 \itemize{
-\item \out{<span class="pkg-link" data-pkg="arrayopTemp" data-topic="RepoBase" data-id="execute">}\href{../../arrayopTemp/html/RepoBase.html#method-execute}{\code{arrayopTemp::RepoBase$execute()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="arrayopTemp" data-topic="RepoBase" data-id="get_alias_schema">}\href{../../arrayopTemp/html/RepoBase.html#method-get_alias_schema}{\code{arrayopTemp::RepoBase$get_alias_schema()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="arrayopTemp" data-topic="RepoBase" data-id="load_schema_from_db">}\href{../../arrayopTemp/html/RepoBase.html#method-load_schema_from_db}{\code{arrayopTemp::RepoBase$load_schema_from_db()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="arrayopTemp" data-topic="RepoBase" data-id="query">}\href{../../arrayopTemp/html/RepoBase.html#method-query}{\code{arrayopTemp::RepoBase$query()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="arrayopTemp" data-topic="RepoBase" data-id="register_schema_alias_by_array_name">}\href{../../arrayopTemp/html/RepoBase.html#method-register_schema_alias_by_array_name}{\code{arrayopTemp::RepoBase$register_schema_alias_by_array_name()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="RepoBase" data-id="execute">}\href{../../arrayop/html/RepoBase.html#method-execute}{\code{arrayop::RepoBase$execute()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="RepoBase" data-id="get_alias_schema">}\href{../../arrayop/html/RepoBase.html#method-get_alias_schema}{\code{arrayop::RepoBase$get_alias_schema()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="RepoBase" data-id="load_schema_from_db">}\href{../../arrayop/html/RepoBase.html#method-load_schema_from_db}{\code{arrayop::RepoBase$load_schema_from_db()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="RepoBase" data-id="query">}\href{../../arrayop/html/RepoBase.html#method-query}{\code{arrayop::RepoBase$query()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="RepoBase" data-id="register_schema_alias_by_array_name">}\href{../../arrayop/html/RepoBase.html#method-register_schema_alias_by_array_name}{\code{arrayop::RepoBase$register_schema_alias_by_array_name()}}\out{</span>}
 }
 \out{</details>}
 }

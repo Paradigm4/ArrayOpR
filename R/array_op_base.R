@@ -373,7 +373,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
     #' All fields in the template are compared to their matching source fields by equality, except for thos in 
     #' lower_bound/upper_bound which will be used as a range `[lower_bound, upper_bound]`.
     #' @param template A data.frame or ArrayOp used to reduce the number of source cells without changing its schema
-    #' @param op_mode ['filter', 'cross_between', 'customized']
+    #' @param op_mode ['filter', 'cross_between']
     #' @param lower_bound Field names as lower bounds. 
     #' @param upper_bound Field names as upper bounds.
     #' @param field_mapping A named list where name is source field name and value is template field name.
@@ -599,14 +599,13 @@ where name is field name and value is the starting number.")
     # AFL -------------------------------------------------------------------------------------------------------------
     ,
     #' @description 
-    #' Return AFL when self used as an operand in another parent operation.
+    #' AFL representation of the ArrayOp instance
     #' 
-    #' Implemented by calling to_afl_explicit with `selected_fields = self$selected`
-    #'
-    #' @param drop_dims Whether self dimensions will be dropped in parent operations
-    #' By default, dimensions are not dropped in parent operation
-    #' But in some operations, dimensions are dropped or converted to attributes
-    #' e.g. equi_join creates two artificial dimensions and discard any existing dimensions of two operands.
+    #' The ArrayOp instance may have 'selected' fields but they are not reflected in the result.
+    #' 'selected' fields are meaningful in `to_df_afl` and `.to_afl_explicit` functions, where the parent operation
+    #' treats dimension and attributes differently.
+    #' 
+    #' @return an AFL expression string
     to_afl = function() {
       return(private$raw_afl)
     }
@@ -683,9 +682,6 @@ where name is field name and value is the starting number.")
       applyList <- selectedFields %n% (dimensions %-% keyFields)
       projectList <-  applyList %u% (attributes %n% selectedFields)
       specialList <- dimensions %n% keyFields   # for joined-on dimensions which we also we want to keep in result
-      # applyList <-base::intersect(selectedFields, base::setdiff(dimensions, keyFields))
-      # projectList <- base::union(applyList, base::intersect(attributes, selectedFields))
-      # specialList <- base::intersect(dimensions, keyFields)   # for joined-on dimensions which we also we want to keep in result
       if(keep_dimensions){
         applyList = applyList %-% self$dims
         projectList = projectList %-% self$dims

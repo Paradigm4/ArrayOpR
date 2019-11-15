@@ -7,7 +7,7 @@ stopf <- function(fmt, ...) { stop(sprintf(fmt, ...)) }
 
 printf <- function(fmt, ...) { print(sprintf(fmt, ...)) }
 
-assert <- function(cond, errorMsgFmt, ...) { if(!cond) stop(sprintf(errorMsgFmt, ...))}
+assert <- function(cond, errorMsgFmt = '', ...) { if(!cond) stop(sprintf(errorMsgFmt, ...))}
 
 assert_has_len <- function(obj, ...) { assert(rlang::has_length(obj), ...) }
 assert_not_has_len <- function(obj, ...) { assert(!rlang::has_length(obj), ...) }

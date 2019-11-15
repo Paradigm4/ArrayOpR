@@ -11,7 +11,7 @@ One operation consists of an scidb operator and \link{1..*} operands, of which t
 in another operation. Operands and Opreration results can all be denoted by ArrayOp.
 }
 \section{Super class}{
-\code{\link[arrayopTemp:ArrayOpBase]{arrayopTemp::ArrayOpBase}} -> \code{ArrayOpV18}
+\code{\link[arrayop:ArrayOpBase]{arrayop::ArrayOpBase}} -> \code{ArrayOpV18}
 }
 \section{Methods}{
 \subsection{Public methods}{
@@ -22,23 +22,23 @@ in another operation. Operands and Opreration results can all be denoted by Arra
 \if{html}{
 \out{<details ><summary>Inherited methods</summary>}
 \itemize{
-\item \out{<span class="pkg-link" data-pkg="arrayopTemp" data-topic="ArrayOpBase" data-id=".to_afl_explicit">}\href{../../arrayopTemp/html/ArrayOpBase.html#method-.to_afl_explicit}{\code{arrayopTemp::ArrayOpBase$.to_afl_explicit()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="arrayopTemp" data-topic="ArrayOpBase" data-id=".to_join_operand_afl">}\href{../../arrayopTemp/html/ArrayOpBase.html#method-.to_join_operand_afl}{\code{arrayopTemp::ArrayOpBase$.to_join_operand_afl()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="arrayopTemp" data-topic="ArrayOpBase" data-id="build_new">}\href{../../arrayopTemp/html/ArrayOpBase.html#method-build_new}{\code{arrayopTemp::ArrayOpBase$build_new()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="arrayopTemp" data-topic="ArrayOpBase" data-id="create_new">}\href{../../arrayopTemp/html/ArrayOpBase.html#method-create_new}{\code{arrayopTemp::ArrayOpBase$create_new()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="arrayopTemp" data-topic="ArrayOpBase" data-id="create_new_with_same_schema">}\href{../../arrayopTemp/html/ArrayOpBase.html#method-create_new_with_same_schema}{\code{arrayopTemp::ArrayOpBase$create_new_with_same_schema()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="arrayopTemp" data-topic="ArrayOpBase" data-id="get_absent_fields">}\href{../../arrayopTemp/html/ArrayOpBase.html#method-get_absent_fields}{\code{arrayopTemp::ArrayOpBase$get_absent_fields()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="arrayopTemp" data-topic="ArrayOpBase" data-id="get_field_types">}\href{../../arrayopTemp/html/ArrayOpBase.html#method-get_field_types}{\code{arrayopTemp::ArrayOpBase$get_field_types()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="arrayopTemp" data-topic="ArrayOpBase" data-id="initialize">}\href{../../arrayopTemp/html/ArrayOpBase.html#method-initialize}{\code{arrayopTemp::ArrayOpBase$initialize()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="arrayopTemp" data-topic="ArrayOpBase" data-id="join">}\href{../../arrayopTemp/html/ArrayOpBase.html#method-join}{\code{arrayopTemp::ArrayOpBase$join()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="arrayopTemp" data-topic="ArrayOpBase" data-id="load_file">}\href{../../arrayopTemp/html/ArrayOpBase.html#method-load_file}{\code{arrayopTemp::ArrayOpBase$load_file()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="arrayopTemp" data-topic="ArrayOpBase" data-id="match">}\href{../../arrayopTemp/html/ArrayOpBase.html#method-match}{\code{arrayopTemp::ArrayOpBase$match()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="arrayopTemp" data-topic="ArrayOpBase" data-id="reshape">}\href{../../arrayopTemp/html/ArrayOpBase.html#method-reshape}{\code{arrayopTemp::ArrayOpBase$reshape()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="arrayopTemp" data-topic="ArrayOpBase" data-id="select">}\href{../../arrayopTemp/html/ArrayOpBase.html#method-select}{\code{arrayopTemp::ArrayOpBase$select()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="arrayopTemp" data-topic="ArrayOpBase" data-id="to_afl">}\href{../../arrayopTemp/html/ArrayOpBase.html#method-to_afl}{\code{arrayopTemp::ArrayOpBase$to_afl()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="arrayopTemp" data-topic="ArrayOpBase" data-id="to_df_afl">}\href{../../arrayopTemp/html/ArrayOpBase.html#method-to_df_afl}{\code{arrayopTemp::ArrayOpBase$to_df_afl()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="arrayopTemp" data-topic="ArrayOpBase" data-id="where">}\href{../../arrayopTemp/html/ArrayOpBase.html#method-where}{\code{arrayopTemp::ArrayOpBase$where()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="arrayopTemp" data-topic="ArrayOpBase" data-id="write_to">}\href{../../arrayopTemp/html/ArrayOpBase.html#method-write_to}{\code{arrayopTemp::ArrayOpBase$write_to()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id=".to_afl_explicit">}\href{../../arrayop/html/ArrayOpBase.html#method-.to_afl_explicit}{\code{arrayop::ArrayOpBase$.to_afl_explicit()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id=".to_join_operand_afl">}\href{../../arrayop/html/ArrayOpBase.html#method-.to_join_operand_afl}{\code{arrayop::ArrayOpBase$.to_join_operand_afl()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="build_new">}\href{../../arrayop/html/ArrayOpBase.html#method-build_new}{\code{arrayop::ArrayOpBase$build_new()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="create_new">}\href{../../arrayop/html/ArrayOpBase.html#method-create_new}{\code{arrayop::ArrayOpBase$create_new()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="create_new_with_same_schema">}\href{../../arrayop/html/ArrayOpBase.html#method-create_new_with_same_schema}{\code{arrayop::ArrayOpBase$create_new_with_same_schema()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="get_absent_fields">}\href{../../arrayop/html/ArrayOpBase.html#method-get_absent_fields}{\code{arrayop::ArrayOpBase$get_absent_fields()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="get_field_types">}\href{../../arrayop/html/ArrayOpBase.html#method-get_field_types}{\code{arrayop::ArrayOpBase$get_field_types()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="initialize">}\href{../../arrayop/html/ArrayOpBase.html#method-initialize}{\code{arrayop::ArrayOpBase$initialize()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="join">}\href{../../arrayop/html/ArrayOpBase.html#method-join}{\code{arrayop::ArrayOpBase$join()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="load_file">}\href{../../arrayop/html/ArrayOpBase.html#method-load_file}{\code{arrayop::ArrayOpBase$load_file()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="match">}\href{../../arrayop/html/ArrayOpBase.html#method-match}{\code{arrayop::ArrayOpBase$match()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="reshape">}\href{../../arrayop/html/ArrayOpBase.html#method-reshape}{\code{arrayop::ArrayOpBase$reshape()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="select">}\href{../../arrayop/html/ArrayOpBase.html#method-select}{\code{arrayop::ArrayOpBase$select()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="to_afl">}\href{../../arrayop/html/ArrayOpBase.html#method-to_afl}{\code{arrayop::ArrayOpBase$to_afl()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="to_df_afl">}\href{../../arrayop/html/ArrayOpBase.html#method-to_df_afl}{\code{arrayop::ArrayOpBase$to_df_afl()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="where">}\href{../../arrayop/html/ArrayOpBase.html#method-where}{\code{arrayop::ArrayOpBase$where()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="write_to">}\href{../../arrayop/html/ArrayOpBase.html#method-write_to}{\code{arrayop::ArrayOpBase$write_to()}}\out{</span>}
 }
 \out{</details>}
 }

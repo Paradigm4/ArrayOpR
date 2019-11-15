@@ -273,7 +273,7 @@ lower_bound/upper_bound which will be used as a range \verb{[lower_bound, upper_
 \describe{
 \item{\code{template}}{A data.frame or ArrayOp used to reduce the number of source cells without changing its schema}
 
-\item{\code{op_mode}}{\link{'filter', 'cross_between', 'customized'}}
+\item{\code{op_mode}}{\link{'filter', 'cross_between'}}
 
 \item{\code{lower_bound}}{Field names as lower bounds.}
 
@@ -348,22 +348,17 @@ Otherwise replace the whole target array with the source.}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-to_afl"></a>}}
 \subsection{Method \code{to_afl()}}{
-Return AFL when self used as an operand in another parent operation.
+AFL representation of the ArrayOp instance
 
-Implemented by calling to_afl_explicit with \code{selected_fields = self$selected}
+The ArrayOp instance may have 'selected' fields but they are not reflected in the result.
+'selected' fields are meaningful in \code{to_df_afl} and \code{.to_afl_explicit} functions, where the parent operation
+treats dimension and attributes differently.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$to_afl()}\if{html}{\out{</div>}}
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{drop_dims}}{Whether self dimensions will be dropped in parent operations
-By default, dimensions are not dropped in parent operation
-But in some operations, dimensions are dropped or converted to attributes
-e.g. equi_join creates two artificial dimensions and discard any existing dimensions of two operands.}
-}
-\if{html}{\out{</div>}}
+\subsection{Returns}{
+an AFL expression string
 }
 }
 \if{html}{\out{<hr>}}

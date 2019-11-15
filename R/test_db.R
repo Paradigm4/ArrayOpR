@@ -2,85 +2,126 @@
 # This script is for specific scidb version tests
 #
 
+
+ScidbTest = R6::R6Class(
+  "ScidbTest",
+  private = list(
+    log_job = function(job, msg, done_msg = 'Done') {
+      cat(sprintf("%s ...", msg))
+      result = force(job)
+      cat(sprintf("%s\n", done_msg))
+      invisible(result)
+    }
+    ,
+    file_list = NULL
+    ,
+    file = function(name) {
+      full_path = function(name)
+      if(!.has_len(private$file_list)){
+        private$file_list = list()
+      }
+      full_path = private$file_list[[name]]
+      if(!.has_len(full_path)){
+        full_path = system.file('extdata', name, package = 'arrayop', mustWork = T)
+        private$file_list[[name]] = full_path
+      }
+      full_path
+    }
+  )
+  ,
+  public = list(
+    repo = NULL
+    ,
+    ns = NULL
+    ,
+    initialize = function(repo, ns = 'test_arrayop') {
+      self$repo = repo
+      self$ns = ns
+    }
+    ,
+    #' @description 
+    #' Tests entry point
+    run_tests = function(create_namespace = FALSE) {
+      if(create_namespace)
+        self$create_namespace()
+      private$log_job(self$test_simple_load(), "Test simple loading file into array")
+    }
+    ,
+    create_namespace = function() {
+      try(self$repo$execute(afl(self$ns %create_namespace% NULL)))
+    }
+    ,
+    test_simple_load = function() {
+      alias = 'V1'
+      VariantArray = sprintf('%s.%s', self$ns, alias)
+      try(self$repo$execute(afl(VariantArray %remove% NULL)))
+      self$repo$execute(
+        sprintf("create array %s <
+                            ref:string,
+                            alt:string,
+                            extra:string> [chrom=1:24:0:1;
+                            pos=1:*:0:1000000]", VariantArray)
+      )
+      self$repo$register_schema_alias_by_array_name(alias, VariantArray, is_full_name = T)
+      V = self$repo$get_alias_schema(alias)
+      
+      # Load all array content from a file
+      loaded = V$load_file(private$file('init.vcf'), 
+                           aio_settings = list(header = 1), 
+                           file_headers = c('chrom', 'pos', 'ref', 'alt', 'extra'))
+      self$repo$execute(loaded$write_to(V))
+      
+      resultRepo = self$repo$query(V)
+      resultDf = data.table::fread(private$file('init.vcf'))
+      try(assert(nrow(resultRepo) == nrow(resultDf)))
+    }
+    ,
+    test_load_with_auto_increment_id = function() {
+      
+    }
+  )
+)
+
 # Debugging -------------------------------------------------------------------------------------------------------
 
-debugging_db = function() {
-  result = scidb::scidbconnect(host = "localhost",
-                         username = 'scidbadmin',
-                         password = readLines('~/.bms_password'),
-                         port = 8083,
-                         protocol = "https")
+connect_to_scidb = function(...) {
+  result = scidb::scidbconnect(...)
   options(scidb.aio = TRUE)
   options(scidb.result_size_limit = 1*1024)
   result
 }
 
-setup_namespace = function(db) {
-  scidb::iquery(db, sprintf("create_namespace('%s')", NS), return = F)
-}
-
-debug = function(db) {
-  repo = newRepo(default_namespace = 'test_arrayop', db = db)
-}
-
-NS = 'test_arrayop'
-VariantArray = sprintf('%s.Variant', NS)
-
-if(! exists('db'))
-  db = debugging_db()
-if(! exists('repo'))
-  # setup repo
-  repo = newRepo(default_namespace = NS, db = db)
 
 # Run at user side ------------------------------------------------------------------------------------------------
 
 
 #' Run tests with a scidb connection
 #' @param db a scidb connection returned by calling `scidb::scidbconnect`
+#' If not provided, a connection will be created using other params.
 #' @param namespace Namespace to run tests in
+#' @param host scidb host
+#' @param username scidb user name
+#' @param password scidb password
+#' @param port scidb port default: 8083
+#' @param protocol scidb protocol default: 'https'
 #' @export
-run_tests_with_scidb_connection = function(db, namespace) {
-  # create_variants_array = function() {
-  #   try(repo$execute(afl(VariantArray %remove% NULL)))
-  #   repo$execute(
-  #     sprintf("create array %s variant_id:int64,
-  #                           ref:string,
-  #                           alt:string,
-  #                           extra:string> [chrom=1:24:0:1;
-  #                           pos=1:*:0:1000000,
-  #                           alt_id=0:*:0:100]", VariantArray)
-  #   )
-  #   repo$register_schema_alias_by_array_name('V', VariantArray, is_full_name = T)
-  # }
-  
-  load_vcf_files = function() {
-    # V = repo$get_alias_schema('V')
-    
+run_tests_with_scidb_connection = function(db = NULL, namespace = 'test_arrayop', create_namespace = FALSE,
+                                           host = "localhost",
+                                           username = 'scidbadmin',
+                                           password = readLines('~/.bms_password'),
+                                           port = 8083,
+                                           protocol = "https"
+                                           ) {
+  if(is.null(db)){
+    db = connect_to_scidb(host = host, username = username, password = password, port = port, protocol = protocol)
   }
-  
+  repo = newRepo(default_namespace = namespace, db = db)
+  testClass = ScidbTest$new(repo, namespace)
+  testClass$run_tests(create_namespace)
+  cat("All tests are done. ")
 }
 
-log_job = function(job, msg) {
-  print(sprintf("Start %s...", msg))
-  force(job)
-  print(sprintf("Finish %s", msg))
-}
 
-simple_load = function(db, VariantArray) {
-  try(repo$execute(afl(VariantArray %remove% NULL)))
-  repo$execute(
-    sprintf("create array %s <
-                            ref:string,
-                            alt:string,
-                            extra:string> [chrom=1:24:0:1;
-                            pos=1:*:0:1000000]", VariantArray)
-  )
-  repo$register_schema_alias_by_array_name('V', VariantArray, is_full_name = T)
-  V = repo$get_alias_schema('V')
-  initVcf = system.file('extdata', 'init.vcf', package = 'arrayopTemp', mustWork = T)
-  loaded = V$load_file(initVcf, aio_settings = list(header = 1), file_headers = c('chrom', 'pos', 'ref', 'alt', 'extra'))
-  repo$execute(loaded$write_to(V))
-}
 
 auto_increment_load = function(db, VariantArray) {
   try(repo$execute(afl(VariantArray %remove% NULL)))
@@ -94,7 +135,7 @@ auto_increment_load = function(db, VariantArray) {
   )
   repo$register_schema_alias_by_array_name('V', VariantArray, is_full_name = T)
   V = repo$get_alias_schema('V')
-  initVcf = system.file('extdata', 'init.vcf', package = 'arrayopTemp', mustWork = T)
+  initVcf = system.file('extdata', 'init.vcf', package = 'arrayop', mustWork = T)
   loaded = V$load_file(initVcf, aio_settings = list(header = 1), file_headers = c('chrom', 'pos', 'ref', 'alt', 'extra'))
   repo$execute(
     loaded$

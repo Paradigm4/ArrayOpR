@@ -1,4 +1,4 @@
-Package: arrayopTemp
+Package: arrayop
 Title: Toolset for Object-Oriented SciDB Array Operations/Operands
 Description: ArrayOp abstracts away AFL generation by unifying array operations and array operands.
 Version: 0.2
