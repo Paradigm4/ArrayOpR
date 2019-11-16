@@ -7,7 +7,7 @@ ScidbTest = R6::R6Class(
   "ScidbTest",
   private = list(
     log_job = function(job, msg, done_msg = 'Done') {
-      cat(sprintf("%s ...", msg))
+      cat(sprintf("%s ... ", msg))
       result = force(job)
       cat(sprintf("%s\n", done_msg))
       invisible(result)
@@ -45,6 +45,7 @@ ScidbTest = R6::R6Class(
       if(create_namespace)
         self$create_namespace()
       private$log_job(self$test_simple_load(), "Test simple loading file into array")
+      private$log_job(self$test_load_with_auto_increment_id(), "Test loading file with auto-increment id")
     }
     ,
     create_namespace = function() {
@@ -77,7 +78,37 @@ ScidbTest = R6::R6Class(
     }
     ,
     test_load_with_auto_increment_id = function() {
+      alias = 'V2'
+      VariantArray = sprintf('%s.%s', self$ns, alias)
+      try(self$repo$execute(afl(VariantArray %remove% NULL)))
+      self$repo$execute(
+        sprintf("create array %s <
+                            vid: int64,
+                            ref:string,
+                            alt:string,
+                            extra:string> [chrom=1:24:0:1;
+                            pos=1:*:0:1000000]", VariantArray)
+      )
+      self$repo$register_schema_alias_by_array_name(alias, VariantArray, is_full_name = T)
+      V = self$repo$get_alias_schema(alias)
       
+      # Load all array content from a file
+      loaded = V$load_file(private$file('init.vcf'), 
+                           aio_settings = list(header = 1), 
+                           file_headers = c('chrom', 'pos', 'ref', 'alt', 'extra'))
+      self$repo$execute(
+        loaded$
+          reshape(select = loaded$dims_n_attrs, dim_mode = 'drop', artificial_field = 'z')$
+          write_to(V, source_auto_increment = c(z=0), target_auto_increment = c(vid = 10))
+      )
+      
+      resultRepo = self$repo$query(V)
+      resultDf = data.table::fread(private$file('init.vcf'))
+      try({
+        assert(nrow(resultRepo) == nrow(resultDf))
+        assert(min(resultRepo$vid) == 10)     
+        assert(max(resultRepo$vid) == 15)     
+       })
     }
   )
 )
