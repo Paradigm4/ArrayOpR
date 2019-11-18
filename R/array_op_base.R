@@ -606,6 +606,41 @@ where name is field name and value is the starting number.")
       afl_literal = if(append) afl(src %insert% target) else afl(src %store% target)
       return(self$create_new(afl_literal, c(), c()))
     }
+    ,
+    #' @description 
+    #' Create a new ArrayOp instance from a `self` template
+    #' 
+    #' This function is mainly for array schema string generation where we might want to rename and/or exclude certain
+    #' fields of the template. Data types and dimension specs will be inherited from the template unless provided. 
+    #' 
+    #' Note: except for scidb build or aio_input operators, the spawned ArrayOp is not meaningful semantically. So do not
+    #' use this function for operations other than 'build'/ArrayOp$build_new and 'aio_input'/ArrayOp$load_file
+    spawn = function(renamed = NULL, excluded = NULL, dtypes = NULL, dim_specs = NULL) {
+      attrs = self$attrs
+      dims = self$dims
+      oldDtypes = self$dtypes
+      
+      if(.has_len(renamed)){
+        renamedOldFields = names(renamed)
+        attrs = as.character(replace(attrs, attrs %in% renamedOldFields, plyr::compact(renamed[attrs])))
+        dims = as.character(replace(dims, dims %in% renamedOldFields, plyr::compact(renamed[dims])))
+        namesOldDtypes = names(oldDtypes)
+        names(oldDtypes) <- replace(namesOldDtypes, namesOldDtypes %in% renamedOldFields, plyr::compact(renamed[namesOldDtypes]))
+      }
+      if(.has_len(dtypes)){
+        dtypes = c(dtypes, oldDtypes)
+      }
+      dtypes = .ifelse(.has_len(dtypes), c(dtypes, oldDtypes), oldDtypes)
+      dtypes = dtypes[c(dims, attrs)]
+      
+      if(.has_len(excluded)){
+        attrs = attrs %-% excluded
+        dims = dims %-% excluded
+        dtypes = dtypes[attrs %u% dims]
+      }
+      
+      self$create_new(self$to_afl(), dims, attrs, dtypes)
+    }
 
     # AFL -------------------------------------------------------------------------------------------------------------
     ,
@@ -629,6 +664,16 @@ where name is field name and value is the starting number.")
     #' @return AFL string
     to_df_afl = function(drop_dims = FALSE, artificial_field = .random_attr_name()) {
       return(self$.to_afl_explicit(drop_dims, self$selected, artificial_field = artificial_field))
+    }
+    ,
+    #' @description 
+    #' Return a schema representation of the ArrayOp <attr1 [, attr2 ...]> \[dim1 [;dim2]\]
+    #' 
+    #' @return AFL string
+    to_schema_str = function() {
+      attrStr = paste(self$attrs, self$get_field_types(self$attrs), sep = ':', collapse = ',')
+      dimStr = paste(self$dims, collapse = ';')
+      sprintf("<%s> [%s]", attrStr, dimStr)
     }
     
     # Old -------------------------------------------------------------------------------------------------------------

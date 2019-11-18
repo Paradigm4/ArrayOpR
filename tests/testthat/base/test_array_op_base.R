@@ -317,3 +317,41 @@ test_that("All target fields must be present in the source by matching names in 
       dtypes = list(x='int64', db='int64', aa='string', ab='int32'))$write_to(Target), "not found")
 })
 
+
+# Spawn -----------------------------------------------------------------------------------------------------------
+
+test_that("Spawn a new ArrayOp from a template", {
+  t = newArrayOp('t', c('da', 'db'), c('aa', 'ab'), dtypes = list(da='int64', db='int64', aa='string', ab='int32'))
+  spawned = t$spawn()
+  expect_identical(spawned$dims, c('da', 'db'))
+  expect_identical(spawned$attrs, c('aa', 'ab'))
+  expect_identical(spawned$get_field_types(), list(da='int64', db='int64', aa='string', ab='int32'))
+  assert_afl_equal(spawned$to_schema_str(), "<aa:string, ab:int32> [da;db]")
+  
+  spawned = t$spawn(excluded = c('da', 'ab'))
+  expect_identical(spawned$dims, c('db'))
+  expect_identical(spawned$attrs, c('aa'))
+  expect_identical(spawned$get_field_types(), list(db='int64', aa='string'))
+  assert_afl_equal(spawned$to_schema_str(), "<aa:string> [db]")
+  
+  spawned = t$spawn(renamed = list(da = 'a', ab = 'AB'))
+  expect_identical(spawned$dims, c('a', 'db'))
+  expect_identical(spawned$attrs, c('aa', 'AB'))
+  expect_identical(spawned$get_field_types(), list(a='int64', db='int64', aa='string', AB='int32'))
+  assert_afl_equal(spawned$to_schema_str(), "<aa:string, AB:int32> [a;db]")
+  
+  spawned = t$spawn(renamed = list(da = 'a', ab = 'AB'), excluded = 'aa')
+  expect_identical(spawned$dims, c('a', 'db'))
+  expect_identical(spawned$attrs, c('AB'))
+  expect_identical(spawned$get_field_types(), list(a='int64', db='int64', AB='int32'))
+  assert_afl_equal(spawned$to_schema_str(), "<AB:int32> [a;db]")
+})
+
+# To schema str ---------------------------------------------------------------------------------------------------
+
+test_that("Output a schema representation for the ArrayOp", {
+  t = newArrayOp('t', c('da', 'db'), c('aa', 'ab'), dtypes = list(da='int64', db='int64', aa='string', ab='int32'))
+  assert_afl_equal(t$to_schema_str(), "<aa:string, ab:int32> [da;db]")
+  assert_afl_equal(t$spawn(excluded = c('db'))$to_schema_str(), "<aa:string, ab:int32> [da]")
+  assert_afl_equal(t$spawn(excluded = c('aa'))$to_schema_str(), "<ab:int32> [da; db]")
+})
