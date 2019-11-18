@@ -65,6 +65,7 @@ ArrayOpBase <- R6::R6Class("ArrayOpBase",
       attrs = as.character(c()),
       dtypes = list(),
       validate_fields = TRUE,
+      dim_specs = list(),
       ...,
       metaList
     ) {
@@ -76,7 +77,7 @@ ArrayOpBase <- R6::R6Class("ArrayOpBase",
       "ERROR: ArrayOp:initialze: metaList cannot be provided with any of the args: dims, attrs, validate_fields, dtypes")
       private$raw_afl = raw_afl
       private$metaList = if(methods::hasArg('metaList')) metaList else
-        private$metaList = list(dims = dims, attrs = attrs, dtypes = dtypes, validate_fields = validate_fields, ...)
+        list(dims = dims, attrs = attrs, dtypes = dtypes, validate_fields = validate_fields, dim_specs = dim_specs, ...)
     }
     ,
     #' @description 
@@ -101,6 +102,19 @@ ArrayOpBase <- R6::R6Class("ArrayOpBase",
         private$raw_afl
       )
       return(self$dtypes[field_names])
+    }
+    ,
+    #' @description 
+    #' Get dimension specifications
+    #' 
+    #' A dimension spec str is formatted as "lower bound : upper bound : overlap : chunk_length", 
+    #' as seen in scidb `show(array_name)` operator.
+    #' All dimensions' data types are int64. 
+    #' @param dim_names Default NULL equals all dimensions.
+    #' @return A named list where the name is dimension name and value is a dimension spec string
+    get_dim_specs = function(dim_names = NULL) {
+      if(!.has_len(dim_names)) dim_names = self$dims
+      private$get_meta('dim_specs')[dim_names]
     }
     ,
     #' @description 
@@ -672,7 +686,11 @@ where name is field name and value is the starting number.")
     #' @return AFL string
     to_schema_str = function() {
       attrStr = paste(self$attrs, self$get_field_types(self$attrs), sep = ':', collapse = ',')
-      dimStr = paste(self$dims, collapse = ';')
+      dimStrItems = mapply(function(dimName, dimSpec){
+        if(.has_len(dimSpec) && nchar(dimSpec) > 0) sprintf("%s=%s", dimName, dimSpec)
+        else dimName
+      }, self$dims, self$get_dim_specs())
+      dimStr = paste(dimStrItems, collapse = ';')
       sprintf("<%s> [%s]", attrStr, dimStr)
     }
     

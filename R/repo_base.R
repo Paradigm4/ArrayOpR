@@ -145,7 +145,11 @@ RepoBase <- R6::R6Class("RepoBase",
       attrs = schemaDf[!schemaDf$is_dimension, ]
       dims = schemaDf[schemaDf$is_dimension, ]
       dtypes = as.list(structure(schemaDf$dtype, names = schemaDf$name))
-      arrayOp = self$ArrayOp(full_array_name, dims$name, attrs$name, dtypes = dtypes)
+      
+      dimSpecVector = if(is.null(dims$dim_spec)) list() else dims$dim_spec
+      dimSpecs = as.list(structure(dimSpecVector, names = dims$name))
+      
+      arrayOp = self$ArrayOp(full_array_name, dims$name, attrs$name, dtypes = dtypes, dim_specs = dimSpecs)
       return(arrayOp)
     }
   )
@@ -201,13 +205,20 @@ default_dep_obj = function(db) {
     # Should return a data.frame with columns: name, dtype, is_dimension
     get_schema_df = function(array_name) {
       # Get dimensions
-      dimDf = runQuery(sprintf("project(dimensions(%s), name, type)", array_name))
+      dimDf = runQuery(sprintf("project(dimensions(%s), name, type, start, length, chunk_overlap, chunk_interval)", array_name))
+      dimSpecs = gsub('NA', '*', 
+            sprintf("%s:%s:%s:%s", 
+                    bit64::as.integer64(dimDf$start), 
+                    bit64::as.integer64(dimDf$start + dimDf$length - 1), 
+                    bit64::as.integer64(dimDf$chunk_overlap), 
+                    bit64::as.integer64(dimDf$chunk_interval)))
       # Get attributes
       attrDf = runQuery(sprintf("project(attributes(%s), name, type_id)", array_name))
       data.frame(
         name = c(dimDf$name, attrDf$name),
         dtype = c(dimDf$type, attrDf$type_id),
         is_dimension = c(rep(T, nrow(dimDf)), rep(F, nrow(attrDf))),
+        dim_spec = c(dimSpecs, rep('', nrow(attrDf))),
         stringsAsFactors = FALSE
       )
     }

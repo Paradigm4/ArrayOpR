@@ -18,7 +18,8 @@ Imports:
     rlang,
     methods,
     plyr,
-    R6
+    R6,
+    bit64
 RoxygenNote: 7.0.0
 Roxygen: list(markdown = TRUE)
 Collate: 

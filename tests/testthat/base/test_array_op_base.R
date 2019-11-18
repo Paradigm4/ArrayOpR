@@ -355,3 +355,9 @@ test_that("Output a schema representation for the ArrayOp", {
   assert_afl_equal(t$spawn(excluded = c('db'))$to_schema_str(), "<aa:string, ab:int32> [da]")
   assert_afl_equal(t$spawn(excluded = c('aa'))$to_schema_str(), "<ab:int32> [da; db]")
 })
+
+test_that("Output a schema representation for the ArrayOp with dimension specs", {
+  t = newArrayOp('t', c('da', 'db'), c('aa', 'ab'), dtypes = list(da='int64', db='int64', aa='string', ab='int32'),
+                 dim_specs = list(da = '0:*:0:*', db='1:23:0:23'))
+  assert_afl_equal(t$to_schema_str(), "<aa:string, ab:int32> [da=0:*:0:*;db=1:23:0:23]")
+})
