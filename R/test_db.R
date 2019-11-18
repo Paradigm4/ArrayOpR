@@ -16,7 +16,6 @@ ScidbTest = R6::R6Class(
     file_list = NULL
     ,
     file = function(name) {
-      full_path = function(name)
       if(!.has_len(private$file_list)){
         private$file_list = list()
       }
@@ -94,6 +93,10 @@ ScidbTest = R6::R6Class(
       self$repo$register_schema_alias_by_array_name(alias, VariantArray, is_full_name = T)
       V = self$repo$get_alias_schema(alias)
       
+      minVid = 10
+      batch1 = data.table::fread(private$file('init.vcf'))
+      batch2 = data.table::fread(private$file('batch2.vcf'))
+      
       # Load all array content from a file
       loaded = V$load_file(private$file('init.vcf'), 
                            aio_settings = list(header = 1), 
@@ -101,16 +104,34 @@ ScidbTest = R6::R6Class(
       self$repo$execute(
         loaded$
           reshape(select = loaded$dims_n_attrs, dim_mode = 'drop', artificial_field = 'z')$
-          write_to(V, source_auto_increment = c(z=0), target_auto_increment = c(vid = 10))
+          write_to(V, source_auto_increment = c(z=0), target_auto_increment = c(vid = minVid))
       )
       
       resultRepo = self$repo$query(V)
-      resultDf = data.table::fread(private$file('init.vcf'))
       try({
-        assert(nrow(resultRepo) == nrow(resultDf))
-        assert(min(resultRepo$vid) == 10)     
-        assert(max(resultRepo$vid) == 15)     
+        assert(nrow(resultRepo) == nrow(batch1))
+        assert(min(resultRepo$vid) == minVid)     
+        assert(max(resultRepo$vid) == minVid + nrow(batch1) - 1)     
        })
+      
+      # Load a second batch of variants from file
+      # batch2.vcf doesn't have any cell clision with init.vcf
+      loaded = V$load_file(private$file('batch2.vcf'), 
+                           aio_settings = list(header = 1), 
+                           file_headers = c('chrom', 'pos', 'ref', 'alt', 'extra'))
+      self$repo$execute(
+        loaded$
+          reshape(select = loaded$dims_n_attrs, dim_mode = 'drop', artificial_field = 'z')$
+          write_to(V, source_auto_increment = c(z=0), target_auto_increment = c(vid = minVid))
+      )
+      
+      resultRepo = self$repo$query(V)
+      try({
+        assert(nrow(resultRepo) == nrow(batch1) + nrow(batch2))
+        assert(min(resultRepo$vid) == minVid)     
+        assert(max(resultRepo$vid) == minVid + nrow(batch1) + nrow(batch2) - 1)     
+       })
+      
     }
     ,
     test_where = function() {
@@ -120,6 +141,13 @@ ScidbTest = R6::R6Class(
         assert(nrow(filtered) == 2)
         assert(all(filtered$chrom == 1))
         assert(all(filtered$extra == c('variant1', 'variant2')))
+        
+        filtered = self$repo$query(V$where(chrom %in% !!c(1, 2)))
+        assert(nrow(filtered) == 4)
+        filtered = self$repo$query(V$where(chrom %in% !!c(1, 3)))
+        assert(nrow(filtered) == 3)
+        filtered = self$repo$query(V$where(chrom <= 3))
+        assert(nrow(filtered) == 5)
         
         filtered = self$repo$query(V$where(chrom != 1 & extra %like% '.*3.*'))
         assert(nrow(filtered) == 2)
@@ -200,27 +228,4 @@ run_tests_with_scidb_connection = function(db = NULL, namespace = 'test_arrayop'
   testClass = ScidbTest$new(repo, namespace)
   testClass$run_tests(create_namespace)
   cat("All tests are done. ")
-}
-
-
-
-auto_increment_load = function(db, VariantArray) {
-  try(repo$execute(afl(VariantArray %remove% NULL)))
-  repo$execute(
-    sprintf("create array %s <
-                            vid: int64,
-                            ref:string,
-                            alt:string,
-                            extra:string> [chrom=1:24:0:1;
-                            pos=1:*:0:1000000]", VariantArray)
-  )
-  repo$register_schema_alias_by_array_name('V', VariantArray, is_full_name = T)
-  V = repo$get_alias_schema('V')
-  initVcf = system.file('extdata', 'init.vcf', package = 'arrayop', mustWork = T)
-  loaded = V$load_file(initVcf, aio_settings = list(header = 1), file_headers = c('chrom', 'pos', 'ref', 'alt', 'extra'))
-  repo$execute(
-    loaded$
-      reshape(select = loaded$dims_n_attrs, dim_mode = 'drop', artificial_field = 'z')$
-      write_to(V, source_auto_increment = c(z=0), target_auto_increment = c(vid = 10))
-  )
 }
