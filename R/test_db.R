@@ -132,14 +132,14 @@ ScidbTest = R6::R6Class(
       V = self$repo$get_alias_schema('V1')
       df = data.frame(chrom=c(1,2))
       built = V$build_new(df)
+      # Match chrom-1 and chrom-2
       try({
         for(result in list(
           self$repo$query(V$match(df, op_mode = 'filter'))
           , self$repo$query(V$match(built, op_mode = 'cross_between'))
           , self$repo$query(V$match(df, op_mode = 'filter'))
-          # TODO Change lower/upper bound to cross_between mode
-          #, self$repo$query(V$match(data.frame(chrom_low=1, chrom_hi=2), op_mode = 'filter', 
-          #                           lower_bound = 'chrom_low', upper_bound = 'chrom_hi'))
+          , self$repo$query(V$match(data.frame(chrom_low=1, chrom_hi=2), op_mode = 'filter',
+                                    lower_bound = list(chrom='chrom_low'), upper_bound = list(chrom='chrom_hi')))
           , self$repo$query(V$match(built, op_mode = 'cross_between', 
                                     lower_bound = list(chrom = 'chrom-3'),
                                     upper_bound = list(chrom = 'chrom+0')
@@ -149,13 +149,15 @@ ScidbTest = R6::R6Class(
           assert(all(result$chrom == 1 || result$chrom == 2))
           assert(base::setequal(result$extra, c('variant1', 'variant2', 'variant3', 'variant4')))
         }
-        browser()
+      })
+      # More Cross-between mode tests
+      try({
+        assert(nrow(self$repo$query(V$match(built, op_mode = 'cross_between'))) == 4)
         assert(nrow(self$repo$query(V$match(built, op_mode = 'cross_between', 
             lower_bound = list(chrom = 'chrom-3'), upper_bound = list(chrom = 'chrom') ))) == 4)
         
-        # TODO: lower/upper bound is ignored if there is matching field
-        # assert(nrow(self$repo$query(V$match(built, op_mode = 'cross_between', 
-        #     lower_bound = list(chrom = 'chrom-3'), upper_bound = list(chrom = 'chrom+1') ))) == 5)
+        assert(nrow(self$repo$query(V$match(built, op_mode = 'cross_between',
+            lower_bound = list(chrom = 'chrom-3'), upper_bound = list(chrom = 'chrom+1') ))) == 5)
       })
     }
   )

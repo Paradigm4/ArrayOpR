@@ -160,6 +160,18 @@ test_that("Override matching fields", {
       )
     )"
   )
+  # Without field_mapping = list(), matching fields are automatically applied as lower/upper bounds.
+  assert_afl_equal(MatchSource$match(t, op_mode = 'cross_between',
+                                     lower_bound = list(da = 'da'), upper_bound = list(da = 'db'))$to_afl(),
+   "cross_between(
+      s,
+      project(
+        apply(template, _da_low, da, _da_high, db,
+                        _db_low, int64(db), _db_high, int64(db)),
+        _da_low, _db_low, _da_high, _db_high
+      )
+    )"
+  )
 })
 
 test_that("cross_between with customized lower/upper bounds (padding)", {
