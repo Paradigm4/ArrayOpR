@@ -43,9 +43,9 @@ test_that("Write a dataset ArrayOp to target in redimension mode with auto-incre
         cross_join(
           dataset,
           aggregate(
-            target, max(ab) as max_ab)
+            target, max(ab) as _max_ab)
         ),
-        ab, iif(max_ab is null, x + 2, max_ab + x -2)
+        ab, iif(_max_ab is null, x + 2, _max_ab + x -2)
       )
     ,target), target)")
   
@@ -58,13 +58,14 @@ test_that("Write a dataset ArrayOp to target in redimension mode with auto-incre
         cross_join(
           dataset,
           aggregate(
-            apply(target, da, da), max(da) as max_da)
+            apply(target, da, da), max(da) as _max_da)
         ),
-        da, iif(max_da is null, x + 1, max_da + x + 1)
+        da, iif(_max_da is null, x + 1, _max_da + x + 1)
       )
     ,target), target)")
   
   expect_error(ds$write_to(Target, source_auto_increment = c(non = 0), target_auto_increment = c(da = 1)),
     "not exist")
 })
+
 

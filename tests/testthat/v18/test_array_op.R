@@ -1,6 +1,6 @@
 context("Scidb V18.x ArrayOp")
 
-# aio_input -------------------------------------------------------------------------------------------------------
+# Load file with aio_input -------------------------------------------------------------------------------------------------------
 
 test_that("Load array from file", {
   template = newArrayOp('L', c('da', 'db'), c('aa', 'ab'), 
@@ -97,3 +97,98 @@ test_that("Load array from file with extra settings", {
       ),
     da, db, aa, ab, ac, ad)")
 })
+
+
+
+# Write to with anti collision id ---------------------------------------------------------------------------------
+
+test_that("Write a dataset ArrayOp to target in redimension mode with anti-collision field", {
+  # When regular dimensions can overlap, we need an artificial dimension to make each cell coordinate unique
+  # which is named anti-collision field
+  Target = newArrayOp('target', c('da', 'db', 'altid'), c('aa', 'ab'), 
+                      dtypes = list(da='int64', db='int64', altid='int64', aa='string', ab='int32'),
+                      dim_specs = list(da='0:*:0:1', db='0:*:0:*', altid='0:*:0:1234'))
+  
+  ds = newArrayOp('dataset', 'x', c('db', 'aa', 'da', 'ab'), 
+                  dtypes = list(x='int64', db='int64', aa='string', da='int32'))
+  
+  writeOp = ds$write_to(Target, anti_collision_field = 'altid')
+  assert_afl_equal(writeOp$to_afl(), 
+   "insert(redimension(
+      apply(
+        equi_join(
+          apply(
+            redimension(
+              dataset,
+              <aa:string, ab:int32>
+              [da=0:*:0:1; db=0:*:0:*; _src_altid=0:*:0:1234]
+            ),
+            _src_altid, _src_altid
+          ),
+          grouped_aggregate(
+            apply(
+              target,
+              altid, altid
+            ),
+            max(altid) as _max_altid, da, db
+          ),
+          'left_names=da,db',
+          'right_names=da,db',
+          'left_outer=1'
+        ),
+        altid, iif(_max_altid is null, _src_altid, _src_altid + _max_altid + 1)
+      )
+    ,target), target)")
+})
+
+test_that("Write a dataset ArrayOp to target in redimension mode with both auto-increment-id and anti-collision-field", {
+  # When regular dimensions can overlap, we need an artificial dimension to make each cell coordinate unique
+  # which is named anti-collision field
+  Target = newArrayOp('target', c('da', 'db', 'altid'), c('aa', 'ab', 'aid'), 
+                      dtypes = list(da='int64', db='int64', altid='int64', aa='string', ab='int32', aid='int64'),
+                      dim_specs = list(da='0:*:0:1', db='0:*:0:*', altid='0:*:0:1234'))
+  
+  ds = newArrayOp('dataset', 'x', c('db', 'aa', 'da', 'ab'), 
+                  dtypes = list(x='int64', db='int64', aa='string', da='int32'))
+  
+  writeOp = ds$write_to(Target, anti_collision_field = 'altid', 
+                        source_auto_increment = c(x = 0), target_auto_increment = c(aid = 1))
+  
+  autoIncremented = 
+    "apply(
+        cross_join(
+          dataset,
+          aggregate(
+            target, max(aid) as _max_aid)
+        ),
+        aid, iif(_max_aid is null, x + 1, _max_aid + x + 1)
+    )"
+  
+  assert_afl_equal(writeOp$to_afl(), sprintf(
+   "insert(redimension(
+      apply(
+        equi_join(
+          apply(
+            redimension(
+              %s,
+              <aa:string, ab:int32, aid:int64>
+              [da=0:*:0:1; db=0:*:0:*; _src_altid=0:*:0:1234]
+            ),
+            _src_altid, _src_altid
+          ),
+          grouped_aggregate(
+            apply(
+              target,
+              altid, altid
+            ),
+            max(altid) as _max_altid, da, db
+          ),
+          'left_names=da,db',
+          'right_names=da,db',
+          'left_outer=1'
+        ),
+        altid, iif(_max_altid is null, _src_altid, _src_altid + _max_altid + 1)
+      )
+    ,target), target)", autoIncremented))
+})
+

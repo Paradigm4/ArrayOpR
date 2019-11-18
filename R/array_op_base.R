@@ -584,7 +584,9 @@ Only data.frame is supported", class(df))
         assert_not_has_len(missingFields, 
                            "ERROR: ArrayOp$write_to: redimension mode: Source field(s) '%s' not found in Target", 
                            paste(missingFields, collapse = ','))
+        
         # If there is an auto-incremnt field, it needs to be inferred from the params
+        # After this step, 'src' is an updated ArrayOp with auto-incremented id calculated (during AFL execution only due to lazy evaluation)
         if(.has_len(target_auto_increment)){
           assert(length(source_auto_increment) == 1 && length(target_auto_increment) == 1,
             "ERROR: ArrayOp$write_to: both source and target auto increment params should be ONE-element named list, 
@@ -600,7 +602,7 @@ where name is field name and value is the starting number.")
           
           initialOffset = target_auto_increment - source_auto_increment
           existingOffset = 1 - source_auto_increment
-          max_taif = sprintf("max_%s", taif)
+          max_taif = sprintf("_max_%s", taif)
           agg = afl(
             .ifelse(taif %in% target$dims,
               afl(target %apply% c(taif, taif)),
@@ -614,6 +616,43 @@ where name is field name and value is the starting number.")
             self %cross_join% agg %apply% c(taif, iif)
           )
         }
+        
+        # If there is anti_collision_field, more actions are required to avoid cell collision
+        # After this step, 'src' is an updated ArrayOp with auto_collision_field set properly
+        if(.has_len(anti_collision_field)){
+          assert(is.character(anti_collision_field) && length(anti_collision_field) == 1, 
+                 "ERROR: ArrayOp$write_to: redimension mode: param 'anti_collision_field' if provided must be a single string, but got: %s", anti_collision_field)
+          
+          # Target dimensions other than the anti_collision_field
+          regularTargetDims = target$dims %-% anti_collision_field 
+          
+          # Redimension source with a different field name for the anti-collision-field
+          srcAltId = sprintf("_src_%s", anti_collision_field)
+          renamedList = as.list(structure(srcAltId, names = anti_collision_field))
+          renamedTarget = target$spawn(renamed = renamedList)
+          redimenedSource = renamedTarget$create_new_with_same_schema(afl(
+            src %redimension% renamedTarget$to_schema_str() %apply% c(srcAltId, srcAltId)
+          ))
+          
+          # Get the max anti-collision-field from group aggregating the target on the remainder of target dimensions
+          targetAltIdMax = sprintf("_max_%s", anti_collision_field)
+          groupedTarget = target$create_new_with_same_schema(afl(
+            target %apply% c(anti_collision_field, anti_collision_field) %grouped_aggregate%
+              c(sprintf("max(%s) as %s", anti_collision_field, targetAltIdMax), regularTargetDims)
+          ))
+          
+          # Left join on the remainder of the target dimensions
+          joined = redimenedSource$join(groupedTarget, on_left = regularTargetDims, on_right = regularTargetDims,
+                                        settings = list(left_outer=1))
+          
+          # Finally calculate the values of anti_collision_field
+          src = target$create_new_with_same_schema(afl(
+            joined %apply% c(anti_collision_field, sprintf(
+              "iif(%s is null, %s, %s + %s + 1)", targetAltIdMax, srcAltId, srcAltId, targetAltIdMax
+            ))
+          ))
+        }
+        
         src = afl(src %redimension% target)
       }
       
@@ -633,6 +672,7 @@ where name is field name and value is the starting number.")
       attrs = self$attrs
       dims = self$dims
       oldDtypes = self$dtypes
+      oldDimSpecs = self$get_dim_specs()
       
       if(.has_len(renamed)){
         renamedOldFields = names(renamed)
@@ -640,20 +680,24 @@ where name is field name and value is the starting number.")
         dims = as.character(replace(dims, dims %in% renamedOldFields, plyr::compact(renamed[dims])))
         namesOldDtypes = names(oldDtypes)
         names(oldDtypes) <- replace(namesOldDtypes, namesOldDtypes %in% renamedOldFields, plyr::compact(renamed[namesOldDtypes]))
+        
+        namesOldDimSpecs = names(oldDimSpecs)
+        names(oldDimSpecs) <- replace(namesOldDimSpecs, namesOldDimSpecs %in% renamedOldFields, plyr::compact(renamed[namesOldDimSpecs]))
       }
-      if(.has_len(dtypes)){
-        dtypes = c(dtypes, oldDtypes)
-      }
+
       dtypes = .ifelse(.has_len(dtypes), c(dtypes, oldDtypes), oldDtypes)
       dtypes = dtypes[c(dims, attrs)]
+      
+      dim_specs = .ifelse(.has_len(dim_specs), c(dim_specs, oldDimSpecs), oldDimSpecs)
       
       if(.has_len(excluded)){
         attrs = attrs %-% excluded
         dims = dims %-% excluded
         dtypes = dtypes[attrs %u% dims]
+        dim_specs = dim_specs[attrs %u% dims]
       }
       
-      self$create_new(self$to_afl(), dims, attrs, dtypes)
+      self$create_new(self$to_afl(), dims, attrs, dtypes, dim_specs = dim_specs)
     }
 
     # AFL -------------------------------------------------------------------------------------------------------------
