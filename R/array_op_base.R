@@ -378,6 +378,8 @@ Please select on left operand's fields OR do not select on either operand. Look 
     #' @param upper_bound Field names as upper bounds.
     #' @param field_mapping A named list where name is source field name and value is template field name.
     #' Default NULL: fields are mapped between template and source by field names only. 
+    #' If there is mapping fields in the template which are intended for lower or upper bound, 
+    #' provide an empty list or a list with matching fields 
     #' @return A new ArrayOp instance which has the same schema as the source. 
     match = function(template, op_mode, lower_bound = NULL, upper_bound = NULL, field_mapping = NULL, ...){
       assert_not_has_len(names(lower_bound) %n% names(field_mapping), 
@@ -431,8 +433,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
       cross_between_mode = function(...){
         assert(inherits(template, 'ArrayOpBase'), 
           "ERROR: ArrayOp$match: cross_between mode: template must be a ArrayOp instance, but got: %s", class(template))
-        
-        if(!.has_len(field_mapping)){
+        if(is.null(field_mapping)){
           dimMatchMarks = self$dims %in% template$dims_n_attrs
           matchedDims = template$dims_n_attrs %n% self$dims
           field_mapping = as.list(structure(matchedDims, names = matchedDims))
@@ -442,7 +443,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
           dimMatchMarks = self$dims %in% names(field_mapping)
         }
         
-        assert_has_len(matchedDims,
+        assert_has_len(matchedDims %u% names(lower_bound) %u% names(upper_bound),
           "ERROR: ArrayOp$match: cross_between mode: none of the template fields '%s' matches the source's dimensions: '%s'.
 Only dimensions are matched in this mode. Attributes are ignored even if they are provided.",
           paste(template$dims_n_attrs, collapse = ','), paste(self$dims, collapse = ','))
@@ -452,15 +453,15 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
           res = rep(default, length(self$dims))
           for(i in 1:length(self$dims)){
             mainDimKeyName = self$dims[[i]]
-            if(dimMatchMarks[[i]]){
-              res[[i]] <- sprintf("int64(%s)", field_mapping[[mainDimKeyName]])
-            } 
-            else if(low && mainDimKeyName %in% names(lower_bound)){
+            if(low && mainDimKeyName %in% names(lower_bound)){
               res[[i]] <- lower_bound[[mainDimKeyName]]
             }
             else if(!low && mainDimKeyName %in% names(upper_bound)){
               res[[i]] <- upper_bound[[mainDimKeyName]]
             }
+            else if(dimMatchMarks[[i]]){
+              res[[i]] <- sprintf("int64(%s)", field_mapping[[mainDimKeyName]])
+            } 
           }
           return(res)
         }

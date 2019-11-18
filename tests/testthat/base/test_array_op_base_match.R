@@ -99,6 +99,7 @@ test_that("explicitly specify field match between the main operand and the templ
       )
     )"
   )
+  
 })
 
 test_that("cross_between with lower/upper bounds", {
@@ -133,6 +134,32 @@ test_that("cross_between with lower/upper bounds", {
       _da_low, _db_low, _da_high, _db_high
     )
   )")
+})
+
+test_that("Override matching fields", {
+  t = newArrayOp('template', dims = 'da', attrs = c('db', 'aa'))
+  assert_afl_equal(MatchSource$match(t, op_mode = 'cross_between', field_mapping = list(), 
+                                     lower_bound = list(da = 'da'))$to_afl(),
+   "cross_between(
+      s,
+      project(
+        apply(template, _da_low, da, _da_high, 4611686018427387903,
+                        _db_low, -4611686018427387902, _db_high, 4611686018427387903),
+        _da_low, _db_low, _da_high, _db_high
+      )
+    )"
+  )
+  assert_afl_equal(MatchSource$match(t, op_mode = 'cross_between', field_mapping = list(), 
+                                     lower_bound = list(da = 'da'), upper_bound = list(da = 'db'))$to_afl(),
+   "cross_between(
+      s,
+      project(
+        apply(template, _da_low, da, _da_high, db,
+                        _db_low, -4611686018427387902, _db_high, 4611686018427387903),
+        _da_low, _db_low, _da_high, _db_high
+      )
+    )"
+  )
 })
 
 test_that("cross_between with customized lower/upper bounds (padding)", {
@@ -237,7 +264,6 @@ test_that("explicitly specify field match between the main operand and the templ
   )
   
   assert_afl_equal(s$match(t, op_mode = 'cross_between',
-    # on_left = c('db', 'da'), on_right = c('taa', 'tdb'))$to_afl(),
     field_mapping = list(db = 'taa', da = 'tdb'))$to_afl(),
     "cross_between(
       operand,
