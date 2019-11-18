@@ -66,7 +66,5 @@ test_that("Write a dataset ArrayOp to target in redimension mode with auto-incre
   
   expect_error(ds$write_to(Target, source_auto_increment = c(non = 0), target_auto_increment = c(da = 1)),
     "not exist")
-  expect_error(ds$write_to(Target, source_auto_increment = c(x = 0), target_auto_increment = c(non = 1)),
-    "not exist")
 })
 
