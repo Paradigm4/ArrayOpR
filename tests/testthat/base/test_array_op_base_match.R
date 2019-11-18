@@ -23,9 +23,18 @@ test_that("Filter mode", {
 
 test_that("Filter mode with bounds", {
   df = data.frame(da = c(1, 2), db = c(3, 4))
-  matchOp = MatchSource$match(df, op_mode = 'filter', lower_bound = 'da', upper_bound = 'db')
+  matchOp = MatchSource$match(df, op_mode = 'filter', lower_bound = list(da='da'), upper_bound = list(db='db'))
   assert_afl_equal(matchOp$to_afl(), "filter(s,
     (da >= 1 and db <= 3) or (da >= 2 and db <= 4)
+  )")
+  expect_identical(MatchSource$dims_n_attrs, matchOp$dims_n_attrs)
+})
+
+test_that("Filter mode with bounds on one field", {
+  df = data.frame(da_low = c(1, 2), da_hi = c(3, 4))
+  matchOp = MatchSource$match(df, op_mode = 'filter', lower_bound = list(da = 'da_low'), upper_bound = list(da = 'da_hi'))
+  assert_afl_equal(matchOp$to_afl(), "filter(s,
+    (da >= 1 and da <= 3) or (da >= 2 and da <= 4)
   )")
   expect_identical(MatchSource$dims_n_attrs, matchOp$dims_n_attrs)
 })
@@ -41,6 +50,14 @@ test_that("Filter mode errors", {
     data.frame(a = 1, non_matching_col = 'x'),
     op_mode = 'filter'
   ), "not matching")
+  expect_error(MatchSource$match(
+    data.frame(da = 1, db_low = 2, db_hi = 3), lower_bound = list(db = 'db_low'),
+    op_mode = 'filter'
+  ), "not matching")
+  expect_error(MatchSource$match(
+    data.frame(da = 1, db_low = 2, db_hi = 3), lower_bound = 'db_low',
+    op_mode = 'filter'
+  ), "named list")
 })
 
 # Match with cross_between mode -----------------------------------------------------------------------------------

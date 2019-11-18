@@ -386,11 +386,15 @@ Please select on left operand's fields OR do not select on either operand. Look 
       assert_not_has_len(names(upper_bound) %n% names(field_mapping), 
         "ERROR: ArrayOp$match: Field names in param 'upper_bound' and 'field_mapping' cannot overlap: '%s'",
         paste(names(upper_bound) %n% names(field_mapping), collapse = ','))
+      if(.has_len(lower_bound))
+        assert_named_list(lower_bound, "ERROR: ArrayOp$match: lower_bound if provided must be a named list.")
+      if(.has_len(upper_bound))
+        assert_named_list(upper_bound, "ERROR: ArrayOp$match: upper_bound if provided must be a named list.")
       
       filter_mode = function(...){
         assert(inherits(template, 'data.frame'), 
           "ERROR: ArrayOp$match: filter mode: template must be a data.frame, but got: %s", class(template))
-        unmatchedCols = names(template) %-% self$dims_n_attrs
+        unmatchedCols = names(template) %-% self$dims_n_attrs %-% lower_bound %-% upper_bound
         assert_not_has_len(unmatchedCols, 
           "ERROR: ArrayOp$match: filter mode: template field(s) not matching the source: '%s'",
           paste(unmatchedCols, collapse = ','))
@@ -398,12 +402,19 @@ Please select on left operand's fields OR do not select on either operand. Look 
         colTypes = sapply(template, class)
         needQuotes = colTypes != 'numeric'
         valueStrTemplates = lapply(needQuotes, .ifelse, "'%s'", "%s")
-        
+        # Iterate on the template data frame
         convertRow = function(eachRow, colNames) {
           rowValues = mapply(sprintf, valueStrTemplates, eachRow)
+          # Each filter item per row per field
           rowItems = mapply(function(name, val){
-            if(name %in% lower_bound) operator = '>='
-            else if(name %in% upper_bound) operator = '<='
+            if(name %in% lower_bound) {
+              operator = '>='
+              name = names(lower_bound)[lower_bound == name][[1]]
+            }
+            else if(name %in% upper_bound) {
+              operator = '<='
+              name = names(upper_bound)[upper_bound == name][[1]]
+            }
             else operator = '='
             sprintf("%s%s%s", name, operator, val)
           }, colNames, rowValues)

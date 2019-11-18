@@ -11,7 +11,9 @@ assert <- function(cond, errorMsgFmt = '', ...) { if(!cond) stop(sprintf(errorMs
 
 assert_has_len <- function(obj, ...) { assert(rlang::has_length(obj), ...) }
 assert_not_has_len <- function(obj, ...) { assert(!rlang::has_length(obj), ...) }
-
+assert_named_list <- function(obj, ...) {
+  assert(.has_len(names(obj)) && all(names(obj) != ''), ...)
+}
 
 .ifelse <- function(condition, yes, no) if(condition) yes else no
 .has_len <- function(...) rlang::has_length(...)
