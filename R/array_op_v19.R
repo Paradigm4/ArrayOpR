@@ -25,6 +25,7 @@ ArrayOpV19 <- R6::R6Class("ArrayOpV19",
       if(is.character(value))
         value = sprintf("'%s'", value)  # Quote string value(s)
       valueStr = if(length(value) > 1) sprintf("(%s)", paste(value, collapse = ',')) else value
+      if(key == 'path') key = 'paths'
       sprintf("%s:%s", key, valueStr)
     }
   )
