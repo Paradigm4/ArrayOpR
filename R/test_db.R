@@ -2,6 +2,7 @@
 # This script is for specific scidb version tests
 #
 
+`%>` = dplyr::`%>%`
 
 ScidbTest = R6::R6Class(
   "ScidbTest",
@@ -47,6 +48,7 @@ ScidbTest = R6::R6Class(
       private$log_job(self$test_load_with_auto_increment_id(), "Test loading file with auto-increment id")
       private$log_job(self$test_where(), "Test ArrayOp$where(...)")
       private$log_job(self$test_match(), "Test ArrayOp$match(...)")
+      private$log_job(self$test_load_with_dim_collision(), "Test loading file with dimension collision")
     }
     ,
     create_namespace = function() {
@@ -187,6 +189,70 @@ ScidbTest = R6::R6Class(
         assert(nrow(self$repo$query(V$match(built, op_mode = 'cross_between',
             lower_bound = list(chrom = 'chrom-3'), upper_bound = list(chrom = 'chrom+1') ))) == 5)
       })
+    }
+    ,
+    test_load_with_dim_collision = function() {
+      alias = 'V3'
+      VariantArray = sprintf('%s.%s', self$ns, alias)
+      try(self$repo$execute(afl(VariantArray %remove% NULL)))
+      self$repo$execute(
+        sprintf("create array %s <
+                            vid: int64,
+                            ref:string,
+                            alt:string,
+                            extra:string> 
+                [chrom=1:24:0:1; pos=1:*:0:1000000; alt_id=0:*:0:1000]", VariantArray)
+      )
+      self$repo$register_schema_alias_by_array_name(alias, VariantArray, is_full_name = T)
+      V = self$repo$get_alias_schema(alias)
+      
+      minVid = 1
+      batch1 = data.table::fread(private$file('dim_collision_1.vcf'))
+      batch2 = data.table::fread(private$file('dim_collision_2.vcf'))
+      
+      # Load all array content from a file
+      loaded = V$load_file(private$file('dim_collision_1.vcf'), 
+                           aio_settings = list(header = 1), 
+                           file_headers = c('chrom', 'pos', 'ref', 'alt', 'extra'))
+      self$repo$execute(
+        loaded$
+          reshape(select = loaded$dims_n_attrs, dim_mode = 'drop', artificial_field = 'z')$
+          write_to(V, source_auto_increment = c(z=0), target_auto_increment = c(vid = minVid), 
+                   anti_collision_field = 'alt_id')
+      )
+      
+      resultRepo = self$repo$query(V)
+      try({
+        assert(nrow(resultRepo) == nrow(batch1))
+        assert(min(resultRepo$vid) == minVid)     
+        assert(max(resultRepo$vid) == minVid + nrow(batch1) - 1)     
+      })
+      
+      # Load a second batch of variants from file where cell collision occurs with multiple cells
+      loaded = V$load_file(private$file('dim_collision_2.vcf'), 
+                           aio_settings = list(header = 1), 
+                           file_headers = c('chrom', 'pos', 'ref', 'alt', 'extra'))
+      self$repo$execute(
+        loaded$
+          reshape(select = loaded$dims_n_attrs, dim_mode = 'drop', artificial_field = 'z')$
+          write_to(V, source_auto_increment = c(z=0), target_auto_increment = c(vid = minVid),
+                   anti_collision_field = 'alt_id')
+      )
+      
+      resultRepo = self$repo$query(V)
+      try({
+        assert(nrow(resultRepo) == nrow(batch1) + nrow(batch2))
+        assert(min(resultRepo$vid) == minVid)     
+        assert(max(resultRepo$vid) == minVid + nrow(batch1) + nrow(batch2) - 1)     
+      })
+      
+      try({
+        batch = dplyr::bind_rows(batch1, batch2)
+        agg = batch %>% dplyr::count(chrom, pos)
+        result = self$repo$query(V$where(alt_id != 0))
+        assert(nrow(result) == nrow(batch) - nrow(agg))
+      })
+      
     }
   )
 )

@@ -1,0 +1,12 @@
+chrom	pos	ref	alt	extra
+2	200	A	T	v10
+2	200	A	G	v11
+3	301	C	G	v12
+4	400	C	G	v13
+4	401	G	T	v14
+5	500	A	C	v15
+5	500	A	T	v16
+5	501	A	G	v17
+5	502	T	G	v18
+6	600	A	G	v19
+6	601	G	A	v20

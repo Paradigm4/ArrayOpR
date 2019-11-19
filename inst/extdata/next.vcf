@@ -1,5 +1,0 @@
-#chrom	pos	ref	alt	extra
-1	123	A	T	variant4
-1	321	A	G	variant5: collide with variant2
-2	234	C	G	variant6: collide with v3
-2	400	C	G	variant7

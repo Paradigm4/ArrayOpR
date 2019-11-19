@@ -204,6 +204,26 @@ default_dep_obj = function(db) {
     ,
     # Should return a data.frame with columns: name, dtype, is_dimension
     get_schema_df = function(array_name) {
+      # V3<vid:int64,ref:string,alt:string,extra:string> [chrom=1:24:0:1; pos=1:*:0:1000000; alt_id=0:*:0:1000]
+      schemaStr = runQuery(sprintf("show(%s)", array_name))[1, 'schema']
+      matched = stringr::str_match_all(schemaStr, "\\<(.+)\\>\\s*\\[(.+)\\]")[[1]]
+      attrStr = matched[1,2]
+      dimStr = matched[1,3]
+      attrMatrix = stringr::str_match_all(attrStr, "(\\w+):(\\w+)")[[1]]
+      dimMatrix = stringr::str_match_all(dimStr, "(\\w+)=([^;]+)")[[1]]
+      numAttrs = nrow(attrMatrix)
+      numDims = nrow(dimMatrix)
+      data.frame(
+        name = c(attrMatrix[, 2], dimMatrix[, 2]),
+        dtype = c(attrMatrix[, 3], rep('int64', numDims)),
+        is_dimension = c(rep(F, numAttrs), rep(T, numDims)),
+        dim_spec = c(rep('', numAttrs), dimMatrix[, 3]),
+        stringsAsFactors = FALSE
+      )
+    }
+    ,
+    # Should return a data.frame with columns: name, dtype, is_dimension
+    get_schema_df_with_attributes_dimensions_operator = function(array_name) {
       # Get dimensions
       dimDf = runQuery(sprintf("project(dimensions(%s), name, type, start, length, chunk_overlap, chunk_interval)", array_name))
       dimSpecs = gsub('NA', '*', 
