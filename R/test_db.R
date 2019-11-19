@@ -2,7 +2,7 @@
 # This script is for specific scidb version tests
 #
 
-`%>` = dplyr::`%>%`
+`%>%` = dplyr::`%>%`
 
 ScidbTest = R6::R6Class(
   "ScidbTest",
