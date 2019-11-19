@@ -290,7 +290,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
       mergedSettings <- c(list(left_names = on_left, right_names = on_right), settings)
       # Values of setting items cannot be quoted.
       # But the whole 'key=value' needs single quotation according to equi_join plugin specs
-      settingItems = mapply(private$to_setting_item_str, names(mergedSettings), mergedSettings)
+      settingItems = mapply(private$to_equi_join_setting_item_str, names(mergedSettings), mergedSettings)
 
       keep_dimensions = (function(){
         val = settings[['keep_dimensions']]
@@ -298,7 +298,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
       })()
       
       # Join two operands
-      joinExpr <- sprintf("equi_join(%s, %s, %s)",
+      joinExpr <- sprintf(private$equi_join_template(),
         left$.to_join_operand_afl(on_left, keep_dimensions = keep_dimensions, artificial_field = .artificial_field), 
         right$.to_join_operand_afl(on_right, keep_dimensions = keep_dimensions, artificial_field = .artificial_field),
         paste(settingItems, collapse = ', '))
@@ -307,15 +307,15 @@ Please select on left operand's fields OR do not select on either operand. Look 
       dims = list(instance_id = 'int64', value_no = 'int64')
       attrs = (function() {
         if(hasSelected){
-          rightSelected = base::setdiff(right$selected, on_right)  # Right key(s) are ignored/masked in equi_join
+          rightSelected = right$selected %-% on_right  # Right key(s) are ignored/masked in equi_join
           as.character(unique(c(left$selected, rightSelected)))
         }
         else{
           leftRetained = if(keep_dimensions) left$attrs_n_dims else left$attrs
           rightRetained = if(keep_dimensions) right$attrs_n_dims else right$attrs
           return(c(on_left,
-            base::setdiff(leftRetained, on_left),
-            base::setdiff(rightRetained, on_right)
+            leftRetained %-% on_left,
+            rightRetained %-% on_right
           ))
         }
       }) ()

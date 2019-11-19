@@ -27,9 +27,9 @@ test_that("Join on selected attr", {
   assert_afl_equal(joinOp$to_afl(), "
   project(
     equi_join(
-      project(L, laa),
-      R,
-        left_names:laa, right_names:raa
+      project(L, laa) as _L,
+      R as _R,
+        left_names:_L.laa, right_names:_R.raa
     ),
     laa
   )")
@@ -43,9 +43,9 @@ test_that("Join on selected attr", {
   assert_afl_equal(joinOp$to_afl(), "
   project(
     equi_join(
-      project(L, laa),
-      project(R, raa),
-        left_names:laa, right_names:raa
+      project(L, laa) as _L,
+      project(R, raa) as _R,
+        left_names:_L.laa, right_names:_R.raa
     ), 
     laa
   )")
@@ -62,9 +62,9 @@ test_that("Join on single attribute with .dim_mode = 'drop'", {
   assert_afl_equal(joinOp$to_afl(), "
   project(unpack(
     equi_join(
-      project(L, laa),
-      R,
-        left_names:laa, right_names:raa
+      project(L, laa) as _L,
+      R as _R,
+        left_names:_L.laa, right_names:_R.raa
     ),
     z),
     laa
@@ -82,9 +82,9 @@ test_that("Join on multiple attrs", {
     on_left = c('laa', 'lab'), on_right = c('raa', 'rac'))
   assert_afl_equal(joinOp$to_afl(), "project(
   equi_join(
-    project(L, laa, lab),
-    project(R, raa, rac),
-      left_names:(laa,lab), right_names:(raa,rac)
+    project(L, laa, lab) as _L,
+    project(R, raa, rac) as _R,
+      left_names:(_L.laa,_L.lab), right_names:(_R.raa,_R.rac)
   ), laa, lab)
   ")
   expect_identical(joinOp$selected, NULL)
@@ -98,9 +98,9 @@ test_that("Join on multiple attrs", {
 
   assert_afl_equal(joinOp$to_afl(), "project(unpack(
   equi_join(
-    project(L, laa, lab),
-    project(R, raa, rac),
-      left_names:(laa,lab), right_names:(raa,rac)
+    project(L, laa, lab) as _L,
+    project(R, raa, rac) as _R,
+      left_names:(_L.laa,_L.lab), right_names:(_R.raa,_R.rac)
   ), z), laa, lab)
   ")
   expect_identical(joinOp$selected, NULL)
@@ -114,9 +114,9 @@ test_that("No selected fields in right operand", {
   assert_afl_equal(joinOp$to_afl(), "
   project(
     equi_join(
-      project(L, laa),
-      R,
-      left_names:laa, right_names:raa
+      project(L, laa) as _L,
+      R as _R,
+      left_names:_L.laa, right_names:_R.raa
     ),
     laa
   )")
@@ -126,9 +126,9 @@ test_that("No selected fields in right operand", {
   assert_afl_equal(joinOp$to_afl(), "
   project(
     equi_join(
-      project(L, laa),
-      R,
-      left_names:lda, right_names:raa
+      project(L, laa) as _L,
+      R as _R,
+      left_names:_L.lda, right_names:_R.raa
     ),
     laa
   )")
@@ -138,9 +138,9 @@ test_that("No selected fields in right operand", {
   assert_afl_equal(joinOp$to_afl(), "
   project(
     equi_join(
-      project( apply(L, lda, lda), lda, laa),
-      R,
-      left_names:laa, right_names:raa
+      project( apply(L, lda, lda), lda, laa) as _L,
+      R as _R,
+      left_names:_L.laa, right_names:_R.raa
     ),
     lda, laa
   )")
@@ -151,7 +151,7 @@ test_that("No selected fields on either side", {
   joinOp = arrL$join(arrR, on_left = 'laa', on_right = 'raa')
   assert_afl_equal(
     joinOp$to_afl(),
-    "equi_join(L, R, left_names:laa, right_names:raa)"
+    "equi_join(L as _L, R as _R, left_names:_L.laa, right_names:_R.raa)"
   )
   expect_identical(joinOp$selected, NULL)
   expect_identical(joinOp$dims, c('instance_id', 'value_no'))
@@ -164,7 +164,7 @@ test_that("No selected fields on either side", {
   joinOp = arrL$join(arrR, on_left = 'laa', on_right = 'raa', list(keep_dimensions = 1))
   assert_afl_equal(
     joinOp$to_afl(),
-    "equi_join(L, R, left_names:laa, right_names:raa, keep_dimensions:1)"
+    "equi_join(L as _L, R as _R, left_names:_L.laa, right_names:_R.raa, keep_dimensions:1)"
   )
   expect_identical(joinOp$selected, NULL)
   expect_identical(joinOp$dims, c('instance_id', 'value_no'))
@@ -172,11 +172,6 @@ test_that("No selected fields on either side", {
     'rab', 'rac', 'rad', 'rda', 'rdb', 'rdc', 'rdd'))
   expect_equal(length(joinOp$dtypes), 17)
   
-  # left = SubsetOp$new(arrL, filter_expr = e(lab > 1, lac == 'val'))
-  # assert_afl_equal(
-  #   JoinOp$new(left, arrR, on_left = 'laa', on_right = 'raa')$to_afl(),
-  #   "equi_join(filter(L, lab > 1 and lac = 'val'), R, left_names:laa, right_names:raa)"
-  # )
 })
 
 # __on_right keys are omitted  ------------------------------------------------------------------------------------
@@ -187,9 +182,9 @@ test_that("Right operand's selected fields are omitted from the output if they a
   assert_afl_equal(joinOp$to_afl(), "
   project(
     equi_join(
-      project(L, laa),
-      project(R, raa),
-      left_names:laa, right_names:raa
+      project(L, laa) as _L,
+      project(R, raa) as _R,
+      left_names:_L.laa, right_names:_R.raa
     ),
     laa
   )
@@ -205,9 +200,9 @@ test_that("Join on dims and select other dims", {
   assert_afl_equal(joinOp$to_afl(), "
   project(
     equi_join(
-      project(apply(L, lda, lda), lda),
-      project(apply(R, rda, rda), rda),
-      left_names:ldb, right_names:rdb
+      project(apply(L, lda, lda), lda) as _L,
+      project(apply(R, rda, rda), rda) as _R,
+      left_names:_L.ldb, right_names:_R.rdb
     ),
     lda, rda
   )")
@@ -220,9 +215,9 @@ test_that("Join on dims and select attrs", {
   assert_afl_equal(joinOp$to_afl(), "
   project(
     equi_join(
-      project(L, laa),
-      project(apply(R, rdb, rdb), rdb),
-        left_names:lda, right_names:rda
+      project(L, laa) as _L,
+      project(apply(R, rdb, rdb), rdb) as _R,
+        left_names:_L.lda, right_names:_R.rda
     ), laa, rdb
   )")
   expect_identical(joinOp$attrs, c('laa', 'rdb'))
@@ -233,9 +228,9 @@ test_that("Special case when operand's selected fields are all join keys", {
   assert_afl_equal(joinOp$to_afl(), "
   project(
     equi_join(
-      project(apply(L, x, null), x),
-      R,
-        left_names:lda, right_names:raa
+      project(apply(L, x, null), x) as _L,
+      R as _R,
+        left_names:_L.lda, right_names:_R.raa
     ), lda
   )
   ")
@@ -243,18 +238,18 @@ test_that("Special case when operand's selected fields are all join keys", {
   assert_afl_equal(joinOp$to_afl(), "
   project(
     equi_join(
-      project(apply(L, ldb, ldb), ldb),
-      R,
-        left_names:lda, right_names:raa
+      project(apply(L, ldb, ldb), ldb) as _L,
+      R as _R,
+        left_names:_L.lda, right_names:_R.raa
     ), lda, ldb
   )")
   joinOp = arrL$select('lda', 'laa')$join(arrR, on_left = 'lda', on_right = 'raa', .artificial_field = 'x')
   assert_afl_equal(joinOp$to_afl(), "
   project(
     equi_join(
-      project(L, laa),
-      R,
-        left_names:lda, right_names:raa
+      project(L, laa) as _L,
+      R as _R,
+        left_names:_L.lda, right_names:_R.raa
     ), lda, laa
   )
   ")
@@ -265,9 +260,9 @@ test_that("Special case when operand's selected fields are all join keys", {
   assert_afl_equal(joinOp$to_afl(), "
   project(
     equi_join(
-      project(apply(L, x, null), x),
-      R,
-        left_names:lda, right_names:raa, keep_dimensions:1
+      project(apply(L, x, null), x) as _L,
+      R as _R,
+        left_names:_L.lda, right_names:_R.raa, keep_dimensions:1
     ), lda
   )
   ")
@@ -276,9 +271,9 @@ test_that("Special case when operand's selected fields are all join keys", {
   assert_afl_equal(joinOp$to_afl(), "
   project(
     equi_join(
-      project(apply(L, x, null), x),
-      R,
-        left_names:lda, right_names:raa, keep_dimensions:1
+      project(apply(L, x, null), x) as _L,
+      R as _R,
+        left_names:_L.lda, right_names:_R.raa, keep_dimensions:1
     ), lda, ldb
   )
   ")
@@ -287,9 +282,9 @@ test_that("Special case when operand's selected fields are all join keys", {
   assert_afl_equal(joinOp$to_afl(), "
   project(
     equi_join(
-      project(L, laa),
-      R,
-        left_names:lda, right_names:raa, keep_dimensions:1
+      project(L, laa) as _L,
+      R as _R,
+        left_names:_L.lda, right_names:_R.raa, keep_dimensions:1
     ), lda, laa
   )
   ")
@@ -304,9 +299,9 @@ test_that("Add extra settings (equi_join specific)", {
 
   assert_afl_equal(joinOp$to_afl(), "project(
   equi_join(
-    project(L, laa),
-    project(R, raa),
-      left_names:laa, right_names:raa,
+    project(L, laa) as _L,
+    project(R, raa) as _R,
+      left_names:_L.laa, right_names:_R.raa,
       algorithm:hash_replicate_right, left_outer:1
   ), laa)
   ")
@@ -370,7 +365,7 @@ test_that("When right has selected_fields, the 'on_right' keys are excluded", {
 test_that("No selcted_fields on either operands. Left join keys and left/right dimensions are selected", {
   joinOp = arrL$join(arrR, on_left = 'lab', on_right = 'raa', settings=list(keep_dimensions=1))
   assert_afl_equal(joinOp$to_afl(), "equi_join(
-    L, R, left_names:lab, right_names:raa, keep_dimensions:1
+    L as _L, R as _R, left_names:_L.lab, right_names:_R.raa, keep_dimensions:1
   )")
   expect_identical(joinOp$dims, c('instance_id', 'value_no'))
   expect_identical(joinOp$selected, NULL)
@@ -387,10 +382,10 @@ test_that("No selcted_fields on either operands. Left join keys and left/right d
 test_that("When left has selected_fields, JoinOp will project on equi_join which changes fields", {
   leftSelected = list(c('laa'), c('laa', 'lab'), c('lda', 'ldb'), c('lda', 'laa'))
   afls = list(
-    "project(equi_join(project(L, laa), R, left_names:ldc, right_names:raa, keep_dimensions:1), laa)"
-    , "project(equi_join(project(L, laa, lab), R, left_names:ldc, right_names:raa, keep_dimensions:1), laa, lab)"
-    , "project(equi_join(project(apply(L, xxx, null), xxx), R, left_names:ldc, right_names:raa, keep_dimensions:1), lda, ldb)"
-    , "project(equi_join(project(L, laa), R, left_names:ldc, right_names:raa, keep_dimensions:1), lda, laa)"
+    "project(equi_join(project(L, laa) as _L, R as _R, left_names:_L.ldc, right_names:_R.raa, keep_dimensions:1), laa)"
+    , "project(equi_join(project(L, laa, lab) as _L, R as _R, left_names:_L.ldc, right_names:_R.raa, keep_dimensions:1), laa, lab)"
+    , "project(equi_join(project(apply(L, xxx, null), xxx) as _L, R as _R, left_names:_L.ldc, right_names:_R.raa, keep_dimensions:1), lda, ldb)"
+    , "project(equi_join(project(L, laa) as _L, R as _R, left_names:_L.ldc, right_names:_R.raa, keep_dimensions:1), lda, laa)"
   )
   i = 1
   for(lSelected in leftSelected){
@@ -410,7 +405,7 @@ test_that("When right has selected_fields, the 'on_right' keys are excluded", {
   expect_identical(joinOp$attrs, c('raa'))
   assert_afl_equal(joinOp$to_afl(),
     "project(
-      equi_join(L, project(R, raa), left_names:lda, right_names:rda, keep_dimensions:1),
+      equi_join(L as _L, project(R, raa) as _R, left_names:_L.lda, right_names:_R.rda, keep_dimensions:1),
       raa
     )")
 

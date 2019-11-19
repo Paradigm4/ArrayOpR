@@ -16,7 +16,11 @@
 ArrayOpV18 <- R6::R6Class("ArrayOpV18",
   inherit = ArrayOpBase,
   private = list(
-    to_setting_item_str = function(key, value) {
+    equi_join_template = function() {
+      "equi_join(%s, %s, %s)"
+    }
+    ,
+    to_equi_join_setting_item_str = function(key, value) {
       valueStr = if(length(value) > 1) paste(value, collapse = ',') else value
       sprintf("'%s=%s'", key, valueStr)
     }
