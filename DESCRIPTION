@@ -12,7 +12,9 @@ Encoding: UTF-8
 LazyData: true
 Suggests: 
     testthat,
-    data.table
+    data.table,
+    knitr,
+    rmarkdown
 Imports: 
     scidb,
     rlang,
@@ -36,3 +38,4 @@ Collate:
     'repo_v19.R'
     'package.R'
     'test_db.R'
+VignetteBuilder: knitr

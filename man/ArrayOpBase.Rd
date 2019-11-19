@@ -15,6 +15,7 @@ in another operation. Operands and Opreration results can all be denoted by Arra
 \itemize{
 \item \href{#method-new}{\code{ArrayOpBase$new()}}
 \item \href{#method-get_field_types}{\code{ArrayOpBase$get_field_types()}}
+\item \href{#method-get_dim_specs}{\code{ArrayOpBase$get_dim_specs()}}
 \item \href{#method-get_absent_fields}{\code{ArrayOpBase$get_absent_fields()}}
 \item \href{#method-create_new}{\code{ArrayOpBase$create_new()}}
 \item \href{#method-create_new_with_same_schema}{\code{ArrayOpBase$create_new_with_same_schema()}}
@@ -26,8 +27,10 @@ in another operation. Operands and Opreration results can all be denoted by Arra
 \item \href{#method-match}{\code{ArrayOpBase$match()}}
 \item \href{#method-build_new}{\code{ArrayOpBase$build_new()}}
 \item \href{#method-write_to}{\code{ArrayOpBase$write_to()}}
+\item \href{#method-spawn}{\code{ArrayOpBase$spawn()}}
 \item \href{#method-to_afl}{\code{ArrayOpBase$to_afl()}}
 \item \href{#method-to_df_afl}{\code{ArrayOpBase$to_df_afl()}}
+\item \href{#method-to_schema_str}{\code{ArrayOpBase$to_schema_str()}}
 \item \href{#method-.to_afl_explicit}{\code{ArrayOpBase$.to_afl_explicit()}}
 \item \href{#method-.to_join_operand_afl}{\code{ArrayOpBase$.to_join_operand_afl()}}
 \item \href{#method-clone}{\code{ArrayOpBase$clone()}}
@@ -44,6 +47,7 @@ Base class initialize function, to be called in sub-class
   attrs = as.character(c()),
   dtypes = list(),
   validate_fields = TRUE,
+  dim_specs = list(),
   ...,
   metaList
 )}\if{html}{\out{</div>}}
@@ -76,6 +80,29 @@ NOTE: private$info has to be defined, otherwise returns NULL
 }
 \subsection{Returns}{
 a named list as \code{field_names}, where absent fields or fields without data types are dropped silently.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-get_dim_specs"></a>}}
+\subsection{Method \code{get_dim_specs()}}{
+Get dimension specifications
+
+A dimension spec str is formatted as "lower bound : upper bound : overlap : chunk_length",
+as seen in scidb \code{show(array_name)} operator.
+All dimensions' data types are int64.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$get_dim_specs(dim_names = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{dim_names}}{Default NULL equals all dimensions.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A named list where the name is dimension name and value is a dimension spec string
 }
 }
 \if{html}{\out{<hr>}}
@@ -280,7 +307,9 @@ lower_bound/upper_bound which will be used as a range \verb{[lower_bound, upper_
 \item{\code{upper_bound}}{Field names as upper bounds.}
 
 \item{\code{field_mapping}}{A named list where name is source field name and value is template field name.
-Default NULL: fields are mapped between template and source by field names only.}
+Default NULL: fields are mapped between template and source by field names only.
+If there is mapping fields in the template which are intended for lower or upper bound,
+provide an empty list or a list with matching fields}
 }
 \if{html}{\out{</div>}}
 }
@@ -330,7 +359,8 @@ occurs within scidb where necessary/applicable.
   target,
   append = TRUE,
   source_auto_increment = NULL,
-  target_auto_increment = NULL
+  target_auto_increment = NULL,
+  anti_collision_field = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -341,9 +371,37 @@ occurs within scidb where necessary/applicable.
 
 \item{\code{append}}{Append to existing target array if set to TRUE (default).
 Otherwise replace the whole target array with the source.}
+
+\item{\code{source_auto_increment}}{a named number vector e.g. c(z=0), where the name is a source field and value is the starting index}
+
+\item{\code{target_auto_increment}}{a named number vector e.g. c(aid=0), where the name is a target field and value is the starting index.
+Here the \code{target_auto_increment} param only affects the initial load when the field is still null in the target array.}
+
+\item{\code{anti_collision_field}}{a target dimension name which exsits only to resolve cell collision
+(ie. cells with the same dimension coordinate).}
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-spawn"></a>}}
+\subsection{Method \code{spawn()}}{
+Create a new ArrayOp instance from a \code{self} template
+
+This function is mainly for array schema string generation where we might want to rename and/or exclude certain
+fields of the template. Data types and dimension specs will be inherited from the template unless provided.
+
+Note: except for scidb build or aio_input operators, the spawned ArrayOp is not meaningful semantically. So do not
+use this function for operations other than 'build'/ArrayOp$build_new and 'aio_input'/ArrayOp$load_file
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$spawn(
+  renamed = NULL,
+  excluded = NULL,
+  dtypes = NULL,
+  dim_specs = NULL
+)}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-to_afl"></a>}}
@@ -381,6 +439,18 @@ scidb::iquery has a param \code{only_attributes}, which, if set TRUE, will effec
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Returns}{
+AFL string
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-to_schema_str"></a>}}
+\subsection{Method \code{to_schema_str()}}{
+Return a schema representation of the ArrayOp <attr1 \link{, attr2 ...}> [dim1 \link{;dim2}]
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$to_schema_str()}\if{html}{\out{</div>}}
+}
+
 \subsection{Returns}{
 AFL string
 }

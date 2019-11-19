@@ -4,12 +4,32 @@
 \alias{run_tests_with_scidb_connection}
 \title{Run tests with a scidb connection}
 \usage{
-run_tests_with_scidb_connection(db, namespace)
+run_tests_with_scidb_connection(
+  db = NULL,
+  namespace = "test_arrayop",
+  create_namespace = FALSE,
+  host = "localhost",
+  username = "scidbadmin",
+  password = readLines("~/.bms_password"),
+  port = 8083,
+  protocol = "https"
+)
 }
 \arguments{
-\item{db}{a scidb connection returned by calling \code{scidb::scidbconnect}}
+\item{db}{a scidb connection returned by calling \code{scidb::scidbconnect}
+If not provided, a connection will be created using other params.}
 
 \item{namespace}{Namespace to run tests in}
+
+\item{host}{scidb host}
+
+\item{username}{scidb user name}
+
+\item{password}{scidb password}
+
+\item{port}{scidb port default: 8083}
+
+\item{protocol}{scidb protocol default: 'https'}
 }
 \description{
 Run tests with a scidb connection
