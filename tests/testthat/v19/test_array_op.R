@@ -12,7 +12,7 @@ test_that("Load array from file", {
     assert_afl_equal(loaded$to_afl(),
       "project(
         apply(
-          aio_input(paths:'file_path', num_attributes:4),
+          aio_input('file_path', num_attributes:4),
           da, int64(a0), db, int64(a1), aa, a2, ab, double(a3)
         ),
       da, db, aa, ab)")
@@ -21,7 +21,7 @@ test_that("Load array from file", {
     template$load_file('file_path', file_headers = c('aa', 'ab'))$to_afl(),
     "project(
         apply(
-          aio_input(paths:'file_path', num_attributes:2),
+          aio_input('file_path', num_attributes:2),
           aa, a0, ab, double(a1)
         ),
     aa, ab)"
@@ -31,7 +31,7 @@ test_that("Load array from file", {
     template$load_file('file_path', file_headers = c('aa', 'db'))$to_afl(),
     "project(
         apply(
-          aio_input(paths:'file_path', num_attributes:2),
+          aio_input('file_path', num_attributes:2),
           db, int64(a1), aa, a0
         ),
     db, aa)"
@@ -45,7 +45,7 @@ test_that("Load array from file with skipped file columns", {
   assert_afl_equal(loaded$to_afl(),
     "project(
       apply(
-        aio_input(paths:'file_path', num_attributes:5),
+        aio_input('file_path', num_attributes:5),
         da, int64(a1), db, int64(a2), aa, a3, ab, double(a4)
       ),
     da, db, aa, ab)")
@@ -54,7 +54,7 @@ test_that("Load array from file with skipped file columns", {
   assert_afl_equal(loaded$to_afl(),
     "project(
       apply(
-        aio_input(paths:'file_path', num_attributes:4),
+        aio_input('file_path', num_attributes:4),
         da, int64(a0), db, int64(a3)
       ),
     da, db)")
@@ -69,7 +69,7 @@ test_that("Load array from file with customized field conversion", {
   assert_afl_equal(loaded$to_afl(),
     "project(
       apply(
-        aio_input(paths:'file_path', num_attributes:6),
+        aio_input('file_path', num_attributes:6),
         da, int64(a0), db, int64(a1), aa, a2, ab, int64(a3)+42, ac, int32(a4), ad, dcast(a5, bool(null))
       ),
     da, db, aa, ab, ac, ad)")
@@ -83,7 +83,7 @@ test_that("Load array from file with extra settings", {
   assert_afl_equal(loaded$to_afl(),
     "project(
       apply(
-        aio_input(paths:'file_path', num_attributes:6, header:1, attribute_delimiter:'\\t'),
+        aio_input('file_path', num_attributes:6, header:1, attribute_delimiter:'\\t'),
         da, int64(a0), db, int64(a1), aa, a2, ab, double(a3), ac, int32(a4), ad, bool(a5)
       ),
     da, db, aa, ab, ac, ad)")
@@ -92,7 +92,7 @@ test_that("Load array from file with extra settings", {
   assert_afl_equal(loaded$to_afl(),
     "project(
       apply(
-        aio_input(paths:'file_path', num_attributes:6, header:1, attribute_delimiter:'\t'),
+        aio_input('file_path', num_attributes:6, header:1, attribute_delimiter:'\t'),
         da, int64(a0), db, int64(a1), aa, a2, ab, double(a3), ac, int32(a4), ad, bool(a5)
       ),
     da, db, aa, ab, ac, ad)")
