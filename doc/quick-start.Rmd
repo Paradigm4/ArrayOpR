@@ -1,5 +1,5 @@
 ---
-title: "ArrayOpR Quick Start"
+title: "Quick Start"
 author: "Paradigm4"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
