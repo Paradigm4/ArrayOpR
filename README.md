@@ -10,6 +10,9 @@ An R package `arrayop` for object-oriented scidb operations/operands
     - [2.1. Synopsis](#21-synopsis)
     - [2.2. What is ArrayOp?](#22-what-is-arrayop)
     - [2.3. ArrayOp class features](#23-arrayop-class-features)
+    - [2.4. A working example and tests](#24-a-working-example-and-tests)
+        - [2.4.1. Integration tests](#241-integration-tests)
+        - [2.4.2. Unit tests](#242-unit-tests)
 - [3. Create a Repo instance](#3-create-a-repo-instance)
     - [3.1. Repo operations](#31-repo-operations)
     - [3.2. Prep the Repo](#32-prep-the-repo)
@@ -39,7 +42,10 @@ An R package `arrayop` for object-oriented scidb operations/operands
         - [5.3.3. build_new](#533-build_new)
     - [5.4. Schema change](#54-schema-change)
         - [5.4.1. reshape](#541-reshape)
-        - [5.5. spawn](#55-spawn)
+        - [5.4.2. spawn](#542-spawn)
+- [6. Create AFL manually](#6-create-afl-manually)
+    - [6.1. R infix functions are converted to scidb operators/functions](#61-r-infix-functions-are-converted-to-scidb-operatorsfunctions)
+    - [6.2. Run generated AFL in scidb](#62-run-generated-afl-in-scidb)
 
 <!-- /TOC -->
 
@@ -102,11 +108,15 @@ Regardless of how an `ArrayOp` instance `arrayOp` is created, it has the full fe
   
   The latest `arrayop` package supports scidb v18 and v19. Version switch is made during `Repo` creation (see below for details).
 
-  ## A working example and tests
-  During `arrayop` package development, [an integration test script](R/test_db.R) that runs on both scidb v19 and v18 ensures `arraop` passes all tests in action. 
+## 2.4. A working example and tests
+
+### 2.4.1. Integration tests
+
+During `arrayop` package development, [an integration test script](R/test_db.R) that runs on both scidb v19 and v18 ensures `arraop` passes all tests in action. 
   
-  ### Unit tests
-  The unit tests do not depend on a scidb connection. But they shows how AFL is generated under the hood. Feel free to take a look at the [unit tests](tests/testthat/) or dive right into the [tests on ArrayOpBase class](tests/testthat/base/test_array_op_base.R).
+### 2.4.2. Unit tests
+  
+The unit tests do not depend on a scidb connection. But they shows how AFL is generated under the hood. Feel free to take a look at the [unit tests](tests/testthat/) or dive right into the [tests on ArrayOpBase class](tests/testthat/base/test_array_op_base.R).
 
 # 3. Create a Repo instance
 
@@ -345,7 +355,7 @@ NOTE: `reshape`d ArrayOp is useful in I/O related operations.
 
 E.g. we can only calculate a field after some initial operations, so the initially loaded ArrayOp can not have the same field name as the `write_to` target due to field name confliction. 
 
-### 5.5. spawn
+### 5.4.2. spawn
 
 `spawn` is similar to `reshape` in the sense they both return a new ArrayOp with a modified schema than the template. But `spawn` differs from `reshape` in :
   - `spawn` only renames or excludes existing template fields, and does not allow new fields.
@@ -360,4 +370,35 @@ E.g. we can only calculate a field after some initial operations, so the initial
 The param `dtypes` and `dim_specs` can redefine field data types and dimension specs of the result schema.
 
 NOTE: all the params can be provided in combination with each other. When both `renamed` and `excluded` are provided, renaming is performed prior to excluding the fields. 
+
+# 6. Create AFL manually
+
+Not all scidb operations can be achieved directly via ArrayOp instance functions. Sometimes we need to create AFL manually. After all, ArrayOp features are also implemented through AFL, just more user friendly.
+
+The package level function `afl(...)` translate R expressions into AFL, where a customized R infix function `%func%` is converted to an AFL function `func`, and operands are converted to their proper string forms. See examples below.
+
+## 6.1. R infix functions are converted to scidb operators/functions
+
+`afl('a' %op% 'b')` => `op(a, b)`
+
+`afl("'a'" %op% 'b')` => `op('a', b)` 
+
+`afl('a' %op% c('b', 'c'))` => `op(a, b, c)`
+
+`afl(arrayOpA %op% 'b')` => `op(arrayOpA$to_afl(), b)`
+
+`afl(arrayOpA %op% arrayOpB)` => `op(arrayOpA$to_afl(), arrayOpB$to_afl())`
+
+`afl(arrayOpA %filter% 'aa > 0' %apply% c('da', 'da') %project% c('da', 'aa'))` => `project(apply(filter(arrayOpA$to_afl(),aa > 0),da,da),da,aa)`
+
+See [relevant unit tests](tests/testthat/base/test_afl_util.R) for more details.
+
+NOTE: `arrayop` does not validate in any way the AFL operands or functions.
+
+## 6.2. Run generated AFL in scidb
+
+`repo$query(afl('a' %op% 'b'))` will return the result of the AFL query `op(a, b)`
+`repo$execute(afl('a' %op% 'b'))` will execute the AFL command `op(a, b)`
+
+
 
