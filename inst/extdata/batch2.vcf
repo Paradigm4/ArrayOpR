@@ -1,0 +1,5 @@
+#chrom	pos	ref	alt	extra
+5	1	G	C	variant-chr5
+6	2	A	T	variant-chr6
+7	3	A	G	variant-chr7
+8	4	T	G	variant-chr8

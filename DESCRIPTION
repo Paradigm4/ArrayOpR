@@ -1,0 +1,41 @@
+Package: arrayop
+Title: Toolset for Object-Oriented SciDB Array Operations/Operands
+Description: ArrayOp abstracts away AFL generation by unifying array operations and array operands.
+Version: 0.2
+Author: Paradigm4, Inc
+Copyright: Paradigm4, Inc.
+Maintainer: Paradigm4, Inc <support@paradigm4.com>
+BugReports: https://github.com/Paradigm4/ArrayOpR/issues
+URL: https://github.com/Paradigm4/ArrayOpR
+License: AGPL-3
+Encoding: UTF-8
+LazyData: true
+Suggests: 
+    testthat,
+    data.table,
+    knitr,
+    rmarkdown
+Imports: 
+    scidb,
+    rlang,
+    methods,
+    plyr,
+    dplyr,
+    R6,
+    bit64,
+    stringr
+RoxygenNote: 7.0.0
+Roxygen: list(markdown = TRUE)
+Collate: 
+    'afl_utils.R'
+    'arg_list.R'
+    'array_op_base.R'
+    'array_op_v18.R'
+    'array_op_v19.R'
+    'utils.R'
+    'repo_base.R'
+    'repo_v18.R'
+    'repo_v19.R'
+    'package.R'
+    'test_db.R'
+VignetteBuilder: knitr

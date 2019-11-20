@@ -1,0 +1,26 @@
+library(testthat)
+context('test entry')
+
+# Order of sourced files matter. First sourced is loaded into package namespace first.
+
+# Get current file and directory, so that we can 'source' relative paths.
+# Otherwise, the enclosing directory is required which creates an unnecessary dependecy on the directory name.
+# Should only be used at the top level of 'sourced' R files
+relative_path <- function(filename, n = 3) {
+  this.file <- parent.frame(n)$ofile
+  this.dir <- dirname(this.file)
+  return(file.path(this.dir, filename))
+}
+
+assert_afl_equal <- function(actual, expected) {
+  actual <- gsub('\\s+', '', actual)
+  expected <- gsub('\\s+', '', expected)
+  testthat::expect_identical(actual, expected)
+}
+
+# When runnning devtools::test(), the working directory is (package root)/tests/testthat/
+
+# source("array_op/__source.R", local = TRUE)
+source("base/__source.R", local = TRUE)
+source("v18/__source.R", local = TRUE)
+source("v19/__source.R", local = TRUE)
