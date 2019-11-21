@@ -164,6 +164,10 @@ test_that("Select dims only", {
   }
 })
 
+test_that("Must select fields in dim_mode = 'keep'", {
+  expect_error(Source$reshape(), 'select')
+  expect_error(Source$reshape(dim_mode = 'keep'), 'select')
+})
 # 
 # dim_mode = 'drop' 
 # 
@@ -189,6 +193,14 @@ test_that("Select existing attributes/dimensions in dim_mode = 'drop'", {
   expect_identical(t$dims_n_attrs, c('z', 'ac', 'da'))
   expect_identical(t$get_field_types(), list(z = 'int64', ac = 'dtac', da = 'dtda'))
   assert_afl_equal(t$to_afl(), "project(unpack(s, z), ac, da)")
+  # No selected fields
+  t = Source$reshape(dim_mode = 'drop', artificial_field = 'z')
+  expect_identical(t$dims, 'z')
+  expect_identical(t$attrs, c('da', 'db', 'ac', 'ad'))
+  expect_identical(t$dims_n_attrs, c('z', 'da', 'db', 'ac', 'ad'))
+  expect_identical(t$get_field_types(), list(z = 'int64', da='dtda', db='dtdb', ac = 'dtac', ad = 'dtad'))
+  expect_null(t$get_dim_specs('z')[[1]])
+  assert_afl_equal(t$to_afl(), "unpack(s, z)")
 })
 
 test_that("Select new fields in dim_mode = 'drop'", {

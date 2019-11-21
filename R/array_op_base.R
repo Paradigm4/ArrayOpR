@@ -192,10 +192,12 @@ ArrayOpBase <- R6::R6Class("ArrayOpBase",
     #' @param dtypes a named list to provide field data types for newly derived fields
     #' @param artificial_field A field name used as the artificial dimension name in `unpack` scidb operator
     #' By default, a random string is generated.
-    reshape = function(select, dtypes = NULL, dim_mode = 'keep', artificial_field = .random_attr_name()) {
-      
-      assert_has_len(select,
-        "ERROR: ArrayOp$reshape: 'select' param must be a non-empty character list, but got: %s", select)
+    reshape = function(select=NULL, dtypes = NULL, dim_mode = 'keep', artificial_field = .random_attr_name()) {
+      if(dim_mode == 'keep'){
+        assert(.has_len(select),
+          "ERROR: ArrayOp$reshape: dim_mode='keep': 'select' param must be a non-empty character list, but got: %s", 
+          class(select))
+      }
       
       existingFields = if(.has_len(names(select))) select[names(select) == ''] else {
         as.character(select)
@@ -228,9 +230,16 @@ ArrayOpBase <- R6::R6Class("ArrayOpBase",
         unpacked = afl(self %unpack% artificial_field)
         newAfl = if(.has_len(newFieldNames)) 
           afl(unpacked %apply% afl_join_fields(newFieldNames, newFields) %project% selectFieldNames) 
-        else afl(unpacked %project% selectFieldNames)
+        else if(.has_len(selectFieldNames)) afl(unpacked %project% selectFieldNames)
+        else unpacked
+        # If no selected fields, then follow the unpack operator's default behavior:
+        # all dimensions and attributes are converted to attributes
+        if(!.has_len(selectFieldNames))
+          selectFieldNames = self$dims_n_attrs
+        
         newDtypes = c(mergedDtypes[selectFieldNames], structure('int64', names = artificial_field))
-        self$create_new(newAfl, artificial_field, selectFieldNames, newDtypes, validate_fields = private$get_meta('validate_fields'))
+        self$create_new(newAfl, artificial_field, selectFieldNames, 
+          dtypes = newDtypes, validate_fields = private$get_meta('validate_fields'))
       }
       
       ignore_in_parent = function() {
