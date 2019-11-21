@@ -817,13 +817,15 @@ where name is field name and value is the starting number.")
     .to_join_operand_afl = function(keyFields, keep_dimensions = FALSE, artificial_field = .random_attr_name()) {
       
       selectedFields = self$selected
+      if(!.has_len(selectedFields))
+        return(self$to_afl())
       
       dimensions = self$dims
       attributes = self$attrs
       arrName  = self$to_afl()
       
       applyList <- selectedFields %n% (dimensions %-% keyFields)
-      projectList <-  applyList %u% (attributes %n% selectedFields)
+      projectList <-  applyList %u% (attributes %n% selectedFields) %u% (keyFields %-% dimensions)
       specialList <- dimensions %n% keyFields   # for joined-on dimensions which we also we want to keep in result
       if(keep_dimensions){
         applyList = applyList %-% self$dims

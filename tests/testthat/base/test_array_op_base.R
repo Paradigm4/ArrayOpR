@@ -345,3 +345,31 @@ test_that("Output a schema representation for the ArrayOp with dimension specs",
                  dim_specs = list(da = '0:*:0:*', db='1:23:0:23'))
   assert_afl_equal(t$to_schema_str(), "<aa:string, ab:int32> [da=0:*:0:*;db=1:23:0:23]")
 })
+
+
+
+# To join operand -------------------------------------------------------------------------------------------------
+# Tests on the joined result are scidb version specific because the syntax is different in v19 than v18
+
+test_that("ArrayOp as an operand in a join", {
+  t = newArrayOp('t', c('da', 'db'), c('aa', 'ab'), dtypes = list(da='int64', db='int64', aa='string', ab='int32'))
+  
+  # No selected fields, always use the array name as join operand
+  assert_afl_equal(t$.to_join_operand_afl('da'), 't')
+  assert_afl_equal(t$.to_join_operand_afl('aa'), 't')
+  assert_afl_equal(t$.to_join_operand_afl('db', keep_dimension = T), 't')
+  assert_afl_equal(t$.to_join_operand_afl('aa', keep_dimension = T), 't')
+  
+  # With selected fields but not keep dimensions
+  assert_afl_equal(t$select('aa')$.to_join_operand_afl('da'), 'project(t, aa)')
+  assert_afl_equal(t$select('db')$.to_join_operand_afl('da'), 'project(apply(t, db, db), db)')
+  assert_afl_equal(t$select('ab')$.to_join_operand_afl('aa'), 'project(t, ab, aa)')
+  assert_afl_equal(t$select('db')$.to_join_operand_afl('aa'), 'project(apply(t, db, db), db, aa)')
+  
+  # With selected fields and keep dimensions
+  assert_afl_equal(t$select('aa')$.to_join_operand_afl('da', keep_dimension = T), 'project(t, aa)')
+  assert_afl_equal(t$select('db')$.to_join_operand_afl('da', keep_dimension = T, artificial_field = 'x'),
+    'project(apply(t, x, null), x)')
+  assert_afl_equal(t$select('ab')$.to_join_operand_afl('aa', keep_dimension = T), 'project(t, ab, aa)')
+  assert_afl_equal(t$select('db')$.to_join_operand_afl('aa', keep_dimension = T), 'project(t, aa)')
+})
