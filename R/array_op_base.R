@@ -557,12 +557,13 @@ Only data.frame is supported", class(df))
     #' @param target A target ArrayOp the source data is written to. 
     #' @param append Append to existing target array if set to TRUE (default). 
     #' Otherwise replace the whole target array with the source.
+    #' @param force_redimension Redimension the source even if the source fields match perfectly the target fields
     #' @param source_auto_increment a named number vector e.g. c(z=0), where the name is a source field and value is the starting index
     #' @param target_auto_increment a named number vector e.g. c(aid=0), where the name is a target field and value is the starting index.
     #' Here the `target_auto_increment` param only affects the initial load when the field is still null in the target array.
     #' @param anti_collision_field a target dimension name which exsits only to resolve cell collision 
     #' (ie. cells with the same dimension coordinate).
-    write_to = function(target, append = TRUE, source_auto_increment = NULL, target_auto_increment = NULL, anti_collision_field = NULL) {
+    write_to = function(target, append = TRUE, force_redimension = FALSE, source_auto_increment = NULL, target_auto_increment = NULL, anti_collision_field = NULL) {
       assert(inherits(target, 'ArrayOpBase'),
         "ERROR: ArrayOp$write_to: param target must be ArrayOp, but got '%s' instead.", class(target))
       
@@ -577,7 +578,7 @@ Only data.frame is supported", class(df))
         }
       
       src = self
-      if(!exactDtypeMatch){
+      if(!exactDtypeMatch || force_redimension){
         # If data types do not exactly match, redimension is required
         missingFields = target$dims_n_attrs %-% self$dims_n_attrs %-% names(target_auto_increment) %-% anti_collision_field
         # If no auto increment set, then all target fields should be matched
