@@ -678,36 +678,51 @@ where name is field name and value is the starting number.")
     #' 
     #' Note: except for scidb build or aio_input operators, the spawned ArrayOp is not meaningful semantically. So do not
     #' use this function for operations other than 'build'/ArrayOp$build_new and 'aio_input'/ArrayOp$load_file
-    spawn = function(renamed = NULL, excluded = NULL, dtypes = NULL, dim_specs = NULL) {
+    spawn = function(renamed = NULL, added = NULL, excluded = NULL, dtypes = NULL, dim_specs = NULL) {
+      if(.has_len(renamed)){
+        assert_named_list(renamed, "ERROR: ArrayOp$spawn: 'renamed' param must be a named list, but got: %s", renamed)
+      }
+      assert(!.has_len(added) || is.character(added), 
+        "ERROR: ArrayOp$spawn: 'added' param must be an R character, but got: %s", class(added))
+      assert(!.has_len(excluded) || is.character(excluded), 
+        "ERROR: ArrayOp$spawn: 'excluded' param must be an R character, but got: %s", class(excluded))
+      
       attrs = self$attrs
       dims = self$dims
       oldDtypes = self$dtypes
       oldDimSpecs = self$get_dim_specs()
       
+      # Rename the existing
       if(.has_len(renamed)){
         renamedOldFields = names(renamed)
         attrs = as.character(replace(attrs, attrs %in% renamedOldFields, plyr::compact(renamed[attrs])))
         dims = as.character(replace(dims, dims %in% renamedOldFields, plyr::compact(renamed[dims])))
         namesOldDtypes = names(oldDtypes)
         names(oldDtypes) <- replace(namesOldDtypes, namesOldDtypes %in% renamedOldFields, plyr::compact(renamed[namesOldDtypes]))
-        
         namesOldDimSpecs = names(oldDimSpecs)
         names(oldDimSpecs) <- replace(namesOldDimSpecs, namesOldDimSpecs %in% renamedOldFields, plyr::compact(renamed[namesOldDimSpecs]))
       }
-
+      
+      # Add new fields
+      if(.has_len(added)){
+        addedDims = added %n% names(dim_specs)
+        addedAttrs = added %-% names(dim_specs)
+        attrs = attrs %u% addedAttrs
+        dims = dims %u% addedDims
+      }
+      
+      # Exclude the excluded
+      if(.has_len(excluded)){
+        attrs = attrs %-% excluded
+        dims = dims %-% excluded
+      }
+      
       dtypes = .ifelse(.has_len(dtypes), c(dtypes, oldDtypes), oldDtypes)
       dtypes = dtypes[c(dims, attrs)]
       
       dim_specs = .ifelse(.has_len(dim_specs), c(dim_specs, oldDimSpecs), oldDimSpecs)
       
-      if(.has_len(excluded)){
-        attrs = attrs %-% excluded
-        dims = dims %-% excluded
-        dtypes = dtypes[attrs %u% dims]
-        dim_specs = dim_specs[attrs %u% dims]
-      }
-      
-      self$create_new(self$to_afl(), dims, attrs, dtypes, dim_specs = dim_specs)
+      self$create_new("Spawned ArrayOp", dims, attrs, dtypes, dim_specs = dim_specs)
     }
 
     # AFL -------------------------------------------------------------------------------------------------------------
@@ -830,6 +845,12 @@ where name is field name and value is the starting number.")
       }
       return(res)
     }
+    ,
+    #' Set ArrayOp meta data directly
+    .set_meta = function(key, value) private$set_meta(key, value)
+    ,
+    #' Get ArrayOp meta data directly
+    .get_meta = function(key) private$get_meta(key)
   )
 )
 

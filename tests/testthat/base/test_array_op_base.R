@@ -312,6 +312,25 @@ test_that("Spawn a new ArrayOp from a template", {
   assert_afl_equal(spawned$to_schema_str(), "<AB:int32> [a;db]")
 })
 
+test_that("Spawn a new ArrayOp with extra fields", {
+  t = newArrayOp('t', c('da', 'db'), c('aa', 'ab'), dtypes = list(da='int64', db='int64', aa='string', ab='int32'),
+    dim_specs = list(da = '0:1:0:1', db = '1:*:0:24'))
+  
+  spawned = t$spawn(added = c('extra1', 'extra2'), dtype = list(extra1 = 'int64', extra2 = 'string'))
+  expect_identical(spawned$dims, c('da', 'db'))
+  expect_identical(spawned$attrs, c('aa', 'ab', 'extra1', 'extra2'))
+  expect_identical(spawned$get_field_types(), list(da='int64', db='int64', aa='string', ab='int32', 
+    extra1 = 'int64', extra2 = 'string'))
+  
+  spawned = t$spawn(added = c('extra1', 'extra2'), renamed = list(db='x'), excluded = c('da', 'aa'), 
+    dtype = list(extra1 = 'int64', extra2 = 'string'), dim_specs = list('extra1' = '0:*:0:*'))
+  expect_identical(spawned$dims, c('x', 'extra1'))
+  expect_identical(spawned$attrs, c('ab', 'extra2'))
+  expect_identical(spawned$get_field_types(), list(x='int64', extra1 = 'int64', ab='int32', extra2 = 'string'))
+  expect_identical(spawned$get_dim_specs(), list(x='1:*:0:24', extra1 = '0:*:0:*'))
+  
+})
+
 # To schema str ---------------------------------------------------------------------------------------------------
 
 test_that("Output a schema representation for the ArrayOp", {
