@@ -108,6 +108,16 @@ test_that("Select fields do not change afl output", {
   }
 })
 
+test_that("Select fields through a field param", {
+  op = newArrayOp("rawafl", c("da", "db"), c("ac", "ad"), dtypes = list(ac='string', ad='int32', da='int64', db='int64'))
+  expect_identical(op$select('ac')$selected, op$select(c('ac'))$selected)
+  v = c('ac', 'da')
+  expect_identical(op$select('ac', 'da')$selected, op$select(v)$selected)
+  expect_identical(op$select('db')$selected, op$select(c('db'))$selected)
+  v = c('db', 'ad')
+  expect_identical(op$select('db', 'ad')$selected, op$select(v)$selected)
+})
+
 test_that("Cannot select non-existent fields", {
   op = newArrayOp("rawafl", c("da", "db"), c("ac", "ad"), dtypes = list(ac='string', ad='int32', da='int64', db='int64'))
   expect_error(op$select('non-existent'))
