@@ -261,13 +261,15 @@ ArrayOpBase <- R6::R6Class("ArrayOpBase",
     #' @param right The other ArrayOp instance to join with.
     #' @param on_left R character vector. Join keys from the left (self).
     #' @param on_right R character vector. Join keys from the `right`. Must be of the same length as `on_left`
+    #' @param .auto_select default: FALSE. If set to TRUE, the resultant ArrayOp instance will auto `select` the fields
+    #' that are selected in the left and right operands but not in the right join keys (since they are masked by equi_join operator).
     #' @param settings `equi_join` settings, a named list where both key and values are strings. 
-    #' @param dim_mode How to reshape the resultant ArrayOp. Same meaning as in `ArrayOp$reshape` function. 
+    #' @param .dim_mode How to reshape the resultant ArrayOp. Same meaning as in `ArrayOp$reshape` function. 
     #' By default, dim_mode = 'keep', the artificial dimensions, namely `instance_id` and `value_no` from `equi_join`
     #' are retained. If set to 'drop', the artificial dimensions will be removed. See `ArrayOp$reshape` for more details.
-    #' @param artificial_field As in `ArrayOp$reshpae`, it defaults to a random field name. It can be safely ignored in
+    #' @param .artificial_field As in `ArrayOp$reshpae`, it defaults to a random field name. It can be safely ignored in
     #' client code. It exists only for test purposes. 
-    join = function(right, on_left, on_right, settings = NULL, 
+    join = function(right, on_left, on_right, settings = NULL, .auto_select = FALSE,
       .dim_mode = 'keep', .artificial_field = .random_attr_name()) {
       # Validate left and right
       left = self
@@ -332,9 +334,11 @@ Please select on left operand's fields OR do not select on either operand. Look 
       selectedFields = if(hasSelected) attrs else NULL
       joinedOp = self$create_new(joinExpr, names(dims), attrs, dtypes = dtypes)
       if(hasSelected) {
-        joinedOp$reshape(select = selectedFields, dim_mode = .dim_mode, artificial_field = .artificial_field)
+        joinedOp = joinedOp$reshape(select = selectedFields, dim_mode = .dim_mode, artificial_field = .artificial_field)
+        if(.auto_select)
+          joinedOp = joinedOp$select(selectedFields)
       }
-      else joinedOp
+      joinedOp
     }
     ,
     #' @description 
