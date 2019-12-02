@@ -559,6 +559,57 @@ Only data.frame is supported", class(df))
     }
     ,
     #' @description 
+    #' Create a new ArrayOp instance that with added auto incremented fields
+    #' 
+    #' @param reference ArrayOp instance to draw existing max id from 
+    #' @param source_field 
+    #' @param ref_field 
+    #' @param source_start 
+    #' @param ref_start 
+    #' @param new_field 
+    set_auto_increment_field = function(reference, source_field, ref_field, source_start, ref_start, new_field = NULL) {
+      assert(inherits(reference, 'ArrayOpBase'),
+        "ERROR: ArrayOp$set_auto_increment_field: param 'reference' must be ArrayOp, but got '%s' instead.", 
+        class(reference))
+      
+      assert(is.character(source_field), 
+        "ERROR: ArrayOp$set_auto_increment_field: param 'source_field' must be a character, but got '%s' instead.", 
+        class(source_field))
+      assert(is.character(ref_field), 
+        "ERROR: ArrayOp$set_auto_increment_field: param 'ref_field' must be a character, but got '%s' instead.", 
+        class(ref_field))
+      
+      assert(is.numeric(source_start), 
+        "ERROR: ArrayOp$set_auto_increment_field: param 'source_start' must be a numeric, but got '%s' instead.", 
+        class(source_start))
+      assert(is.numeric(ref_start), 
+        "ERROR: ArrayOp$set_auto_increment_field: param 'ref_start' must be a numeric, but got '%s' instead.", 
+        class(ref_start))
+      
+      refDims = ref_field %-% reference$attrs
+      maxRefFields = sprintf("_max_%s", ref_field)
+      aggFields = sprintf("max(%s) as %s", ref_field, maxRefFields)
+      defaultOffset = ref_start - source_start
+      nonDefaultOffset = 1 - source_start
+        
+      if(!.has_len(new_field)) new_field = ref_field
+      newFieldExpr = sprintf("iif(%s is null, %s%s, %s+%s%s)", maxRefFields, 
+        source_field, .to_signed_integer_str(defaultOffset), 
+        source_field, maxRefFields, .to_signed_integer_str(nonDefaultOffset))
+      
+      forAggregate = if(.has_len(refDims)) afl(reference %apply% afl_join_fields(refDims, refDims)) else reference
+      aggregated = afl(forAggregate %aggregate% aggFields)
+      crossJoined = afl(
+        self 
+        %cross_join% aggregated 
+        %apply% 
+          afl_join_fields(new_field, newFieldExpr)
+      )
+      self$spawn(added = new_field, dtypes = as.list(rlang::rep_named(new_field, 'int64')))$
+        create_new_with_same_schema(crossJoined)
+    }
+    ,
+    #' @description 
     #' Create a new ArrayOp instance that represents a writing data operation
     #' 
     #' If the dimension count, attribute count and data types match between the source(self) and target, 

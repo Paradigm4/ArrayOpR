@@ -415,3 +415,91 @@ test_that("to_join_operand_afl keep_dimension = T", {
   test_select_key('ab', 'aa', 'project(t, ab, aa)')
   test_select_key('db', 'aa', 'project(t, aa)')
 })
+
+
+# Set auto increment fields ---------------------------------------------------------------------------------------
+# apply auto incremnt id to the Source with incremented values from the reference
+
+test_that("Auto increment the reference dimension", {
+  source = newArrayOp('s', 'x', 'a')
+  ref = newArrayOp('ref', c('da', 'db', 'dc'), c('aa', 'ab', 'ac'))
+  
+  # new_field defaults to the reference fields
+  result = source$set_auto_increment_field(ref, 
+    source_field = 'x', ref_field = 'da', source_start = 5, ref_start = 2)
+  assert_afl_equal(result$to_afl(), "
+  apply(
+    cross_join(
+      s,
+      aggregate(apply(ref, da, da), max(da) as _max_da)
+    ), 
+    da,  iif(_max_da is null, x-3, x + _max_da - 4)
+  )")
+  # new_field can be set explicitly
+  result = source$set_auto_increment_field(ref, 
+    source_field = 'x', ref_field = 'da', source_start = 5, ref_start = 2, new_field = 'anything')
+  assert_afl_equal(result$to_afl(), "
+  apply(
+    cross_join(
+      s,
+      aggregate(apply(ref, da, da), max(da) as _max_da)
+    ), 
+    anything,  iif(_max_da is null, x-3, x + _max_da - 4)
+  )")
+})
+
+test_that("More than one auto increment field is allowed", {
+  source = newArrayOp('s', 'x', 'a', dtypes = list(a='string', x='int64'))
+  ref = newArrayOp('ref', c('da', 'db', 'dc'), c('aa', 'ab', 'ac'))
+  result = source$set_auto_increment_field(ref, 
+    source_field = 'x', ref_field = c('da', 'ab'), source_start = 0, ref_start = c(5, 3))
+  assert_afl_equal(result$to_afl(), "
+  apply(
+    cross_join(
+      s,
+      aggregate(apply(ref, da, da), max(da) as _max_da, max(ab) as _max_ab)
+    ), 
+    da,  iif(_max_da is null, x+5, x + _max_da + 1),
+    ab,  iif(_max_ab is null, x+3, x + _max_ab + 1)
+  )")
+  expect_identical(result$dims, 'x')
+  expect_identical(result$attrs, c('a', 'da', 'ab'))
+  expect_identical(result$get_field_types(result$attrs), list('a'='string', 'da'='int64', 'ab'='int64'))
+})
+
+test_that("Auto increment the reference attribute", {
+  source = newArrayOp('s', 'x', 'a')
+  ref = newArrayOp('ref', c('da', 'db', 'dc'), c('aa', 'ab', 'ac'))
+  result = source$set_auto_increment_field(ref, 
+    source_field = 'x', ref_field = 'aa', source_start = 0, ref_start = 1, new_field = 'aa')
+  assert_afl_equal(result$to_afl(), "
+  apply(
+    cross_join(
+      s,
+      aggregate(ref, max(aa) as _max_aa)
+    ), 
+    aa,  iif(_max_aa is null, x + 1, x + _max_aa + 1)
+  )")
+  result = source$set_auto_increment_field(ref, 
+    source_field = 'x', ref_field = 'aa', source_start = 0, ref_start = 0, new_field = 'aa')
+  assert_afl_equal(result$to_afl(), "
+  apply(
+    cross_join(
+      s,
+      aggregate(ref, max(aa) as _max_aa)
+    ), 
+    aa,  iif(_max_aa is null, x, x + _max_aa + 1)
+  )")
+  result = source$set_auto_increment_field(ref, 
+    source_field = 'x', ref_field = 'aa', source_start = 5, ref_start = 2, new_field = 'aa')
+  assert_afl_equal(result$to_afl(), "
+  apply(
+    cross_join(
+      s,
+      aggregate(ref, max(aa) as _max_aa)
+    ), 
+    aa,  iif(_max_aa is null, x-3, x + _max_aa - 4)
+  )")
+})
+
+
