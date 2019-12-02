@@ -383,3 +383,35 @@ test_that("ArrayOp as an operand in a join", {
   assert_afl_equal(t$select('ab')$.to_join_operand_afl('aa', keep_dimension = T), 'project(t, ab, aa)')
   assert_afl_equal(t$select('db')$.to_join_operand_afl('aa', keep_dimension = T), 'project(t, aa)')
 })
+
+test_that("to_join_operand_afl keep_dimension = F", {
+  t = newArrayOp('t', c('da', 'db', 'dc'), c('aa', 'ab', 'ac'), 
+    dtypes = list(da='int64', db='int64', dc='int64', aa='string', ab='int32', ac='bool'))
+  
+  test_select_key = function(selected, key, afl_str){
+    assert_afl_equal(t$select(selected)$.to_join_operand_afl(key, artificial_field='x'), afl_str)
+  }
+  
+  test_select_key('aa', 'aa', 'project(t, aa)')
+  test_select_key('da', 'da', 'project(apply(t, x, null), x)')
+  test_select_key('aa', 'da', 'project(t, aa)')
+  test_select_key('db', 'da', 'project(apply(t, db, db), db)')
+  test_select_key('ab', 'aa', 'project(t, ab, aa)')
+  test_select_key('db', 'aa', 'project(apply(t, db, db), db, aa)')
+})
+
+test_that("to_join_operand_afl keep_dimension = T", {
+  t = newArrayOp('t', c('da', 'db', 'dc'), c('aa', 'ab', 'ac'), 
+    dtypes = list(da='int64', db='int64', dc='int64', aa='string', ab='int32', ac='bool'))
+  
+  test_select_key = function(selected, key, afl_str){
+    assert_afl_equal(t$select(selected)$.to_join_operand_afl(key, keep_dimension = T, artificial_field='x'), afl_str)
+  }
+  
+  test_select_key('aa', 'aa', 'project(t, aa)')
+  test_select_key('da', 'da', 'project(apply(t, x, null), x)')
+  test_select_key('aa', 'da', 'project(t, aa)')
+  test_select_key('db', 'da', 'project(apply(t, x, null), x)')
+  test_select_key('ab', 'aa', 'project(t, ab, aa)')
+  test_select_key('db', 'aa', 'project(t, aa)')
+})
