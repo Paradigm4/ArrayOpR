@@ -586,6 +586,13 @@ Only data.frame is supported", class(df))
         "ERROR: ArrayOp$set_auto_increment_field: param 'ref_start' must be a numeric, but got '%s' instead.", 
         class(ref_start))
       
+      assert_not_has_len(source_field %-% self$dims_n_attrs, 
+        "ERROR: ArrayOp$set_auto_increment_field: source_field '%s' not exist.",
+        paste(source_field %-% self$dims_n_attrs, ','))
+      assert_not_has_len(ref_field %-% reference$dims_n_attrs, 
+        "ERROR: ArrayOp$set_auto_increment_field: ref_field '%s' not exist.",
+        paste(ref_field %-% ref$dims_n_attrs, ','))
+      
       refDims = ref_field %-% reference$attrs
       maxRefFields = sprintf("_max_%s", ref_field)
       aggFields = sprintf("max(%s) as %s", ref_field, maxRefFields)
@@ -595,7 +602,7 @@ Only data.frame is supported", class(df))
       if(!.has_len(new_field)) new_field = ref_field
       newFieldExpr = sprintf("iif(%s is null, %s%s, %s+%s%s)", maxRefFields, 
         source_field, .to_signed_integer_str(defaultOffset), 
-        source_field, maxRefFields, .to_signed_integer_str(nonDefaultOffset))
+        maxRefFields, source_field, .to_signed_integer_str(nonDefaultOffset))
       
       forAggregate = if(.has_len(refDims)) afl(reference %apply% afl_join_fields(refDims, refDims)) else reference
       aggregated = afl(forAggregate %aggregate% aggFields)
@@ -627,7 +634,9 @@ Only data.frame is supported", class(df))
     #' Here the `target_auto_increment` param only affects the initial load when the field is still null in the target array.
     #' @param anti_collision_field a target dimension name which exsits only to resolve cell collision 
     #' (ie. cells with the same dimension coordinate).
-    write_to = function(target, append = TRUE, force_redimension = FALSE, source_auto_increment = NULL, target_auto_increment = NULL, anti_collision_field = NULL) {
+    write_to = function(target, append = TRUE, force_redimension = FALSE, 
+      source_auto_increment = NULL, target_auto_increment = NULL, 
+      anti_collision_field = NULL) {
       assert(inherits(target, 'ArrayOpBase'),
         "ERROR: ArrayOp$write_to: param target must be ArrayOp, but got '%s' instead.", class(target))
       
@@ -653,33 +662,9 @@ Only data.frame is supported", class(df))
         # If there is an auto-incremnt field, it needs to be inferred from the params
         # After this step, 'src' is an updated ArrayOp with auto-incremented id calculated (during AFL execution only due to lazy evaluation)
         if(.has_len(target_auto_increment)){
-          assert(length(source_auto_increment) == 1 && length(target_auto_increment) == 1,
-            "ERROR: ArrayOp$write_to: both source and target auto increment params should be ONE-element named list, 
-where name is field name and value is the starting number.")
-          # source/target auto increment field: saif/taif
-          saif = names(source_auto_increment)
-          taif = names(target_auto_increment)
-          # assert() # Ensure source/target auto incremented fields exist.
-          assert(saif %in% self$dims_n_attrs, 
-            "ERROR: ArrayOp$write_to: source auto incremented field '%s' does not exist.", saif)
-          assert(taif %in% target$dims_n_attrs, 
-            "ERROR: ArrayOp$write_to: target auto incremented field '%s' does not exist.", taif)
-          
-          initialOffset = target_auto_increment - source_auto_increment
-          existingOffset = 1 - source_auto_increment
-          max_taif = sprintf("_max_%s", taif)
-          agg = afl(
-            .ifelse(taif %in% target$dims,
-              afl(target %apply% c(taif, taif)),
-              target) 
-            %aggregate% 
-              sprintf("max(%s) as %s", taif, max_taif)
-          )
-          iif = sprintf("iif(%s is null, %s%+d, %s+%s%+d)", # %+d output signed integers
-            max_taif, saif, initialOffset, max_taif, saif, existingOffset)
-          src = afl(
-            self %cross_join% agg %apply% c(taif, iif)
-          )
+          src = self$set_auto_increment_field(target, 
+            source_field = names(source_auto_increment), ref_field = names(target_auto_increment), 
+            source_start = source_auto_increment, ref_start = target_auto_increment)
         }
         
         # If there is anti_collision_field, more actions are required to avoid cell collision

@@ -433,7 +433,7 @@ test_that("Auto increment the reference dimension", {
       s,
       aggregate(apply(ref, da, da), max(da) as _max_da)
     ), 
-    da,  iif(_max_da is null, x-3, x + _max_da - 4)
+    da,  iif(_max_da is null, x-3, _max_da + x - 4)
   )")
   # new_field can be set explicitly
   result = source$set_auto_increment_field(ref, 
@@ -444,7 +444,7 @@ test_that("Auto increment the reference dimension", {
       s,
       aggregate(apply(ref, da, da), max(da) as _max_da)
     ), 
-    anything,  iif(_max_da is null, x-3, x + _max_da - 4)
+    anything,  iif(_max_da is null, x-3, _max_da + x - 4)
   )")
 })
 
@@ -459,8 +459,8 @@ test_that("More than one auto increment field is allowed", {
       s,
       aggregate(apply(ref, da, da), max(da) as _max_da, max(ab) as _max_ab)
     ), 
-    da,  iif(_max_da is null, x+5, x + _max_da + 1),
-    ab,  iif(_max_ab is null, x+3, x + _max_ab + 1)
+    da,  iif(_max_da is null, x+5, _max_da + x + 1),
+    ab,  iif(_max_ab is null, x+3, _max_ab + x + 1)
   )")
   expect_identical(result$dims, 'x')
   expect_identical(result$attrs, c('a', 'da', 'ab'))
@@ -478,7 +478,7 @@ test_that("Auto increment the reference attribute", {
       s,
       aggregate(ref, max(aa) as _max_aa)
     ), 
-    aa,  iif(_max_aa is null, x + 1, x + _max_aa + 1)
+    aa,  iif(_max_aa is null, x + 1, _max_aa + x + 1)
   )")
   result = source$set_auto_increment_field(ref, 
     source_field = 'x', ref_field = 'aa', source_start = 0, ref_start = 0, new_field = 'aa')
@@ -488,7 +488,7 @@ test_that("Auto increment the reference attribute", {
       s,
       aggregate(ref, max(aa) as _max_aa)
     ), 
-    aa,  iif(_max_aa is null, x, x + _max_aa + 1)
+    aa,  iif(_max_aa is null, x, _max_aa + x + 1)
   )")
   result = source$set_auto_increment_field(ref, 
     source_field = 'x', ref_field = 'aa', source_start = 5, ref_start = 2, new_field = 'aa')
@@ -498,7 +498,7 @@ test_that("Auto increment the reference attribute", {
       s,
       aggregate(ref, max(aa) as _max_aa)
     ), 
-    aa,  iif(_max_aa is null, x-3, x + _max_aa - 4)
+    aa,  iif(_max_aa is null, x-3, _max_aa + x - 4)
   )")
 })
 
