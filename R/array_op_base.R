@@ -543,6 +543,8 @@ Only data.frame is supported", class(df))
           "" # Return an empty string for NA or NULL
         else if(is.character(single_value) || is.factor(single_value))
           sprintf("\\'%s\\'", single_value)  # String literals
+        else if(is.logical(single_value) && single_value) "true"
+        else if(is.logical(single_value) && !single_value) "false"
         else sprintf("%s", single_value)  # Other types
       }
      
