@@ -888,9 +888,11 @@ Only data.frame is supported", class(df))
       return(res)
     }
     ,
+    #' @description 
     #' Set ArrayOp meta data directly
     .set_meta = function(key, value) private$set_meta(key, value)
     ,
+    #' @description 
     #' Get ArrayOp meta data directly
     .get_meta = function(key) private$get_meta(key)
   )

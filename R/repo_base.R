@@ -113,6 +113,11 @@ RepoBase <- R6::R6Class("RepoBase",
 
     # Schema management -----------------------------------------------------------------------------------------------
     ,
+    #' @description 
+    #' Register a scidb array as an alias in the Repo
+    #' 
+    #' If array_name is not fully qualified, the current default_namespace meta info is taken.
+    #' Later changes to the default_namespace will not affect already registered arrays
     register_schema_alias_by_array_name = function(alias, array_name, is_full_name = FALSE) {
       if(!is_full_name){
         array_name = sprintf("%s.%s", private$get_meta('default_namespace'), array_name)
@@ -152,6 +157,14 @@ RepoBase <- R6::R6Class("RepoBase",
       arrayOp = self$ArrayOp(full_array_name, dims$name, attrs$name, dtypes = dtypes, dim_specs = dimSpecs)
       return(arrayOp)
     }
+    ,
+    #' @description 
+    #' Set Repo meta data directly
+    .set_meta = function(key, value) private$set_meta(key, value)
+    ,
+    #' @description 
+    #' Get Repo meta data directly
+    .get_meta = function(key) private$get_meta(key)
   )
 )
 
