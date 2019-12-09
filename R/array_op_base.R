@@ -558,7 +558,8 @@ Only data.frame is supported", class(df))
         if(is.na(single_value) || is.null(single_value))
           "" # Return an empty string for NA or NULL
         else if(is.character(single_value) || is.factor(single_value))
-          sprintf("\\'%s\\'", single_value)  # String literals
+          # R, gsub, AFL all treat single quotes specially, so we need to escape back slashes at multiple levels
+          sprintf("\\'%s\\'", gsub("(['\\])", "\\\\\\\\\\1", single_value))  # String literals
         else if(is.logical(single_value) && single_value) "true"
         else if(is.logical(single_value) && !single_value) "false"
         else sprintf("%s", single_value)  # Other types

@@ -287,11 +287,11 @@ Template = newArrayOp('template', c('da', 'db'), c('aa', 'ab', 'ac'),
   dtypes = list(da='int64', db='int64', aa='string', ab='int32', ac='bool'))
 
 test_that("New ArrayOp from building a data.frame with full field match", {
-  df = data.frame(da = c(1,2), aa=c('aa1', 'aa2'), ab=c(3,4), db = c(5, 6), ac = c(T, F))
+  df = data.frame(da = c(1,2), aa=c('aa1', "a' \" \\ a2"), ab=c(3,4), db = c(5, 6), ac = c(T, F))
   built = Template$build_new(df, artificial_field = 'z')
   assert_afl_equal(built$to_afl(),
     "build(<da:int64, aa:string, ab:int32, db:int64, ac:bool>[z],
-        '[(1, \\'aa1\\', 3, 5, true), (2, \\'aa2\\', 4, 6, false)]', true)")
+        '[(1, \\'aa1\\', 3, 5, true), (2, \\'a\\\\' \" \\\\\\ a2\\', 4, 6, false)]', true)")
   expect_identical(built$attrs, c('da', 'aa', 'ab', 'db', 'ac'))
   expect_identical(built$get_field_types(built$attrs), Template$get_field_types(built$attrs))
 })
