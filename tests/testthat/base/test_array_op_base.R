@@ -174,6 +174,49 @@ test_that("Select dims only", {
   }
 })
 
+test_that("Select new fields", {
+  # Select no existing attrs
+  reshaped = Source$reshape(list(new_field1 = '42'), dtypes = list(new_field1 = 'int'))
+  expect_identical(reshaped$attrs, 'new_field1')
+  expect_identical(reshaped$dims, c('da', 'db'))
+  expect_identical(reshaped$get_field_types(), list('da'='dtda', 'db'='dtdb', 'new_field1' = 'int'))
+  assert_afl_equal(reshaped$to_afl(), 'project(apply(s, new_field1, 42), new_field1)')
+  # Select existing attrs without expression
+  reshaped = Source$reshape(list(new_field1 = '42', 'ac'), dtypes = list(new_field1 = 'int'))
+  expect_identical(reshaped$attrs, c('new_field1', 'ac'))
+  expect_identical(reshaped$dims, c('da', 'db'))
+  expect_identical(reshaped$get_field_types(), list('da'='dtda', 'db'='dtdb', 'new_field1' = 'int', 'ac'='dtac'))
+  assert_afl_equal(reshaped$to_afl(), 'project(apply(s, new_field1, 42), new_field1, ac)')
+  
+  # Selecting new fields without expression
+  reshaped = Source$reshape(list(new_field1 = '42', 'extra'), dtypes = list(new_field1 = 'int', extra='string'))
+  expect_identical(reshaped$attrs, c('new_field1', 'extra'))
+  expect_identical(reshaped$dims, c('da', 'db'))
+  expect_identical(reshaped$get_field_types(), list('da'='dtda', 'db'='dtdb', 'new_field1' = 'int', 'extra'='string'))
+  assert_afl_equal(reshaped$to_afl(), 'project(apply(s, new_field1, 42), new_field1, extra)')
+})
+
+test_that("Provide expressions to exsiting fields will effectively replace the existing fields", {
+  # Replace existing field only
+  reshaped = Source$reshape(list(ac = 'ac+ad'), dtypes = list(ac='string'))
+  expect_identical(reshaped$attrs, 'ac')
+  expect_identical(reshaped$dims, c('da', 'db'))
+  expect_identical(reshaped$get_field_types(), list('da'='dtda', 'db'='dtdb', 'ac'='string'))
+  assert_afl_equal(reshaped$to_afl(), 'apply(project(apply(s, _ac, ac+ad), _ac), ac, _ac)')
+  # Replace existing field while selecting existing fields
+  reshaped = Source$reshape(list(ac = 'ac+ad', 'ad'), dtypes = list(ac='string'))
+  expect_identical(reshaped$attrs, c('ac', 'ad'))
+  expect_identical(reshaped$dims, c('da', 'db'))
+  expect_identical(reshaped$get_field_types(), list('da'='dtda', 'db'='dtdb', 'ac'='string', 'ad'='dtad'))
+  assert_afl_equal(reshaped$to_afl(), 'apply(project(apply(s, _ac, ac+ad), ad, _ac), ac, _ac)')
+  # Replace existing field while selecting existing fields and new fields
+  reshaped = Source$reshape(list(ac = 'ac+ad', 'ad', extra=42), dtypes = list(ac='string', extra='int64'))
+  expect_identical(reshaped$attrs, c('ac', 'ad', 'extra'))
+  expect_identical(reshaped$dims, c('da', 'db'))
+  expect_identical(reshaped$get_field_types(), list('da'='dtda', 'db'='dtdb', 'ac'='string', 'ad'='dtad', extra='int64'))
+  assert_afl_equal(reshaped$to_afl(), 'apply(project(apply(s, _ac, ac+ad), ad, _ac), ac, _ac, extra, 42)')
+})
+
 test_that("Must select fields in dim_mode = 'keep'", {
   expect_error(Source$reshape(), 'select')
   expect_error(Source$reshape(dim_mode = 'keep'), 'select')

@@ -199,30 +199,46 @@ ArrayOpBase <- R6::R6Class("ArrayOpBase",
           class(select))
       }
       
+      # Plain selected fields without change
       existingFields = if(.has_len(names(select))) select[names(select) == ''] else {
         as.character(select)
       }
-      
+      # Names of the retained fields (existing or new)
       selectFieldNames = .ifelse(!.has_len(names(select)), as.character(select),
         mapply(function(name, value){
           if(name == '') value else name
         }, names(select), select, USE.NAMES = F)
       )
-      newFields = select[names(select) != '']
-      newFieldNames = names(newFields)
-      mergedDtypes = c(self$dtypes, dtypes)
+      fieldExprs = select[names(select) != '']
+      fieldNamesWithExprs = names(fieldExprs)
+      
+      newFieldNames = fieldNamesWithExprs %-% .ifelse(dim_mode=='keep', self$attrs, self$dims_n_attrs)
+      newFields = fieldExprs[newFieldNames]
+      
+      replacedFieldNames = fieldNamesWithExprs %-% newFieldNames
+      replacedFieldNamesAlt = sprintf("_%s", replacedFieldNames)
+      replacedFields = sapply(replacedFieldNames, function(x) gsub('@', x, fieldExprs[[x]]))
+      
+      mergedDtypes = utils::modifyList(self$dtypes, as.list(dtypes))
       
       keep = function(){
-        selectedOldAttrs = existingFields %-% self$attrs
         attrs = selectFieldNames %-% self$dims
-        inner = if(.has_len(newFieldNames)) 
-          afl(self %apply% afl_join_fields(newFieldNames, newFields)) else self$to_afl()
         
-        newAfl = if(.has_len(attrs)) afl(inner %project% attrs) 
-          else {
-            attrs = artificial_field
-            afl(inner %apply% c(artificial_field, 'null') %project% artificial_field)
-          }
+        newAfl = if(.has_len(replacedFieldNames)){
+          afl(self %apply% afl_join_fields(replacedFieldNamesAlt, replacedFields)
+            %project% (attrs %-% newFieldNames %-% replacedFieldNames %u% replacedFieldNamesAlt) 
+            %apply% afl_join_fields(replacedFieldNames %u% newFieldNames, replacedFieldNamesAlt %u% newFields))
+        }
+        else if(.has_len(attrs)) {
+          inner = self
+          if(.has_len(newFieldNames))
+             inner = afl(self %apply% afl_join_fields(newFieldNames, newFields))
+          afl(inner %project% attrs)
+        }
+        else {
+          attrs = artificial_field
+          afl(self %apply% c(artificial_field, 'null') %project% artificial_field)
+        }
         self$create_new(newAfl, self$dims, attrs, mergedDtypes, validate_fields = private$get_meta('validate_fields'))
       }
       
