@@ -270,7 +270,9 @@ Please select on left operand's fields OR do not select on either operand. Look 
         }
         stop(paste(status$error_msgs, collapse = '\n'))
       }
-      newRawAfl = afl(self %filter% afl_filter_from_expr(filterExpr))
+      newRawAfl = if(.has_len(filterExpr)) 
+        afl(self %filter% afl_filter_from_expr(filterExpr)) 
+      else self$to_afl()
       self$create_new_with_same_schema(newRawAfl)
     }
     ,
