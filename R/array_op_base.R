@@ -42,6 +42,107 @@ ArrayOpBase <- R6::R6Class("ArrayOpBase",
       absentKeys = operand$get_absent_fields(keys)
       assert_not_has_len(absentKeys, "JoinOp arg 'on_%s' has invalid fields: %s", side, paste(absentKeys, collapse = ', '))
     }
+    ,
+    validate_join_params = function(left, right, on_left, on_right, settings) {
+      private$validate_join_operand('left', left, on_left)
+      private$validate_join_operand('right', right, on_right)
+      
+      # Assert left and right keys lengths match
+      assert(length(on_left) == length(on_right),
+        "ERROR: ArrayOp$join: on_left[%s field(s)] and on_right[%s field(s)] must have the same length.",
+        length(on_left), length(on_right))
+      
+      # Validate settings
+      if(.has_len(settings)){
+        settingKeys <- names(settings)
+        if(!.has_len(settingKeys) || any(settingKeys == '')){
+          stop("ERROR: ArrayOp$join: Settings must be a named list and each setting item must have a non-empty name when creating a JoinOp")
+        }
+      }
+    }
+    ,
+    equi_join = function(right, on_left, on_right, settings = NULL, .auto_select = FALSE, 
+      .dim_mode = 'keep', .left_alias = '_L', .right_alias = '_R', .artificial_field = .random_attr_name()) {
+      # Validate join params
+      left = self
+      private$validate_join_params(left, right, on_left, on_right, settings)
+      
+      # Validate selected fields
+      hasSelected = .has_len(left$selected) || .has_len(right$selected)
+      if(hasSelected && !.has_len(left$selected))
+        assert(right$selected != on_right, 
+          "ERROR: ArrayOp$join: Right operand's selected field(s) '%s' cannot be its join key(s) '%s' when there is no left operand fields selected.
+Please select on left operand's fields OR do not select on either operand. Look into 'equi_join' documentation for more details.",
+          paste(right$selected, collapse = ','), paste(on_right, collapse = ','))
+      
+      # Create setting items
+      
+      mergedSettings <- c(list(left_names = on_left, right_names = on_right), settings)
+      # Values of setting items cannot be quoted.
+      # But the whole 'key=value' needs single quotation according to equi_join plugin specs
+      settingItems = mapply(private$to_equi_join_setting_item_str, names(mergedSettings), mergedSettings)
+
+      keep_dimensions = (function(){
+        val = settings[['keep_dimensions']]
+        .has_len(val) && val == 1
+      })()
+      
+      # Join two operands
+      joinExpr <- sprintf(private$equi_join_template(),
+        left$.to_join_operand_afl(on_left, keep_dimensions = keep_dimensions, artificial_field = .artificial_field), 
+        right$.to_join_operand_afl(on_right, keep_dimensions = keep_dimensions, artificial_field = .artificial_field),
+        paste(settingItems, collapse = ', '))
+      
+      
+      dims = list(instance_id = 'int64', value_no = 'int64')
+      attrs = (function() {
+        if(hasSelected){
+          rightSelected = right$selected %-% on_right  # Right key(s) are ignored/masked in equi_join
+          as.character(unique(c(left$selected, rightSelected)))
+        }
+        else{
+          leftRetained = if(keep_dimensions) left$attrs_n_dims else left$attrs
+          rightRetained = if(keep_dimensions) right$attrs_n_dims else right$attrs
+          return(c(on_left,
+            leftRetained %-% on_left,
+            rightRetained %-% on_right
+          ))
+        }
+      }) ()
+      dtypes = plyr::compact(c(dims, c(left$dtypes, right$dtypes)[attrs]))
+      selectedFields = if(hasSelected) attrs else NULL
+      joinedOp = self$create_new(joinExpr, names(dims), attrs, dtypes = dtypes)
+      if(hasSelected) {
+        joinedOp = joinedOp$reshape(select = selectedFields, dim_mode = .dim_mode, artificial_field = .artificial_field)
+        if(.auto_select)
+          joinedOp = joinedOp$select(selectedFields)
+      }
+      joinedOp
+    }
+    ,
+    cross_join = function(right, on_left, on_right, settings = NULL, .auto_select = FALSE, 
+      .dim_mode = 'keep', .left_alias = '_L', .right_alias = '_R', .artificial_field = .random_attr_name()) {
+      # Scidb cross_join operator only allows join on operands' dimensions
+      assert_keys_are_all_dimensions = function(side, operand, keys){
+        nonDimKeys = keys %-% operand$dims
+        assert_not_has_len(nonDimKeys, 
+          "ERROR: ArrayOp$join: cross_join mode: All join keys must be dimensions, but %s key(s) '%s' are not.", 
+          side, paste(nonDimKeys, collapse = ','))
+      }
+      # Validate join params
+      left = self
+      private$validate_join_params(left, right, on_left, on_right, settings)
+      assert_keys_are_all_dimensions('left', left, on_left)
+      assert_keys_are_all_dimensions('right', right, on_right)
+      # Construct the AFL
+      joinDims = paste(sprintf(", %s.%s, %s.%s", .left_alias, on_left, .right_alias, on_right), collapse = '')
+      aflStr = sprintf("cross_join(%s as %s, %s as %s %s)", left$to_afl(), .left_alias, right$to_afl(), .right_alias, joinDims)
+      attrs = c(left$attrs, right$attrs)
+      dims = c(left$dims, right$dims %-% on_right)
+      dtypes = c(left$get_field_types(.strict = F), right$get_field_types(right$dims_n_attrs %-% on_right, .strict = F))
+      dim_specs = c(left$get_dim_specs(), right$get_dim_specs(right$dims %-% on_right))
+      self$create_new(aflStr, dims = dims, attrs = attrs, dtypes = dtypes, dim_specs = dim_specs)
+    }
   ),
   active = list(
     dims = function() private$get_meta('dims'),
@@ -86,7 +187,7 @@ ArrayOpBase <- R6::R6Class("ArrayOpBase",
     #' NOTE: private$info has to be defined, otherwise returns NULL
     #' @param field_names R character
     #' @return a named list as `field_names`, where absent fields or fields without data types are dropped silently.
-    get_field_types = function(field_names = NULL){
+    get_field_types = function(field_names = NULL, .strict = TRUE){
       if(is.null(field_names))
         field_names = self$dims_n_attrs
       missingFields = base::setdiff(field_names, self$dims_n_attrs)
@@ -95,12 +196,14 @@ ArrayOpBase <- R6::R6Class("ArrayOpBase",
         paste(missingFields, collapse = ','),
         private$raw_afl
       )
-      missingFields = base::setdiff(field_names, names(self$dtypes))
-      assert_not_has_len(missingFields, 
-        "ERROR: ArrayOp$get_field_types: Field(s) '%s' not annotated with dtype in ArrayOp: %s", 
-        paste(missingFields, collapse = ','),
-        private$raw_afl
-      )
+      if(.strict){
+        missingFields = field_names %-% names(self$dtypes)
+        assert_not_has_len(missingFields, 
+          "ERROR: ArrayOp$get_field_types: Field(s) '%s' not annotated with dtype in ArrayOp: %s", 
+          paste(missingFields, collapse = ','),
+          private$raw_afl
+        )
+      }
       return(self$dtypes[field_names])
     }
     ,
@@ -142,8 +245,11 @@ ArrayOpBase <- R6::R6Class("ArrayOpBase",
     #' Create a new ArrayOp instance of the same class
     #' 
     #' The new instance shares all meta data with the template
-    create_new_with_same_schema = function(new_afl) {
-      self$create_new(new_afl, metaList = private$metaList)
+    #' @param new_afl AFL for the new ArrayOp
+    #' @param ... Named params in `...` will replace the items in the template's metaList
+    create_new_with_same_schema = function(new_afl, ...) {
+      metaList = utils::modifyList(private$metaList, list(...))
+      self$create_new(new_afl, metaList = metaList)
     }
     ,
     #' @description 
@@ -277,6 +383,7 @@ ArrayOpBase <- R6::R6Class("ArrayOpBase",
     #' @param right The other ArrayOp instance to join with.
     #' @param on_left R character vector. Join keys from the left (self).
     #' @param on_right R character vector. Join keys from the `right`. Must be of the same length as `on_left`
+    #' @param on_both Join keys on both operand.
     #' @param .auto_select default: FALSE. If set to TRUE, the resultant ArrayOp instance will auto `select` the fields
     #' that are selected in the left and right operands but not in the right join keys (since they are masked by equi_join operator).
     #' @param settings `equi_join` settings, a named list where both key and values are strings. 
@@ -285,76 +392,19 @@ ArrayOpBase <- R6::R6Class("ArrayOpBase",
     #' are retained. If set to 'drop', the artificial dimensions will be removed. See `ArrayOp$reshape` for more details.
     #' @param .artificial_field As in `ArrayOp$reshpae`, it defaults to a random field name. It can be safely ignored in
     #' client code. It exists only for test purposes. 
-    join = function(right, on_left, on_right, settings = NULL, .auto_select = FALSE,
-      .dim_mode = 'keep', .artificial_field = .random_attr_name()) {
-      # Validate left and right
-      left = self
-      private$validate_join_operand('left', left, on_left)
-      private$validate_join_operand('right', right, on_right)
-      
-      # Assert left and right keys lengths match
-      assert(length(on_left) == length(on_right),
-        "ERROR: ArrayOp$join: on_left[%s field(s)] and on_right[%s field(s)] must have the same length.",
-        length(on_left), length(on_right))
-      
-      # Validate settings
-      if(.has_len(settings)){
-        settingKeys <- names(settings)
-        if(!.has_len(settingKeys) || any(settingKeys == '')){
-          stop("ERROR: ArrayOp$join: Settings must be a named list and each setting item must have a non-empty name when creating a JoinOp")
-        }
+    join = function(right, on_left = NULL, on_right = NULL, settings = NULL, on_both = NULL, .auto_select = FALSE, join_mode = 'equi_join',
+      .dim_mode = 'keep', .left_alias = '_L', .right_alias = '_R', .artificial_field = .random_attr_name()) {
+      if(.has_len(on_both)){
+        on_left = on_both %u% on_left
+        on_right = on_both %u% on_right
       }
-      # Validate selected fields
-      hasSelected = .has_len(left$selected) || .has_len(right$selected)
-      if(hasSelected && !.has_len(left$selected))
-        assert(right$selected != on_right, 
-          "ERROR: ArrayOp$join: Right operand's selected field(s) '%s' cannot be its join key(s) '%s' when there is no left operand fields selected.
-Please select on left operand's fields OR do not select on either operand. Look into 'equi_join' documentation for more details.",
-          paste(right$selected, collapse = ','), paste(on_right, collapse = ','))
-      
-      # Create setting items
-      
-      mergedSettings <- c(list(left_names = on_left, right_names = on_right), settings)
-      # Values of setting items cannot be quoted.
-      # But the whole 'key=value' needs single quotation according to equi_join plugin specs
-      settingItems = mapply(private$to_equi_join_setting_item_str, names(mergedSettings), mergedSettings)
-
-      keep_dimensions = (function(){
-        val = settings[['keep_dimensions']]
-        .has_len(val) && val == 1
-      })()
-      
-      # Join two operands
-      joinExpr <- sprintf(private$equi_join_template(),
-        left$.to_join_operand_afl(on_left, keep_dimensions = keep_dimensions, artificial_field = .artificial_field), 
-        right$.to_join_operand_afl(on_right, keep_dimensions = keep_dimensions, artificial_field = .artificial_field),
-        paste(settingItems, collapse = ', '))
-      
-      
-      dims = list(instance_id = 'int64', value_no = 'int64')
-      attrs = (function() {
-        if(hasSelected){
-          rightSelected = right$selected %-% on_right  # Right key(s) are ignored/masked in equi_join
-          as.character(unique(c(left$selected, rightSelected)))
-        }
-        else{
-          leftRetained = if(keep_dimensions) left$attrs_n_dims else left$attrs
-          rightRetained = if(keep_dimensions) right$attrs_n_dims else right$attrs
-          return(c(on_left,
-            leftRetained %-% on_left,
-            rightRetained %-% on_right
-          ))
-        }
-      }) ()
-      dtypes = plyr::compact(c(dims, c(left$dtypes, right$dtypes)[attrs]))
-      selectedFields = if(hasSelected) attrs else NULL
-      joinedOp = self$create_new(joinExpr, names(dims), attrs, dtypes = dtypes)
-      if(hasSelected) {
-        joinedOp = joinedOp$reshape(select = selectedFields, dim_mode = .dim_mode, artificial_field = .artificial_field)
-        if(.auto_select)
-          joinedOp = joinedOp$select(selectedFields)
-      }
-      joinedOp
+      switch(join_mode,
+        'equi_join' = private$equi_join,
+        'cross_join' = private$cross_join,
+        stopf("ERROR: ArrayOp$join: Invalid param 'join_mode' %s. Must be one of [equi_join, cross_join, auto]", join_mode)
+      )(right, on_left, on_right, settings = settings, 
+        .auto_select = .auto_select, .dim_mode = .dim_mode,
+        .left_alias = .left_alias, .right_alias = .right_alias, .artificial_field = .artificial_field)
     }
     ,
     #' @description 

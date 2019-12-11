@@ -460,6 +460,47 @@ test_that("to_join_operand_afl keep_dimension = T", {
 })
 
 
+# Join - cross_join mode ------------------------------------------------------------------------------------------
+
+test_that("Join cross_join mode", {
+  left = newArrayOp('left', c('da', 'db'), c('aa', 'ab'), dtypes = list(da='int64', db='int64', aa='string', ab='double'))
+  right = newArrayOp('right', c('rda', 'rdb'), c('raa', 'rab'), dtypes = list(rda='int64', rdb='int64', raa='string', rab='double'))
+  joined = left$join(right, on_left = 'da', on_right = 'rda', join_mode = 'cross_join')
+  assert_afl_equal(joined$to_afl(), "cross_join(left as _L, right as _R, _L.da, _R.rda)")
+  expect_identical(joined$dims, c('da', 'db', 'rdb'))
+  expect_identical(joined$attrs, c('aa', 'ab', 'raa', 'rab'))
+  expect_identical(joined$get_field_types(joined$dims), list(da='int64', db='int64', rdb='int64'))
+  expect_identical(joined$get_field_types(joined$attrs), list(aa='string', ab='double', raa='string', rab='double'))
+})
+
+test_that("on_both shorthand for on_left and on_right", {
+  left = newArrayOp('left', c('da', 'db'), c('aa', 'ab'), dtypes = list(da='int64', db='int64', aa='string', ab='double'))
+  right = newArrayOp('right', c('da', 'db'), c('raa', 'rab'), dtypes = list(da='int64', db='int64', raa='string', rab='double'))
+  joined = left$join(right, on_both='da', join_mode = 'cross_join')
+  assert_afl_equal(joined$to_afl(), "cross_join(left as _L, right as _R, _L.da, _R.da)")
+  expect_identical(joined$dims, c('da', 'db', 'db'))
+  expect_identical(joined$attrs, c('aa', 'ab', 'raa', 'rab'))
+  expect_identical(joined$get_field_types(joined$dims), list(da='int64', db='int64', db='int64'))
+  expect_identical(joined$get_field_types(joined$attrs), list(aa='string', ab='double', raa='string', rab='double'))
+})
+
+test_that("Set operand aliases", {
+  left = newArrayOp('left', c('da', 'db'), c('aa', 'ab'), dtypes = list(da='int64', db='int64', aa='string', ab='double'))
+  right = newArrayOp('right', c('da', 'db'), c('raa', 'rab'), dtypes = list(da='int64', db='int64', raa='string', rab='double'))
+  joined = left$join(right, on_both='da', join_mode = 'cross_join', .left_alias = 'L', .right_alias = 'R')
+  assert_afl_equal(joined$to_afl(), "cross_join(left as L, right as R, L.da, R.da)")
+  expect_identical(joined$dims, c('da', 'db', 'db'))
+  expect_identical(joined$attrs, c('aa', 'ab', 'raa', 'rab'))
+  expect_identical(joined$get_field_types(joined$dims), list(da='int64', db='int64', db='int64'))
+  expect_identical(joined$get_field_types(joined$attrs), list(aa='string', ab='double', raa='string', rab='double'))
+})
+
+test_that("Cannot cross_join on attributes (dimensions only)", {
+  left = newArrayOp('left', c('da', 'db'), c('aa', 'ab'), dtypes = list(da='int64', db='int64', aa='string', ab='double'))
+  right = newArrayOp('right', c('da', 'db'), c('raa', 'rab'), dtypes = list(da='int64', db='int64', raa='string', rab='double'))
+  expect_error(left$join(right, on_left='aa', on_right='raa', join_mode = 'cross_join'), "must be dimensions")
+})
+
 # Set auto increment fields ---------------------------------------------------------------------------------------
 # apply auto incremnt id to the Source with incremented values from the reference
 
