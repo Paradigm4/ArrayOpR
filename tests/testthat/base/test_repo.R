@@ -76,3 +76,49 @@ test_that("Create ArrayOp instance for registered array schema aliases", {
   expect_error(repo$get_alias_schema('non-existent'), 'not registered')
 })
 
+# Load repo from a setting object (list) ----------
+
+test_that("Load repo schemas from a setting object", {
+  dep = list(get_scidb_version = function() '18.1', query = function(x) 42, execute = function(x) 'cmd', 
+    get_schema_df = identity)
+  config = list(namespace = 'ns', settings = list(), 
+    arrays = list(
+      list(alias = 'V', name = 'Variant', schema = "<ref:string, alt:string compression 'zlib', score:double> [chrom=1:24:0:1; pos=*]"),
+      list(alias = 'G', name = 'Genotype', 
+        attrs = list(ref='string', alt='string', score='double'), 
+        dims = list(chrom='1:24:0:1', pos='*'))
+    ))
+  yamlStr = "# comment line
+namespace: ns
+arrays:
+  - alias: V
+    name: Variant
+    schema: <ref:string, alt:string compression 'zlib', score:double> [chrom=1:24:0:1; pos=*]
+  - alias: G
+    name: Genotype
+    dims:
+      chrom: '1:24:0:1'
+      # a single * has to be quoted otherwise will cause a yaml parse error
+      pos: '*'
+    attrs:
+      ref: string
+      alt: string
+      score: double
+"
+  for(repo in c(
+    newRepo(dep = dep, config = config)
+    , newRepo(dep = dep, config = yaml::yaml.load(yamlStr))
+  )){
+    V = repo$get_alias_schema('V')
+    G = repo$get_alias_schema('G')
+    expect_identical(V$to_afl(), 'ns.Variant')
+    expect_identical(V$dims, c('chrom', 'pos'))
+    expect_identical(V$attrs, c('ref', 'alt', 'score'))
+    assert_afl_equal(V$to_schema_str(), "<ref:string, alt:string compression 'zlib', score:double> [chrom=1:24:0:1; pos=*]")
+    
+    expect_identical(G$to_afl(), 'ns.Genotype')
+    expect_identical(G$dims, c('chrom', 'pos'))
+    expect_identical(G$attrs, c('ref', 'alt', 'score'))
+    assert_afl_equal(G$to_schema_str(), "<ref:string, alt:string, score:double> [chrom=1:24:0:1; pos=*]")
+  }
+})
