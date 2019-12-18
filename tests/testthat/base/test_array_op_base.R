@@ -400,6 +400,18 @@ test_that("Output a schema representation for the ArrayOp with dimension specs",
 })
 
 
+# create, delete, delete_versions ---------------------------------------------------------------------------------
+
+test_that("Common array operations", {
+  t = newArrayOp('t', c('da', 'db'), c('aa', 'ab'), dtypes = list(da='int64', db='int64', aa='string', ab='int32'),
+    dim_specs = list(da='1:24:0:1', db='*'))
+  assert_afl_equal(t$create_array_cmd('NEW'), "create array NEW <aa:string, ab:int32> [da=1:24:0:1; db=*]")
+  assert_afl_equal(t$remove_array_cmd(), "remove(t)")
+  assert_afl_equal(t$remove_array_versions_cmd(), "remove_versions(t)")
+  assert_afl_equal(t$remove_array_versions_cmd(version_id = NULL), "remove_versions(t)")
+  assert_afl_equal(t$remove_array_versions_cmd(version_id = 3), "remove_versions(t, 3)")
+})
+
 
 # To join operand -------------------------------------------------------------------------------------------------
 # Tests on the joined result are scidb version specific because the syntax is different in v19 than v18

@@ -836,6 +836,28 @@ Only data.frame is supported", class(df))
       self$create_new("Spawned ArrayOp", dims, attrs, dtypes, dim_specs = dim_specs)
     }
 
+    # Common array operators ------------------------------------------------------------------------------------------
+    ,
+    #' @description 
+    #' Generate a command string that creates a new array based on the caller's schema
+    #' 
+    create_array_cmd = function(array_name) {
+      sprintf("create array %s %s", array_name, self$to_schema_str())
+    }
+    ,
+    #' @description 
+    #' Generate a command string that removes the array (use with CAUTION!!!)
+    remove_array_cmd = function() {
+      sprintf("remove(%s)", self$to_afl())
+    }
+    ,
+    #' @description 
+    #' Generate a command string that removes the versions of the array (use with CAUTION!!!)
+    remove_array_versions_cmd = function(version_id = NULL) {
+      if(is.null(version_id)) sprintf("remove_versions(%s)", self$to_afl())
+      else sprintf("remove_versions(%s, %s)", self$to_afl(), version_id)
+    }
+    
     # AFL -------------------------------------------------------------------------------------------------------------
     ,
     #' @description 
