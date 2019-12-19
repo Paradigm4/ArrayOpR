@@ -16,15 +16,15 @@
 ArrayOpV19 <- R6::R6Class("ArrayOpV19",
   inherit = ArrayOpBase,
   private = list(
-    equi_join_template = function() {
-      "equi_join(%s as _L, %s as _R, %s)"
+    equi_join_template = function(left_alias, right_alias) {
+      sprintf("equi_join(%%s as %s, %%s as %s, %%s)", left_alias, right_alias)
     }
     ,
-    to_equi_join_setting_item_str = function(key, value) {
+    to_equi_join_setting_item_str = function(key, value, left_alias, right_alias) {
       if(key == 'left_names')
-        value = sprintf("_L.%s", value)
+        value = sprintf("%s.%s", left_alias, value)
       else if(key == 'right_names')
-        value = sprintf("_R.%s", value)
+        value = sprintf("%s.%s", right_alias, value)
       valueStr = if(length(value) > 1) sprintf("(%s)", paste(value, collapse = ',')) else value
       sprintf("%s:%s", key, valueStr)
     }

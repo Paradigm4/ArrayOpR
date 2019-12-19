@@ -80,7 +80,8 @@ Please select on left operand's fields OR do not select on either operand. Look 
       mergedSettings <- c(list(left_names = on_left, right_names = on_right), settings)
       # Values of setting items cannot be quoted.
       # But the whole 'key=value' needs single quotation according to equi_join plugin specs
-      settingItems = mapply(private$to_equi_join_setting_item_str, names(mergedSettings), mergedSettings)
+      settingItems = mapply(function(k, v) private$to_equi_join_setting_item_str(k, v, .left_alias, .right_alias), 
+        names(mergedSettings), mergedSettings)
 
       keep_dimensions = (function(){
         val = settings[['keep_dimensions']]
@@ -88,7 +89,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
       })()
       
       # Join two operands
-      joinExpr <- sprintf(private$equi_join_template(),
+      joinExpr <- sprintf(private$equi_join_template(.left_alias, .right_alias),
         left$.to_join_operand_afl(on_left, keep_dimensions = keep_dimensions, artificial_field = .artificial_field), 
         right$.to_join_operand_afl(on_right, keep_dimensions = keep_dimensions, artificial_field = .artificial_field),
         paste(settingItems, collapse = ', '))
