@@ -21,6 +21,52 @@ RepoBase <- R6::R6Class("RepoBase",
     get_meta = function(key) {
       private$metaList[[key]]
     }
+    ,
+    new_arrayop_from_list = function(full_array_name, params){
+      self$ArrayOp(full_array_name, params$dims, params$attrs, dtypes = params$dtypes, dim_specs = params$dim_specs)
+    }
+    ,
+    new_arrayop_from_schema_df = function(full_array_name, schema_df) {
+      schemaDf = schema_df
+      mandatoryCols = c('name', 'dtype', 'is_dimension')
+      assert(all(mandatoryCols %in% names(schemaDf)),
+        "ERROR: Repo$load_schema_from_db: schema data frame should have all the columns: '%s', but got '%s'",
+        mandatoryCols, names(schemaDf)
+      )
+      attrs = schemaDf[!schemaDf$is_dimension, ]
+      dims = schemaDf[schemaDf$is_dimension, ]
+      dtypes = as.list(structure(schemaDf$dtype, names = schemaDf$name))
+      
+      dimSpecVector = if(is.null(dims$dim_spec)) list() else dims$dim_spec
+      dimSpecs = as.list(structure(dimSpecVector, names = dims$name))
+      
+      params = list(dims = dims$name, attrs = attrs$name, dtypes = dtypes, dim_specs = dimSpecs)
+      return(private$new_arrayop_from_list(full_array_name, params))
+    }
+    ,
+    # If both schema and attrs/dims are provided, only 'schema' takes precedence
+    # Here we assume that all dimensions have 'int64' data type
+    load_array_config = function(alias, name, schema, attrs, dims) {
+      self$register_schema_alias_by_array_name(alias, name, is_full_name = grepl('\\.', name))
+      fullArrayName = private$get_meta('schema_registry')[[alias]]
+      
+      arrayOp = 
+      if(methods::hasArg(schema)) {
+        assert_has_len(schema, "ERROR: Repo$load_array_config: schema string must be provided when attrs/dims missing")
+        schemaDf = get_schema_df_from_schema_str(schema)
+        private$new_arrayop_from_schema_df(fullArrayName, schemaDf)
+      }
+      else {
+        assert(methods::hasArg(attrs) && methods::hasArg(dims),
+          "ERROR: Repo$load_array_config: Array [%s]: No schema string or dims/attrs config are provided ", alias)
+        private$new_arrayop_from_list(fullArrayName, list(
+          dims = names(dims), attrs = names(attrs), 
+          dtypes = c(attrs, invert.list(list('int64' = names(dims)))), dim_specs = dims
+        ))
+      }
+      
+      private$cached_schemas[[alias]] = arrayOp
+    }
   )
   ,
   active = list(
@@ -36,7 +82,7 @@ RepoBase <- R6::R6Class("RepoBase",
     #' Do NOT call this `initialize` function directly. Call `newRepo` instead to get a new Repo instance.
     #' @param namespace The default namespace
     #' @param dbAccess A DbAccess instantance that manages scidb connection
-    initialize = function(default_namespace, dependency_object = NULL) {
+    initialize = function(default_namespace, dependency_object = NULL, config = NULL) {
       private$cached_schemas = list()
       private$metaList = list()
       
@@ -46,6 +92,18 @@ RepoBase <- R6::R6Class("RepoBase",
       private$set_meta('schema_registry', list())
       private$set_meta('repo_version', "RepoBase")
       private$set_meta('scidb_version', dependency_object$get_scidb_version())
+      
+      # Reading settings from a config object if available
+      if (!is.null(config)) {
+        if (default_namespace == 'public')
+          private$set_meta('default_namespace', config$namespace)
+
+        # load settings
+        # load arrays
+        for(arr in config$arrays){
+          do.call(private$load_array_config, arr)
+        }
+      }
     }
     ,
     #' @description 
@@ -113,6 +171,11 @@ RepoBase <- R6::R6Class("RepoBase",
 
     # Schema management -----------------------------------------------------------------------------------------------
     ,
+    #' @description 
+    #' Register a scidb array as an alias in the Repo
+    #' 
+    #' If array_name is not fully qualified, the current default_namespace meta info is taken.
+    #' Later changes to the default_namespace will not affect already registered arrays
     register_schema_alias_by_array_name = function(alias, array_name, is_full_name = FALSE) {
       if(!is_full_name){
         array_name = sprintf("%s.%s", private$get_meta('default_namespace'), array_name)
@@ -134,24 +197,21 @@ RepoBase <- R6::R6Class("RepoBase",
     }
     ,
     #' @description
-    #' Load Array Schema directly from scidb
+    #' Load a new ArrayOp directly from scidb
+    #' 
+    #' The repo's `dep$get_schema_df` function is called to get array schema denoted by a data frame
     load_schema_from_db = function(full_array_name) {
       schemaDf = private$dep$get_schema_df(full_array_name)
-      mandatoryCols = c('name', 'dtype', 'is_dimension')
-      assert(all(mandatoryCols %in% names(schemaDf)),
-        "ERROR: Repo$load_schema_from_db: schema data frame should have all the columns: '%s', but got '%s'",
-        mandatoryCols, names(schemaDf)
-      )
-      attrs = schemaDf[!schemaDf$is_dimension, ]
-      dims = schemaDf[schemaDf$is_dimension, ]
-      dtypes = as.list(structure(schemaDf$dtype, names = schemaDf$name))
-      
-      dimSpecVector = if(is.null(dims$dim_spec)) list() else dims$dim_spec
-      dimSpecs = as.list(structure(dimSpecVector, names = dims$name))
-      
-      arrayOp = self$ArrayOp(full_array_name, dims$name, attrs$name, dtypes = dtypes, dim_specs = dimSpecs)
-      return(arrayOp)
+      private$new_arrayop_from_schema_df(full_array_name, schemaDf)
     }
+    ,
+    #' @description 
+    #' Set Repo meta data directly
+    .set_meta = function(key, value) private$set_meta(key, value)
+    ,
+    #' @description 
+    #' Get Repo meta data directly
+    .get_meta = function(key) private$get_meta(key)
   )
 )
 
@@ -166,10 +226,10 @@ RepoBase <- R6::R6Class("RepoBase",
 #' If left NULL, will require a scidb connection 'db' to create the dependency_obj automatically.
 #' @param db a scidb connection returned by scidb::scidbconnect
 #' @export
-newRepo = function(default_namespace = 'ns', dependency_obj = NULL, db){
+newRepo = function(default_namespace = 'public', dependency_obj = NULL, db = NULL, config = NULL){
   # Validate dependency_obj has all required methods
   requiredNames = c('get_scidb_version', 'query', 'execute', 'get_schema_df')
-  if(!.has_len(dependency_obj) && methods::hasArg('db')){
+  if(!.has_len(dependency_obj) && .has_len(db)){
     dependency_obj = default_dep_obj(db)
   }
   missingNames = base::setdiff(requiredNames, names(dependency_obj))
@@ -186,7 +246,8 @@ newRepo = function(default_namespace = 'ns', dependency_obj = NULL, db){
     '19' = RepoV19
   )
   assert(!is.null(repoClass), "ERROR in newRepo: unsupported scidb version %s", fullScidbVersion)
-  repoClass$new(default_namespace, dependency_obj)
+  result = repoClass$new(default_namespace, dependency_obj, config = config)
+  return(result)
 }
 
 default_dep_obj = function(db) {
@@ -206,22 +267,39 @@ default_dep_obj = function(db) {
     get_schema_df = function(array_name) {
       # V3<vid:int64,ref:string,alt:string,extra:string> [chrom=1:24:0:1; pos=1:*:0:1000000; alt_id=0:*:0:1000]
       schemaStr = runQuery(sprintf("show(%s)", array_name))[1, 'schema']
-      matched = stringr::str_match_all(schemaStr, "\\<(.+)\\>\\s*\\[(.+)\\]")[[1]]
-      attrStr = matched[1,2]
-      dimStr = matched[1,3]
-      attrMatrix = stringr::str_match_all(attrStr, "(\\w+):(\\w+)")[[1]]
-      dimMatrix = stringr::str_match_all(dimStr, "(\\w+)=([^;]+)")[[1]]
-      numAttrs = nrow(attrMatrix)
-      numDims = nrow(dimMatrix)
-      data.frame(
-        name = c(attrMatrix[, 2], dimMatrix[, 2]),
-        dtype = c(attrMatrix[, 3], rep('int64', numDims)),
-        is_dimension = c(rep(F, numAttrs), rep(T, numDims)),
-        dim_spec = c(rep('', numAttrs), dimMatrix[, 3]),
-        stringsAsFactors = FALSE
-      )
+      get_schema_df_from_schema_str(schemaStr)
     }
   )
 }
 
+get_schema_df_from_schema_str = function(schemaStr) {
+  matched = stringr::str_match_all(schemaStr, "\\<(.+)\\>\\s*\\[(.+)\\]")[[1]]
+  attrStr = matched[1,2]
+  dimStr = matched[1,3]
+  attrMatrix = stringr::str_match_all(attrStr, "(\\w+):\\s*([^;,:]+)")[[1]]
+  dimMatrix = stringr::str_match_all(dimStr, "(\\w+)=([^;]+)")[[1]]
+  numAttrs = nrow(attrMatrix)
+  numDims = nrow(dimMatrix)
+  data.frame(
+    name = c(attrMatrix[, 2], dimMatrix[, 2]),
+    dtype = c(attrMatrix[, 3], rep('int64', numDims)),
+    is_dimension = c(rep(F, numAttrs), rep(T, numDims)),
+    dim_spec = c(rep('', numAttrs), dimMatrix[, 3]),
+    stringsAsFactors = FALSE
+  )
+}
+
+#' Invert names and values of a list (or named vector)
+#'
+#' @param obj a named list
+#' @param .as.list Return a list if set TRUE; otherwise a named vector
+#' @return A list or named vector whose key/values are inverted from the original `obj`
+invert.list = function(obj, .as.list = T) {
+  res = structure(
+    unlist(mapply(rep, names(obj), sapply(obj, length)), use.names=F),
+    names = unlist(obj)
+  )
+  if(.as.list) res = as.list(res)
+  res
+}
 

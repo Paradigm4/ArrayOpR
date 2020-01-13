@@ -16,6 +16,21 @@ arrL =  dummyArrayOp('L', c('lda', 'ldb', 'ldc', 'ldd'), c('laa', 'lab', 'lac', 
 arrR = dummyArrayOp('R', c('rda', 'rdb', 'rdc', 'rdd'), c('raa', 'rab', 'rac', 'rad'))
 
 
+# Join operand alias ----------------------------------------------------------------------------------------------
+
+test_that("Operand alias", {
+  joinOp = arrL$select('laa')$join(arrR, on_left = 'laa', on_right = 'raa', .left_alias = 'LeftL', .right_alias = 'RightR')
+  assert_afl_equal(joinOp$to_afl(), "
+  project(
+    equi_join(
+      project(L, laa) as LeftL,
+      R as RightR,
+        left_names:LeftL.laa, right_names:RightR.raa
+    ),
+    laa
+  )")
+})
+
 # __Join on array attributes -------------------------------------------------------------------------------------
 
 # NOTE: JoinOp ignores all 'on_right' fields even they are 'selected' in 'right' operand

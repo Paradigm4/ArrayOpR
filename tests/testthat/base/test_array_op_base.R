@@ -108,6 +108,16 @@ test_that("Select fields do not change afl output", {
   }
 })
 
+test_that("Select fields through a field param", {
+  op = newArrayOp("rawafl", c("da", "db"), c("ac", "ad"), dtypes = list(ac='string', ad='int32', da='int64', db='int64'))
+  expect_identical(op$select('ac')$selected, op$select(c('ac'))$selected)
+  v = c('ac', 'da')
+  expect_identical(op$select('ac', 'da')$selected, op$select(v)$selected)
+  expect_identical(op$select('db')$selected, op$select(c('db'))$selected)
+  v = c('db', 'ad')
+  expect_identical(op$select('db', 'ad')$selected, op$select(v)$selected)
+})
+
 test_that("Cannot select non-existent fields", {
   op = newArrayOp("rawafl", c("da", "db"), c("ac", "ad"), dtypes = list(ac='string', ad='int32', da='int64', db='int64'))
   expect_error(op$select('non-existent'))
@@ -164,6 +174,53 @@ test_that("Select dims only", {
   }
 })
 
+test_that("Select new fields", {
+  # Select no existing attrs
+  reshaped = Source$reshape(list(new_field1 = '42'), dtypes = list(new_field1 = 'int'))
+  expect_identical(reshaped$attrs, 'new_field1')
+  expect_identical(reshaped$dims, c('da', 'db'))
+  expect_identical(reshaped$get_field_types(), list('da'='dtda', 'db'='dtdb', 'new_field1' = 'int'))
+  assert_afl_equal(reshaped$to_afl(), 'project(apply(s, new_field1, 42), new_field1)')
+  # Select existing attrs without expression
+  reshaped = Source$reshape(list(new_field1 = '42', 'ac'), dtypes = list(new_field1 = 'int'))
+  expect_identical(reshaped$attrs, c('new_field1', 'ac'))
+  expect_identical(reshaped$dims, c('da', 'db'))
+  expect_identical(reshaped$get_field_types(), list('da'='dtda', 'db'='dtdb', 'new_field1' = 'int', 'ac'='dtac'))
+  assert_afl_equal(reshaped$to_afl(), 'project(apply(s, new_field1, 42), new_field1, ac)')
+  
+  # Selecting new fields without expression
+  reshaped = Source$reshape(list(new_field1 = '42', 'extra'), dtypes = list(new_field1 = 'int', extra='string'))
+  expect_identical(reshaped$attrs, c('new_field1', 'extra'))
+  expect_identical(reshaped$dims, c('da', 'db'))
+  expect_identical(reshaped$get_field_types(), list('da'='dtda', 'db'='dtdb', 'new_field1' = 'int', 'extra'='string'))
+  assert_afl_equal(reshaped$to_afl(), 'project(apply(s, new_field1, 42), new_field1, extra)')
+})
+
+test_that("Provide expressions to exsiting fields will effectively replace the existing fields", {
+  # Replace existing field only
+  reshaped = Source$reshape(list(ac = 'ac+ad'), dtypes = list(ac='string'))
+  expect_identical(reshaped$attrs, 'ac')
+  expect_identical(reshaped$dims, c('da', 'db'))
+  expect_identical(reshaped$get_field_types(), list('da'='dtda', 'db'='dtdb', 'ac'='string'))
+  assert_afl_equal(reshaped$to_afl(), 'apply(project(apply(s, _ac, ac+ad), _ac), ac, _ac)')
+  # Replace existing field while selecting existing fields
+  reshaped = Source$reshape(list(ac = 'ac+ad', 'ad'), dtypes = list(ac='string'))
+  expect_identical(reshaped$attrs, c('ac', 'ad'))
+  expect_identical(reshaped$dims, c('da', 'db'))
+  expect_identical(reshaped$get_field_types(), list('da'='dtda', 'db'='dtdb', 'ac'='string', 'ad'='dtad'))
+  assert_afl_equal(reshaped$to_afl(), 'apply(project(apply(s, _ac, ac+ad), ad, _ac), ac, _ac)')
+  # Replace existing field while selecting existing fields and new fields
+  reshaped = Source$reshape(list(ac = 'ac+ad', 'ad', extra=42), dtypes = list(ac='string', extra='int64'))
+  expect_identical(reshaped$attrs, c('ac', 'ad', 'extra'))
+  expect_identical(reshaped$dims, c('da', 'db'))
+  expect_identical(reshaped$get_field_types(), list('da'='dtda', 'db'='dtdb', 'ac'='string', 'ad'='dtad', extra='int64'))
+  assert_afl_equal(reshaped$to_afl(), 'apply(project(apply(s, _ac, ac+ad), ad, _ac), ac, _ac, extra, 42)')
+})
+
+test_that("Must select fields in dim_mode = 'keep'", {
+  expect_error(Source$reshape(), 'select')
+  expect_error(Source$reshape(dim_mode = 'keep'), 'select')
+})
 # 
 # dim_mode = 'drop' 
 # 
@@ -189,6 +246,14 @@ test_that("Select existing attributes/dimensions in dim_mode = 'drop'", {
   expect_identical(t$dims_n_attrs, c('z', 'ac', 'da'))
   expect_identical(t$get_field_types(), list(z = 'int64', ac = 'dtac', da = 'dtda'))
   assert_afl_equal(t$to_afl(), "project(unpack(s, z), ac, da)")
+  # No selected fields
+  t = Source$reshape(dim_mode = 'drop', artificial_field = 'z')
+  expect_identical(t$dims, 'z')
+  expect_identical(t$attrs, c('da', 'db', 'ac', 'ad'))
+  expect_identical(t$dims_n_attrs, c('z', 'da', 'db', 'ac', 'ad'))
+  expect_identical(t$get_field_types(), list(z = 'int64', da='dtda', db='dtdb', ac = 'dtac', ad = 'dtad'))
+  expect_null(t$get_dim_specs('z')[[1]])
+  assert_afl_equal(t$to_afl(), "unpack(s, z)")
 })
 
 test_that("Select new fields in dim_mode = 'drop'", {
@@ -218,16 +283,16 @@ test_that("Select new fields in dim_mode = 'drop'", {
 
 # Build new -------------------------------------------------------------------------------------------------------
 
-Template = newArrayOp('template', c('da', 'db'), c('aa', 'ab'), 
-  dtypes = list(da='int64', db='int64', aa='string', ab='int32'))
+Template = newArrayOp('template', c('da', 'db'), c('aa', 'ab', 'ac'), 
+  dtypes = list(da='int64', db='int64', aa='string', ab='int32', ac='bool'))
 
 test_that("New ArrayOp from building a data.frame with full field match", {
-  df = data.frame(da = c(1,2), aa=c('aa1', 'aa2'), ab=c(3,4), db = c(5, 6))
+  df = data.frame(da = c(1,2), aa=c('aa1', "a' \" \\ a2"), ab=c(3,4), db = c(5, 6), ac = c(T, F))
   built = Template$build_new(df, artificial_field = 'z')
   assert_afl_equal(built$to_afl(),
-    "build(<da:int64, aa:string, ab:int32, db:int64>[z],
-        '[(1, \\'aa1\\', 3, 5), (2, \\'aa2\\', 4, 6)]', true)")
-  expect_identical(built$attrs, c('da', 'aa', 'ab', 'db'))
+    "build(<da:int64, aa:string, ab:int32, db:int64, ac:bool>[z],
+        '[(1, \\'aa1\\', 3, 5, true), (2, \\'a\\\\' \" \\\\\\ a2\\', 4, 6, false)]', true)")
+  expect_identical(built$attrs, c('da', 'aa', 'ab', 'db', 'ac'))
   expect_identical(built$get_field_types(built$attrs), Template$get_field_types(built$attrs))
 })
 
@@ -271,53 +336,6 @@ test_that("All colum names in df should be valid template fields", {
 })
 
 
-# Write data  -------------------------------------------------------------------------------------------------
-
-# Target ArrayOp is the one we want to write data to
-Target = newArrayOp('target', c('da', 'db'), c('aa', 'ab'), 
-  dtypes = list(da='int64', db='int64', aa='string', ab='int32'))
-
-test_that("Write a dataset ArrayOp to target", {
-  ds = newArrayOp('dataset', c('da', 'db'), c('aa', 'ab'), 
-    dtypes = list(da='int64', db='int64', aa='string', ab='int32'))
-  writeOp = ds$write_to(Target)
-  assert_afl_equal(writeOp$to_afl(), "insert(dataset, target)")
-  writeOp = ds$write_to(Target, append = F)
-  assert_afl_equal(writeOp$to_afl(), "store(dataset, target)")
-})
-
-test_that("Field names do not matter as long as the field data types match target", {
-  for(ds in c(
-    newArrayOp('dataset', c('w', 'x'), c('y', 'z'), dtypes = list(w='int64', x='int64', y='string', z='int32'))
-    ,newArrayOp('dataset', c('z', 'x'), c('y', 'w'), dtypes = list(z='int64', x='int64', y='string', w='int32'))
-  )){
-    writeOp = ds$write_to(Target)
-    assert_afl_equal(writeOp$to_afl(), "insert(dataset, target)")
-  }
-})
-
-# If data types do not exactly match, 'redimension' is used
-
-test_that("Write a dataset ArrayOp to target in redimension mode", {
-  for(ds in c(
-    newArrayOp('dataset', 'x', c('da', 'db', 'aa', 'ab'), dtypes = list(x='int64', da='int64', db='int64', aa='string', ab='int32'))
-    ,newArrayOp('dataset', 'x', c('da', 'db', 'aa', 'ab'))
-    ,newArrayOp('dataset', 'x', c('extra_field_is_ok', 'da', 'db', 'aa', 'ab'))
-  )){
-    writeOp = ds$write_to(Target)
-    assert_afl_equal(writeOp$to_afl(), "insert(redimension(dataset, target), target)")
-    writeOp = ds$write_to(Target, append = F)
-    assert_afl_equal(writeOp$to_afl(), "store(redimension(dataset, target), target)")
-  }
-})
-
-test_that("All target fields must be present in the source by matching names in Redimension mode ", {
-  expect_error(
-    newArrayOp('dataset', 'x', c('db', 'aa', 'ab'), 
-      dtypes = list(x='int64', db='int64', aa='string', ab='int32'))$write_to(Target), "not found")
-})
-
-
 # Spawn -----------------------------------------------------------------------------------------------------------
 
 test_that("Spawn a new ArrayOp from a template", {
@@ -347,6 +365,25 @@ test_that("Spawn a new ArrayOp from a template", {
   assert_afl_equal(spawned$to_schema_str(), "<AB:int32> [a;db]")
 })
 
+test_that("Spawn a new ArrayOp with extra fields", {
+  t = newArrayOp('t', c('da', 'db'), c('aa', 'ab'), dtypes = list(da='int64', db='int64', aa='string', ab='int32'),
+    dim_specs = list(da = '0:1:0:1', db = '1:*:0:24'))
+  
+  spawned = t$spawn(added = c('extra1', 'extra2'), dtype = list(extra1 = 'int64', extra2 = 'string'))
+  expect_identical(spawned$dims, c('da', 'db'))
+  expect_identical(spawned$attrs, c('aa', 'ab', 'extra1', 'extra2'))
+  expect_identical(spawned$get_field_types(), list(da='int64', db='int64', aa='string', ab='int32', 
+    extra1 = 'int64', extra2 = 'string'))
+  
+  spawned = t$spawn(added = c('extra1', 'extra2'), renamed = list(db='x'), excluded = c('da', 'aa'), 
+    dtype = list(extra1 = 'int64', extra2 = 'string'), dim_specs = list('extra1' = '0:*:0:*'))
+  expect_identical(spawned$dims, c('x', 'extra1'))
+  expect_identical(spawned$attrs, c('ab', 'extra2'))
+  expect_identical(spawned$get_field_types(), list(x='int64', extra1 = 'int64', ab='int32', extra2 = 'string'))
+  expect_identical(spawned$get_dim_specs(), list(x='1:*:0:24', extra1 = '0:*:0:*'))
+  
+})
+
 # To schema str ---------------------------------------------------------------------------------------------------
 
 test_that("Output a schema representation for the ArrayOp", {
@@ -361,3 +398,204 @@ test_that("Output a schema representation for the ArrayOp with dimension specs",
                  dim_specs = list(da = '0:*:0:*', db='1:23:0:23'))
   assert_afl_equal(t$to_schema_str(), "<aa:string, ab:int32> [da=0:*:0:*;db=1:23:0:23]")
 })
+
+
+# create, delete, delete_versions ---------------------------------------------------------------------------------
+
+test_that("Common array operations", {
+  t = newArrayOp('t', c('da', 'db'), c('aa', 'ab'), dtypes = list(da='int64', db='int64', aa='string', ab='int32'),
+    dim_specs = list(da='1:24:0:1', db='*'))
+  assert_afl_equal(t$create_array_cmd('NEW'), "create array NEW <aa:string, ab:int32> [da=1:24:0:1; db=*]")
+  assert_afl_equal(t$remove_array_cmd(), "remove(t)")
+  assert_afl_equal(t$remove_array_versions_cmd(), "remove_versions(t)")
+  assert_afl_equal(t$remove_array_versions_cmd(version_id = NULL), "remove_versions(t)")
+  assert_afl_equal(t$remove_array_versions_cmd(version_id = 3), "remove_versions(t, 3)")
+})
+
+
+# To join operand -------------------------------------------------------------------------------------------------
+# Tests on the joined result are scidb version specific because the syntax is different in v19 than v18
+
+test_that("ArrayOp as an operand in a join", {
+  t = newArrayOp('t', c('da', 'db'), c('aa', 'ab'), dtypes = list(da='int64', db='int64', aa='string', ab='int32'))
+  
+  # No selected fields, always use the array name as join operand
+  assert_afl_equal(t$.to_join_operand_afl('da'), 't')
+  assert_afl_equal(t$.to_join_operand_afl('aa'), 't')
+  assert_afl_equal(t$.to_join_operand_afl('db', keep_dimension = T), 't')
+  assert_afl_equal(t$.to_join_operand_afl('aa', keep_dimension = T), 't')
+  
+  # With selected fields but not keep dimensions
+  assert_afl_equal(t$select('aa')$.to_join_operand_afl('da'), 'project(t, aa)')
+  assert_afl_equal(t$select('db')$.to_join_operand_afl('da'), 'project(apply(t, db, db), db)')
+  assert_afl_equal(t$select('ab')$.to_join_operand_afl('aa'), 'project(t, ab, aa)')
+  assert_afl_equal(t$select('db')$.to_join_operand_afl('aa'), 'project(apply(t, db, db), db, aa)')
+  
+  # With selected fields and keep dimensions
+  assert_afl_equal(t$select('aa')$.to_join_operand_afl('da', keep_dimension = T), 'project(t, aa)')
+  assert_afl_equal(t$select('db')$.to_join_operand_afl('da', keep_dimension = T, artificial_field = 'x'),
+    'project(apply(t, x, null), x)')
+  assert_afl_equal(t$select('ab')$.to_join_operand_afl('aa', keep_dimension = T), 'project(t, ab, aa)')
+  assert_afl_equal(t$select('db')$.to_join_operand_afl('aa', keep_dimension = T), 'project(t, aa)')
+})
+
+test_that("to_join_operand_afl keep_dimension = F", {
+  t = newArrayOp('t', c('da', 'db', 'dc'), c('aa', 'ab', 'ac'), 
+    dtypes = list(da='int64', db='int64', dc='int64', aa='string', ab='int32', ac='bool'))
+  
+  test_select_key = function(selected, key, afl_str){
+    assert_afl_equal(t$select(selected)$.to_join_operand_afl(key, artificial_field='x'), afl_str)
+  }
+  
+  test_select_key('aa', 'aa', 'project(t, aa)')
+  test_select_key('da', 'da', 'project(apply(t, x, null), x)')
+  test_select_key('aa', 'da', 'project(t, aa)')
+  test_select_key('db', 'da', 'project(apply(t, db, db), db)')
+  test_select_key('ab', 'aa', 'project(t, ab, aa)')
+  test_select_key('db', 'aa', 'project(apply(t, db, db), db, aa)')
+})
+
+test_that("to_join_operand_afl keep_dimension = T", {
+  t = newArrayOp('t', c('da', 'db', 'dc'), c('aa', 'ab', 'ac'), 
+    dtypes = list(da='int64', db='int64', dc='int64', aa='string', ab='int32', ac='bool'))
+  
+  test_select_key = function(selected, key, afl_str){
+    assert_afl_equal(t$select(selected)$.to_join_operand_afl(key, keep_dimension = T, artificial_field='x'), afl_str)
+  }
+  
+  test_select_key('aa', 'aa', 'project(t, aa)')
+  test_select_key('da', 'da', 'project(apply(t, x, null), x)')
+  test_select_key('aa', 'da', 'project(t, aa)')
+  test_select_key('db', 'da', 'project(apply(t, x, null), x)')
+  test_select_key('ab', 'aa', 'project(t, ab, aa)')
+  test_select_key('db', 'aa', 'project(t, aa)')
+})
+
+
+# Join - cross_join mode ------------------------------------------------------------------------------------------
+
+test_that("Join cross_join mode", {
+  left = newArrayOp('left', c('da', 'db'), c('aa', 'ab'), dtypes = list(da='int64', db='int64', aa='string', ab='double'))
+  right = newArrayOp('right', c('rda', 'rdb'), c('raa', 'rab'), dtypes = list(rda='int64', rdb='int64', raa='string', rab='double'))
+  joined = left$join(right, on_left = 'da', on_right = 'rda', join_mode = 'cross_join')
+  assert_afl_equal(joined$to_afl(), "cross_join(left as _L, right as _R, _L.da, _R.rda)")
+  expect_identical(joined$dims, c('da', 'db', 'rdb'))
+  expect_identical(joined$attrs, c('aa', 'ab', 'raa', 'rab'))
+  expect_identical(joined$get_field_types(joined$dims), list(da='int64', db='int64', rdb='int64'))
+  expect_identical(joined$get_field_types(joined$attrs), list(aa='string', ab='double', raa='string', rab='double'))
+})
+
+test_that("on_both shorthand for on_left and on_right", {
+  left = newArrayOp('left', c('da', 'db'), c('aa', 'ab'), dtypes = list(da='int64', db='int64', aa='string', ab='double'))
+  right = newArrayOp('right', c('da', 'db'), c('raa', 'rab'), dtypes = list(da='int64', db='int64', raa='string', rab='double'))
+  joined = left$join(right, on_both='da', join_mode = 'cross_join')
+  assert_afl_equal(joined$to_afl(), "cross_join(left as _L, right as _R, _L.da, _R.da)")
+  expect_identical(joined$dims, c('da', 'db', 'db'))
+  expect_identical(joined$attrs, c('aa', 'ab', 'raa', 'rab'))
+  expect_identical(joined$get_field_types(joined$dims), list(da='int64', db='int64', db='int64'))
+  expect_identical(joined$get_field_types(joined$attrs), list(aa='string', ab='double', raa='string', rab='double'))
+})
+
+test_that("Set operand aliases", {
+  left = newArrayOp('left', c('da', 'db'), c('aa', 'ab'), dtypes = list(da='int64', db='int64', aa='string', ab='double'))
+  right = newArrayOp('right', c('da', 'db'), c('raa', 'rab'), dtypes = list(da='int64', db='int64', raa='string', rab='double'))
+  joined = left$join(right, on_both='da', join_mode = 'cross_join', .left_alias = 'L', .right_alias = 'R')
+  assert_afl_equal(joined$to_afl(), "cross_join(left as L, right as R, L.da, R.da)")
+  expect_identical(joined$dims, c('da', 'db', 'db'))
+  expect_identical(joined$attrs, c('aa', 'ab', 'raa', 'rab'))
+  expect_identical(joined$get_field_types(joined$dims), list(da='int64', db='int64', db='int64'))
+  expect_identical(joined$get_field_types(joined$attrs), list(aa='string', ab='double', raa='string', rab='double'))
+})
+
+test_that("Cannot cross_join on attributes (dimensions only)", {
+  left = newArrayOp('left', c('da', 'db'), c('aa', 'ab'), dtypes = list(da='int64', db='int64', aa='string', ab='double'))
+  right = newArrayOp('right', c('da', 'db'), c('raa', 'rab'), dtypes = list(da='int64', db='int64', raa='string', rab='double'))
+  expect_error(left$join(right, on_left='aa', on_right='raa', join_mode = 'cross_join'), "must be dimensions")
+})
+
+# Set auto increment fields ---------------------------------------------------------------------------------------
+# apply auto incremnt id to the Source with incremented values from the reference
+
+test_that("Auto increment the reference dimension", {
+  source = newArrayOp('s', 'x', 'a')
+  ref = newArrayOp('ref', c('da', 'db', 'dc'), c('aa', 'ab', 'ac'))
+  
+  # new_field defaults to the reference fields
+  result = source$set_auto_increment_field(ref, 
+    source_field = 'x', ref_field = 'da', source_start = 5, ref_start = 2)
+  assert_afl_equal(result$to_afl(), "
+  apply(
+    cross_join(
+      s,
+      aggregate(apply(ref, da, da), max(da) as _max_da)
+    ), 
+    da,  iif(_max_da is null, x-3, _max_da + x - 4)
+  )")
+  # new_field can be set explicitly
+  result = source$set_auto_increment_field(ref, 
+    source_field = 'x', ref_field = 'da', source_start = 5, ref_start = 2, new_field = 'anything')
+  assert_afl_equal(result$to_afl(), "
+  apply(
+    cross_join(
+      s,
+      aggregate(apply(ref, da, da), max(da) as _max_da)
+    ), 
+    anything,  iif(_max_da is null, x-3, _max_da + x - 4)
+  )")
+})
+
+test_that("More than one auto increment field is allowed", {
+  source = newArrayOp('s', 'x', 'a', dtypes = list(a='string', x='int64'))
+  ref = newArrayOp('ref', c('da', 'db', 'dc'), c('aa', 'ab', 'ac'))
+  result = source$set_auto_increment_field(ref, 
+    source_field = 'x', ref_field = c('da', 'ab'), source_start = 0, ref_start = c(5, 3))
+  assert_afl_equal(result$to_afl(), "
+  apply(
+    cross_join(
+      s,
+      aggregate(apply(ref, da, da), max(da) as _max_da, max(ab) as _max_ab)
+    ), 
+    da,  iif(_max_da is null, x+5, _max_da + x + 1),
+    ab,  iif(_max_ab is null, x+3, _max_ab + x + 1)
+  )")
+  expect_identical(result$dims, 'x')
+  expect_identical(result$attrs, c('a', 'da', 'ab'))
+  expect_identical(result$get_field_types(result$attrs), list('a'='string', 'da'='int64', 'ab'='int64'))
+})
+
+test_that("Auto increment the reference attribute", {
+  source = newArrayOp('s', 'x', 'a')
+  ref = newArrayOp('ref', c('da', 'db', 'dc'), c('aa', 'ab', 'ac'))
+  result = source$set_auto_increment_field(ref, 
+    source_field = 'x', ref_field = 'aa', source_start = 0, ref_start = 1, new_field = 'aa')
+  assert_afl_equal(result$to_afl(), "
+  apply(
+    cross_join(
+      s,
+      aggregate(ref, max(aa) as _max_aa)
+    ), 
+    aa,  iif(_max_aa is null, x + 1, _max_aa + x + 1)
+  )")
+  result = source$set_auto_increment_field(ref, 
+    source_field = 'x', ref_field = 'aa', source_start = 0, ref_start = 0, new_field = 'aa')
+  assert_afl_equal(result$to_afl(), "
+  apply(
+    cross_join(
+      s,
+      aggregate(ref, max(aa) as _max_aa)
+    ), 
+    aa,  iif(_max_aa is null, x, _max_aa + x + 1)
+  )")
+  result = source$set_auto_increment_field(ref, 
+    source_field = 'x', ref_field = 'aa', source_start = 5, ref_start = 2, new_field = 'aa')
+  assert_afl_equal(result$to_afl(), "
+  apply(
+    cross_join(
+      s,
+      aggregate(ref, max(aa) as _max_aa)
+    ), 
+    aa,  iif(_max_aa is null, x-3, _max_aa + x - 4)
+  )")
+})
+
+

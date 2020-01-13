@@ -26,3 +26,12 @@ assert_named_list <- function(obj, ...) {
 `%u%` = function(lhs, rhs) base::union(lhs, rhs)
 `%-%` = function(lhs, rhs) base::setdiff(lhs, rhs)
 `%n%` = function(lhs, rhs) base::intersect(lhs, rhs)
+
+
+.to_signed_integer_str = function(values) {
+  single_value = function(v) {
+    if(v == 0) '' else sprintf("%+d", v)
+  }
+  values = as.integer(values)
+  vapply(values, single_value, FUN.VALUE = '')
+}
