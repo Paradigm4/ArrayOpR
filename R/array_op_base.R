@@ -440,7 +440,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
       colIndexes = vapply(self$dims_n_attrs, function(x) lookup[x], integer(1))
       colIndexes = colIndexes[!is.na(colIndexes)]
 
-      fieldTypes = self$get_field_types(names(colIndexes))
+      fieldTypes = self$get_field_types(names(colIndexes), .raw = TRUE)
       
       # Populate aio settings
       aio_settings = c(list(path = filepath, num_attributes = max(colIndexes) + 1), aio_settings)
