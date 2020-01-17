@@ -58,6 +58,14 @@ test_that("to_df_afl calls to_afl_explict internally", {
 
 })
 
+test_that("Differentiate actual data types and raw types", {
+  dtypeList = list(da="int64", aa="string", ab="string compression 'zlib'", ac="bool not null")
+  rawDtypes = list(da="int64", aa="string", ab="string", ac="bool")
+  op = newArrayOp("rawafl", "da", c("aa", "ab", "ac"), 
+                  dtypes = dtypeList)
+  expect_identical(op$get_field_types(c('da','aa','ab','ac')), dtypeList)
+  expect_identical(op$get_field_types(c('da','aa','ab','ac'), .raw=T), rawDtypes)
+})
 
 # Where ----------------------------------------------------------------------------------------------------------
 
@@ -387,10 +395,10 @@ test_that("Spawn a new ArrayOp with extra fields", {
 # To schema str ---------------------------------------------------------------------------------------------------
 
 test_that("Output a schema representation for the ArrayOp", {
-  t = newArrayOp('t', c('da', 'db'), c('aa', 'ab'), dtypes = list(da='int64', db='int64', aa='string', ab='int32'))
-  assert_afl_equal(t$to_schema_str(), "<aa:string, ab:int32> [da;db]")
-  assert_afl_equal(t$spawn(excluded = c('db'))$to_schema_str(), "<aa:string, ab:int32> [da]")
-  assert_afl_equal(t$spawn(excluded = c('aa'))$to_schema_str(), "<ab:int32> [da; db]")
+  t = newArrayOp('t', c('da', 'db'), c('aa', 'ab'), dtypes = list(da='int64', db='int64', aa="string compression 'zlib'", ab='int32 not null'))
+  assert_afl_equal(t$to_schema_str(), "<aa:string compression 'zlib', ab:int32 not null> [da;db]")
+  assert_afl_equal(t$spawn(excluded = c('db'))$to_schema_str(), "<aa:string compression 'zlib', ab:int32 not null> [da]")
+  assert_afl_equal(t$spawn(excluded = c('aa'))$to_schema_str(), "<ab:int32 not null> [da; db]")
 })
 
 test_that("Output a schema representation for the ArrayOp with dimension specs", {

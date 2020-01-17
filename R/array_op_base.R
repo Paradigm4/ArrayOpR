@@ -188,7 +188,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
     #' NOTE: private$info has to be defined, otherwise returns NULL
     #' @param field_names R character
     #' @return a named list as `field_names`, where absent fields or fields without data types are dropped silently.
-    get_field_types = function(field_names = NULL, .strict = TRUE){
+    get_field_types = function(field_names = NULL, .strict = TRUE, .raw = FALSE){
       if(is.null(field_names))
         field_names = self$dims_n_attrs
       missingFields = base::setdiff(field_names, self$dims_n_attrs)
@@ -205,7 +205,11 @@ Please select on left operand's fields OR do not select on either operand. Look 
           private$raw_afl
         )
       }
-      return(self$dtypes[field_names])
+      result = self$dtypes[field_names]
+      if(.raw){
+        result = as.list(structure(regmatches(result, regexpr("^\\w+", result)), names = field_names))
+      }
+      result
     }
     ,
     #' @description 
