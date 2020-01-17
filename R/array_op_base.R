@@ -186,8 +186,11 @@ Please select on left operand's fields OR do not select on either operand. Look 
     #' Return ArrayOp field types
     #'
     #' NOTE: private$info has to be defined, otherwise returns NULL
-    #' @param field_names R character
-    #' @return a named list as `field_names`, where absent fields or fields without data types are dropped silently.
+    #' @param field_names R character. If NULL, defaults to `self$dims_n_attrs`, ie. dimensions and attributes.
+    #' @param .raw Default FALSE, full data types are returned; if set TRUE, only the raw data types are returned 
+    #' (raw data types are string, int32, int64, bool, etc, without scidb attribute specs such as: string compression 'zlib')
+    #' @return a named list as `field_names`, where absent fields or fields without data types will cause error; 
+    #' unless `.strict=F`, absent fields are ignored
     get_field_types = function(field_names = NULL, .strict = TRUE, .raw = FALSE){
       if(is.null(field_names))
         field_names = self$dims_n_attrs
@@ -594,6 +597,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' Create a new ArrayOp instance from 'build'ing a data.frame
     #' 
     #' All matching fields are built as attributes of the result ArrayOp.
+    #' Build operator accepts compound attribute types, so the result may have something like "build(<aa:string not null, ...)"
     #' @param df a data.frame, where all column names must all validate template fields.
     #' @param artificial_field A field name used as the artificial dimension name in `build` scidb operator
     #' By default, a random string is generated, and the dimension starts from 0. 
