@@ -25,7 +25,9 @@ test_that("Raw afl, dimensions, attributes work as expected with data types", {
   expect_identical(op$get_field_types(op$dims_n_attrs), list(da='int64', db='int64', ac='string', ad='int32'))
   expect_identical(op$get_field_types('da'), list(da='int64'))
   expect_identical(op$get_field_types('ac'), list(ac='string'))
-
+  
+  expect_identical(str(op), "rawafl <ac:string,ad:int32> [da;db]")
+  expect_identical(print(op), "rawafl <ac:string,ad:int32> [da;db]")
 })
 
 test_that("to_df_afl calls to_afl_explict internally", {

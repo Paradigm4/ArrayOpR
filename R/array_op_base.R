@@ -3,6 +3,9 @@
 MAX_DIM = '4611686018427387903'
 MIN_DIM = '-4611686018427387902'
 
+print.ArrayOpBase = str.ArrayOpBase = function(op) {
+  sprintf("%s %s", op$to_afl(), op$to_schema_str())
+}
 
 #' Base class of all ArrayOp classes
 #' @description 
