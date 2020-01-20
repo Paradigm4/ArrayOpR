@@ -12,9 +12,9 @@ Target = newArrayOp('target', c('da', 'db'), c('aa', 'ab'),
 test_that("Write a dataset ArrayOp to target", {
   ds = newArrayOp('dataset', c('da', 'db'), c('aa', 'ab'), 
     dtypes = list(da='int64', db='int64', aa='string', ab='int32'))
-  writeOp = ds$write_to(Target)
+  writeOp = ds$write_to(Target, force_redimension=F)
   assert_afl_equal(writeOp$to_afl(), "insert(dataset, target)")
-  writeOp = ds$write_to(Target, append = F)
+  writeOp = ds$write_to(Target, append = F, force_redimension=F)
   assert_afl_equal(writeOp$to_afl(), "store(dataset, target)")
 })
 
@@ -23,7 +23,7 @@ test_that("Field names do not matter as long as the field data types match targe
     newArrayOp('dataset', c('w', 'x'), c('y', 'z'), dtypes = list(w='int64', x='int64', y='string', z='int32'))
     ,newArrayOp('dataset', c('z', 'x'), c('y', 'w'), dtypes = list(z='int64', x='int64', y='string', w='int32'))
   )){
-    writeOp = ds$write_to(Target)
+    writeOp = ds$write_to(Target, force_redimension=F)
     assert_afl_equal(writeOp$to_afl(), "insert(dataset, target)")
   }
 })
