@@ -325,11 +325,19 @@ Please select on left operand's fields OR do not select on either operand. Look 
     #' @description 
     #' Create a new ArrayOp instance with a different schema/shape
     #' 
-    #' @param select a non-empty list, where named items are new derived attributes and
-    #' unamed string values are existing dimensions/attributes.
+    #' @param select Which attributes to select or create.
+    #' In dim_mode='keep', `select` must be a non-empty list, where named items are derived new attributes and
+    #' unamed string values are existing dimensions/attributes. Dimensions, selected or not, are all retained in
+    #' dim_mode='keep'.
+    #' In dim_mode='drop', `select` can be NULL, which effectively select all source dimensions and attributes.
+    #' Unselected dimensions will be discarded. 
     #' @param dtypes a named list to provide field data types for newly derived fields
-    #' @param artificial_field A field name used as the artificial dimension name in `unpack` scidb operator
-    #' By default, a random string is generated.
+    #' @param dim_mode a string [keep, drop]. 
+    #' In the default 'keep' mode, only attributes can be selected. All dimensions are kept.
+    #' In 'drop' mode, dimensions are first converted to attributes, then selected.  
+    #' @param artificial_field ONLY relevant when `dim_mode='drop'`.
+    #' A field name used as the artificial dimension name in 'drop' dim_mode 
+    #' (internally used by `unpack` scidb operator). By default, a random string is generated.
     reshape = function(select=NULL, dtypes = NULL, dim_mode = 'keep', artificial_field = .random_attr_name()) {
       if(dim_mode == 'keep'){
         assert(.has_len(select),

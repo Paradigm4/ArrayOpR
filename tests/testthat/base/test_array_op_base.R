@@ -246,6 +246,7 @@ test_that("Select existing attributes/dimensions in dim_mode = 'drop'", {
   expect_identical(t$dims_n_attrs, c('z', 'ac'))
   expect_identical(t$get_field_types(), list(z = 'int64', ac = 'dtac'))
   assert_afl_equal(t$to_afl(), "project(unpack(s, z), ac)")
+  assert_afl_equal(t$to_schema_str(), "<ac:dtac> [z]")
   # Select dims
   t = Source$reshape('da', dim_mode = 'drop', artificial_field = 'z')
   expect_identical(t$dims, 'z')
@@ -253,6 +254,7 @@ test_that("Select existing attributes/dimensions in dim_mode = 'drop'", {
   expect_identical(t$dims_n_attrs, c('z', 'da'))
   expect_identical(t$get_field_types(), list(z = 'int64', da = 'dtda'))
   assert_afl_equal(t$to_afl(), "project(unpack(s, z), da)")
+  assert_afl_equal(t$to_schema_str(), "<da:dtda> [z]")
   # Select dims and attrs
   t = Source$reshape(c('ac', 'da'), dim_mode = 'drop', artificial_field = 'z')
   expect_identical(t$dims, 'z')
@@ -260,6 +262,7 @@ test_that("Select existing attributes/dimensions in dim_mode = 'drop'", {
   expect_identical(t$dims_n_attrs, c('z', 'ac', 'da'))
   expect_identical(t$get_field_types(), list(z = 'int64', ac = 'dtac', da = 'dtda'))
   assert_afl_equal(t$to_afl(), "project(unpack(s, z), ac, da)")
+  assert_afl_equal(t$to_schema_str(), "<ac:dtac,da:dtda> [z]")
   # No selected fields
   t = Source$reshape(dim_mode = 'drop', artificial_field = 'z')
   expect_identical(t$dims, 'z')
@@ -268,6 +271,7 @@ test_that("Select existing attributes/dimensions in dim_mode = 'drop'", {
   expect_identical(t$get_field_types(), list(z = 'int64', da='dtda', db='dtdb', ac = 'dtac', ad = 'dtad'))
   expect_null(t$get_dim_specs('z')[[1]])
   assert_afl_equal(t$to_afl(), "unpack(s, z)")
+  assert_afl_equal(t$to_schema_str(), "<da:dtda,db:dtdb,ac:dtac,ad:dtad> [z]")
 })
 
 test_that("Select new fields in dim_mode = 'drop'", {
