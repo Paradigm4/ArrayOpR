@@ -7,7 +7,7 @@
 afl(...)
 }
 \arguments{
-\item{...}{In the ellipsis arg, only R infix functions \verb{\%name\%} are converted to operators,
+\item{...}{In the ellipsis arg, only R infix functions \code{\%name\%} are converted to operators,
 All regular functions are first evaluated in the calling environment, and then convereted to strings
 depending on the result types. ArrayOp => ArrayOp$to_afl(), v:NonEmptyVector => paste(v, collapse=','),
 NULL is ignored.}
@@ -19,12 +19,12 @@ AFL string
 This is a convenience function for AFL generation.
 }
 \details{
-Any \code{a \%op_name\% b} call will be translated to \verb{\%op_name\%(a, b)} in R, then translated to AFL:
+Any \code{a \%op_name\% b} call will be translated to \code{\%op_name\%(a, b)} in R, then translated to AFL:
 \code{op_name(a, b)}
 
 Using this syntax, we can chain multiple AFL operators
 
 E.g. \code{'array' \%filter\% 'a > 3 and b < 4' \%project\% c('a', 'b')}
-will be translated into: \verb{project(filter(array, a > 3 and b < 4), 'a', 'b')}
-Use NULL if no 2nd operand is needed. E.g. 'array' \%op_count\% NULL => op_count(array)
+will be translated into: \code{project(filter(array, a > 3 and b < 4), 'a', 'b')}
+Use NULL if no 2nd operand is needed. E.g. 'array' %op_count% NULL => op_count(array)
 }

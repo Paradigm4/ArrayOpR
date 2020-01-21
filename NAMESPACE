@@ -3,6 +3,8 @@
 S3method("[",ArgList)
 S3method("[[",ArgList)
 S3method(names,ArgList)
+S3method(print,ArrayOpBase)
+S3method(str,ArrayOpBase)
 export(ArgList)
 export(ArrayOpBase)
 export(ArrayOpV18)

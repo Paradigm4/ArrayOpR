@@ -13,7 +13,7 @@ afl_join_fields(..., sep = ",")
 Default behavior: \code{paste(..., sep = sep, collapse = sep)} where \code{sep = ','}
 }
 \details{
-afl(...) will convert vectors to joined strings separated by \verb{,}.
+afl(...) will convert vectors to joined strings separated by \code{,}.
 This function is useful in concatenating multiple vectors in parallel,
 e.g. joining a new field vector and expression vector for the \code{apply} operator.
 }
