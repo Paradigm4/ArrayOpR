@@ -534,6 +534,27 @@ test_that("Cannot cross_join on attributes (dimensions only)", {
   expect_error(left$join(right, on_left='aa', on_right='raa', join_mode = 'cross_join'), "must be dimensions")
 })
 
+# Set null fields ---------------------------------------------------------------------------------------
+
+test_that("Set null fields to a source according to a ref", {
+  source = newArrayOp('source', 'x', c('b', 'c', 'd'), dtypes = list(a='int64', b='string', c='bool', d='double', x='int64'))
+  ref = newArrayOp('ref', 'dim', c('a', 'b', 'c', 'd'), dtypes = list(a='int64 null', b='string', c='bool', d='double', dim='int64'))
+  # Dimension will not be automatically referenced
+  result = source$set_null_fields(ref)
+  assert_afl_equal(result$to_afl(), "apply(source, a, int64(null))")
+  assert_afl_equal(result$to_schema_str(), "<b:string,c:bool,d:double,a:int64> [x]")
+  
+  result = source$set_null_fields(list(a = 'int64', a2 = 'string'))
+  assert_afl_equal(result$to_afl(), 
+                   "apply(source, a, int64(null), a2, string(null))")
+  assert_afl_equal(result$to_schema_str(), "<b:string,c:bool,d:double,a:int64,a2:string> [x]")
+  
+  # Passing an explicit list can attach any new field to the soruce
+  result = source$set_null_fields(ref$get_field_types(c('dim', 'a'), .raw = T))
+  assert_afl_equal(result$to_afl(), 
+                   "apply(source, dim, int64(null), a, int64(null))")
+  assert_afl_equal(result$to_schema_str(), "<b:string,c:bool,d:double,dim:int64,a:int64> [x]")
+})
 # Set auto increment fields ---------------------------------------------------------------------------------------
 # apply auto incremnt id to the Source with incremented values from the reference
 
