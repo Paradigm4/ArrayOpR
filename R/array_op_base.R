@@ -377,7 +377,8 @@ Please select on left operand's fields OR do not select on either operand. Look 
           attrs = artificial_field
           afl(self %apply% c(artificial_field, 'null') %project% artificial_field)
         }
-        self$create_new(newAfl, self$dims, attrs, mergedDtypes, validate_fields = private$get_meta('validate_fields'))
+        self$create_new(newAfl, self$dims, attrs, mergedDtypes, dim_specs = self$get_dim_specs(),
+                          validate_fields = private$get_meta('validate_fields'))
       }
       
       drop = function() {
@@ -394,10 +395,6 @@ Please select on left operand's fields OR do not select on either operand. Look 
         newDtypes = c(mergedDtypes[selectFieldNames], structure('int64', names = artificial_field))
         self$create_new(newAfl, artificial_field, selectFieldNames, 
           dtypes = newDtypes, validate_fields = private$get_meta('validate_fields'))
-      }
-      
-      ignore_in_parent = function() {
-        identity
       }
       
       switch (dim_mode,

@@ -137,7 +137,8 @@ test_that("Cannot select non-existent fields", {
 
 # Reshape ---------------------------------------------------------------------------------------------------------
 
-Source = newArrayOp("s", c("da", "db"), c("ac", "ad"), dtypes = list(ac='dtac', ad='dtad', da='dtda', db='dtdb'))
+Source = newArrayOp("s", c("da", "db"), c("ac", "ad"), dtypes = list(ac='dtac', ad='dtad', da='dtda', db='dtdb'),
+                    dim_specs = list(da="0:1:2:3"))
 
 # 
 # dim_mode = 'keep' by default
@@ -154,6 +155,7 @@ test_that("Select one attr", {
     expect_identical(t$dims, c('da', 'db'))
     expect_identical(t$get_field_types('ac'), list(ac='dtac'))
     assert_afl_equal(t$to_afl(), "project(s, ac)")
+    assert_afl_equal(t$to_schema_str(), "<ac:dtac> [da=0:1:2:3;db]")
   }
 })
 test_that("Select two attrs", {
