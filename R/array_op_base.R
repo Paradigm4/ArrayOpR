@@ -375,6 +375,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
         }
         else {
           attrs = artificial_field
+          mergedDtypes[[artificial_field]] = 'void'
           afl(self %apply% c(artificial_field, 'null') %project% artificial_field)
         }
         self$create_new(newAfl, self$dims, attrs, mergedDtypes, dim_specs = self$get_dim_specs(),

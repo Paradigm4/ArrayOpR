@@ -170,6 +170,7 @@ test_that("Select two attrs", {
     expect_identical(t$dims, c('da', 'db'))
     expect_identical(t$get_field_types(c('ad', 'ac')), list(ad='dtad', ac='dtac'))
     assert_afl_equal(t$to_afl(), "project(s, ad, ac)")
+    assert_afl_equal(t$to_schema_str(), "<ad:dtad, ac:dtac> [da=0:1:2:3;db]")
   }
 })
 test_that("Select dims only", {
@@ -183,6 +184,7 @@ test_that("Select dims only", {
     expect_identical(t$dims, c('da', 'db'))
     expect_identical(t$get_field_types(c('da', 'db')), list(da='dtda', db='dtdb'))
     assert_afl_equal(t$to_afl(), "project(apply(s, z, null), z)")
+    assert_afl_equal(t$to_schema_str(), "<z:void> [da=0:1:2:3;db]")
   }
 })
 
