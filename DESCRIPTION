@@ -24,7 +24,7 @@ Imports:
     R6,
     bit64,
     stringr
-RoxygenNote: 7.0.0
+RoxygenNote: 7.0.2
 Roxygen: list(markdown = TRUE)
 Collate: 
     'afl_utils.R'

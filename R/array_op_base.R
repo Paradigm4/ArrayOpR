@@ -13,7 +13,9 @@ str.ArrayOpBase = function(op) {
 #' A string representation of ArrayOp instance
 #' 
 #' @export
-print.ArrayOpBase = str.ArrayOpBase
+print.ArrayOpBase = function(op) {
+  sprintf("%s %s", op$to_afl(), op$to_schema_str())
+}
 
 #' Base class of all ArrayOp classes
 #' @description 
@@ -157,11 +159,17 @@ Please select on left operand's fields OR do not select on either operand. Look 
     }
   ),
   active = list(
+    #' @field dims Dimension names
     dims = function() private$get_meta('dims'),
+    #' @field attrs Attribute names
     attrs = function() private$get_meta('attrs'),
+    #' @field selected Selected dimension and/or attribute names
     selected = function() private$get_meta('selected'),
+    #' @field dtypes A named list, where key is dim/attr name and value is respective SciDB data type as string
     dtypes = function() private$get_meta('dtypes'),
+    #' @field dims_n_attrs Dimension and attribute names
     dims_n_attrs = function() c(self$dims, self$attrs),
+    #' @field attrs_n_dims Attribute and dimension names
     attrs_n_dims = function() c(self$attrs, self$dims)
   ),
 
@@ -253,8 +261,11 @@ Please select on left operand's fields OR do not select on either operand. Look 
     }
     # Functions that creat new ArrayOps -------------------------------------------------------------------------------
     ,
-    # Return the class constructor function. 
-    # Should work in sub-class without requiring class names or constructor function.
+    #' @description 
+    #' Return the class constructor function. 
+    #' 
+    #' Work in sub-class without requiring class names or constructor function.
+    #' @param ... The samme params with Repo$ArrayOp(...)
     create_new = function(...){
       classConstructor = get(class(self))$new
       classConstructor(...)

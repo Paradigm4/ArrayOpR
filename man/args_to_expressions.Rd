@@ -18,7 +18,7 @@ This provides flexibility and simplifies API function signatures, but only suppo
 e.g. xxx_contains, xxx_range, xxx_not.
 }
 \details{
-Eg. name_contains = 'str' => name %contains% 'str'
+Eg. name_contains = 'str' => name \%contains\% 'str'
 Eg. value_range = c(1, 9) => c(value >= 1, value <= 9)
 }
 \seealso{

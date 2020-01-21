@@ -21,7 +21,7 @@ in the calling environment.
 Besides common comparison operators including \code{==}, \code{>}, \code{<}, \code{>=}, \code{<=}, \code{!=}, there are a few special operators
 supported to ease AFL generation:
 \itemize{
-\item \code{\%in\%} semantically similar to R. \code{a \%in\% !!c(1,2,3)} will be translated to \code{(a == 1 or a == 2 or a == 3)}
-\item \code{\%like\%} for string regex matching.
+\item \code{\%in\%} semantically similar to R. \code{a \%in\% !!c(1,2,3)} will be translated to \verb{(a == 1 or a == 2 or a == 3)}
+\item \verb{\%like\%} for string regex matching.
 }
 }

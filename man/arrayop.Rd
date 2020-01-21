@@ -3,7 +3,6 @@
 \docType{package}
 \name{arrayop}
 \alias{arrayop}
-\alias{arrayop-package}
 \title{ArrayOp: A package for Object-Oriented SciDB Array Operations/Operands}
 \description{
 ArrayOp abstracts away AFL generation by unifying array operations and array operands.

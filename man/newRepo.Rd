@@ -4,8 +4,12 @@
 \alias{newRepo}
 \title{Create a scidb-version-specific Repo instance}
 \usage{
-newRepo(default_namespace = "public", dependency_obj = NULL,
-  db = NULL, config = NULL)
+newRepo(
+  default_namespace = "public",
+  dependency_obj = NULL,
+  db = NULL,
+  config = NULL
+)
 }
 \arguments{
 \item{dependency_obj}{A named list that contains 4 functions: get_scidb_version, query, execute and get_schema_df
