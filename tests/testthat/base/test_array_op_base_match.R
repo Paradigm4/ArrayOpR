@@ -31,7 +31,7 @@ test_that("Filter mode with bounds", {
 })
 
 test_that("Filter mode with bounds on one field", {
-  df = data.frame(da_low = c(1, 2), da_hi = c(3, 4))
+  df = data.frame(da_low = as.integer(c(1, 2)), da_hi = c(3, 4))
   matchOp = MatchSource$match(df, op_mode = 'filter', lower_bound = list(da = 'da_low'), upper_bound = list(da = 'da_hi'))
   assert_afl_equal(matchOp$to_afl(), "filter(s,
     (da >= 1 and da <= 3) or (da >= 2 and da <= 4)

@@ -533,7 +533,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
           paste(unmatchedCols, collapse = ','))
         
         colTypes = sapply(template, class)
-        needQuotes = colTypes != 'numeric'
+        needQuotes = !(colTypes %in% c('numeric', 'integer', 'integer64'))
         valueStrTemplates = lapply(needQuotes, .ifelse, "'%s'", "%s")
         # Iterate on the template data frame
         convertRow = function(eachRow, colNames) {
