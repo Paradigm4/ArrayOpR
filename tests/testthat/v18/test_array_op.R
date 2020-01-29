@@ -4,7 +4,7 @@ context("Scidb V18.x ArrayOp")
 
 test_that("Load array from file", {
   template = newArrayOp('L', c('da', 'db'), c('aa', 'ab'), 
-    dtypes = list(da='int64', db='int64', aa='string', ab='double'))
+                        dtypes = list(da='int64', db='int64', aa="string compression 'zlib'", ab='double not null'))
   for(loaded  in c(
     template$load_file('file_path'),
     template$load_file('file_path', file_headers = c('da', 'db', 'aa', 'ab'))

@@ -10,6 +10,23 @@ ArrayOp classes denote scidb array operations and operands, hence the name.
 One operation consists of an scidb operator and \link{1..*} operands, of which the result can be used as an operand
 in another operation. Operands and Opreration results can all be denoted by ArrayOp.
 }
+\section{Active bindings}{
+\if{html}{\out{<div class="r6-active-bindings">}}
+\describe{
+\item{\code{dims}}{Dimension names}
+
+\item{\code{attrs}}{Attribute names}
+
+\item{\code{selected}}{Selected dimension and/or attribute names}
+
+\item{\code{dtypes}}{A named list, where key is dim/attr name and value is respective SciDB data type as string}
+
+\item{\code{dims_n_attrs}}{Dimension and attribute names}
+
+\item{\code{attrs_n_dims}}{Attribute and dimension names}
+}
+\if{html}{\out{</div>}}
+}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
@@ -26,13 +43,19 @@ in another operation. Operands and Opreration results can all be denoted by Arra
 \item \href{#method-load_file}{\code{ArrayOpBase$load_file()}}
 \item \href{#method-match}{\code{ArrayOpBase$match()}}
 \item \href{#method-build_new}{\code{ArrayOpBase$build_new()}}
+\item \href{#method-set_auto_increment_field}{\code{ArrayOpBase$set_auto_increment_field()}}
 \item \href{#method-write_to}{\code{ArrayOpBase$write_to()}}
 \item \href{#method-spawn}{\code{ArrayOpBase$spawn()}}
+\item \href{#method-create_array_cmd}{\code{ArrayOpBase$create_array_cmd()}}
+\item \href{#method-remove_array_cmd}{\code{ArrayOpBase$remove_array_cmd()}}
+\item \href{#method-remove_array_versions_cmd}{\code{ArrayOpBase$remove_array_versions_cmd()}}
 \item \href{#method-to_afl}{\code{ArrayOpBase$to_afl()}}
 \item \href{#method-to_df_afl}{\code{ArrayOpBase$to_df_afl()}}
 \item \href{#method-to_schema_str}{\code{ArrayOpBase$to_schema_str()}}
 \item \href{#method-.to_afl_explicit}{\code{ArrayOpBase$.to_afl_explicit()}}
 \item \href{#method-.to_join_operand_afl}{\code{ArrayOpBase$.to_join_operand_afl()}}
+\item \href{#method-.set_meta}{\code{ArrayOpBase$.set_meta()}}
+\item \href{#method-.get_meta}{\code{ArrayOpBase$.get_meta()}}
 \item \href{#method-clone}{\code{ArrayOpBase$clone()}}
 }
 }
@@ -68,18 +91,22 @@ Return ArrayOp field types
 
 NOTE: private$info has to be defined, otherwise returns NULL
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$get_field_types(field_names = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$get_field_types(field_names = NULL, .strict = TRUE, .raw = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{field_names}}{R character}
+\item{\code{field_names}}{R character. If NULL, defaults to \code{self$dims_n_attrs}, ie. dimensions and attributes.}
+
+\item{\code{.raw}}{Default FALSE, full data types are returned; if set TRUE, only the raw data types are returned
+(raw data types are string, int32, int64, bool, etc, without scidb attribute specs such as: string compression 'zlib')}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-a named list as \code{field_names}, where absent fields or fields without data types are dropped silently.
+a named list as \code{field_names}, where absent fields or fields without data types will cause error;
+unless \code{.strict=F}, absent fields are ignored
 }
 }
 \if{html}{\out{<hr>}}
@@ -119,10 +146,20 @@ This function is useful for validating fields in use cases:
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-create_new"></a>}}
 \subsection{Method \code{create_new()}}{
+Return the class constructor function.
+
+Work in sub-class without requiring class names or constructor function.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$create_new(...)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{The samme params with Repo$ArrayOp(...)}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-create_new_with_same_schema"></a>}}
@@ -131,9 +168,18 @@ Create a new ArrayOp instance of the same class
 
 The new instance shares all meta data with the template
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$create_new_with_same_schema(new_afl)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$create_new_with_same_schema(new_afl, ...)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{new_afl}}{AFL for the new ArrayOp}
+
+\item{\code{...}}{Named params in \code{...} will replace the items in the template's metaList}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-where"></a>}}
@@ -179,7 +225,7 @@ a parent operation that changes its schema, e.g. equi_join or to_df(only_attribu
 Create a new ArrayOp instance with a different schema/shape
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$reshape(
-  select,
+  select = NULL,
   dtypes = NULL,
   dim_mode = "keep",
   artificial_field = .random_attr_name()
@@ -209,10 +255,15 @@ Currently implemented with scidb \code{equi_join} operator.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$join(
   right,
-  on_left,
-  on_right,
+  on_left = NULL,
+  on_right = NULL,
   settings = NULL,
+  on_both = NULL,
+  .auto_select = FALSE,
+  join_mode = "equi_join",
   .dim_mode = "keep",
+  .left_alias = "_L",
+  .right_alias = "_R",
   .artificial_field = .random_attr_name()
 )}\if{html}{\out{</div>}}
 }
@@ -228,11 +279,16 @@ Currently implemented with scidb \code{equi_join} operator.
 
 \item{\code{settings}}{\code{equi_join} settings, a named list where both key and values are strings.}
 
-\item{\code{dim_mode}}{How to reshape the resultant ArrayOp. Same meaning as in \code{ArrayOp$reshape} function.
+\item{\code{on_both}}{Join keys on both operand.}
+
+\item{\code{.auto_select}}{default: FALSE. If set to TRUE, the resultant ArrayOp instance will auto \code{select} the fields
+that are selected in the left and right operands but not in the right join keys (since they are masked by equi_join operator).}
+
+\item{\code{.dim_mode}}{How to reshape the resultant ArrayOp. Same meaning as in \code{ArrayOp$reshape} function.
 By default, dim_mode = 'keep', the artificial dimensions, namely \code{instance_id} and \code{value_no} from \code{equi_join}
 are retained. If set to 'drop', the artificial dimensions will be removed. See \code{ArrayOp$reshape} for more details.}
 
-\item{\code{artificial_field}}{As in \code{ArrayOp$reshpae}, it defaults to a random field name. It can be safely ignored in
+\item{\code{.artificial_field}}{As in \code{ArrayOp$reshpae}, it defaults to a random field name. It can be safely ignored in
 client code. It exists only for test purposes.}
 }
 \if{html}{\out{</div>}}
@@ -323,6 +379,7 @@ A new ArrayOp instance which has the same schema as the source.
 Create a new ArrayOp instance from 'build'ing a data.frame
 
 All matching fields are built as attributes of the result ArrayOp.
+Build operator accepts compound attribute types, so the result may have something like "build(<aa:string not null, ...)"
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$build_new(df, artificial_field = .random_attr_name())}\if{html}{\out{</div>}}
 }
@@ -344,6 +401,39 @@ Create a build expression from a data.frame and specified scidb data types
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-set_auto_increment_field"></a>}}
+\subsection{Method \code{set_auto_increment_field()}}{
+Create a new ArrayOp instance that with added auto incremented fields
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$set_auto_increment_field(
+  reference,
+  source_field,
+  ref_field,
+  source_start,
+  ref_start,
+  new_field = NULL
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{reference}}{ArrayOp instance to draw existing max id from}
+
+\item{\code{source_field}}{}
+
+\item{\code{ref_field}}{}
+
+\item{\code{source_start}}{}
+
+\item{\code{ref_start}}{}
+
+\item{\code{new_field}}{}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-write_to"></a>}}
 \subsection{Method \code{write_to()}}{
 Create a new ArrayOp instance that represents a writing data operation
@@ -358,6 +448,7 @@ occurs within scidb where necessary/applicable.
 \if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$write_to(
   target,
   append = TRUE,
+  force_redimension = TRUE,
   source_auto_increment = NULL,
   target_auto_increment = NULL,
   anti_collision_field = NULL
@@ -371,6 +462,8 @@ occurs within scidb where necessary/applicable.
 
 \item{\code{append}}{Append to existing target array if set to TRUE (default).
 Otherwise replace the whole target array with the source.}
+
+\item{\code{force_redimension}}{Redimension the source even if the source fields match perfectly the target fields (default TRUE)}
 
 \item{\code{source_auto_increment}}{a named number vector e.g. c(z=0), where the name is a source field and value is the starting index}
 
@@ -396,10 +489,38 @@ use this function for operations other than 'build'/ArrayOp$build_new and 'aio_i
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$spawn(
   renamed = NULL,
+  added = NULL,
   excluded = NULL,
   dtypes = NULL,
   dim_specs = NULL
 )}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-create_array_cmd"></a>}}
+\subsection{Method \code{create_array_cmd()}}{
+Generate a command string that creates a new array based on the caller's schema
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$create_array_cmd(array_name)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-remove_array_cmd"></a>}}
+\subsection{Method \code{remove_array_cmd()}}{
+Generate a command string that removes the array (use with CAUTION!!!)
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$remove_array_cmd()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-remove_array_versions_cmd"></a>}}
+\subsection{Method \code{remove_array_versions_cmd()}}{
+Generate a command string that removes the versions of the array (use with CAUTION!!!)
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$remove_array_versions_cmd(version_id = NULL)}\if{html}{\out{</div>}}
 }
 
 }
@@ -501,6 +622,24 @@ Generate afl for ArrayOp used in a join context (equi_join).
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-.set_meta"></a>}}
+\subsection{Method \code{.set_meta()}}{
+Set ArrayOp meta data directly
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$.set_meta(key, value)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-.get_meta"></a>}}
+\subsection{Method \code{.get_meta()}}{
+Get ArrayOp meta data directly
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$.get_meta(key)}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-clone"></a>}}

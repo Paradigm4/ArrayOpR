@@ -23,8 +23,10 @@ Version-specific logic/behaviors should be implemented in RepoBase sub-classes.
 }
 }
 \if{html}{
-\out{<details open ><summary>Inherited methods</summary>}
+\out{<details ><summary>Inherited methods</summary>}
 \itemize{
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="RepoBase" data-id=".get_meta">}\href{../../arrayop/html/RepoBase.html#method-.get_meta}{\code{arrayop::RepoBase$.get_meta()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="RepoBase" data-id=".set_meta">}\href{../../arrayop/html/RepoBase.html#method-.set_meta}{\code{arrayop::RepoBase$.set_meta()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="RepoBase" data-id="execute">}\href{../../arrayop/html/RepoBase.html#method-execute}{\code{arrayop::RepoBase$execute()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="RepoBase" data-id="get_alias_schema">}\href{../../arrayop/html/RepoBase.html#method-get_alias_schema}{\code{arrayop::RepoBase$get_alias_schema()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="RepoBase" data-id="load_schema_from_db">}\href{../../arrayop/html/RepoBase.html#method-load_schema_from_db}{\code{arrayop::RepoBase$load_schema_from_db()}}\out{</span>}

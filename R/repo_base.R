@@ -274,10 +274,11 @@ default_dep_obj = function(db) {
 
 get_schema_df_from_schema_str = function(schemaStr) {
   matched = stringr::str_match_all(schemaStr, "\\<(.+)\\>\\s*\\[(.+)\\]")[[1]]
+  assert(nrow(matched) == 1, "ERROR: Repo$get_schema_df_from_schema_str: Invalid schema string: %s", schemaStr)
   attrStr = matched[1,2]
   dimStr = matched[1,3]
   attrMatrix = stringr::str_match_all(attrStr, "(\\w+):\\s*([^;,:]+)")[[1]]
-  dimMatrix = stringr::str_match_all(dimStr, "(\\w+)=([^;]+)")[[1]]
+  dimMatrix = stringr::str_match_all(dimStr, "(\\w+)[=\\s]*([^;]*)")[[1]]
   numAttrs = nrow(attrMatrix)
   numDims = nrow(dimMatrix)
   data.frame(

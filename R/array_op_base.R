@@ -3,6 +3,19 @@
 MAX_DIM = '4611686018427387903'
 MIN_DIM = '-4611686018427387902'
 
+#' A string representation of ArrayOp instance
+#' 
+#' @export
+str.ArrayOpBase = function(op) {
+  sprintf("%s %s", op$to_afl(), op$to_schema_str())
+}
+
+#' A string representation of ArrayOp instance
+#' 
+#' @export
+print.ArrayOpBase = function(op) {
+  sprintf("%s %s", op$to_afl(), op$to_schema_str())
+}
 
 #' Base class of all ArrayOp classes
 #' @description 
@@ -146,11 +159,17 @@ Please select on left operand's fields OR do not select on either operand. Look 
     }
   ),
   active = list(
+    #' @field dims Dimension names
     dims = function() private$get_meta('dims'),
+    #' @field attrs Attribute names
     attrs = function() private$get_meta('attrs'),
+    #' @field selected Selected dimension and/or attribute names
     selected = function() private$get_meta('selected'),
+    #' @field dtypes A named list, where key is dim/attr name and value is respective SciDB data type as string
     dtypes = function() private$get_meta('dtypes'),
+    #' @field dims_n_attrs Dimension and attribute names
     dims_n_attrs = function() c(self$dims, self$attrs),
+    #' @field attrs_n_dims Attribute and dimension names
     attrs_n_dims = function() c(self$attrs, self$dims)
   ),
 
@@ -186,9 +205,12 @@ Please select on left operand's fields OR do not select on either operand. Look 
     #' Return ArrayOp field types
     #'
     #' NOTE: private$info has to be defined, otherwise returns NULL
-    #' @param field_names R character
-    #' @return a named list as `field_names`, where absent fields or fields without data types are dropped silently.
-    get_field_types = function(field_names = NULL, .strict = TRUE){
+    #' @param field_names R character. If NULL, defaults to `self$dims_n_attrs`, ie. dimensions and attributes.
+    #' @param .raw Default FALSE, full data types are returned; if set TRUE, only the raw data types are returned 
+    #' (raw data types are string, int32, int64, bool, etc, without scidb attribute specs such as: string compression 'zlib')
+    #' @return a named list as `field_names`, where absent fields or fields without data types will cause error; 
+    #' unless `.strict=F`, absent fields are ignored
+    get_field_types = function(field_names = NULL, .strict = TRUE, .raw = FALSE){
       if(is.null(field_names))
         field_names = self$dims_n_attrs
       missingFields = base::setdiff(field_names, self$dims_n_attrs)
@@ -205,7 +227,11 @@ Please select on left operand's fields OR do not select on either operand. Look 
           private$raw_afl
         )
       }
-      return(self$dtypes[field_names])
+      result = self$dtypes[field_names]
+      if(.raw){
+        result = as.list(structure(regmatches(result, regexpr("^\\w+", result)), names = field_names))
+      }
+      result
     }
     ,
     #' @description 
@@ -235,8 +261,11 @@ Please select on left operand's fields OR do not select on either operand. Look 
     }
     # Functions that creat new ArrayOps -------------------------------------------------------------------------------
     ,
-    # Return the class constructor function. 
-    # Should work in sub-class without requiring class names or constructor function.
+    #' @description 
+    #' Return the class constructor function. 
+    #' 
+    #' Work in sub-class without requiring class names or constructor function.
+    #' @param ... The samme params with Repo$ArrayOp(...)
     create_new = function(...){
       classConstructor = get(class(self))$new
       classConstructor(...)
@@ -296,11 +325,19 @@ Please select on left operand's fields OR do not select on either operand. Look 
     #' @description 
     #' Create a new ArrayOp instance with a different schema/shape
     #' 
-    #' @param select a non-empty list, where named items are new derived attributes and
-    #' unamed string values are existing dimensions/attributes.
+    #' @param select Which attributes to select or create.
+    #' In dim_mode='keep', `select` must be a non-empty list, where named items are derived new attributes and
+    #' unamed string values are existing dimensions/attributes. Dimensions, selected or not, are all retained in
+    #' dim_mode='keep'.
+    #' In dim_mode='drop', `select` can be NULL, which effectively select all source dimensions and attributes.
+    #' Unselected dimensions will be discarded. 
     #' @param dtypes a named list to provide field data types for newly derived fields
-    #' @param artificial_field A field name used as the artificial dimension name in `unpack` scidb operator
-    #' By default, a random string is generated.
+    #' @param dim_mode a string [keep, drop]. 
+    #' In the default 'keep' mode, only attributes can be selected. All dimensions are kept.
+    #' In 'drop' mode, dimensions are first converted to attributes, then selected.  
+    #' @param artificial_field ONLY relevant when `dim_mode='drop'`.
+    #' A field name used as the artificial dimension name in 'drop' dim_mode 
+    #' (internally used by `unpack` scidb operator). By default, a random string is generated.
     reshape = function(select=NULL, dtypes = NULL, dim_mode = 'keep', artificial_field = .random_attr_name()) {
       if(dim_mode == 'keep'){
         assert(.has_len(select),
@@ -346,9 +383,11 @@ Please select on left operand's fields OR do not select on either operand. Look 
         }
         else {
           attrs = artificial_field
+          mergedDtypes[[artificial_field]] = 'void'
           afl(self %apply% c(artificial_field, 'null') %project% artificial_field)
         }
-        self$create_new(newAfl, self$dims, attrs, mergedDtypes, validate_fields = private$get_meta('validate_fields'))
+        self$create_new(newAfl, self$dims, attrs, mergedDtypes, dim_specs = self$get_dim_specs(),
+                          validate_fields = private$get_meta('validate_fields'))
       }
       
       drop = function() {
@@ -365,10 +404,6 @@ Please select on left operand's fields OR do not select on either operand. Look 
         newDtypes = c(mergedDtypes[selectFieldNames], structure('int64', names = artificial_field))
         self$create_new(newAfl, artificial_field, selectFieldNames, 
           dtypes = newDtypes, validate_fields = private$get_meta('validate_fields'))
-      }
-      
-      ignore_in_parent = function() {
-        identity
       }
       
       switch (dim_mode,
@@ -436,7 +471,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
       colIndexes = vapply(self$dims_n_attrs, function(x) lookup[x], integer(1))
       colIndexes = colIndexes[!is.na(colIndexes)]
 
-      fieldTypes = self$get_field_types(names(colIndexes))
+      fieldTypes = self$get_field_types(names(colIndexes), .raw = TRUE)
       
       # Populate aio settings
       aio_settings = c(list(path = filepath, num_attributes = max(colIndexes) + 1), aio_settings)
@@ -498,7 +533,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
           paste(unmatchedCols, collapse = ','))
         
         colTypes = sapply(template, class)
-        needQuotes = colTypes != 'numeric'
+        needQuotes = !(colTypes %in% c('numeric', 'integer', 'integer64'))
         valueStrTemplates = lapply(needQuotes, .ifelse, "'%s'", "%s")
         # Iterate on the template data frame
         convertRow = function(eachRow, colNames) {
@@ -590,6 +625,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' Create a new ArrayOp instance from 'build'ing a data.frame
     #' 
     #' All matching fields are built as attributes of the result ArrayOp.
+    #' Build operator accepts compound attribute types, so the result may have something like "build(<aa:string not null, ...)"
     #' @param df a data.frame, where all column names must all validate template fields.
     #' @param artificial_field A field name used as the artificial dimension name in `build` scidb operator
     #' By default, a random string is generated, and the dimension starts from 0. 
@@ -689,6 +725,25 @@ Only data.frame is supported", class(df))
     }
     ,
     #' @description 
+    #' Create a new ArrayOp instance that added null values to the missing fields compared to a reference ArrayOp
+    #' 
+    #' @param reference An ArrayOp instance that has fields absent in the source; or a named list.
+    #' If reference is ArrayOp, a named list is generated by calling `reference$get_field_types(reference$attrs, .raw = T)`
+    set_null_fields = function(reference) {
+      
+      refDtypes = if(is.list(reference)) reference else reference$get_field_types(reference$attrs, .raw = T)
+      # Fields missing in source but present in reference
+      missingFields = names(refDtypes) %-% self$dims_n_attrs
+      missingDtypes = refDtypes[missingFields]
+      
+      nullStrings = sprintf("%s(null)", missingDtypes)
+      self$create_new(afl(self %apply% afl_join_fields(missingFields, nullStrings)),
+                      dims = self$dims, attrs = self$attrs %u% missingFields, 
+                      dtypes = utils::modifyList(self$get_field_types(), missingDtypes),
+                      dim_specs = self$get_dim_specs())
+    }
+    ,
+    #' @description 
     #' Create a new ArrayOp instance that represents a writing data operation
     #' 
     #' If the dimension count, attribute count and data types match between the source(self) and target, 
@@ -700,13 +755,13 @@ Only data.frame is supported", class(df))
     #' @param target A target ArrayOp the source data is written to. 
     #' @param append Append to existing target array if set to TRUE (default). 
     #' Otherwise replace the whole target array with the source.
-    #' @param force_redimension Redimension the source even if the source fields match perfectly the target fields
+    #' @param force_redimension Redimension the source even if the source fields match perfectly the target fields (default TRUE)
     #' @param source_auto_increment a named number vector e.g. c(z=0), where the name is a source field and value is the starting index
     #' @param target_auto_increment a named number vector e.g. c(aid=0), where the name is a target field and value is the starting index.
     #' Here the `target_auto_increment` param only affects the initial load when the field is still null in the target array.
     #' @param anti_collision_field a target dimension name which exsits only to resolve cell collision 
     #' (ie. cells with the same dimension coordinate).
-    write_to = function(target, append = TRUE, force_redimension = FALSE, 
+    write_to = function(target, append = TRUE, force_redimension = TRUE, 
       source_auto_increment = NULL, target_auto_increment = NULL, 
       anti_collision_field = NULL) {
       assert(inherits(target, 'ArrayOpBase'),

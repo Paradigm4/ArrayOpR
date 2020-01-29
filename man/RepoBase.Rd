@@ -21,6 +21,8 @@ Version-specific logic/behaviors should be implemented in RepoBase sub-classes.
 \item \href{#method-register_schema_alias_by_array_name}{\code{RepoBase$register_schema_alias_by_array_name()}}
 \item \href{#method-get_alias_schema}{\code{RepoBase$get_alias_schema()}}
 \item \href{#method-load_schema_from_db}{\code{RepoBase$load_schema_from_db()}}
+\item \href{#method-.set_meta}{\code{RepoBase$.set_meta()}}
+\item \href{#method-.get_meta}{\code{RepoBase$.get_meta()}}
 \item \href{#method-clone}{\code{RepoBase$clone()}}
 }
 }
@@ -33,7 +35,7 @@ Create a new Repo instance
 
 Do NOT call this \code{initialize} function directly. Call \code{newRepo} instead to get a new Repo instance.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RepoBase$new(default_namespace, dependency_object = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RepoBase$new(default_namespace, dependency_object = NULL, config = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -103,6 +105,10 @@ Should be overriden by sub-classes
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-register_schema_alias_by_array_name"></a>}}
 \subsection{Method \code{register_schema_alias_by_array_name()}}{
+Register a scidb array as an alias in the Repo
+
+If array_name is not fully qualified, the current default_namespace meta info is taken.
+Later changes to the default_namespace will not affect already registered arrays
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RepoBase$register_schema_alias_by_array_name(
   alias,
@@ -123,9 +129,29 @@ Should be overriden by sub-classes
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-load_schema_from_db"></a>}}
 \subsection{Method \code{load_schema_from_db()}}{
-Load Array Schema directly from scidb
+Load a new ArrayOp directly from scidb
+
+The repo's \code{dep$get_schema_df} function is called to get array schema denoted by a data frame
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RepoBase$load_schema_from_db(full_array_name)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-.set_meta"></a>}}
+\subsection{Method \code{.set_meta()}}{
+Set Repo meta data directly
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RepoBase$.set_meta(key, value)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-.get_meta"></a>}}
+\subsection{Method \code{.get_meta()}}{
+Get Repo meta data directly
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RepoBase$.get_meta(key)}\if{html}{\out{</div>}}
 }
 
 }

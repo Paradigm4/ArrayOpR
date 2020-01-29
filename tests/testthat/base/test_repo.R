@@ -93,7 +93,10 @@ namespace: ns
 arrays:
   - alias: V
     name: Variant
-    schema: <ref:string, alt:string compression 'zlib', score:double> [chrom=1:24:0:1; pos=*]
+    schema: >
+      <ref:string, alt:string compression 'zlib', score:double> 
+      [chrom=1:24:0:1; pos=*]
+      
   - alias: G
     name: Genotype
     dims:
@@ -121,4 +124,27 @@ arrays:
     expect_identical(G$attrs, c('ref', 'alt', 'score'))
     assert_afl_equal(G$to_schema_str(), "<ref:string, alt:string, score:double> [chrom=1:24:0:1; pos=*]")
   }
+})
+
+test_that("Load repo from a more complicated repo setting", {
+  yamlStr = "
+namespace: NS
+arrays:
+  - alias: a
+    name: A
+    schema: '<a: string> [da; db = 0:*:0:10] '
+  - alias: b
+    name: B
+    schema: ' <a: string not null> [db= 0:*:0:10; da ] '
+  "
+  dep = list(get_scidb_version = function() '19.11', query = function(x) 42, execute = function(x) 'cmd', 
+             get_schema_df = identity)
+  repo = newRepo(config = yaml::yaml.load(yamlStr), dep = dep)
+  expect_identical(repo$get_alias_schema('a')$to_schema_str(), "<a:string> [da;db=0:*:0:10]")
+  expect_identical(repo$get_alias_schema('b')$to_schema_str(), "<a:string not null> [db=0:*:0:10;da]")
+})
+
+test_that("Throw error if schema str is invalid", {
+  expect_error(get_schema_df_from_schema_str("[da; db]"), "Invalid schema")
+  expect_error(get_schema_df_from_schema_str("<a:string>"), "Invalid schema")
 })
