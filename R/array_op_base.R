@@ -699,7 +699,7 @@ Only data.frame is supported", class(df))
         paste(source_field %-% self$dims_n_attrs, ','))
       assert_not_has_len(ref_field %-% reference$dims_n_attrs, 
         "ERROR: ArrayOp$set_auto_increment_field: ref_field '%s' not exist.",
-        paste(ref_field %-% ref$dims_n_attrs, ','))
+        paste(ref_field %-% reference$dims_n_attrs, ','))
       
       refDims = ref_field %-% reference$attrs
       maxRefFields = sprintf("_max_%s", ref_field)
@@ -720,8 +720,73 @@ Only data.frame is supported", class(df))
         %apply% 
           afl_join_fields(new_field, newFieldExpr)
       )
-      self$spawn(added = new_field, dtypes = as.list(rlang::rep_named(new_field, 'int64')))$
+      self$spawn(added = new_field, dtypes = rlang::set_names(reference$get_field_types(ref_field, .strict = FALSE), new_field))$
+      # self$spawn(added = new_field, dtypes = as.list(rlang::rep_named(new_field, 'int64')))$
         create_new_with_same_schema(crossJoined)
+    }
+    ,
+    #' @description 
+    #' Create a new ArrayOp instance that has an anti-collision field set according to a template arrayOp
+    #' 
+    #' The source (self) operand should have N fields given the target has N+1 dimensions. The one missing field is 
+    #' treated as the anti-collision field.
+    #'
+    #' @param target A target arrayOp that the source draws anti-collision dimension from.
+    #' @param anti_collision_field a target dimension name which exsits only to resolve cell collision 
+    #' (ie. cells with the same dimension coordinate).
+    set_anti_collision_field = function(target, anti_collision_field = NULL) {
+      assert(inherits(target, 'ArrayOpBase'),
+             "ERROR: ArrayOp$set_anti_collision_field: param target must be ArrayOp, but got '%s' instead.", class(target))
+      matchedFieldsOfTargetDimensions = self$dims_n_attrs %n% target$dims
+      assert(length(matchedFieldsOfTargetDimensions) + 1 == length(target$dims), 
+             "ERROR: ArrayOp$set_anti_collision_field: incorrect number of matching fields: source has %d field(s) (SHOULD BE %d) that match %d target dimension(s).",
+             length(matchedFieldsOfTargetDimensions), length(target$dims) - 1, length(target$dims))
+      
+      if(is.null(anti_collision_field))
+        anti_collision_field = target$dims %-% matchedFieldsOfTargetDimensions
+      
+      assert(is.character(anti_collision_field) && length(anti_collision_field) == 1, 
+             "ERROR: ArrayOp$set_anti_collision_field: anti_collission_field should be a single string, but got '%s'",
+             str(anti_collision_field))
+      
+      # Target dimensions other than the anti_collision_field
+      regularTargetDims = target$dims %-% anti_collision_field 
+      
+      # Redimension source with a different field name for the anti-collision-field
+      srcAltId = sprintf("_src_%s", anti_collision_field) # this field is to avoid dimension collision within source 
+      renamedList = as.list(structure(srcAltId, names = anti_collision_field))
+      renamedTarget = target$spawn(renamed = renamedList)
+      redimensionTemplate = self$create_new("TEMPLATE", 
+                                            dims = renamedTarget$dims, 
+                                            attrs = self$attrs %-% renamedTarget$dims,
+                                            dtypes = utils::modifyList(self$get_field_types(), renamedTarget$get_field_types(renamedTarget$dims)),
+                                            dim_specs = renamedTarget$get_dim_specs())
+      redimenedSource = redimensionTemplate$create_new_with_same_schema(afl(
+        self %redimension% redimensionTemplate$to_schema_str() %apply% c(srcAltId, srcAltId)
+      ))
+      
+      # Get the max anti-collision-field from group aggregating the target on the remainder of target dimensions
+      targetAltIdMax = sprintf("_max_%s", anti_collision_field)
+      groupedTarget = target$create_new_with_same_schema(afl(
+        target %apply% c(anti_collision_field, anti_collision_field) %grouped_aggregate%
+          c(sprintf("max(%s) as %s", anti_collision_field, targetAltIdMax), regularTargetDims)
+      ))
+      
+      # Left join on the remainder of the target dimensions
+      joined = redimenedSource$join(groupedTarget, on_left = regularTargetDims, on_right = regularTargetDims,
+                                    settings = list(left_outer=1))
+      
+      # Finally calculate the values of anti_collision_field
+      # src's attributes (that are target dimensions) are converted to dimensions according to the target
+      result = redimensionTemplate$
+        spawn(renamed = invert.list(renamedList))$
+        create_new_with_same_schema(afl(
+          joined %apply% c(anti_collision_field, sprintf(
+            "iif(%s is null, %s, %s + %s + 1)", targetAltIdMax, srcAltId, srcAltId, targetAltIdMax
+          )))
+        )
+      
+      return(result)
     }
     ,
     #' @description 
@@ -741,6 +806,44 @@ Only data.frame is supported", class(df))
                       dims = self$dims, attrs = self$attrs %u% missingFields, 
                       dtypes = utils::modifyList(self$get_field_types(), missingDtypes),
                       dim_specs = self$get_dim_specs())
+    }
+    ,
+    #' @description 
+    #' Create a new ArrayOp instance that has auto incremented fields and/or anti-collision fields according to a template arrayOp
+    #' 
+    #' If the dimension count, attribute count and data types match between the source(self) and target, 
+    #' then no redimension will be performed, otherwise redimension on the source first.
+    #'
+    #' Redimension mode requires all target fields exist on the source disregard of being attributes or dimensions.
+    #' Redimension mode does not check on whether source data types match the target because auto data conversion 
+    #' occurs within scidb where necessary/applicable. 
+    #' @param target A target ArrayOp the source data is written to. 
+    #' @param source_auto_increment a named number vector e.g. c(z=0), where the name is a source field and value is the starting index
+    #' @param target_auto_increment a named number vector e.g. c(aid=0), where the name is a target field and value is the starting index.
+    #' Here the `target_auto_increment` param only affects the initial load when the field is still null in the target array.
+    #' @param anti_collision_field a target dimension name which exsits only to resolve cell collision 
+    #' (ie. cells with the same dimension coordinate).
+    set_auto_fields = function(target, source_auto_increment = NULL, target_auto_increment = NULL, anti_collision_field = NULL) {
+      assert(inherits(target, 'ArrayOpBase'),
+        "ERROR: ArrayOp$write_to: param target must be ArrayOp, but got '%s' instead.", class(target))
+      
+      result = self
+        
+      # If there is an auto-incremnt field, it needs to be inferred from the params
+      # After this step, 'src' is an updated ArrayOp with auto-incremented id calculated (during AFL execution only due to lazy evaluation)
+      if(.has_len(target_auto_increment)){
+        result = result$set_auto_increment_field(target, 
+          source_field = names(source_auto_increment), ref_field = names(target_auto_increment), 
+          source_start = source_auto_increment, ref_start = target_auto_increment)
+      }
+      
+      # If there is anti_collision_field, more actions are required to avoid cell collision
+      # After this step, 'src' is an updated ArrayOp with auto_collision_field set properly
+      if(.has_len(anti_collision_field)){
+        result = result$set_anti_collision_field(target, anti_collision_field)
+      }
+      
+      return(result)
     }
     ,
     #' @description 

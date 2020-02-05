@@ -588,7 +588,7 @@ test_that("Auto increment the reference dimension", {
 
 test_that("More than one auto increment field is allowed", {
   source = newArrayOp('s', 'x', 'a', dtypes = list(a='string', x='int64'))
-  ref = newArrayOp('ref', c('da', 'db', 'dc'), c('aa', 'ab', 'ac'))
+  ref = newArrayOp('ref', c('da', 'db', 'dc'), c('aa', 'ab', 'ac'), dtypes = list(ab='int32', da='int64'))
   result = source$set_auto_increment_field(ref, 
     source_field = 'x', ref_field = c('da', 'ab'), source_start = 0, ref_start = c(5, 3))
   assert_afl_equal(result$to_afl(), "
@@ -602,7 +602,7 @@ test_that("More than one auto increment field is allowed", {
   )")
   expect_identical(result$dims, 'x')
   expect_identical(result$attrs, c('a', 'da', 'ab'))
-  expect_identical(result$get_field_types(result$attrs), list('a'='string', 'da'='int64', 'ab'='int64'))
+  expect_identical(result$get_field_types(result$attrs), list('a'='string', 'da'='int64', 'ab'='int32'))
 })
 
 test_that("Auto increment the reference attribute", {
