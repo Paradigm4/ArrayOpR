@@ -232,6 +232,46 @@ test_that("Set anti-collision field", {
   assert_afl_equal(writeOp$to_schema_str(), "<dsa:string> [da=0:*:0:1; db=0:*:0:*; altid=0:*:0:1234]")
 })
 
+test_that("Set anti-collision field with custom join settings", {
+  # When regular dimensions can overlap, we need an artificial dimension to make each cell coordinate unique
+  # which is named anti-collision field
+  # The source array should have all dimensions as the target except for the anti-collision field
+  Target = newArrayOp('target', c('da', 'db', 'altid'), c('aa', 'ab'), 
+                      dtypes = list(da='int64', db='int64', altid='int64', aa='string', ab='int32'),
+                      dim_specs = list(da='0:*:0:1', db='0:*:0:*', altid='0:*:0:1234'))
+  
+  ds = newArrayOp('dataset', 'x', c('db', 'dsa', 'da'), 
+                  dtypes = list(x='int64', db='int64', dsa='string', da='int32'))
+  
+  writeOp = ds$set_auto_fields(Target, anti_collision_field = 'altid', join_setting = list(join_hash_threshold=1024))
+  assert_afl_equal(writeOp$to_afl(), "
+      apply(
+        equi_join(
+          apply(
+            redimension(
+              dataset,
+              <dsa:string>
+              [da=0:*:0:1; db=0:*:0:*; _src_altid=0:*:0:1234]
+            ),
+            _src_altid, _src_altid
+          ) as _L,
+          grouped_aggregate(
+            apply(
+              target,
+              altid, altid
+            ),
+            max(altid) as _max_altid, da, db
+          ) as _R,
+          left_names:(_L.da,_L.db),
+          right_names:(_R.da,_R.db),
+          join_hash_threshold:1024,
+          left_outer:1
+        ),
+        altid, iif(_max_altid is null, _src_altid, _src_altid + _max_altid + 1)
+      )")
+  assert_afl_equal(writeOp$to_schema_str(), "<dsa:string> [da=0:*:0:1; db=0:*:0:*; altid=0:*:0:1234]")
+})
+
 test_that("Set anti-collision field (Missing dimension fields)", {
   # The source array should have all dimensions as the target except for the anti-collision field
   Target = newArrayOp('target', c('da', 'db', 'altid'), c('aa', 'ab'), 

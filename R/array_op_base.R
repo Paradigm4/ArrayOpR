@@ -734,7 +734,7 @@ Only data.frame is supported", class(df))
     #' @param target A target arrayOp that the source draws anti-collision dimension from.
     #' @param anti_collision_field a target dimension name which exsits only to resolve cell collision 
     #' (ie. cells with the same dimension coordinate).
-    set_anti_collision_field = function(target, anti_collision_field = NULL) {
+    set_anti_collision_field = function(target, anti_collision_field = NULL, join_setting = NULL) {
       assert(inherits(target, 'ArrayOpBase'),
              "ERROR: ArrayOp$set_anti_collision_field: param target must be ArrayOp, but got '%s' instead.", class(target))
       matchedFieldsOfTargetDimensions = self$dims_n_attrs %n% target$dims
@@ -773,8 +773,11 @@ Only data.frame is supported", class(df))
       ))
       
       # Left join on the remainder of the target dimensions
+      joinSetting = if(is.null(join_setting)) list(left_outer=1) else {
+        utils::modifyList(as.list(join_setting), list(left_outer=1))
+      }
       joined = redimenedSource$join(groupedTarget, on_left = regularTargetDims, on_right = regularTargetDims,
-                                    settings = list(left_outer=1))
+                                    settings = joinSetting)
       
       # Finally calculate the values of anti_collision_field
       # src's attributes (that are target dimensions) are converted to dimensions according to the target
@@ -823,7 +826,8 @@ Only data.frame is supported", class(df))
     #' Here the `target_auto_increment` param only affects the initial load when the field is still null in the target array.
     #' @param anti_collision_field a target dimension name which exsits only to resolve cell collision 
     #' (ie. cells with the same dimension coordinate).
-    set_auto_fields = function(target, source_auto_increment = NULL, target_auto_increment = NULL, anti_collision_field = NULL) {
+    set_auto_fields = function(target, source_auto_increment = NULL, target_auto_increment = NULL, anti_collision_field = NULL
+                               ,join_setting = NULL) {
       assert(inherits(target, 'ArrayOpBase'),
         "ERROR: ArrayOp$write_to: param target must be ArrayOp, but got '%s' instead.", class(target))
       
@@ -840,7 +844,7 @@ Only data.frame is supported", class(df))
       # If there is anti_collision_field, more actions are required to avoid cell collision
       # After this step, 'src' is an updated ArrayOp with auto_collision_field set properly
       if(.has_len(anti_collision_field)){
-        result = result$set_anti_collision_field(target, anti_collision_field)
+        result = result$set_anti_collision_field(target, anti_collision_field, join_setting = join_setting)
       }
       
       return(result)
