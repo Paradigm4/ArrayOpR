@@ -232,6 +232,45 @@ test_that("Set anti-collision field", {
   assert_afl_equal(writeOp$to_schema_str(), "<dsa:string> [da=0:*:0:1; db=0:*:0:*; altid=0:*:0:1234]")
 })
 
+test_that("Set anti-collision field according to a reshaped target", {
+  # Only target's dimensions are necessary, so we can safely project away other attributes using 'reshape'
+  # Target array may have a large number of attributes, which can slow down the join
+  Target = newArrayOp('target', c('da', 'db', 'altid'), c('aa', 'ab', 'ac', 'ad'), 
+                      dtypes = list(da='int64', db='int64', altid='int64', aa='string', ab='int32', ac='bool', ad='string'),
+                      dim_specs = list(da='0:*:0:1', db='0:*:0:*', altid='0:*:0:1234'))
+  
+  ds = newArrayOp('dataset', 'x', c('db', 'dsa', 'da'), 
+                  dtypes = list(x='int64', db='int64', dsa='string', da='int32'))
+  
+  writeOp = ds$set_auto_fields(Target$reshape(Target$dims, artificial_field = 'xxx'), 
+                               anti_collision_field = 'altid')
+  assert_afl_equal(writeOp$to_afl(), "
+      apply(
+        equi_join(
+          apply(
+            redimension(
+              dataset,
+              <dsa:string>
+              [da=0:*:0:1; db=0:*:0:*; _src_altid=0:*:0:1234]
+            ),
+            _src_altid, _src_altid
+          ) as _L,
+          grouped_aggregate(
+            apply(
+              project(apply(target, xxx, null), xxx),
+              altid, altid
+            ),
+            max(altid) as _max_altid, da, db
+          ) as _R,
+          left_names:(_L.da,_L.db),
+          right_names:(_R.da,_R.db),
+          left_outer:1
+        ),
+        altid, iif(_max_altid is null, _src_altid, _src_altid + _max_altid + 1)
+      )")
+  assert_afl_equal(writeOp$to_schema_str(), "<dsa:string> [da=0:*:0:1; db=0:*:0:*; altid=0:*:0:1234]")
+})
+
 test_that("Set anti-collision field with custom join settings", {
   # When regular dimensions can overlap, we need an artificial dimension to make each cell coordinate unique
   # which is named anti-collision field
@@ -304,6 +343,9 @@ test_that("Set two auto-incremented fields", {
         aid2, iif(_max_aid2 is null, x + 5, _max_aid2 + x + 1)
     )")
   assert_afl_equal(writeOp$to_schema_str(), "<aa:string, ds1:int32, aid:int32, aid2:int64> [x]")
+  pruned = writeOp$reshape(writeOp$attrs)
+  assert_afl_equal(pruned$to_afl(), sprintf("project(%s, aa, ds1, aid, aid2)", writeOp$to_afl()))
+  assert_afl_equal(pruned$to_schema_str(), "<aa:string, ds1:int32, aid:int32, aid2:int64> [x]")
 })
 
 test_that("Set both auto-increment-id and anti-collision-field", {
