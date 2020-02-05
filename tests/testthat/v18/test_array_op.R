@@ -110,7 +110,7 @@ test_that("Write a dataset ArrayOp to target in redimension mode with anti-colli
                       dim_specs = list(da='0:*:0:1', db='0:*:0:*', altid='0:*:0:1234'))
   
   ds = newArrayOp('dataset', 'x', c('db', 'aa', 'da', 'ab'), 
-                  dtypes = list(x='int64', db='int64', aa='string', da='int32'))
+                  dtypes = list(x='int64', db='int64', aa='string', da='int32', ab='int32'))
   
   writeOp = ds$write_to(Target, anti_collision_field = 'altid')
   assert_afl_equal(writeOp$to_afl(), 
@@ -149,7 +149,7 @@ test_that("Write a dataset ArrayOp to target in redimension mode with both auto-
                       dim_specs = list(da='0:*:0:1', db='0:*:0:*', altid='0:*:0:1234'))
   
   ds = newArrayOp('dataset', 'x', c('db', 'aa', 'da', 'ab'), 
-                  dtypes = list(x='int64', db='int64', aa='string', da='int32'))
+                  dtypes = list(x='int64', db='int64', aa='string', da='int32', ab='int32'))
   
   writeOp = ds$write_to(Target, anti_collision_field = 'altid', 
                         source_auto_increment = c(x = 0), target_auto_increment = c(aid = 1))

@@ -879,65 +879,25 @@ Only data.frame is supported", class(df))
           length(srcDtypes) == length(targetDtypes) && 
             all(as.character(srcDtypes) == as.character(targetDtypes))
         }
-      
-      src = self
-      if(!exactDtypeMatch || force_redimension){
-        # If data types do not exactly match, redimension is required
+      needRedimension = !exactDtypeMatch || force_redimension
+      if(needRedimension){
+        # Fields present in target but not in source(self)
         missingFields = target$dims_n_attrs %-% self$dims_n_attrs %-% names(target_auto_increment) %-% anti_collision_field
         # If no auto increment set, then all target fields should be matched
-        assert_not_has_len(missingFields, 
-                           "ERROR: ArrayOp$write_to: redimension mode: Source field(s) '%s' not found in Target", 
+        assert_not_has_len(missingFields,
+                           "ERROR: ArrayOp$write_to: redimension mode: Target field(s) '%s' not found in Source",
                            paste(missingFields, collapse = ','))
-        
-        # If there is an auto-incremnt field, it needs to be inferred from the params
-        # After this step, 'src' is an updated ArrayOp with auto-incremented id calculated (during AFL execution only due to lazy evaluation)
-        if(.has_len(target_auto_increment)){
-          src = self$set_auto_increment_field(target, 
-            source_field = names(source_auto_increment), ref_field = names(target_auto_increment), 
-            source_start = source_auto_increment, ref_start = target_auto_increment)
-        }
-        
-        # If there is anti_collision_field, more actions are required to avoid cell collision
-        # After this step, 'src' is an updated ArrayOp with auto_collision_field set properly
-        if(.has_len(anti_collision_field)){
-          assert(is.character(anti_collision_field) && length(anti_collision_field) == 1, 
-                 "ERROR: ArrayOp$write_to: redimension mode: param 'anti_collision_field' if provided must be a single string, but got: %s", anti_collision_field)
-          
-          # Target dimensions other than the anti_collision_field
-          regularTargetDims = target$dims %-% anti_collision_field 
-          
-          # Redimension source with a different field name for the anti-collision-field
-          srcAltId = sprintf("_src_%s", anti_collision_field)
-          renamedList = as.list(structure(srcAltId, names = anti_collision_field))
-          renamedTarget = target$spawn(renamed = renamedList)
-          redimenedSource = renamedTarget$create_new_with_same_schema(afl(
-            src %redimension% renamedTarget$to_schema_str() %apply% c(srcAltId, srcAltId)
-          ))
-          
-          # Get the max anti-collision-field from group aggregating the target on the remainder of target dimensions
-          targetAltIdMax = sprintf("_max_%s", anti_collision_field)
-          groupedTarget = target$create_new_with_same_schema(afl(
-            target %apply% c(anti_collision_field, anti_collision_field) %grouped_aggregate%
-              c(sprintf("max(%s) as %s", anti_collision_field, targetAltIdMax), regularTargetDims)
-          ))
-          
-          # Left join on the remainder of the target dimensions
-          joined = redimenedSource$join(groupedTarget, on_left = regularTargetDims, on_right = regularTargetDims,
-                                        settings = list(left_outer=1))
-          
-          # Finally calculate the values of anti_collision_field
-          src = target$create_new_with_same_schema(afl(
-            joined %apply% c(anti_collision_field, sprintf(
-              "iif(%s is null, %s, %s + %s + 1)", targetAltIdMax, srcAltId, srcAltId, targetAltIdMax
-            ))
-          ))
-        }
-        
-        src = afl(src %redimension% target)
       }
       
-      afl_literal = if(append) afl(src %insert% target) else afl(src %store% target)
-      return(self$create_new(afl_literal, c(), c()))
+      resultOp = self
+      if(.has_len(source_auto_increment) || .has_len(anti_collision_field)){
+        resultOp = self$set_auto_fields(target, source_auto_increment, target_auto_increment, anti_collision_field)
+      }
+      if(needRedimension){
+        resultOp = target$create_new_with_same_schema(afl(resultOp %redimension% target))
+      }
+      writeAfl = if(append) afl(resultOp %insert% target) else afl(resultOp %store% target)
+      return(resultOp$create_new_with_same_schema(writeAfl))
     }
     ,
     #' @description 

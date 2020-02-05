@@ -109,7 +109,7 @@ test_that("Write a dataset ArrayOp to target in redimension mode with anti-colli
                       dim_specs = list(da='0:*:0:1', db='0:*:0:*', altid='0:*:0:1234'))
   
   ds = newArrayOp('dataset', 'x', c('db', 'aa', 'da', 'ab'), 
-                  dtypes = list(x='int64', db='int64', aa='string', da='int32'))
+                  dtypes = list(x='int64', db='int64', aa='string', da='int32', ab='int32'))
   
   writeOp = ds$write_to(Target, anti_collision_field = 'altid')
   assert_afl_equal(writeOp$to_afl(), 
@@ -148,7 +148,7 @@ test_that("Write a dataset ArrayOp to target in redimension mode with both auto-
                       dim_specs = list(da='0:*:0:1', db='0:*:0:*', altid='0:*:0:1234'))
   
   ds = newArrayOp('dataset', 'x', c('db', 'aa', 'da', 'ab'), 
-                  dtypes = list(x='int64', db='int64', aa='string', da='int32'))
+                  dtypes = list(x='int64', db='int64', aa='string', da='int32', ab='int32'))
   
   writeOp = ds$write_to(Target, anti_collision_field = 'altid', 
                         source_auto_increment = c(x = 0), target_auto_increment = c(aid = 1))
@@ -276,8 +276,17 @@ test_that("Set both auto-increment-id and anti-collision-field", {
   ds = newArrayOp('dataset', 'x', c('db', 'dsa', 'da', 'dsb'), 
                   dtypes = list(x='int64', db='int64', dsa='string', da='int32', dsb='int32'))
   
-  writeOp = ds$set_auto_fields(Target, anti_collision_field = 'altid', 
-                        source_auto_increment = c(x = 2), target_auto_increment = c(aid = 5L))
+  # The 3 operations below are equivelant
+  operations = list(
+    ds$set_auto_fields(Target, anti_collision_field = 'altid', 
+                       source_auto_increment = c(x = 2), target_auto_increment = c(aid = 5L))
+    ,
+    ds$set_auto_increment_field(Target, 'x', 'aid', 2, 5)$
+      set_anti_collision_field(Target)
+    ,
+    ds$set_auto_fields(Target, source_auto_increment = c(x = 2), target_auto_increment = c(aid = 5L))$
+      set_auto_fields(Target, anti_collision_field = 'altid')
+  )
   
   autoIncremented = 
     "apply(
@@ -288,30 +297,31 @@ test_that("Set both auto-increment-id and anti-collision-field", {
         ),
         aid, iif(_max_aid is null, x + 3, _max_aid + x - 1)
     )"
-  
-  assert_afl_equal(writeOp$to_afl(), sprintf("
-      apply(
-        equi_join(
-          apply(
-            redimension(
-              %s,
-              <dsa:string, dsb:int32, aid:int64>
-              [da=0:*:0:1; db=0:*:0:*; _src_altid=0:*:0:1234]
-            ),
-            _src_altid, _src_altid
-          ) as _L,
-          grouped_aggregate(
+  for(op in operations){
+    assert_afl_equal(op$to_afl(), sprintf("
+        apply(
+          equi_join(
             apply(
-              target,
-              altid, altid
-            ),
-            max(altid) as _max_altid, da, db
-          ) as _R,
-          left_names:(_L.da,_L.db),
-          right_names:(_R.da,_R.db),
-          left_outer:1
-        ),
-        altid, iif(_max_altid is null, _src_altid, _src_altid + _max_altid + 1)
-      )", autoIncremented))
-  assert_afl_equal(writeOp$to_schema_str(), "<dsa:string, dsb:int32, aid:int64> [da=0:*:0:1; db=0:*:0:*; altid=0:*:0:1234]")
+              redimension(
+                %s,
+                <dsa:string, dsb:int32, aid:int64>
+                [da=0:*:0:1; db=0:*:0:*; _src_altid=0:*:0:1234]
+              ),
+              _src_altid, _src_altid
+            ) as _L,
+            grouped_aggregate(
+              apply(
+                target,
+                altid, altid
+              ),
+              max(altid) as _max_altid, da, db
+            ) as _R,
+            left_names:(_L.da,_L.db),
+            right_names:(_R.da,_R.db),
+            left_outer:1
+          ),
+          altid, iif(_max_altid is null, _src_altid, _src_altid + _max_altid + 1)
+        )", autoIncremented))
+    assert_afl_equal(op$to_schema_str(), "<dsa:string, dsb:int32, aid:int64> [da=0:*:0:1; db=0:*:0:*; altid=0:*:0:1234]")
+  }
 })
