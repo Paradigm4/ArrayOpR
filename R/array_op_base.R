@@ -157,6 +157,35 @@ Please select on left operand's fields OR do not select on either operand. Look 
       dim_specs = c(left$get_dim_specs(), right$get_dim_specs(right$dims %-% on_right))
       self$create_new(aflStr, dims = dims, attrs = attrs, dtypes = dtypes, dim_specs = dim_specs)
     }
+    ### Implement raw AFL function ----
+    # Functions prefixed with 'afl_' are implemented according to scidb operators with sanity checks.
+    ,
+    # Project a list of array's attributes.
+    # Return a result array instance with the same dimensions and a subset (projected) attributes
+    # Throw an error if there are non-attribute fileds because scidb only allows project'ing on attributes
+    afl_project = function(...) {
+      fields = c(....)
+      nonAttrs = fields %-% self$attrs
+      assert_not_has_len(nonAttrs, "ERROR: afl_project: %d non-attribute field(s) found: %s", length(nonAttrs), paste(nonAttrs, collapse = ', '))
+      if(!.has_len(fields)) return(self)
+      self$create_new(afl(self %project% fields), dims = self$dims, attrs = fields, 
+                      dtypes = self$get_field_types(c(self$dims, fields)), dim_specs = self$get_dim_specs())
+    }
+    ,
+    # Apply new attributes to an existing array. 
+    # Return a result array with added (applied) attributes
+    # If fields are existing dimensions, data types are inheritted; otherwise new attributes require data types
+    # @param fields: a named list or character. Cannot contain existing attributes because it creates conflicts.
+    afl_apply = function(fields, dtypes = NULL) {
+      fieldNames = .get_element_names(fields)
+      fieldExprs = as.character(fields)
+      conflictFields = fields %n% self$attrs
+      assert_not_has_len(conflictFields, "ERROR: afl_apply: cannot apply existing attribute(s): %s", paste(conflictFields, collapse = ', '))
+      
+      newDTypes = utils::modifyList(self$get_field_types(), as.list(dtypes))
+      self$create_new(afl(self %apply% afl_join_fields(fieldNames, fieldExprs)), dims = self$dims, 
+                      attrs = self$attrs %u% fields, dtypes = newDTypes, dim_specs = self$get_dim_specs())
+    }
   ),
   active = list(
     #' @field dims Dimension names
@@ -350,11 +379,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
         as.character(select)
       }
       # Names of the retained fields (existing or new)
-      selectFieldNames = .ifelse(!.has_len(names(select)), as.character(select),
-        mapply(function(name, value){
-          if(name == '') value else name
-        }, names(select), select, USE.NAMES = F)
-      )
+      selectFieldNames = .get_element_names(select)
       fieldExprs = select[names(select) != '']
       fieldNamesWithExprs = names(fieldExprs)
       

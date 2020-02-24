@@ -1,0 +1,15 @@
+namespace: arrayop_unittest
+arrays:
+  - alias: alias_a
+    name: A
+    schema: "<a:string compression 'zlib', b:int32> [da=0:*:0:*]"
+  - alias: alias_b
+    name: B
+    schema: "<a:string, b:int32> [da=0:*:0:*]"
+  - alias: alias_c
+    name: C
+    schema: "<a:string, b:int32, c:bool> [da=0:*:0:*]"
+
+  - alias: template_a
+    name: D
+    schema: "<fa:string compression 'zlib', fb:int32, fc:int64, fd: bool> [da=0:*:0:*]"

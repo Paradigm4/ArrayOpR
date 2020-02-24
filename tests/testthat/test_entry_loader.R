@@ -24,6 +24,7 @@ assert_afl_equal <- function(actual, expected) {
 source("base/__source.R", local = TRUE)
 source("v18/__source.R", local = TRUE)
 source("v19/__source.R", local = TRUE)
+source("repo_dao/__source.R", local = TRUE)
 
 # Tests that run with a scidb connection
 # Only run these tests if a db connection is configured; otherwise skip them altogether

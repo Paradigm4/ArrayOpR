@@ -35,3 +35,16 @@ assert_named_list <- function(obj, ...) {
   values = as.integer(values)
   vapply(values, single_value, FUN.VALUE = '')
 }
+
+# param named_values: A named list or named vector
+# return The names of the elements. If an element has no name, then its string representation will be used as name.
+.get_element_names = function(named_values) {
+  if (!.has_len(names(named_values)))
+    as.character(named_values)
+  else {
+    mapply(function(name, value) {
+      if (name == '') value
+      else name
+    }, names(named_values), named_values, USE.NAMES = F)
+  }
+}

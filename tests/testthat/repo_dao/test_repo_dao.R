@@ -1,0 +1,36 @@
+context("Test RepoDAO class basic features")
+
+## Query and Execute functions are delegated to Repo class
+
+
+mockDep = list(
+  get_scidb_version = function()
+    "19.3"
+  , query = function(what, ...) list('query', what, ...)
+  , execute = function(what, ...) list('execute', what, ...)
+  , get_schema_df = function(...) stop("get_schema_df not implemented in the mockDep object")
+)
+
+repo = newRepo(dependency_obj = mockDep, config = yaml::yaml.load_file(relative_path('repo.yaml')))
+dao = newRepoDao(repo = repo, db = NULL)
+
+test_that("Raw query", {
+  expect_identical(dao$query_raw("abc"), list('query', 'abc'))
+  expect_identical(dao$query_raw("abc", extra_arg = 42), list('query', 'abc', extra_arg = 42))
+})
+
+test_that("Raw execute", {
+  expect_identical(dao$execute_raw("abc"), list('execute', 'abc'))
+  expect_identical(dao$execute_raw("abc", extra_arg = 42), list('execute', 'abc', extra_arg = 42))
+})
+
+test_that("Get array", {
+  arrayOp = dao$get_array('alias_a')
+  expect_identical(arrayOp$to_afl(), "NS.A")
+  expect_identical(dao$get_array(arrayOp), arrayOp)
+  
+  literalArr = dao$get_array("NS2.another <a:string, b:int32> [da=*; db=0:1:2:3]")
+  assert_afl_equal(literalArr$to_afl(), 'NS2.another')
+  assert_afl_equal(literalArr$to_schema_str(), '<a:string, b:int32> [da=*; db=0:1:2:3]')
+  assert_afl_equal(str(literalArr), "NS2.another <a:string, b:int32> [da=*; db=0:1:2:3]")
+})
