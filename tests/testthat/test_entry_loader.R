@@ -1,4 +1,5 @@
 library(testthat)
+library(mockery)
 context('test entry')
 
 # Order of sourced files matter. First sourced is loaded into package namespace first.

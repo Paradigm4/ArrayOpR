@@ -1,8 +1,5 @@
 context("Test RepoDAO class basic features")
 
-## Query and Execute functions are delegated to Repo class
-
-
 mockDep = list(
   get_scidb_version = function()
     "19.3"
@@ -13,6 +10,12 @@ mockDep = list(
 
 repo = newRepo(dependency_obj = mockDep, config = yaml::yaml.load_file(relative_path('repo.yaml')))
 dao = newRepoDao(repo = repo, db = NULL)
+
+new_df = function(...) {
+  data.frame(..., stringsAsFactors = F, row.names = NULL)
+}
+
+## Query and Execute functions are delegated to Repo class ----
 
 test_that("Raw query", {
   expect_identical(dao$query_raw("abc"), list('query', 'abc'))
@@ -33,4 +36,29 @@ test_that("Get array", {
   assert_afl_equal(literalArr$to_afl(), 'NS2.another')
   assert_afl_equal(literalArr$to_schema_str(), '<a:string, b:int32> [da=*; db=0:1:2:3]')
   assert_afl_equal(str(literalArr), "NS2.another <a:string, b:int32> [da=*; db=0:1:2:3]")
+})
+
+## Expressions are parsed and evaluated ----
+mockDep = list(
+  get_scidb_version = function()
+    "19.3"
+  , query = identity
+  , execute = identity
+  , get_schema_df = function(...) stop("get_schema_df not implemented in the mockDep object")
+)
+
+repo = newRepo(dependency_obj = mockDep, config = yaml::yaml.load_file(relative_path('repo.yaml')))
+dao = newRepoDao(repo = repo, db = NULL)
+
+test_that("nrows", {
+  stub(dao$nrow, 'query_raw', function(q, ...) new_df(i=0, count=q))
+  expect_equal(dao$nrow('alias_a', ), "op_count(NS.A)")
+  assert_afl_equal(dao$nrow('alias_a where (b > 3)'), "op_count(filter(NS.A, b > 3))")
+})
+
+test_that("head", {
+  # stub(dao$limit, 'query_raw', data.frame(i=0, count=42))
+  assert_afl_equal(dao$limit('alias_a', 5), "limit(NS.A, 5)")
+  assert_afl_equal(dao$limit('alias_a', 5, 3), "limit(NS.A, 5, 3)")
+  assert_afl_equal(dao$limit('alias_a where (b > 3)', 5), "limit(filter(NS.A, b > 3), 5)")
 })
