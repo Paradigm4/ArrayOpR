@@ -734,7 +734,7 @@ Only data.frame is supported", class(df))
     #' @param target A target arrayOp that the source draws anti-collision dimension from.
     #' @param anti_collision_field a target dimension name which exsits only to resolve cell collision 
     #' (ie. cells with the same dimension coordinate).
-    set_anti_collision_field = function(target, anti_collision_field = NULL, join_setting = NULL) {
+    set_anti_collision_field = function(target, anti_collision_field = NULL, join_setting = NULL, source_anti_collision_dim_spec = NULL) {
       assert(inherits(target, 'ArrayOpBase'),
              "ERROR: ArrayOp$set_anti_collision_field: param target must be ArrayOp, but got '%s' instead.", class(target))
       matchedFieldsOfTargetDimensions = self$dims_n_attrs %n% target$dims
@@ -756,11 +756,17 @@ Only data.frame is supported", class(df))
       srcAltId = sprintf("_src_%s", anti_collision_field) # this field is to avoid dimension collision within source 
       renamedList = as.list(structure(srcAltId, names = anti_collision_field))
       renamedTarget = target$spawn(renamed = renamedList)
+      redimensionTemplateDimSpecs =
+        if (is.null(source_anti_collision_dim_spec))
+          renamedTarget$get_dim_specs()
+      else
+        utils::modifyList(renamedTarget$get_dim_specs(),
+                          as.list(structure(source_anti_collision_dim_spec, names = srcAltId)))
       redimensionTemplate = self$create_new("TEMPLATE", 
                                             dims = renamedTarget$dims, 
                                             attrs = self$attrs %-% renamedTarget$dims,
                                             dtypes = utils::modifyList(self$get_field_types(), renamedTarget$get_field_types(renamedTarget$dims)),
-                                            dim_specs = renamedTarget$get_dim_specs())
+                                            dim_specs = redimensionTemplateDimSpecs)
       redimenedSource = redimensionTemplate$create_new_with_same_schema(afl(
         self %redimension% redimensionTemplate$to_schema_str() %apply% c(srcAltId, srcAltId)
       ))
@@ -827,7 +833,7 @@ Only data.frame is supported", class(df))
     #' @param anti_collision_field a target dimension name which exsits only to resolve cell collision 
     #' (ie. cells with the same dimension coordinate).
     set_auto_fields = function(target, source_auto_increment = NULL, target_auto_increment = NULL, anti_collision_field = NULL
-                               ,join_setting = NULL) {
+                               ,join_setting = NULL, source_anti_collision_dim_spec = NULL) {
       assert(inherits(target, 'ArrayOpBase'),
         "ERROR: ArrayOp$write_to: param target must be ArrayOp, but got '%s' instead.", class(target))
       
@@ -844,7 +850,8 @@ Only data.frame is supported", class(df))
       # If there is anti_collision_field, more actions are required to avoid cell collision
       # After this step, 'src' is an updated ArrayOp with auto_collision_field set properly
       if(.has_len(anti_collision_field)){
-        result = result$set_anti_collision_field(target, anti_collision_field, join_setting = join_setting)
+        result = result$set_anti_collision_field(target, anti_collision_field, join_setting = join_setting, 
+                                                 source_anti_collision_dim_spec = source_anti_collision_dim_spec)
       }
       
       return(result)

@@ -232,6 +232,45 @@ test_that("Set anti-collision field", {
   assert_afl_equal(writeOp$to_schema_str(), "<dsa:string> [da=0:*:0:1; db=0:*:0:*; altid=0:*:0:1234]")
 })
 
+test_that("Set anti-collision field with a customized _src_altid dimension spec", {
+  # By default, source array has a synthetic _src_altid dimension that shares the target's anti-collision dimension spec.
+  # This can be overriden by a customized dimension spec, which is useful when the source array has potentially more
+  # conflicting dimension coordinates than the Target's anti-collision dimension chunk size.
+  Target = newArrayOp('target', c('da', 'db', 'altid'), c('aa', 'ab'), 
+                      dtypes = list(da='int64', db='int64', altid='int64', aa='string', ab='int32'),
+                      dim_specs = list(da='0:*:0:1', db='0:*:0:*', altid='0:*:0:1234'))
+  
+  ds = newArrayOp('dataset', 'x', c('db', 'dsa', 'da'), 
+                  dtypes = list(x='int64', db='int64', dsa='string', da='int32'))
+  
+  writeOp = ds$set_auto_fields(Target, anti_collision_field = 'altid', source_anti_collision_dim_spec = "0:*:0:*")
+  assert_afl_equal(writeOp$to_afl(), "
+      apply(
+        equi_join(
+          apply(
+            redimension(
+              dataset,
+              <dsa:string>
+              [da=0:*:0:1; db=0:*:0:*; _src_altid=0:*:0:*]
+            ),
+            _src_altid, _src_altid
+          ) as _L,
+          grouped_aggregate(
+            apply(
+              target,
+              altid, altid
+            ),
+            max(altid) as _max_altid, da, db
+          ) as _R,
+          left_names:(_L.da,_L.db),
+          right_names:(_R.da,_R.db),
+          left_outer:1
+        ),
+        altid, iif(_max_altid is null, _src_altid, _src_altid + _max_altid + 1)
+      )")
+  assert_afl_equal(writeOp$to_schema_str(), "<dsa:string> [da=0:*:0:1; db=0:*:0:*; altid=0:*:0:*]")
+})
+
 test_that("Set anti-collision field according to a reshaped target", {
   # Only target's dimensions are necessary, so we can safely project away other attributes using 'reshape'
   # Target array may have a large number of attributes, which can slow down the join
