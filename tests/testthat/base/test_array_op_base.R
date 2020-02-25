@@ -216,19 +216,19 @@ test_that("Provide expressions to exsiting fields will effectively replace the e
   expect_identical(reshaped$attrs, 'ac')
   expect_identical(reshaped$dims, c('da', 'db'))
   expect_identical(reshaped$get_field_types(), list('da'='dtda', 'db'='dtdb', 'ac'='string'))
-  assert_afl_equal(reshaped$to_afl(), 'apply(project(apply(s, _ac, ac+ad), _ac), ac, _ac)')
+  assert_afl_equal(reshaped$to_afl(), 'project(apply(project(apply(s, _ac, ac+ad), _ac), ac, _ac), ac)')
   # Replace existing field while selecting existing fields
   reshaped = Source$reshape(list(ac = 'ac+ad', 'ad'), dtypes = list(ac='string'))
   expect_identical(reshaped$attrs, c('ac', 'ad'))
   expect_identical(reshaped$dims, c('da', 'db'))
   expect_identical(reshaped$get_field_types(), list('da'='dtda', 'db'='dtdb', 'ac'='string', 'ad'='dtad'))
-  assert_afl_equal(reshaped$to_afl(), 'apply(project(apply(s, _ac, ac+ad), ad, _ac), ac, _ac)')
+  assert_afl_equal(reshaped$to_afl(), 'project(apply(project(apply(s, _ac, ac+ad), ad, _ac), ac, _ac), ac, ad)')
   # Replace existing field while selecting existing fields and new fields
   reshaped = Source$reshape(list(ac = 'ac+ad', 'ad', extra=42), dtypes = list(ac='string', extra='int64'))
   expect_identical(reshaped$attrs, c('ac', 'ad', 'extra'))
   expect_identical(reshaped$dims, c('da', 'db'))
   expect_identical(reshaped$get_field_types(), list('da'='dtda', 'db'='dtdb', 'ac'='string', 'ad'='dtad', extra='int64'))
-  assert_afl_equal(reshaped$to_afl(), 'apply(project(apply(s, _ac, ac+ad), ad, _ac), ac, _ac, extra, 42)')
+  assert_afl_equal(reshaped$to_afl(), 'project(apply(project(apply(s, _ac, ac+ad), ad, _ac), ac, _ac, extra, 42), ac, ad, extra)')
 })
 
 test_that("Must select fields in dim_mode = 'keep'", {
@@ -296,6 +296,48 @@ test_that("Select new fields in dim_mode = 'drop'", {
   expect_identical(t$attrs, c('nfa', 'da'))
   expect_identical(t$get_field_types(), list(z = 'int64', nfa = 'int32', da = 'dtda'))
   assert_afl_equal(t$to_afl(), "project(apply(unpack(s, z), nfa, strlen(ad)), nfa, da)")
+})
+
+test_that("Fields should follow the order they are provided", {
+  Source = newArrayOp("s", c("da", "db"), c("ac", "ad"), dtypes = list(ac='dtac', ad='dtad', da='dtda', db='dtdb'),
+                      dim_specs = list(da="0:1:2:3"))
+  # Existing fileds should be in order
+  assert_afl_equal(str(Source$reshape(list('ad', 'ac'))), "project(s, ad, ac) <ad:dtad, ac:dtac> [da=0:1:2:3; db]")
+  assert_afl_equal(str(Source$reshape(list('ac', 'ad'))), "project(s, ac, ad) <ac:dtac, ad:dtad> [da=0:1:2:3; db]")
+  
+  # Extra fields should be in order
+  assert_afl_equal(str(Source$reshape(list('extra'=42, 'ac'), dtypes = list('extra'='int32 NULL'))),
+                   "project(apply(s, extra, 42), extra, ac) <extra:int32 NULL, ac:dtac> [da=0:1:2:3; db]")
+  assert_afl_equal(str(Source$reshape(list('ad', 'extra'=42, 'ac'), dtypes = list('extra'='int32 NULL'))),
+                   "project(apply(s, extra, 42), ad, extra, ac) <ad:dtad, extra:int32 NULL, ac:dtac> [da=0:1:2:3; db]")
+  
+  # Renamed fileds should be in order
+  assert_afl_equal(str(Source$reshape(list('ad', 'ac'=42))),
+                   "project(apply(project(apply(s, _ac, 42), ad, _ac), ac, _ac), ad, ac)
+                   <ad:dtad, ac:dtac> [da=0:1:2:3; db]")
+  assert_afl_equal(str(Source$reshape(list('ac'=42, 'ad'))),
+                   "project(apply(project(apply(s, _ac, 42), ad, _ac), ac, _ac), ac, ad)
+                   <ac:dtac, ad:dtad> [da=0:1:2:3; db]")
+  
+  assert_afl_equal(
+    str(Source$reshape(list('extra'=42, 'ac', 'db', 'da'), dtypes = list('extra'='int32 NULL'), 
+                       dim_mode = 'drop', artificial_field = 'z')),
+    "project(apply(unpack(s, z), extra, 42), extra, ac, db, da) <extra:int32 NULL, ac:dtac, db:dtdb, da:dtda> [z]")
+  assert_afl_equal(
+    str(Source$reshape(list('extra'="double(42)", 'ac', 'db'='int64(da+db)'), dtypes = list('extra'='int32 NULL', 'db'='int64 NULL'), 
+                       dim_mode = 'drop', artificial_field = 'z')),
+    "
+    project(
+      apply(
+        project(
+          apply(
+            unpack(s, z), 
+            _db, int64(da+db)), 
+          ac, _db), 
+        db, _db, extra, double(42)),
+        extra, ac, db
+    ) 
+    <extra:int32 NULL, ac:dtac, db:int64 NULL> [z]")
 })
 
 
@@ -670,7 +712,7 @@ test_that("Update with matching dimensions and matching attributes", {
 })
 
 test_that("Update with 'where' clause ", {
-  source = Target$where(da > 2 && aa == 'string')$reshape(list('aa', 'ab', 'ac' = 42), dtypes = list(ac='dboule nullable'))$reshape(list('aa', 'ab', 'ac'))
+  source = Target$where(da > 2 && aa == 'string')$reshape(list('aa', 'ab', 'ac' = 42), dtypes = list(ac='dboule nullable'))
   op = Target$update_by(source)
   assert_afl_equal(op$to_afl(), 
   "insert(

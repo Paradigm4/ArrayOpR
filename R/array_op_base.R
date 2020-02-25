@@ -157,6 +157,57 @@ Please select on left operand's fields OR do not select on either operand. Look 
       dim_specs = c(left$get_dim_specs(), right$get_dim_specs(right$dims %-% on_right))
       self$create_new(aflStr, dims = dims, attrs = attrs, dtypes = dtypes, dim_specs = dim_specs)
     }
+    ,
+    # Reshape an array without modifying its dimensions
+    # 
+    # This is an enhanced version inspired by scidb 'project' and 'apply' operators which also only work on attributes.
+    reshape_attrs = function(select=NULL, dtypes = NULL, artificial_field = .random_attr_name()) {
+      assert(.has_len(select),
+             "ERROR: ArrayOp$reshape_attrs: param 'select' must be a non-empty character list, but got: %s", 
+             class(select))
+      
+      # Plain selected fields without change
+      existingFields = if(.has_len(names(select))) select[names(select) == ''] else {
+        as.character(select)
+      }
+      # Names of the retained fields (existing or new)
+      selectFieldNames = .get_element_names(select)
+      fieldExprs = select[names(select) != '']
+      fieldNamesWithExprs = names(fieldExprs)
+      
+      newFieldNames = fieldNamesWithExprs %-% self$attrs
+      newFields = fieldExprs[newFieldNames]
+      
+      replacedFieldNames = fieldNamesWithExprs %-% newFieldNames
+      replacedFieldNamesAlt = sprintf("_%s", replacedFieldNames)
+      replacedFields = sapply(replacedFieldNames, function(x) gsub('@', x, fieldExprs[[x]]))
+      
+      mergedDtypes = utils::modifyList(self$dtypes, as.list(dtypes))
+      
+      attrs = selectFieldNames %-% self$dims
+      
+      newAfl = if(.has_len(replacedFieldNames)){
+        afl(self %apply% afl_join_fields(replacedFieldNamesAlt, replacedFields)
+            %project% (attrs %-% newFieldNames %-% replacedFieldNames %u% replacedFieldNamesAlt) 
+            %apply% afl_join_fields(replacedFieldNames %u% newFieldNames, replacedFieldNamesAlt %u% newFields)
+            %project% attrs
+            )
+      }
+      else if(.has_len(attrs)) {
+        inner = self
+        if(.has_len(newFieldNames))
+          inner = afl(self %apply% afl_join_fields(newFieldNames, newFields))
+        afl(inner %project% attrs)
+      }
+      else {
+        attrs = artificial_field
+        mergedDtypes[[artificial_field]] = 'void'
+        afl(self %apply% c(artificial_field, 'null') %project% artificial_field)
+      }
+      self$create_new(newAfl, self$dims, attrs, mergedDtypes, dim_specs = self$get_dim_specs(),
+                      validate_fields = private$get_meta('validate_fields'))
+      
+    }
     ### Implement raw AFL function ----
     # Functions prefixed with 'afl_' are implemented according to scidb operators with sanity checks.
     ,
@@ -199,7 +250,9 @@ Please select on left operand's fields OR do not select on either operand. Look 
     #' @field dims_n_attrs Dimension and attribute names
     dims_n_attrs = function() c(self$dims, self$attrs),
     #' @field attrs_n_dims Attribute and dimension names
-    attrs_n_dims = function() c(self$attrs, self$dims)
+    attrs_n_dims = function() c(self$attrs, self$dims),
+    #' @field .private For admins only. Please avoid accessing this field to avoid unintended consequences!!!
+    .private = function() private
   ),
 
 
@@ -368,67 +421,21 @@ Please select on left operand's fields OR do not select on either operand. Look 
     #' A field name used as the artificial dimension name in 'drop' dim_mode 
     #' (internally used by `unpack` scidb operator). By default, a random string is generated.
     reshape = function(select=NULL, dtypes = NULL, dim_mode = 'keep', artificial_field = .random_attr_name()) {
-      if(dim_mode == 'keep'){
-        assert(.has_len(select),
-          "ERROR: ArrayOp$reshape: dim_mode='keep': 'select' param must be a non-empty character list, but got: %s", 
-          class(select))
-      }
-      
-      # Plain selected fields without change
-      existingFields = if(.has_len(names(select))) select[names(select) == ''] else {
-        as.character(select)
-      }
-      # Names of the retained fields (existing or new)
-      selectFieldNames = .get_element_names(select)
-      fieldExprs = select[names(select) != '']
-      fieldNamesWithExprs = names(fieldExprs)
-      
-      newFieldNames = fieldNamesWithExprs %-% .ifelse(dim_mode=='keep', self$attrs, self$dims_n_attrs)
-      newFields = fieldExprs[newFieldNames]
-      
-      replacedFieldNames = fieldNamesWithExprs %-% newFieldNames
-      replacedFieldNamesAlt = sprintf("_%s", replacedFieldNames)
-      replacedFields = sapply(replacedFieldNames, function(x) gsub('@', x, fieldExprs[[x]]))
-      
-      mergedDtypes = utils::modifyList(self$dtypes, as.list(dtypes))
       
       keep = function(){
-        attrs = selectFieldNames %-% self$dims
-        
-        newAfl = if(.has_len(replacedFieldNames)){
-          afl(self %apply% afl_join_fields(replacedFieldNamesAlt, replacedFields)
-            %project% (attrs %-% newFieldNames %-% replacedFieldNames %u% replacedFieldNamesAlt) 
-            %apply% afl_join_fields(replacedFieldNames %u% newFieldNames, replacedFieldNamesAlt %u% newFields))
-        }
-        else if(.has_len(attrs)) {
-          inner = self
-          if(.has_len(newFieldNames))
-             inner = afl(self %apply% afl_join_fields(newFieldNames, newFields))
-          afl(inner %project% attrs)
-        }
-        else {
-          attrs = artificial_field
-          mergedDtypes[[artificial_field]] = 'void'
-          afl(self %apply% c(artificial_field, 'null') %project% artificial_field)
-        }
-        self$create_new(newAfl, self$dims, attrs, mergedDtypes, dim_specs = self$get_dim_specs(),
-                          validate_fields = private$get_meta('validate_fields'))
+        private$reshape_attrs(select, dtypes, artificial_field)
       }
       
       drop = function() {
-        unpacked = afl(self %unpack% artificial_field)
-        newAfl = if(.has_len(newFieldNames)) 
-          afl(unpacked %apply% afl_join_fields(newFieldNames, newFields) %project% selectFieldNames) 
-        else if(.has_len(selectFieldNames)) afl(unpacked %project% selectFieldNames)
-        else unpacked
-        # If no selected fields, then follow the unpack operator's default behavior:
-        # all dimensions and attributes are converted to attributes
-        if(!.has_len(selectFieldNames))
-          selectFieldNames = self$dims_n_attrs
-        
-        newDtypes = c(mergedDtypes[selectFieldNames], structure('int64', names = artificial_field))
-        self$create_new(newAfl, artificial_field, selectFieldNames, 
-          dtypes = newDtypes, validate_fields = private$get_meta('validate_fields'))
+        unpacked = self$create_new(
+          afl(self %unpack% artificial_field), 
+          attrs = self$dims_n_attrs, dims = artificial_field,
+          dtypes = utils::modifyList(self$get_field_types(), as.list(rlang::set_names('int64', artificial_field)))
+        )
+        if(!.has_len(select))
+          unpacked
+        else 
+          unpacked$.private$reshape_attrs(select, dtypes, artificial_field)
       }
       
       switch (dim_mode,
