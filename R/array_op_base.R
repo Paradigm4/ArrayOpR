@@ -451,13 +451,21 @@ Please select on left operand's fields OR do not select on either operand. Look 
     #' 
     #' @param data_source A named list of mutated field expressions
     #' @return a new arrayOp instance that carries the mutated data and has the exact same schema as the target
-    mutate = function(data_source) {
+    mutate = function(data_source, artificial_field = .random_attr_name()) {
       assert(inherits_any(data_source, c('list', 'ArrayOpBase')), 
              "ERROR: ArrayOpBase$mutate: param 'data_source' must be a named list or ArrayOp instance, but got: [%s]",
              paste(class(data_source), collapse = ', '))
       if(is.list(data_source)){
-        fieldExprs = utils::modifyList(as.list(self$attrs), data_source)
-        self$reshape(fieldExprs)
+        mutatedFields = names(data_source)
+        if(!.has_len(mutatedFields %n% self$dims)) { # Only attrs muated
+          self$reshape(utils::modifyList(as.list(self$attrs), data_source))
+        } else {
+          self$create_new_with_same_schema(
+            afl(
+              self$reshape(utils::modifyList(as.list(self$dims_n_attrs), data_source), 
+                         dim_mode = 'drop', artificial_field = artificial_field)
+              %redimension% self$to_schema_str()))
+        }
       }
     }
     ,
