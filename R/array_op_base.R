@@ -447,6 +447,21 @@ Please select on left operand's fields OR do not select on either operand. Look 
     }
     ,
     #' @description 
+    #' Mutate the content of a target arrayOp (self)
+    #' 
+    #' @param data_source A named list of mutated field expressions
+    #' @return a new arrayOp instance that carries the mutated data and has the exact same schema as the target
+    mutate = function(data_source) {
+      assert(inherits_any(data_source, c('list', 'ArrayOpBase')), 
+             "ERROR: ArrayOpBase$mutate: param 'data_source' must be a named list or ArrayOp instance, but got: [%s]",
+             paste(class(data_source), collapse = ', '))
+      if(is.list(data_source)){
+        fieldExprs = utils::modifyList(as.list(self$attrs), data_source)
+        self$reshape(fieldExprs)
+      }
+    }
+    ,
+    #' @description 
     #' Create a new ArrayOp instance by joining with another ArrayOp 
     #' 
     #' Currently implemented with scidb `equi_join` operator.

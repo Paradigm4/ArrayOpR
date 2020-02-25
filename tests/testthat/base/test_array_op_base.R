@@ -685,6 +685,22 @@ test_that("Auto increment the reference attribute", {
 
 
 
+# Mutate array content ----
+# 
+
+test_that("Mutate array content by providing literal values/expressions", {
+  Target = newArrayOp("Target", dims = c('da', 'db', 'dc'), attrs = c('aa', 'ab', 'ac'), 
+                      dtypes = list('da'='int64', 'db'='int64', 'dc'='int64', 'aa'='string zip', 'ab'='bool', 'ac'='double nullable'),
+                      dim_specs = list('da' = 'da_spec', 'db' = 'db_spec', 'dc' = 'dc_spec'))
+  mutated = Target$mutate(list('aa' = "'mutated'"))
+  assert_afl_equal(mutated$to_afl(), 
+                   "project(apply(project(apply(Target, _aa, 'mutated'), ab, ac, _aa), aa, _aa), aa, ab, ac)")
+  mutated = Target$mutate(list('ac' = 'double(null)', 'aa' = "'mutated'"))
+  assert_afl_equal(mutated$to_afl(), 
+                   "project(apply(project(apply(Target, _ac, double(null), _aa, 'mutated'), ab, _ac, _aa), ac, _ac, aa, _aa), aa, ab, ac)")
+  
+})
+
 # Update array content with partial attributes/dimensions ----
 # 
 # Use case: 
