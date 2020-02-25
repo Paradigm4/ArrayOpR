@@ -714,7 +714,18 @@ test_that("Mutate array content by providing mutated dimension expressions", {
           da, _da),
         da, db, dc, aa, ab, ac),
   <aa:string zip, ab: bool, ac:double nullable> [da=da_spec; db=db_spec; dc=dc_spec])")
-  
+  mutated = Target$where(ac > 3.14 && aa == 'pi')$mutate(list('aa' = "'PI'", 'da' = 42L), artificial_field = 'z')
+  assert_afl_equal(mutated$to_afl(), 
+     "
+  redimension(
+     project(
+        apply(
+          project(
+            apply(unpack(filter(Target, ac > 3.14 and aa = 'pi'), z), _aa, 'PI', _da, 42), 
+            db, dc, ab, ac, _aa, _da),
+          aa, _aa, da, _da),
+        da, db, dc, aa, ab, ac),
+  <aa:string zip, ab: bool, ac:double nullable> [da=da_spec; db=db_spec; dc=dc_spec])")
 })
 
 # Update array content with partial attributes/dimensions ----
