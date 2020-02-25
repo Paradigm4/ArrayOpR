@@ -937,6 +937,17 @@ Only data.frame is supported", class(df))
     }
     ,
     #' @description 
+    #' Update self's content from a data source
+    #' 
+    #' @param data_source An arrayOp instance
+    #' @return A new arrayOp that encapsulates the insert operation
+    update_by = function(data_source) {
+      self$create_new_with_same_schema(afl(
+        data_source %insert% self
+      ))
+    }
+    ,
+    #' @description 
     #' Create a new ArrayOp instance from a `self` template
     #' 
     #' This function is mainly for array schema string generation where we might want to rename and/or exclude certain

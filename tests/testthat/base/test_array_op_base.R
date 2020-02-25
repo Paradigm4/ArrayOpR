@@ -641,3 +641,48 @@ test_that("Auto increment the reference attribute", {
 })
 
 
+
+
+# Update array content with partial attributes/dimensions ----
+# 
+# Use case: 
+# A target array with <aa, ab, ac, ad> [da; db; dc]
+# A data source array with a subset of target's dims_n_attrs
+# Expected behavior:
+# Target array is updated with Source's data. 
+# Only the content of matched variables is updated; unmatched variables remains the same
+# 
+
+Target = newArrayOp("Target", dims = c('da', 'db', 'dc'), attrs = c('aa', 'ab', 'ac'), 
+                    dtypes = list('da'='int64', 'db'='int64', 'dc'='int64', 'aa'='string zip', 'ab'='bool', 'ac'='double nullable'),
+                    dim_specs = list('da' = 'da_spec', 'db' = 'db_spec', 'dc' = 'dc_spec'))
+
+test_that("Update with matching dimensions and matching attributes", {
+  source = newArrayOp("Source", c('da', 'db', 'dc'), c('aa', 'ab', 'ac'), dtypes = Target$get_field_types(), dim_specs = Target$get_dim_specs())
+  # If all variable types match, their names do not matter
+  source2 = newArrayOp("Source", c('xda', 'xdb', 'xdc'), c('xaa', 'xab', 'xac'), 
+                       dtypes = list('xda'='int64', 'xdb'='int64', 'xdc'='int64', 'xaa'='string zip', 'xab'='bool', 'xac'='double nullable'),
+                       dim_specs = list('xda' = 'da_spec', 'xdb' = 'db_spec', 'xdc' = 'dc_spec'))
+  op = Target$update_by(source)
+  op2 = Target$update_by(source2)
+  assert_afl_equal(op$to_afl(), "insert(Source, Target)")
+  assert_afl_equal(op2$to_afl(), "insert(Source, Target)")
+})
+
+test_that("Update with 'where' clause ", {
+  source = Target$where(da > 2 && aa == 'string')$reshape(list('aa', 'ab', 'ac' = 42), dtypes = list(ac='dboule nullable'))$reshape(list('aa', 'ab', 'ac'))
+  op = Target$update_by(source)
+  assert_afl_equal(op$to_afl(), 
+  "insert(
+    project(
+      apply(
+        project(
+          apply(
+            filter(Target, da > 2 and aa = 'string'),
+            _ac, 42), 
+          aa, ab, _ac),
+        ac, _ac),
+      aa, ab, ac),
+  Target)")
+})
+
