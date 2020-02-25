@@ -72,7 +72,32 @@ RepoDAO <- R6::R6Class(
                    dtypes = c(attrDtypes, dimDtypes),
                    dim_specs=as.list(rlang::set_names(dimMatrix[,3], dims)))
     }
+    ,
+    execute_raw = function(what, ...) {
+      try(repo$execute(what, ...), silent = settings$ignore_error)
+    }
+    ,
+    query_raw = function(what, ...) {
+      try(repo$query(what, ...), silent = settings$ignore_error)
+    }
+    ,
+    # Get an operand represented by 'what'
+    # @param what: arrayOp instance, or a string (either AFL statement or an R expression)
+    # @param .raw: If .raw = FALSE and 'what' is a string, then 'what' is parsed to an arrayOp instance; 
+    # Otherwise, .raw = TRUE, return 'what' as the operand 
+    # @return: An arrayOp isntance or a AFL statement
+    get_operand = function(what, .raw, .env) {
+      assert(inherits(what, 'ArrayOpBase') || 
+               (inherits(what, 'character') && length(what) == 1), 
+             "ERROR: RepoDAO: get_operand: param 'what' must be a single ArrayOp instance or string, but got: [%s]",
+             paste(class(what), collapse = ','))
+      if(is.character(what) && !.raw) # 'what' is an R expression
+        evaluate_statement(what, .env = .env)  # Eval the expression and return an arrayOp
+      else
+        what
+    }
   )
+  # Public ----
   ,
   public = list(
     settings = NULL,
@@ -156,13 +181,12 @@ RepoDAO <- R6::R6Class(
     #' @param .dry_run If TRUE, only return evaluated query statement. Default FALSE
     #' @param .env An R env or list for R variable substitution
     #' @return A data frame
-    query = function(stmt, ..., .dry_run = FALSE, .env = parent.frame()) {
-      # 'evaluated' should be an ArrayOp object or string
-      evaluated = evaluate_statement(stmt, .env = .env)
+    query = function(what, ..., .dry_run = FALSE, .raw = FALSE, .env = parent.frame()) {
+      op = get_operand(what, .raw = .raw, .env = .env)
       if(.dry_run)
-        evaluated
+        op
       else
-        query_raw(evaluated, ...)
+        query_raw(op, ...)
     }
     ,
     #' Execute a query.
@@ -177,13 +201,12 @@ RepoDAO <- R6::R6Class(
     #' @param .dry_run If TRUE, only return evaluated query statement. Default FALSE
     #' @param .env An R env or list for R variable substitution
     #' @return NULL
-    execute = function(stmt, ..., .dry_run = FALSE, .env = parent.frame()) {
-      # 'evaluated' should be an ArrayOp object or string
-      evaluated = evaluate_statement(stmt, .env = .env)
+    execute = function(what, ..., .dry_run = FALSE, .raw = FALSE, .env = parent.frame()) {
+      op = get_operand(what, .raw = .raw, .env = .env)
       if(.dry_run)
-        evaluated
+        op
       else
-        execute_raw(evaluated, ...)
+        execute_raw(op, ...)
     }
     # Functions for internal use only ---------------------------------------------------------------------------------
     ,
@@ -262,25 +285,20 @@ This can NOT be undone!!!", ns)
       }
     }
     ,
-    nrow = function(what, .raw = F) {
-      op = if(.raw) what else query(what, .dry_run = T)
+    nrow = function(what, .dry_run = FALSE, .raw = FALSE, .env = parent.frame()) {
+      # op = if(.raw) what else query(what, .dry_run = T)
+      op = get_operand(what, .raw = .raw, .env = .env)
       res = query_raw(arrayop::afl(op %op_count% NULL))
       res$count
     }
     ,
-    limit = function(what, count, offset = NULL, .raw = F) {
-      op = if(.raw) what else query(what, .dry_run = T)
+    limit = function(what, count, offset = NULL, .raw = FALSE, .env = parent.frame()) {
+      # op = if(.raw) what else query(what, .dry_run = T)
+      op = get_operand(what, .raw = .raw, .env = .env)
       res = query_raw(arrayop::afl(op %limit% c(count, offset)))
       res
     }
-    ,
-    execute_raw = function(what, ...) {
-      try(repo$execute(what, ...), silent = settings$ignore_error)
-    }
-    ,
-    query_raw = function(what, ...) {
-      try(repo$query(what, ...), silent = settings$ignore_error)
-    }
+   
     ,
     infer_array_schema = function(df, dim_specs = NULL, afl_literal = '', ...) {
       

@@ -18,13 +18,13 @@ new_df = function(...) {
 ## Query and Execute functions are delegated to Repo class ----
 
 test_that("Raw query", {
-  expect_identical(dao$query_raw("abc"), list('query', 'abc'))
-  expect_identical(dao$query_raw("abc", extra_arg = 42), list('query', 'abc', extra_arg = 42))
+  expect_identical(dao$query("abc", .raw = T), list('query', 'abc'))
+  expect_identical(dao$query("abc", extra_arg = 42, .raw = T), list('query', 'abc', extra_arg = 42))
 })
 
 test_that("Raw execute", {
-  expect_identical(dao$execute_raw("abc"), list('execute', 'abc'))
-  expect_identical(dao$execute_raw("abc", extra_arg = 42), list('execute', 'abc', extra_arg = 42))
+  expect_identical(dao$execute("abc", .raw = T), list('execute', 'abc'))
+  expect_identical(dao$execute("abc", extra_arg = 42, .raw = T), list('execute', 'abc', extra_arg = 42))
 })
 
 test_that("Get array", {
@@ -52,13 +52,21 @@ dao = newRepoDao(repo = repo, db = NULL)
 
 test_that("nrows", {
   stub(dao$nrow, 'query_raw', function(q, ...) new_df(i=0, count=q))
-  expect_equal(dao$nrow('alias_a', ), "op_count(NS.A)")
+  expect_equal(dao$nrow('alias_a'), "op_count(NS.A)")
+  expect_equal(dao$nrow(dao$get_array('alias_a')), "op_count(NS.A)")
   assert_afl_equal(dao$nrow('alias_a where (b > 3)'), "op_count(filter(NS.A, b > 3))")
+  assert_afl_equal(dao$nrow('operator(other_ns.array)', .raw = T), "op_count(operator(other_ns.array))")
 })
 
 test_that("head", {
   # stub(dao$limit, 'query_raw', data.frame(i=0, count=42))
   assert_afl_equal(dao$limit('alias_a', 5), "limit(NS.A, 5)")
+  assert_afl_equal(dao$limit('alias_a', 5), "limit(NS.A, 5)")
   assert_afl_equal(dao$limit('alias_a', 5, 3), "limit(NS.A, 5, 3)")
+  
+  arr = dao$get_array('alias_a')
+  assert_afl_equal(dao$limit(arr$where(b > 3), 5), "limit(filter(NS.A, b > 3), 5)")
   assert_afl_equal(dao$limit('alias_a where (b > 3)', 5), "limit(filter(NS.A, b > 3), 5)")
+  
+  assert_afl_equal(dao$limit('operator(other_ns.array)', 5, .raw = T), "limit(operator(other_ns.array), 5)")
 })
