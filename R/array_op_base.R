@@ -449,7 +449,9 @@ Please select on left operand's fields OR do not select on either operand. Look 
     #' @description 
     #' Mutate the content of a target arrayOp (self)
     #' 
-    #' @param data_source A named list of mutated field expressions
+    #' @param data_source A named list of mutated field expressions or an arrayOp instance
+    #' If 'data_source' is a named list that contains target's dimensions, then the number of matching cells should be
+    #' 0 or 1. Mutiple matching cells would cause dimension collision error. 
     #' @return a new arrayOp instance that carries the mutated data and has the exact same schema as the target
     mutate = function(data_source, artificial_field = .random_attr_name()) {
       assert(inherits_any(data_source, c('list', 'ArrayOpBase')), 
@@ -466,6 +468,18 @@ Please select on left operand's fields OR do not select on either operand. Look 
                          dim_mode = 'drop', artificial_field = artificial_field)
               %redimension% self$to_schema_str()))
         }
+      } else {
+        ## data_source is an arrayOp instance
+        # assume data_soruce has the same dimension with the target
+        updatedFields = data_source$attrs %n% self$attrs
+        reservedFields = self$attrs %-% updatedFields
+        assert_has_len(updatedFields, "ERROR: ArrayOp$mutate: param 'data_source' does not have any target attributes to mutate.")
+        self$create_new_with_same_schema(
+          afl(
+            data_source$reshape(updatedFields) %join% 
+              .ifelse(.has_len(reservedFields), self$reshape(reservedFields), self)
+          )
+        )$reshape(self$attrs)
       }
     }
     ,

@@ -686,7 +686,8 @@ test_that("Auto increment the reference attribute", {
 
 
 # Mutate array content ----
-# 
+
+# Data source from a named list 
 
 Target = newArrayOp("Target", dims = c('da', 'db', 'dc'), attrs = c('aa', 'ab', 'ac'), 
                     dtypes = list('da'='int64', 'db'='int64', 'dc'='int64', 'aa'='string zip', 'ab'='bool', 'ac'='double nullable'),
@@ -728,6 +729,27 @@ test_that("Mutate array content by providing mutated dimension expressions", {
   <aa:string zip, ab: bool, ac:double nullable> [da=da_spec; db=db_spec; dc=dc_spec])")
 })
 
+# Data source from an arrayOp instance
+
+Target = newArrayOp("Target", dims = c('da', 'db', 'dc'), attrs = c('aa', 'ab', 'ac'), 
+                    dtypes = list('da'='int64', 'db'='int64', 'dc'='int64', 'aa'='string zip', 'ab'='bool', 'ac'='double nullable'),
+                    dim_specs = list('da' = 'da_spec', 'db' = 'db_spec', 'dc' = 'dc_spec'))
+
+test_that("Mutate array content from an arrayOp data source", {
+  ds = newArrayOp("DS", Target$dims, attrs = c('aa', 'ac'), dtypes = Target$get_field_types(), dim_specs = Target$get_dim_specs())
+  mutated = Target$mutate(ds)
+  assert_afl_equal(mutated$to_afl(),
+  "project(
+    join(
+      project(DS, aa, ac),
+      project(Target, ab)
+    ), 
+    aa, ab, ac)
+  ")
+})
+
+
+ 
 # Update array content with partial attributes/dimensions ----
 # 
 # Use case: 
