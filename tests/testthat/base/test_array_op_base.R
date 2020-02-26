@@ -731,11 +731,11 @@ test_that("Mutate array content by providing mutated dimension expressions", {
 
 # Data source from an arrayOp instance
 
-Target = newArrayOp("Target", dims = c('da', 'db', 'dc'), attrs = c('aa', 'ab', 'ac'), 
+Target = ArrayOpV19$new("Target", dims = c('da', 'db', 'dc'), attrs = c('aa', 'ab', 'ac'), 
                     dtypes = list('da'='int64', 'db'='int64', 'dc'='int64', 'aa'='string zip', 'ab'='bool', 'ac'='double nullable'),
                     dim_specs = list('da' = 'da_spec', 'db' = 'db_spec', 'dc' = 'dc_spec'))
 
-test_that("Mutate array content from an arrayOp data source", {
+test_that("Mutate array content by an arrayOp data source with full dimensions", {
   ds = newArrayOp("DS", Target$dims, attrs = c('aa', 'ac'), dtypes = Target$get_field_types(), dim_specs = Target$get_dim_specs())
   mutated = Target$mutate(ds)
   assert_afl_equal(mutated$to_afl(),
@@ -743,6 +743,38 @@ test_that("Mutate array content from an arrayOp data source", {
     join(
       project(DS, aa, ac),
       project(Target, ab)
+    ), 
+    aa, ab, ac)
+  ")
+  ds = newArrayOp("DS", Target$dims, attrs = c('ab'), dtypes = Target$get_field_types(), dim_specs = Target$get_dim_specs())
+  mutated = Target$mutate(ds)
+  assert_afl_equal(mutated$to_afl(),
+  "project(
+    join(
+      project(DS, ab),
+      project(Target, aa, ac)
+    ), 
+    aa, ab, ac)
+  ")
+})
+
+test_that("Mutate array content from an arrayOp data source with partial dimensions", {
+  ds = ArrayOpV19$new("DS", dims = c('da', 'db'), attrs = c('aa', 'ac'), dtypes = Target$get_field_types(), dim_specs = Target$get_dim_specs())
+  mutated = Target$mutate(ds, keys = c('da', 'db', 'aa'), updated_fields = 'ac')
+  assert_afl_equal(mutated$to_afl(),
+  "project(
+    join(
+      project(
+        redimension(
+          project(
+            equi_join(
+              project(DS, ac, aa) as _L, 
+              project(apply(Target, dc, dc), dc, aa) as _R, 
+                left_names:(_L.da, _L.db, _L.aa), right_names:(_R.da, _R.db, _R.aa)),
+            ac, da, db, dc),
+          <ac:double nullable> [da=da_spec; db=db_spec; dc=dc_spec]),
+        ac),
+      project(Target, aa, ab)
     ), 
     aa, ab, ac)
   ")
@@ -777,7 +809,7 @@ test_that("Update with matching dimensions and matching attributes", {
 })
 
 test_that("Update with 'where' clause ", {
-  source = Target$where(da > 2 && aa == 'string')$reshape(list('aa', 'ab', 'ac' = 42), dtypes = list(ac='dboule nullable'))
+  source = Target$where(da > 2 && aa == 'string')$mutate(list('ac' = 42))
   op = Target$update_by(source)
   assert_afl_equal(op$to_afl(), 
   "insert(

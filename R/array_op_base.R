@@ -208,6 +208,32 @@ Please select on left operand's fields OR do not select on either operand. Look 
                       validate_fields = private$get_meta('validate_fields'))
       
     }
+    ,
+    # Reshape an arrayOp on a compound key (consisted of one or multiple fields) according to the template (self)
+    # 
+    # If the operands have the same dimensions as the template, then only 'project' fields
+    # If the key contains all template's dimensions, then 'redimension' the operand and 'project' unrelated fields
+    # Otherwise, 'equi_join' is needed
+    # 
+    # Return an arrayOp that has the same shape as the template (self)
+    key_to_coordinates = function(arr, keys, reserved_fields,
+                                  .redimension_setting = NULL, .join_setting = NULL){
+      if(length(arr$dims) == length(self$dims) && all(arr$dims == self$dims))
+        # If all dimensions match, no need to do anything about dimensions.
+        return(arr$reshape(reserved_fields))
+      
+      arrKeyFields = .get_element_names(keys)
+      templateKeyFields = as.character(keys)
+      
+      if(all(self$dims %in% arrKeyFields)){
+        return(private$afl_redimension(arr, .setting = .redimension_setting)$reshape(reserved_fields))
+      }
+      
+      joinOp = arr$select(reserved_fields %u% (self$dims %n% arr$dims_n_attrs))$
+        join(self$select(self$dims), 
+             on_left = arrKeyFields, on_right = templateKeyFields)
+      private$afl_redimension(joinOp, .setting = .redimension_setting)
+    }
     ### Implement raw AFL function ----
     # Functions prefixed with 'afl_' are implemented according to scidb operators with sanity checks.
     ,
@@ -236,6 +262,20 @@ Please select on left operand's fields OR do not select on either operand. Look 
       newDTypes = utils::modifyList(self$get_field_types(), as.list(dtypes))
       self$create_new(afl(self %apply% afl_join_fields(fieldNames, fieldExprs)), dims = self$dims, 
                       attrs = self$attrs %u% fields, dtypes = newDTypes, dim_specs = self$get_dim_specs())
+    }
+    ,
+    # Redimension the operand arrayOp instance
+    # 
+    # @param .setting a string vector, where each item will be appended to the redimension operand.
+    # E.g. .setting = c('false', 'cells_per_chunk: 1234') ==> redimension(source, template, false, cells_per_chunk: 1234)
+    # Similar to scidb redimension operator
+    afl_redimension = function(operand, .setting = NULL) {
+      matchingFields = operand$dims_n_attrs %n% self$dims_n_attrs
+      assert_has_len(matchingFields, "ERROR: ArrayOp$afl_redimension: No matching fields found.\nSource:%s\nTemplate:\n",
+                     str(self), str(operand))
+      template = self$spawn(excluded = self$dims_n_attrs %-% matchingFields)
+      
+      template$create_new_with_same_schema(afl(operand %redimension% c(template$to_schema_str(), as.character(.setting)) ))
     }
   ),
   active = list(
@@ -444,43 +484,6 @@ Please select on left operand's fields OR do not select on either operand. Look 
         # 'ignore_in_parent' = ignore_in_parent,
         stopf("ERROR: ArrayOp$reshape: invalid 'dim_mode' %s.", dim_mode)
       ) ()
-    }
-    ,
-    #' @description 
-    #' Mutate the content of a target arrayOp (self)
-    #' 
-    #' @param data_source A named list of mutated field expressions or an arrayOp instance
-    #' If 'data_source' is a named list that contains target's dimensions, then the number of matching cells should be
-    #' 0 or 1. Mutiple matching cells would cause dimension collision error. 
-    #' @return a new arrayOp instance that carries the mutated data and has the exact same schema as the target
-    mutate = function(data_source, artificial_field = .random_attr_name()) {
-      assert(inherits_any(data_source, c('list', 'ArrayOpBase')), 
-             "ERROR: ArrayOpBase$mutate: param 'data_source' must be a named list or ArrayOp instance, but got: [%s]",
-             paste(class(data_source), collapse = ', '))
-      if(is.list(data_source)){
-        mutatedFields = names(data_source)
-        if(!.has_len(mutatedFields %n% self$dims)) { # Only attrs muated
-          self$reshape(utils::modifyList(as.list(self$attrs), data_source))
-        } else {
-          self$create_new_with_same_schema(
-            afl(
-              self$reshape(utils::modifyList(as.list(self$dims_n_attrs), data_source), 
-                         dim_mode = 'drop', artificial_field = artificial_field)
-              %redimension% self$to_schema_str()))
-        }
-      } else {
-        ## data_source is an arrayOp instance
-        # assume data_soruce has the same dimension with the target
-        updatedFields = data_source$attrs %n% self$attrs
-        reservedFields = self$attrs %-% updatedFields
-        assert_has_len(updatedFields, "ERROR: ArrayOp$mutate: param 'data_source' does not have any target attributes to mutate.")
-        self$create_new_with_same_schema(
-          afl(
-            data_source$reshape(updatedFields) %join% 
-              .ifelse(.has_len(reservedFields), self$reshape(reservedFields), self)
-          )
-        )$reshape(self$attrs)
-      }
     }
     ,
     #' @description 
@@ -731,8 +734,9 @@ Only data.frame is supported", class(df))
       afl_literal = sprintf("build(<%s>[%s], '[%s]', true)", 
         attrStr, artificial_field, paste(rowStrs, collapse = ','))
       
+      builtDtypes[[artificial_field]] = 'int64'
       return(self$create_new(afl_literal, artificial_field, builtAttrs, 
-        dtypes = c(list(artificial_field = 'int64'), builtDtypes)))
+        dtypes = builtDtypes))
     }
     ,
     #' @description 
@@ -981,7 +985,70 @@ Only data.frame is supported", class(df))
     }
     ,
     #' @description 
+    #' Mutate the content of a target arrayOp (self)
+    #' 
+    #' @param data_source A named list of mutated field expressions or an arrayOp instance
+    #' If 'data_source' is a named list that contains target's dimensions, then the number of matching cells should be
+    #' 0 or 1. Mutiple matching cells would cause dimension collision error. 
+    #' @return a new arrayOp instance that carries the mutated data and has the exact same schema as the target
+    mutate = function(data_source, keys = NULL, updated_fields = NULL, artificial_field = .random_attr_name(), 
+                      .redimension_setting = NULL, .join_setting = NULL) {
+      assert(inherits_any(data_source, c('list', 'ArrayOpBase')), 
+             "ERROR: ArrayOpBase$mutate: param 'data_source' must be a named list or ArrayOp instance, but got: [%s]",
+             paste(class(data_source), collapse = ', '))
+      
+      
+      
+      mutate_by_field_exprs = function(){
+        mutatedFields = names(data_source)
+        assert(length(mutatedFields) == length(data_source), 
+               "ERROR: ArrayOp$mutate: param 'data_source', if a list, must have names as the mutated fields, and values as mutated values/expressions.")
+        absentFields = mutatedFields %-% self$dims_n_attrs
+        assert_not_has_len(absentFields, "ERROR: ArrayOp$mutate: %d unrecognized mutated field(s): %s", 
+                           length(absentFields), paste(absentFields, collapse = ', '))
+        if(!.has_len(mutatedFields %n% self$dims)) { # Only attrs muated
+          self$reshape(utils::modifyList(as.list(self$attrs), data_source))
+        } else {
+          self$create_new_with_same_schema(
+            afl(
+              self$reshape(utils::modifyList(as.list(self$dims_n_attrs), data_source), 
+                           dim_mode = 'drop', artificial_field = artificial_field)
+              %redimension% self$to_schema_str()))
+        }
+      }
+      
+      mutate_by_arrayop = function(source, updatedFields, reservedFields) {
+        # updatedFields = data_source$attrs %n% self$attrs
+        # reservedFields = self$attrs %-% updatedFields
+        assert_has_len(updatedFields, "ERROR: ArrayOp$mutate: param 'data_source' does not have any target attributes to mutate.")
+        self$create_new_with_same_schema(
+          afl(
+            source$reshape(updatedFields) %join% 
+              .ifelse(.has_len(reservedFields), self$reshape(reservedFields), self)
+          )
+        )$reshape(self$attrs)
+      }
+      
+      if(is.list(data_source)){
+        mutate_by_field_exprs()
+      } else {
+        ## data_source is an arrayOp instance
+        # assume data_soruce has the same dimension with the target
+        updatedFields = if(.has_len(updated_fields)) updated_fields else data_source$attrs %n% self$attrs
+        reservedFields = self$attrs %-% updatedFields
+        needTransform = !(length(data_source$dims) == length(self$dims) && all(data_source$dims == self$dims))
+        if(needTransform){
+          data_source = private$key_to_coordinates(data_source, keys = keys, reserved_fields = updatedFields, 
+                                                   .redimension_setting = .redimension_setting, .join_setting = .join_setting)
+        }
+        mutate_by_arrayop(data_source, updatedFields, reservedFields)
+      }
+    }
+    ,
+    #' @description 
     #' Update self's content from a data source
+    #' 
+    #' Similar behavior to scidb insert operator
     #' 
     #' @param data_source An arrayOp instance
     #' @return A new arrayOp that encapsulates the insert operation
