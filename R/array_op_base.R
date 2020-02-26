@@ -291,12 +291,12 @@ Please select on left operand's fields OR do not select on either operand. Look 
     # @param target: Target array
     # @return An scidb insert operation
     afl_insert = function(target) {
-      assert(length(self$dims) == length(target$dims), "ERROR: ArrayOp$afl_insert: dimensions mismtach: %d != %d",
-             length(self$dims), length(target$dims))
-      assert(length(self$attrs) == length(target$attrs), "ERROR: ArrayOp$afl_insert: attributes mismtach: %d != %d",
-             length(self$attrs), length(target$attrs))
+      assert(length(self$dims) == length(target$dims), "ERROR: ArrayOp$afl_insert: dimension number mismtach: %d[%s] != %d[%s]",
+             length(self$dims), paste(self$dims, collapse=','), length(target$dims), paste(target$dims, collapse = ','))
+      assert(length(self$attrs) == length(target$attrs), "ERROR: ArrayOp$afl_insert: attribute number mismtach: %d[%s] != %d[%s]",
+             length(self$attrs), paste(self$attrs, collapse = ','), length(target$attrs), paste(target$attrs, collapse = ','))
       assert(all(as.character(self$get_field_types(.raw = TRUE)) == as.character(target$get_field_types(.raw = TRUE))),
-             "ERROR: ArrayOp$afl_insert: attribute data types mismatch. \nSource: %s\nTarget: %s", 
+             "ERROR: ArrayOp$afl_insert: attribute data type mismatch. \nSource: %s\nTarget: %s", 
              self$to_schema_str(), target$to_schema_str())
       target$create_new_with_same_schema(afl(self %insert% target))
     }

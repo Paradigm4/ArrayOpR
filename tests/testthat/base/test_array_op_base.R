@@ -870,3 +870,16 @@ test_that("Update with 'where' clause ", {
   Target)")
 })
 
+test_that("Update() negative tests", {
+  create_source_array = function(dims = Target$dims, attrs = Target$attrs, array_name = 'Source', dtypes = Target$get_field_types()) {
+    newArrayOp(array_name, dims, attrs, dtypes = dtypes, dim_specs = Target$get_dim_specs())
+  }
+  expect_error(create_source_array(dims = c('da', 'db'))$update(Target), "dimension number mismtach")
+  expect_error(create_source_array(attrs = c('aa', 'ac'))$update(Target), "attribute number mismtach")
+  expect_error(create_source_array(dtypes = utils::modifyList(Target$get_field_types(), list('aa'='newType')))$
+                 update(Target), "attribute data type mismatch")
+  # Only requires raw data type matches
+  assert_afl_equal(create_source_array(dtypes = utils::modifyList(Target$get_field_types(), list('aa'='string zip zip zip')))$
+                     update(Target)$to_afl(), "insert(Source, Target)")
+})
+
