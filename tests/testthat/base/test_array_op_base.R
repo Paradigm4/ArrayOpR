@@ -848,15 +848,14 @@ test_that("Update with matching dimensions and matching attributes", {
   source2 = newArrayOp("Source", c('xda', 'xdb', 'xdc'), c('xaa', 'xab', 'xac'), 
                        dtypes = list('xda'='int64', 'xdb'='int64', 'xdc'='int64', 'xaa'='string zip', 'xab'='bool', 'xac'='double nullable'),
                        dim_specs = list('xda' = 'da_spec', 'xdb' = 'db_spec', 'xdc' = 'dc_spec'))
-  op = Target$update_by(source)
-  op2 = Target$update_by(source2)
+  op = source$update(Target)
+  op2 = source2$update(Target)
   assert_afl_equal(op$to_afl(), "insert(Source, Target)")
   assert_afl_equal(op2$to_afl(), "insert(Source, Target)")
 })
 
 test_that("Update with 'where' clause ", {
-  source = Target$where(da > 2 && aa == 'string')$mutate(list('ac' = 42))
-  op = Target$update_by(source)
+  op = Target$where(da > 2 && aa == 'string')$mutate(list('ac' = 42))$update(Target)
   assert_afl_equal(op$to_afl(), 
   "insert(
     project(

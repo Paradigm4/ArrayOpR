@@ -283,6 +283,23 @@ Please select on left operand's fields OR do not select on either operand. Look 
       
       template$create_new_with_same_schema(afl(operand %redimension% c(template$to_schema_str(), as.character(.setting)) ))
     }
+    ,
+    # Insert to a target array
+    # 
+    # Perform field data types check. Field names are irrelevant
+    # 
+    # @param target: Target array
+    # @return An scidb insert operation
+    afl_insert = function(target) {
+      assert(length(self$dims) == length(target$dims), "ERROR: ArrayOp$afl_insert: dimensions mismtach: %d != %d",
+             length(self$dims), length(target$dims))
+      assert(length(self$attrs) == length(target$attrs), "ERROR: ArrayOp$afl_insert: attributes mismtach: %d != %d",
+             length(self$attrs), length(target$attrs))
+      assert(all(as.character(self$get_field_types(.raw = TRUE)) == as.character(target$get_field_types(.raw = TRUE))),
+             "ERROR: ArrayOp$afl_insert: attribute data types mismatch. \nSource: %s\nTarget: %s", 
+             self$to_schema_str(), target$to_schema_str())
+      target$create_new_with_same_schema(afl(self %insert% target))
+    }
   ),
   active = list(
     #' @field dims Dimension names
@@ -1016,11 +1033,10 @@ Only data.frame is supported", class(df))
         if(!.has_len(mutatedFields %n% self$dims)) { # Only attrs muated
           self$reshape(utils::modifyList(as.list(self$attrs), data_source))
         } else {
-          self$create_new_with_same_schema(
-            afl(
-              self$reshape(utils::modifyList(as.list(self$dims_n_attrs), data_source), 
-                           dim_mode = 'drop', artificial_field = artificial_field)
-              %redimension% self$to_schema_str()))
+          private$afl_redimension(
+            self$reshape(utils::modifyList(as.list(self$dims_n_attrs), data_source), 
+                         dim_mode = 'drop', artificial_field = artificial_field)
+          )
         }
       }
       
@@ -1053,16 +1069,15 @@ Only data.frame is supported", class(df))
     }
     ,
     #' @description 
-    #' Update self's content from a data source
+    #' Update Target array with self's content
     #' 
     #' Similar behavior to scidb insert operator
     #' 
-    #' @param data_source An arrayOp instance
+    #' @param target An arrayOp instance where self's content is written to.
     #' @return A new arrayOp that encapsulates the insert operation
-    update_by = function(data_source) {
-      self$create_new_with_same_schema(afl(
-        data_source %insert% self
-      ))
+    update = function(target) {
+      assert(inherits(target, 'ArrayOpBase'), "ERROR: ArrayOp$update: param 'target' must be an arrayOp, but got [%s]", paste(class(data_source), collapse = ', '))
+      private$afl_insert(target)
     }
     ,
     #' @description 
