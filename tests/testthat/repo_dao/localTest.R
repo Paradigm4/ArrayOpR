@@ -14,29 +14,31 @@ V = dao$get_array("unittest.V <ref:string,alt:string,rsid:string,vep_gene:string
 ds = V$build_new(data.frame(ref = c('A', 'A'), rsid = c('rs35597240', 'rs9661808'), vep_gene = c('gene11', 'gene22'), alt = 'MUTATED',
                             stringsAsFactors = F))
 
-updateOp = V$update_by(
-  V$mutate(ds, keys = c('ref', 'rsid'), updated_fields = c('vep_gene', 'alt'))
-)
+updateOp =  V$mutate(ds, keys = c('ref', 'rsid'), updated_fields = c('vep_gene', 'alt'))$update(V)
 
 print(updateOp$to_afl())
 
-print(V$update_by(
-  V$where(pos <= 62002484)$mutate(list(vep_gene = "'mutated by list expression'", rsid = "iif(alt='G', 'GGGG', 'NOT ggggg')"))
-)$to_afl())
+print(
+  V$where(pos <= 62002484)$mutate(list(vep_gene = "'mutated by list expression'", rsid = "iif(alt='G', 'GGGG', 'NOT ggggg')"))$
+    update(V)$to_afl())
 
-print(V$update_by(
-  V$where(pos <= 62002484)$mutate(list(vep_gene = "string(null)"))
-)$to_afl())
+print(
+  V$where(pos <= 62002484)$mutate(list(vep_gene = "string(null)"))$update(V)
+$to_afl())
 
+
+# Try with matching attrs
+ds = V$build_new(data.frame(rsid=c('rs35597240', 'rs9661808', 'rs1556483'), ref=c('A', 'A', 'non-existent'),
+                            vep_gene = c('A', 'B', 'C'),
+                            stringsAsFactors = F))
+
+print(V$mutate(ds, keys = c('rsid', 'ref'), updated_fields = 'vep_gene')$update(V)$to_afl())
 
 # Try with matching dimensions
 ds = V$build_new(data.frame(chrom=1L, pos = c(62002418, 62002484, 62007946), alt_id = 0, vep_gene = c('A', 'B', 'C'),
                             stringsAsFactors = F))
 
-print(V$update_by(
-    V$mutate(ds, keys = V$dims, updated_fields = 'vep_gene')
-  )$to_afl()
-)
+print(V$mutate(ds, keys = V$dims, updated_fields = 'vep_gene')$update(V)$to_afl())
 
 # ignore unmatched records
 ds = V$build_new(data.frame(chrom=1L, pos = c(62002418, 62002484, 62007946), alt_id = 1, vep_gene = c('A', 'B', 'C'),

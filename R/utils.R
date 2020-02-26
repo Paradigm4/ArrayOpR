@@ -15,6 +15,12 @@ assert_named_list <- function(obj, ...) {
   assert(.has_len(names(obj)) && all(names(obj) != ''), ...)
 }
 
+# %s in errorMsgFmt will be replaced the concatenated fields; only one %s is allowed. 
+# Extra format placeholders should be denoted by %%s, %%d, etc. due to the extra layer of indirection.
+assert_no_fields <- function(fields, errorMsgFmt = "Field(s) not empty: %s", ..., sep = ','){
+  assert_not_has_len(fields, sprintf(errorMsgFmt, paste(fields, collapse = sep)), ...)
+}
+
 .ifelse <- function(condition, yes, no) if(condition) yes else no
 .has_len <- function(...) rlang::has_length(...)
 
