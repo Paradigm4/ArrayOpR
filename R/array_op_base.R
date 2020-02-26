@@ -161,7 +161,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
     # Reshape an array without modifying its dimensions
     # 
     # This is an enhanced version inspired by scidb 'project' and 'apply' operators which also only work on attributes.
-    reshape_attrs = function(select=NULL, dtypes = NULL, artificial_field = .random_attr_name()) {
+    reshape_attrs = function(select=NULL, dtypes = NULL, artificial_field = .random_attr_name(), .force_project = TRUE) {
       assert(.has_len(select),
              "ERROR: ArrayOp$reshape_attrs: param 'select' must be a non-empty character list, but got: %s", 
              class(select))
@@ -197,7 +197,10 @@ Please select on left operand's fields OR do not select on either operand. Look 
         inner = self
         if(.has_len(newFieldNames))
           inner = afl(self %apply% afl_join_fields(newFieldNames, newFields))
-        afl(inner %project% attrs)
+        if(!.force_project && length(attrs) == length(self$attrs) && all(attrs == self$attrs))
+          afl(inner)
+        else
+          afl(inner %project% attrs)
       }
       else {
         attrs = artificial_field
@@ -224,9 +227,12 @@ Please select on left operand's fields OR do not select on either operand. Look 
       
       arrKeyFields = .get_element_names(keys)
       templateKeyFields = as.character(keys)
+      extraFields = arr$attrs %-% keys %-% reserved_fields
       
       if(all(self$dims %in% arrKeyFields)){
-        return(private$afl_redimension(arr, .setting = .redimension_setting)$reshape(reserved_fields))
+        if(.has_len(extraFields))
+          arr = arr$reshape(c(keys, reserved_fields))
+        return(private$afl_redimension(arr, .setting = .redimension_setting)$reshape(reserved_fields, .force_project = FALSE))
       }
       
       joinOp = arr$select(reserved_fields %u% (self$dims %n% arr$dims_n_attrs))$
@@ -460,10 +466,11 @@ Please select on left operand's fields OR do not select on either operand. Look 
     #' @param artificial_field ONLY relevant when `dim_mode='drop'`.
     #' A field name used as the artificial dimension name in 'drop' dim_mode 
     #' (internally used by `unpack` scidb operator). By default, a random string is generated.
-    reshape = function(select=NULL, dtypes = NULL, dim_mode = 'keep', artificial_field = .random_attr_name()) {
+    reshape = function(select=NULL, dtypes = NULL, dim_mode = 'keep', artificial_field = .random_attr_name(), 
+                       .force_project = TRUE) {
       
       keep = function(){
-        private$reshape_attrs(select, dtypes, artificial_field)
+        private$reshape_attrs(select, dtypes, artificial_field, .force_project = .force_project)
       }
       
       drop = function() {
@@ -1023,7 +1030,7 @@ Only data.frame is supported", class(df))
         assert_has_len(updatedFields, "ERROR: ArrayOp$mutate: param 'data_source' does not have any target attributes to mutate.")
         self$create_new_with_same_schema(
           afl(
-            source$reshape(updatedFields) %join% 
+            source$reshape(updatedFields, .force_project = FALSE) %join% 
               .ifelse(.has_len(reservedFields), self$reshape(reservedFields), self)
           )
         )$reshape(self$attrs)

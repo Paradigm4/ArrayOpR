@@ -741,7 +741,28 @@ test_that("Mutate array content by an arrayOp data source with full dimensions",
   assert_afl_equal(mutated$to_afl(),
   "project(
     join(
-      project(DS, aa, ac),
+      DS,
+      project(Target, ab)
+    ), 
+    aa, ab, ac)
+  ")
+  ds = newArrayOp("DS", Target$dims, attrs = c('ac', 'aa'), dtypes = Target$get_field_types(), dim_specs = Target$get_dim_specs())
+  mutated = Target$mutate(ds)
+  assert_afl_equal(mutated$to_afl(),
+  "project(
+    join(
+      DS,
+      project(Target, ab)
+    ), 
+    aa, ab, ac)
+  ")
+  # Extra fields in data source
+  ds = newArrayOp("DS", Target$dims, attrs = c('ac', 'aa', 'extra'), dtypes = Target$get_field_types(), dim_specs = Target$get_dim_specs())
+  mutated = Target$mutate(ds)
+  assert_afl_equal(mutated$to_afl(),
+  "project(
+    join(
+      project(DS, ac, aa),
       project(Target, ab)
     ), 
     aa, ab, ac)
@@ -751,7 +772,7 @@ test_that("Mutate array content by an arrayOp data source with full dimensions",
   assert_afl_equal(mutated$to_afl(),
   "project(
     join(
-      project(DS, ab),
+      DS,
       project(Target, aa, ac)
     ), 
     aa, ab, ac)
@@ -764,17 +785,42 @@ test_that("Mutate array content from an arrayOp data source with partial dimensi
   assert_afl_equal(mutated$to_afl(),
   "project(
     join(
-      project(
-        redimension(
-          project(
-            equi_join(
-              project(DS, ac, aa) as _L, 
-              project(apply(Target, dc, dc), dc, aa) as _R, 
-                left_names:(_L.da, _L.db, _L.aa), right_names:(_R.da, _R.db, _R.aa)),
-            ac, da, db, dc),
-          <ac:double nullable> [da=da_spec; db=db_spec; dc=dc_spec]),
-        ac),
+      redimension(
+        project(
+          equi_join(
+            project(DS, ac, aa) as _L, 
+            project(apply(Target, dc, dc), dc, aa) as _R, 
+              left_names:(_L.da, _L.db, _L.aa), right_names:(_R.da, _R.db, _R.aa)),
+          ac, da, db, dc),
+        <ac:double nullable> [da=da_spec; db=db_spec; dc=dc_spec]),
       project(Target, aa, ab)
+    ), 
+    aa, ab, ac)
+  ")
+})
+
+test_that("Mutate array content from an arrayOp data source whose attrs include all target dimensions", {
+  ds = ArrayOpV19$new("DS", dims = c('x'), attrs = c('da', 'db', 'dc', 'ab'), dtypes = Target$get_field_types(), dim_specs = Target$get_dim_specs())
+  mutated = Target$mutate(ds, keys = c('da', 'db', 'dc'), updated_fields = c('ab'))
+  assert_afl_equal(mutated$to_afl(),
+  "project(
+    join(
+      redimension(
+          DS,
+          <ab:bool> [da=da_spec; db=db_spec; dc=dc_spec]),
+      project(Target, aa, ac)
+    ), 
+    aa, ab, ac)
+  ")
+  ds = ArrayOpV19$new("DS", dims = c('x'), attrs = c('da', 'db', 'dc', 'ab', 'ac'), dtypes = Target$get_field_types(), dim_specs = Target$get_dim_specs())
+  mutated = Target$mutate(ds, keys = c('da', 'db', 'dc'), updated_fields = c('ab'))
+  assert_afl_equal(mutated$to_afl(),
+  "project(
+    join(
+      redimension(
+          project(DS,da, db, dc,ab),
+          <ab:bool> [da=da_spec; db=db_spec; dc=dc_spec]),
+      project(Target, aa, ac)
     ), 
     aa, ab, ac)
   ")
