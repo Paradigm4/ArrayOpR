@@ -9,7 +9,7 @@ mockDep = list(
   , store_afl_to_scidb = NULL
 )
 
-test_that("Get array from schema", {
+test_that("Get array from schema string", {
   repo = newRepo(dependency_obj = mockDep)
   literalArr = repo$get_array("NS2.another <a:string, b:int32> [da=*; db=0:1:2:3]")
   assert_afl_equal(literalArr$to_afl(), 'NS2.another')
@@ -61,4 +61,21 @@ test_that("Register array with invalid array name", {
   stub(repo$get_array, 'dep$query', function(...) stop("wrong array name"))
   # So no error here
   expect_error(repo$get_array('alias'), 'not a valid scidb array')
+})
+
+# Load arrays from a config ----
+
+test_that("Load arrays from a config", {
+  repo = newRepo(dependency_obj = mockDep)
+  config = list(namespace='NS', arrays = list(
+    list('alias' = 'aa', 'name' = 'rawA', 'schema' = "<a:string compression 'zlib', b:int32> [da=0:*:0:*]")
+    , list('alias' = 'ab', 'name' = 'anotherNS.rawB', 'schema' = "<a:string, b:int32> [da=0:*:0:*]")
+  ))
+  arrayList = repo$load_arrays_from_config(config)
+  arr1 = repo$get_array("NS.rawA<a:string compression 'zlib', b:int32> [da=0:*:0:*]")
+  arr2 = repo$get_array("another.rawB <a:string, b:int32> [da=0:*:0:*]")
+  expect_identical(arrayList[['aa']]$to_afl(), "NS.rawA")
+  expect_identical(arrayList[['aa']]$to_schema_str(), "<a:string compression 'zlib',b:int32> [da=0:*:0:*]")
+  expect_identical(arrayList[['ab']]$to_afl(), "anotherNS.rawB")
+  expect_identical(arrayList[['ab']]$to_schema_str(), "<a:string,b:int32> [da=0:*:0:*]")
 })

@@ -562,6 +562,29 @@ Repo <- R6::R6Class(
              "ERROR:Repo$load_array_from_scidb: '%s' is not a valid scidb array", full_array_name)
       get_array(schemaStr)
     }
+    ,
+    load_arrays_from_config = function(config) {
+      assert(is.list(config), "ERROR:Repo$load_arrays_from_config:'config' must be a list, but got [%s] instead.", paste(class(config), collapse = ','))
+      assert_not_has_len(c('namespace', 'arrays') %-% names(config),
+                         "ERROR:Repo$load_arrays_from_config:param 'config' missing section(s): %s")
+      defaultNamespace = config$namespace
+      arraySection = config$arrays
+      aliases = sapply(arraySection, function(x) x$alias)
+      
+      read_array = function(arrayConfigObj) {
+        assert_not_has_len(c('alias', 'name', 'schema') %-% names(arrayConfigObj),
+                           "ERROR:Repo$load_arrays_from_config:bad config format: %s", str(arrayConfigObj))
+        alias = arrayConfigObj[['alias']]
+        name = arrayConfigObj[['name']]
+        schema = arrayConfigObj[['schema']]
+        isFullName = grepl('\\.', name)
+        fullArrayName = if(isFullName) name else sprintf("%s.%s", defaultNamespace, name)
+        get_array(sprintf("%s %s", fullArrayName, schema))
+      }
+      
+      arrayInstances = lapply(arraySection, read_array)
+      return(rlang::set_names(arrayInstances, aliases))
+    }
   )
 )
 
