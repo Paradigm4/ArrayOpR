@@ -373,6 +373,8 @@ Repo <- R6::R6Class(
     ,
     parser = NULL
     ,
+    array_alias_registry = NULL
+    ,
     set_meta = function(key, value) {
       private$metaList[[key]] <- value
     }
@@ -461,6 +463,7 @@ Repo <- R6::R6Class(
       private$dep = dependency_object
       private$metaList = list()
       private$parser = StatementParser$new()
+      private$array_alias_registry = list()
     }
     ,
     #' Get an ArrayOp instance
@@ -478,7 +481,9 @@ Repo <- R6::R6Class(
         if(grepl("<.+>\\s+\\[.*\\]", what)){
           return(.get_array_from_schema_string(what))
         } else {
-          return(repo$get_alias_schema(what))
+          aliasArray = array_alias_registry[[what]]
+          assert_has_len(aliasArray, "ERROR:Repo$get_array: '%s' is not a registered array alias.", what)
+          return(aliasArray)
         }
       } else if(inherits(what, "ArrayOpBase")){
         return(what)
@@ -525,6 +530,16 @@ Repo <- R6::R6Class(
         op
       else
         execute_raw(op, ...)
+    }
+    ,
+    #' Register a list of arrays with aliases
+    #'  
+    #' Register a list of arrays which can be later accessed via their aliases
+    #' 
+    #' @param items A list where names are aliases and values are arrayOp instances or raw array names
+    register_array = function(items){
+      assert_named_list(items, "ERROR:Repo$register_array: param 'items' must be a named list where every element has a name, and the value is an ArrayOp instance or raw array name.")
+      private$array_alias_registry = utils::modifyList(private$array_alias_registry, items)
     }
   )
 )

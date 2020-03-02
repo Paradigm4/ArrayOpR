@@ -16,10 +16,24 @@ test_that("Get array from schema", {
   assert_afl_equal(literalArr$to_schema_str(), '<a:string, b:int32> [da=*; db=0:1:2:3]')
   assert_afl_equal(str(literalArr), "NS2.another <a:string, b:int32> [da=*; db=0:1:2:3]")
 })
-# 
-# test_that("Get array from alias", {
-#   repo = newRepo(dependency_obj = mockDep)
-#   arrayOp = dao$get_array('alias_a')
-#   expect_identical(arrayOp$to_afl(), "NS.A")
-#   expect_identical(dao$get_array(arrayOp), arrayOp)
-# })
+
+test_that("Get array from alias", {
+  repo = newRepo(dependency_obj = mockDep)
+  
+  # Throw an error if array alias not registered yet. 
+  expect_error(repo$get_array('alias', 'not a reigstered array'))
+  
+  arrayOp = repo$get_array("myNamespace.raw_array_name <a:string zip, b:int32> [dim=0:1:2:3]")
+  anotherArray = repo$get_array("NS2.another <a:string, b:int32> [da=*; db=0:1:2:3]")
+  repo$register_array(list('alias'=arrayOp))
+  expect_identical(repo$get_array('alias'), arrayOp)
+  expect_error(repo$get_array('alias_non_existent', 'not a reigstered array'))
+  
+  repo$register_array(list('alias'=anotherArray))
+  expect_identical(repo$get_array('alias'), anotherArray)
+  
+  # Register an alias as NULL effectively remove it from the array_alias_registry
+  repo$register_array(list('alias'=NULL))
+  expect_error(repo$get_array('alias', 'not a reigstered array'))
+  
+})
