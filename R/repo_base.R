@@ -420,6 +420,29 @@ Repo <- R6::R6Class(
       else
         what
     }
+    ,
+    .get_array_from_schema_string = function(schemaStr) {
+      
+      matched = stringr::str_match(schemaStr, "(\\S*)\\s*\\<(.+)\\>\\s*\\[(.+)\\]")
+      assert(dim(matched)[[1]] == 1,
+             "ERROR: RepoDAO$get_array_from_schema_string: Invalid schema string: %s", schemaStr)
+      
+      arrayName = matched[1,2]
+      attrStr = matched[1,3]
+      dimStr = matched[1,4]
+      attrMatrix = stringr::str_match_all(attrStr, "(\\w+):\\s*([^;,:]+)")[[1]]
+      dimMatrix = stringr::str_match_all(dimStr, "(\\w+)[=\\s]*([^;]*)")[[1]]
+      
+      dims = dimMatrix[,2]
+      attrs = attrMatrix[,2]
+      
+      attrDtypes = as.list(rlang::set_names(attrMatrix[,3], attrs))
+      dimDtypes = as.list(rlang::set_names(rep('int64', dim(dimMatrix)[[1]]), dims))
+      
+      self$ArrayOp(arrayName, dims, attrs,
+                   dtypes = c(attrDtypes, dimDtypes),
+                   dim_specs=as.list(rlang::set_names(dimMatrix[,3], dims)))
+    }
   )
   ,
   active = list(
@@ -438,6 +461,30 @@ Repo <- R6::R6Class(
       private$dep = dependency_object
       private$metaList = list()
       private$parser = StatementParser$new()
+    }
+    ,
+    #' Get an ArrayOp instance
+    #'
+    #' Param `what` can be a string or arrayOp instance. If a string, then `what` is either a registered array alias,
+    #' or raw array schema (e.g. myArray <a:int32, b:string> [d=0:*:0:*])
+    #'
+    #' This function is provide unified access of arrayOp instances
+    #' @param what An array alias, raw array schema or arrayOp instance
+    #' @return An ArrayOp instance
+    get_array = function(what) {
+      # if(length(grepl("<.+>\\s+\\[.*\\]", what)) > 1 || length(inherits(what, "ArrayOpBase")) > 1) browser()
+      # tryCatch({if(is.character(what)){
+      if(is.character(what)){
+        if(grepl("<.+>\\s+\\[.*\\]", what)){
+          return(.get_array_from_schema_string(what))
+        } else {
+          return(repo$get_alias_schema(what))
+        }
+      } else if(inherits(what, "ArrayOpBase")){
+        return(what)
+      }
+      stopf("ERROR:Repo$get_array: param 'what' is not an array alias, schema string or an ArrayOp instance. class(what)=%s",
+            paste(class(what), collapse = ','))
     }
     ,
     #' Run a query and get a data frame
