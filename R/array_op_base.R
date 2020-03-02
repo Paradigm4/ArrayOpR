@@ -845,6 +845,8 @@ Only data.frame is supported", class(df))
       assert(is.character(anti_collision_field) && length(anti_collision_field) == 1, 
              "ERROR: ArrayOp$set_anti_collision_field: anti_collission_field should be a single string, but got '%s'",
              str(anti_collision_field))
+      assert(anti_collision_field %in% target$dims_n_attrs, 
+             "ERROR: ArrayOp$set_anti_collision_field: param 'anti_collision_field' [%s] is not a valid field of target.", anti_collision_field)
       
       # Target dimensions other than the anti_collision_field
       regularTargetDims = target$dims %-% anti_collision_field 

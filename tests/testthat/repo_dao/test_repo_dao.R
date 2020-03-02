@@ -50,6 +50,11 @@ mockDep = list(
 repo = newRepo(dependency_obj = mockDep, config = yaml::yaml.load_file(relative_path('repo.yaml')))
 dao = newRepoDao(repo = repo, db = NULL)
 
+# All the dao functions take 3 types of operands:
+# 1. arrayOp instance; where .raw is irrelevant
+# 2. raw AFL statement, where .raw = T
+# 3. an R expression as string
+
 test_that("nrows", {
   stub(dao$nrow, 'query_raw', function(q, ...) new_df(i=0, count=q))
   expect_equal(dao$nrow('alias_a'), "op_count(NS.A)")
@@ -58,7 +63,7 @@ test_that("nrows", {
   assert_afl_equal(dao$nrow('operator(other_ns.array)', .raw = T), "op_count(operator(other_ns.array))")
 })
 
-test_that("head", {
+test_that("limit", {
   # stub(dao$limit, 'query_raw', data.frame(i=0, count=42))
   assert_afl_equal(dao$limit('alias_a', 5), "limit(NS.A, 5)")
   assert_afl_equal(dao$limit('alias_a', 5), "limit(NS.A, 5)")

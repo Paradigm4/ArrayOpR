@@ -204,32 +204,38 @@ test_that("Set anti-collision field", {
   ds = newArrayOp('dataset', 'x', c('db', 'dsa', 'da'), 
                   dtypes = list(x='int64', db='int64', dsa='string', da='int32'))
   
-  writeOp = ds$set_auto_fields(Target, anti_collision_field = 'altid')
-  assert_afl_equal(writeOp$to_afl(), "
-      apply(
-        equi_join(
-          apply(
-            redimension(
-              dataset,
-              <dsa:string>
-              [da=0:*:0:1; db=0:*:0:*; _src_altid=0:*:0:1234]
-            ),
-            _src_altid, _src_altid
-          ) as _L,
-          grouped_aggregate(
+  # writeOp = ds$set_auto_fields(Target, anti_collision_field = 'altid')
+  for(writeOp in list(
+    ds$set_auto_fields(Target, anti_collision_field = 'altid')
+    ,ds$set_anti_collision_field(Target)
+  )){
+    assert_afl_equal(writeOp$to_afl(), "
+        apply(
+          equi_join(
             apply(
-              target,
-              altid, altid
-            ),
-            max(altid) as _max_altid, da, db
-          ) as _R,
-          left_names:(_L.da,_L.db),
-          right_names:(_R.da,_R.db),
-          left_outer:1
-        ),
-        altid, iif(_max_altid is null, _src_altid, _src_altid + _max_altid + 1)
-      )")
-  assert_afl_equal(writeOp$to_schema_str(), "<dsa:string> [da=0:*:0:1; db=0:*:0:*; altid=0:*:0:1234]")
+              redimension(
+                dataset,
+                <dsa:string>
+                [da=0:*:0:1; db=0:*:0:*; _src_altid=0:*:0:1234]
+              ),
+              _src_altid, _src_altid
+            ) as _L,
+            grouped_aggregate(
+              apply(
+                target,
+                altid, altid
+              ),
+              max(altid) as _max_altid, da, db
+            ) as _R,
+            left_names:(_L.da,_L.db),
+            right_names:(_R.da,_R.db),
+            left_outer:1
+          ),
+          altid, iif(_max_altid is null, _src_altid, _src_altid + _max_altid + 1)
+        )")
+    assert_afl_equal(writeOp$to_schema_str(), "<dsa:string> [da=0:*:0:1; db=0:*:0:*; altid=0:*:0:1234]")
+  }
+  expect_error(ds$set_auto_fields(Target, anti_collision_field = 'non_existent'), 'not a valid field')
 })
 
 test_that("Set anti-collision field with a customized _src_altid dimension spec", {
