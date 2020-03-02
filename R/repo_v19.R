@@ -39,6 +39,7 @@ RepoV19Old <- R6::R6Class("RepoV19Old",
 #' @export
 RepoV19 <- R6::R6Class("RepoV19",
   inherit = Repo,
+  portable = FALSE,
   private = NULL,
   active = NULL
   ,

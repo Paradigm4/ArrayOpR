@@ -325,6 +325,9 @@ newRepo = function(dependency_obj = NULL, db = NULL){
       store_afl_to_scidb = function(afl_stmt, ...){
         
       }
+      ,
+      # Keep this for debugging only
+      .db = db
     )
   }
   # Validate dependency_obj has all required methods
@@ -362,17 +365,60 @@ newRepo = function(dependency_obj = NULL, db = NULL){
 #' @export
 Repo <- R6::R6Class(
   "Repo",
+  portable = FALSE,
   private = list(
     dep = NULL
     ,
     metaList = NULL
     ,
+    parser = NULL
+    ,
     set_meta = function(key, value) {
       private$metaList[[key]] <- value
     }
     ,
-    get_meta = function(key) {
-      private$metaList[[key]]
+    get_meta = function(key, default) {
+      val = private$metaList[[key]]
+      if(is.null(val)) default else val
+    }
+    ,
+    ignore_error = function(){
+      get_meta('ignore_error', FALSE)
+    }
+    ,
+    evaluate_statement = function(stmt, .env = parent.frame()) {
+      parsedExpr = parser$parse_arrayop_expr(stmt)
+      aliases = names(repo$meta$schema_registry)
+      envSchemas = list2env(
+        rlang::set_names(lapply(aliases, repo$get_alias_schema), aliases),
+        parent = .env
+      )
+      # 'evaluated' should be an ArrayOp object or a string
+      eval(parsedExpr, envSchemas)
+    }
+    ,
+    execute_raw = function(what, ...) {
+      try(dep$execute(what, ...), silent = ignore_error())
+    }
+    ,
+    query_raw = function(what, ...) {
+      try(dep$query(what, ...), silent = ignore_error())
+    }
+    ,
+    # Get an operand represented by 'what'
+    # @param what: arrayOp instance, or a string (either AFL statement or an R expression)
+    # @param .raw: If .raw = FALSE and 'what' is a string, then 'what' is parsed to an arrayOp instance; 
+    # Otherwise, .raw = TRUE, return 'what' as the operand 
+    # @return: An arrayOp isntance or a AFL statement
+    get_operand = function(what, .raw, .env) {
+      assert(inherits(what, 'ArrayOpBase') || 
+               (inherits(what, 'character') && length(what) == 1), 
+             "ERROR: RepoDAO: get_operand: param 'what' must be a single ArrayOp instance or string, but got: [%s]",
+             paste(class(what), collapse = ','))
+      if(is.character(what) && !.raw) # 'what' is an R expression
+        evaluate_statement(what, .env = .env)  # Eval the expression and return an arrayOp
+      else
+        what
     }
   )
   ,
@@ -391,6 +437,47 @@ Repo <- R6::R6Class(
     initialize = function(dependency_object = NULL) {
       private$dep = dependency_object
       private$metaList = list()
+      private$parser = StatementParser$new()
+    }
+    ,
+    #' Run a query and get a data frame
+    #'
+    #' The query statement `stmt` is a string.
+    #' @param stmt A string, where
+    #' 1. array aliases are replaced by corresponding arrayOp instances
+    #' 2. functions following arrays are called as arrayOp functions
+    #' 3. extra arrayOp functions can be provided in parentheses
+    #' 4. any other variables in `.env` will be replaced by its values
+    #' @param ... Arguments passed directly to scidb::iquery function
+    #' @param .dry_run If TRUE, only return evaluated query statement. Default FALSE
+    #' @param .env An R env or list for R variable substitution
+    #' @return A data frame
+    query = function(what, ..., .dry_run = FALSE, .raw = FALSE, .env = parent.frame()) {
+      op = get_operand(what, .raw = .raw, .env = .env)
+      if(.dry_run)
+        op
+      else
+        query_raw(op, ...)
+    }
+    ,
+    #' Execute a query.
+    #'
+    #' The query statement `stmt` is a string. No result is returned.
+    #' @param stmt A string, where
+    #' 1. array aliases are replaced by corresponding arrayOp instances
+    #' 2. functions following arrays are called as arrayOp functions
+    #' 3. extra arrayOp functions can be provided in parentheses
+    #' 4. any other variables in `.env` will be replaced by its values
+    #' @param ... Arguments passed directly to scidb::iquery function
+    #' @param .dry_run If TRUE, only return evaluated query statement. Default FALSE
+    #' @param .env An R env or list for R variable substitution
+    #' @return NULL
+    execute = function(what, ..., .dry_run = FALSE, .raw = FALSE, .env = parent.frame()) {
+      op = get_operand(what, .raw = .raw, .env = .env)
+      if(.dry_run)
+        op
+      else
+        execute_raw(op, ...)
     }
   )
 )

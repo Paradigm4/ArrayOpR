@@ -12,3 +12,24 @@ test_that("Create a Repo from a db ", {
   repo = newRepo(db = list(iquery=identity))
   expect_true(!is.null(repo))
 })
+
+# Query and Execute functions are delegated to the dependency_obj
+
+mockDep = list(
+  get_scidb_version = function()
+    "19.3"
+  , query = function(what, ...) list('query', what, ...)
+  , execute = function(what, ...) list('execute', what, ...)
+  , upload_df_to_scidb = NULL
+  , store_afl_to_scidb = NULL
+)
+
+test_that("Query/Execute params are passed to dep", {
+  repo = newRepo(dependency_obj = mockDep)
+
+  expect_identical(repo$query('abc', .raw = TRUE), list('query', 'abc'))
+  expect_identical(repo$query('abc', .raw = TRUE, 'extra_arg', nrow=3), list('query', 'abc', 'extra_arg', nrow=3))
+  
+  expect_identical(repo$execute('abc', .raw = TRUE), list('execute', 'abc'))
+  expect_identical(repo$execute('abc', .raw = TRUE, 'extra_arg', nrow=3), list('execute', 'abc', 'extra_arg', nrow=3))
+})
