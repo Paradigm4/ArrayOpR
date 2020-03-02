@@ -301,28 +301,53 @@ get_schema_df_from_schema_str = function(schemaStr) {
 #' unless a specific Repo version is known/desired beforehand, which is useful in test cases.
 #' @param dependency_obj A named list that contains 4 functions: get_scidb_version, query, execute and get_schema_df
 #' If left NULL, will require a scidb connection 'db' to create the dependency_obj automatically.
-#' @param db a scidb connection returned by scidb::scidbconnect
+#' @param db a scidb connection returned by scidb::scidbconnect. If provided, a `dependency_obj` is automatically created
+#' with default implementations. 
 #' @export
 newRepo = function(dependency_obj = NULL, db = NULL){
-  # Validate dependency_obj has all required methods
-  requiredNames = c('get_scidb_version', 'query', 'execute', 'get_schema_df')
-  if(!.has_len(dependency_obj) && .has_len(db)){
-    dependency_obj = default_dep_obj(db)
+  default_dep_obj = function(db) {
+    runQuery = function(query, ...) scidb::iquery(db, query, return = TRUE, ...)
+    runCmd = function(query, ...) scidb::iquery(db, query, return = FALSE, ...)
+    list(
+      get_scidb_version = function() {
+        df = runQuery("op_scidbversion()", only_attributes = T)[1, c('major', 'minor')]
+        sprintf("%s.%s", df[['major']], df[['minor']])
+      }
+      ,
+      query = runQuery
+      ,
+      execute = runCmd
+      ,
+      upload_df_to_scidb = function(df, ...){
+        
+      }
+      ,
+      store_afl_to_scidb = function(afl_stmt, ...){
+        
+      }
+    )
   }
-  missingNames = base::setdiff(requiredNames, names(dependency_obj))
-  assert_not_has_len(missingNames, 
-                     "newRepo 'dependency_obj' param is missing function(s): '%s'", paste(missingNames, collapse = ', '))
+  # Validate dependency_obj has all required methods
+  requiredNames = c('get_scidb_version', 'query', 'execute', 'upload_df_to_scidb', 'store_afl_to_scidb')
+  if(!.has_len(dependency_obj)){
+    if(.has_len(db))
+      dependency_obj = default_dep_obj(db)
+    else
+      stop("ERROR:newRepo: must provide a param 'dependency_obj' or 'db'. ")
+  }
+  assert_no_fields(requiredNames %-% names(dependency_obj), 
+                   "ERROR:newRepo: param 'dependency_obj' misses function(s): %s")
   
   # Check scidb version
   fullScidbVersion = dependency_obj$get_scidb_version()
   # Use major version for now
   scidbVersion = gsub("\\..+", '', fullScidbVersion)
   
-  repoClass = switch (scidbVersion,
-                      '18' = RepoV18Old,
-                      '19' = RepoV19Old
+  repoClass = switch(scidbVersion, 
+                     '18' = RepoV18,
+                     '19' = RepoV19,
+                     stopf("ERROR:newRepo:Unsupported scidb version '%s'", fullScidbVersion)
   )
-  assert(!is.null(repoClass), "ERROR in newRepo: unsupported scidb version %s", fullScidbVersion)
   result = repoClass$new(dependency_obj)
   return(result)
 }
@@ -339,10 +364,34 @@ Repo <- R6::R6Class(
   "Repo",
   private = list(
     dep = NULL
+    ,
+    metaList = NULL
+    ,
+    set_meta = function(key, value) {
+      private$metaList[[key]] <- value
+    }
+    ,
+    get_meta = function(key) {
+      private$metaList[[key]]
+    }
+  )
+  ,
+  active = list(
+    #' @field .private For internal testing only. Do not access this field to avoid unintended consequences!!!
+    .private = function() private
   )
   ,
   public = list(
-    
+    #' @description
+    #' Initialize function.
+    #'
+    #' Create a new Repo instance
+    #' 
+    #' Do NOT call this `initialize` function directly. Call `newRepo` instead to get a new Repo instance.
+    initialize = function(dependency_object = NULL) {
+      private$dep = dependency_object
+      private$metaList = list()
+    }
   )
 )
 

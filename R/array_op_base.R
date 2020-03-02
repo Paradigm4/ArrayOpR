@@ -314,7 +314,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
     dims_n_attrs = function() c(self$dims, self$attrs),
     #' @field attrs_n_dims Attribute and dimension names
     attrs_n_dims = function() c(self$attrs, self$dims),
-    #' @field .private For admins only. Please avoid accessing this field to avoid unintended consequences!!!
+    #' @field .private For internal testing only. Do not access this field to avoid unintended consequences!!!
     .private = function() private
   ),
 
