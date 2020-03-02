@@ -17,7 +17,7 @@ test_that("Get array from schema", {
   assert_afl_equal(str(literalArr), "NS2.another <a:string, b:int32> [da=*; db=0:1:2:3]")
 })
 
-test_that("Get array from alias", {
+test_that("Get array from registered array alias", {
   repo = newRepo(dependency_obj = mockDep)
   
   # Throw an error if array alias not registered yet. 
@@ -36,4 +36,29 @@ test_that("Get array from alias", {
   repo$register_array(list('alias'=NULL))
   expect_error(repo$get_array('alias', 'not a reigstered array'))
   
+})
+
+test_that("Register array alias as the raw array name", {
+  repo = newRepo(dependency_obj = mockDep)
+  arrayOp = repo$get_array("ns.raw_array_name <a:string zip, b:int32> [dim=0:1:2:3]")
+  anotherArray = repo$get_array("NS2.another <a:string, b:int32> [da=*; db=0:1:2:3]")
+  repo$register_array(list('alias'='ns.raw_array_name', 'another'=anotherArray))
+  stub(repo$get_array, 'load_array_from_scidb', arrayOp)
+  expect_identical(repo$get_array('alias'), arrayOp)
+  expect_identical(repo$get_array('another'), anotherArray)
+  # Registered raw arrays are cached
+  stub(repo$get_array, 'load_array_from_scidb', function(...) stop("error"))
+  # So no error here
+  expect_identical(repo$get_array('alias'), arrayOp)
+})
+
+test_that("Register array with invalid array name", {
+  repo = newRepo(dependency_obj = mockDep)
+  arrayOp = repo$get_array("ns.raw_array_name <a:string zip, b:int32> [dim=0:1:2:3]")
+
+  repo$register_array(list('alias'='wrong name'))
+  # Simulate a scidb query error
+  stub(repo$get_array, 'dep$query', function(...) stop("wrong array name"))
+  # So no error here
+  expect_error(repo$get_array('alias'), 'not a valid scidb array')
 })

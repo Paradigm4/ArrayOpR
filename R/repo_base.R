@@ -466,32 +466,6 @@ Repo <- R6::R6Class(
       private$array_alias_registry = list()
     }
     ,
-    #' Get an ArrayOp instance
-    #'
-    #' Param `what` can be a string or arrayOp instance. If a string, then `what` is either a registered array alias,
-    #' or raw array schema (e.g. myArray <a:int32, b:string> [d=0:*:0:*])
-    #'
-    #' This function is provide unified access of arrayOp instances
-    #' @param what An array alias, raw array schema or arrayOp instance
-    #' @return An ArrayOp instance
-    get_array = function(what) {
-      # if(length(grepl("<.+>\\s+\\[.*\\]", what)) > 1 || length(inherits(what, "ArrayOpBase")) > 1) browser()
-      # tryCatch({if(is.character(what)){
-      if(is.character(what)){
-        if(grepl("<.+>\\s+\\[.*\\]", what)){
-          return(.get_array_from_schema_string(what))
-        } else {
-          aliasArray = array_alias_registry[[what]]
-          assert_has_len(aliasArray, "ERROR:Repo$get_array: '%s' is not a registered array alias.", what)
-          return(aliasArray)
-        }
-      } else if(inherits(what, "ArrayOpBase")){
-        return(what)
-      }
-      stopf("ERROR:Repo$get_array: param 'what' is not an array alias, schema string or an ArrayOp instance. class(what)=%s",
-            paste(class(what), collapse = ','))
-    }
-    ,
     #' Run a query and get a data frame
     #'
     #' The query statement `stmt` is a string.
@@ -532,6 +506,37 @@ Repo <- R6::R6Class(
         execute_raw(op, ...)
     }
     ,
+    #' Get an ArrayOp instance
+    #'
+    #' Param `what` can be a string or arrayOp instance. If a string, then `what` is either a registered array alias,
+    #' or raw array schema (e.g. myArray <a:int32, b:string> [d=0:*:0:*])
+    #'
+    #' This function is provide unified access of arrayOp instances
+    #' @param what An array alias, raw array schema or arrayOp instance
+    #' @return An ArrayOp instance
+    get_array = function(what) {
+      # if(length(grepl("<.+>\\s+\\[.*\\]", what)) > 1 || length(inherits(what, "ArrayOpBase")) > 1) browser()
+      # tryCatch({if(is.character(what)){
+      if(is.character(what)){
+        if(grepl("<.+>\\s+\\[.*\\]", what)){
+          return(.get_array_from_schema_string(what))
+        } else {
+          aliasArray = array_alias_registry[[what]]
+          assert_has_len(aliasArray, "ERROR:Repo$get_array: '%s' is not a registered array alias.", what)
+          if(is.character(aliasArray)){
+            cached = load_array_from_scidb(aliasArray)
+            private$array_alias_registry[[what]] <- cached
+            return(cached)
+          }
+          return(aliasArray)
+        }
+      } else if(inherits(what, "ArrayOpBase")){
+        return(what)
+      }
+      stopf("ERROR:Repo$get_array: param 'what' is not an array alias, schema string or an ArrayOp instance. class(what)=%s",
+            paste(class(what), collapse = ','))
+    }
+    ,
     #' Register a list of arrays with aliases
     #'  
     #' Register a list of arrays which can be later accessed via their aliases
@@ -540,6 +545,22 @@ Repo <- R6::R6Class(
     register_array = function(items){
       assert_named_list(items, "ERROR:Repo$register_array: param 'items' must be a named list where every element has a name, and the value is an ArrayOp instance or raw array name.")
       private$array_alias_registry = utils::modifyList(private$array_alias_registry, items)
+    }
+    ,
+    #' Get an ArrayOp instance from scidb by its full name 
+    #' 
+    #' No cache is provided with this function. 
+    #' See `register_array` for details on registering an array alias with cache.
+    #' 
+    #' @param full_array_name A fully qualified array name (e.g. myNamespace.arrayName)
+    #' @return An ArrayOp instance
+    load_array_from_scidb = function(full_array_name){
+      assert(is.character(full_array_name) && length(full_array_name) == 1,
+             "ERROR:Repo$load_array_from_scidb: param 'full_array_name' must be a single scidb array name")
+      schemaStr = query_raw(afl(full_array_name %project% 'schema'))[['schema']]
+      assert(is.character(schemaStr),
+             "ERROR:Repo$load_array_from_scidb: '%s' is not a valid scidb array", full_array_name)
+      get_array(schemaStr)
     }
   )
 )
