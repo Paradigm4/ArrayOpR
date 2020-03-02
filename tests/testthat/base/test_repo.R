@@ -28,17 +28,17 @@ mockDep2 = list(
 )
 
 test_that("Version switch", {
-  repo = newRepo(default_namespace = 'ns', dependency_obj = mockDep)
+  repo = newRepoBase(default_namespace = 'ns', dependency_obj = mockDep)
   expect_identical(repo$meta[['scidb_version']], '19.3')
-  expect_identical(repo$meta[['repo_version']], 'RepoV19')
+  expect_identical(repo$meta[['repo_version']], 'RepoV19Old')
   
-  repo2 = newRepo(default_namespace = 'ns', dependency_obj = mockDep2)
+  repo2 = newRepoBase(default_namespace = 'ns', dependency_obj = mockDep2)
   expect_identical(repo2$meta[['scidb_version']], '18.1')
-  expect_identical(repo2$meta[['repo_version']], 'RepoV18')
+  expect_identical(repo2$meta[['repo_version']], 'RepoV18Old')
 })
 
 test_that("DB dependency delegation", {
-  repo = newRepo(default_namespace = 'ns', dependency_obj = mockDep)
+  repo = newRepoBase(default_namespace = 'ns', dependency_obj = mockDep)
   expect_identical(repo$query('afl'), 'aflafl')
   expect_identical(repo$query('afl', times = 3), 'aflaflafl')
   expect_identical(repo$execute('afl'), 'Cmd: afl')
@@ -46,7 +46,7 @@ test_that("DB dependency delegation", {
 
 test_that("No matched version", {
   dep = list(get_scidb_version = function() '20.2', query = identity, execute = identity, get_schema_df = identity)
-  expect_error(newRepo('ns', dependency_obj = dep), 'unsupported scidb version')
+  expect_error(newRepoBase('ns', dependency_obj = dep), 'unsupported scidb version')
 })
 
 
@@ -55,13 +55,13 @@ test_that("No matched version", {
 test_that("Reigstered schemas are stored in schema registry", {
   dep = list(get_scidb_version = function() '18.1', query = function(x) 42, execute = function(x) 'cmd', 
     get_schema_df = identity)
-  repo = newRepo('ns', dep)
+  repo = newRepoBase('ns', dep)
   repo$register_schema_alias_by_array_name('a', 'A')
   repo$register_schema_alias_by_array_name('b', 'public.B', is_full_name = T)
   expect_identical(repo$meta$schema_registry, list(a = 'ns.A', b = 'public.B'))
   
   # Register multiple schemas at once
-  repo = newRepo('ns', dep)
+  repo = newRepoBase('ns', dep)
   repo$register_schema_alias_by_array_name(alias = c('a', 'b'), array_name = c('A', 'B'))
   expect_identical(repo$meta$schema_registry, list(a = 'ns.A', b = 'ns.B'))
 })
@@ -69,7 +69,7 @@ test_that("Reigstered schemas are stored in schema registry", {
 test_that("Create ArrayOp instance for registered array schema aliases", {
   dep = list(get_scidb_version = function() '18.1', query = function(x) 42, execute = function(x) 'cmd', 
     get_schema_df = function(x) data.frame(name = 'a', dtype = 'string', is_dimension = F))
-  repo = newRepo('ns', dep)
+  repo = newRepoBase('ns', dep)
   repo$register_schema_alias_by_array_name('a', 'A')
   schema = repo$get_alias_schema('a')
   expect_identical(schema$to_afl(), 'ns.A')
@@ -109,8 +109,8 @@ arrays:
       score: double
 "
   for(repo in c(
-    newRepo(dep = dep, config = config)
-    , newRepo(dep = dep, config = yaml::yaml.load(yamlStr))
+    newRepoBase(dep = dep, config = config)
+    , newRepoBase(dep = dep, config = yaml::yaml.load(yamlStr))
   )){
     V = repo$get_alias_schema('V')
     G = repo$get_alias_schema('G')
@@ -139,7 +139,7 @@ arrays:
   "
   dep = list(get_scidb_version = function() '19.11', query = function(x) 42, execute = function(x) 'cmd', 
              get_schema_df = identity)
-  repo = newRepo(config = yaml::yaml.load(yamlStr), dep = dep)
+  repo = newRepoBase(config = yaml::yaml.load(yamlStr), dep = dep)
   expect_identical(repo$get_alias_schema('a')$to_schema_str(), "<a:string> [da;db=0:*:0:10]")
   expect_identical(repo$get_alias_schema('b')$to_schema_str(), "<a:string not null> [db=0:*:0:10;da]")
 })

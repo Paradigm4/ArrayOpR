@@ -8,7 +8,7 @@ mockDep = list(
   , get_schema_df = function(...) stop("get_schema_df not implemented in the mockDep object")
 )
 
-repo = newRepo(dependency_obj = mockDep, config = yaml::yaml.load_file(relative_path('repo.yaml')))
+repo = newRepoBase(dependency_obj = mockDep, config = yaml::yaml.load_file(relative_path('repo.yaml')))
 dao = newRepoDao(repo = repo, db = NULL)
 
 new_df = function(...) {
@@ -47,7 +47,7 @@ mockDep = list(
   , get_schema_df = function(...) stop("get_schema_df not implemented in the mockDep object")
 )
 
-repo = newRepo(dependency_obj = mockDep, config = yaml::yaml.load_file(relative_path('repo.yaml')))
+repo = newRepoBase(dependency_obj = mockDep, config = yaml::yaml.load_file(relative_path('repo.yaml')))
 dao = newRepoDao(repo = repo, db = NULL)
 
 # All the dao functions take 3 types of operands:

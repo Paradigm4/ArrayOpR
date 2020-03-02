@@ -226,7 +226,7 @@ RepoBase <- R6::R6Class("RepoBase",
 #' If left NULL, will require a scidb connection 'db' to create the dependency_obj automatically.
 #' @param db a scidb connection returned by scidb::scidbconnect
 #' @export
-newRepo = function(default_namespace = 'public', dependency_obj = NULL, db = NULL, config = NULL){
+newRepoBase = function(default_namespace = 'public', dependency_obj = NULL, db = NULL, config = NULL){
   # Validate dependency_obj has all required methods
   requiredNames = c('get_scidb_version', 'query', 'execute', 'get_schema_df')
   if(!.has_len(dependency_obj) && .has_len(db)){
@@ -242,8 +242,8 @@ newRepo = function(default_namespace = 'public', dependency_obj = NULL, db = NUL
   scidbVersion = gsub("\\..+", '', fullScidbVersion)
   
   repoClass = switch (scidbVersion,
-    '18' = RepoV18,
-    '19' = RepoV19
+    '18' = RepoV18Old,
+    '19' = RepoV19Old
   )
   assert(!is.null(repoClass), "ERROR in newRepo: unsupported scidb version %s", fullScidbVersion)
   result = repoClass$new(default_namespace, dependency_obj, config = config)
@@ -290,17 +290,59 @@ get_schema_df_from_schema_str = function(schemaStr) {
   )
 }
 
-#' Invert names and values of a list (or named vector)
-#'
-#' @param obj a named list
-#' @param .as.list Return a list if set TRUE; otherwise a named vector
-#' @return A list or named vector whose key/values are inverted from the original `obj`
-invert.list = function(obj, .as.list = T) {
-  res = structure(
-    unlist(mapply(rep, names(obj), sapply(obj, length)), use.names=F),
-    names = unlist(obj)
+# New Repo Class ----
+
+
+#' Create a scidb-version-specific Repo instance 
+#' 
+#' The created Repo instance is automatically selected based on Repo-Scidb compatibility
+#' 
+#' This should be only way to create a new Repo instance, 
+#' unless a specific Repo version is known/desired beforehand, which is useful in test cases.
+#' @param dependency_obj A named list that contains 4 functions: get_scidb_version, query, execute and get_schema_df
+#' If left NULL, will require a scidb connection 'db' to create the dependency_obj automatically.
+#' @param db a scidb connection returned by scidb::scidbconnect
+#' @export
+newRepo = function(dependency_obj = NULL, db = NULL){
+  # Validate dependency_obj has all required methods
+  requiredNames = c('get_scidb_version', 'query', 'execute', 'get_schema_df')
+  if(!.has_len(dependency_obj) && .has_len(db)){
+    dependency_obj = default_dep_obj(db)
+  }
+  missingNames = base::setdiff(requiredNames, names(dependency_obj))
+  assert_not_has_len(missingNames, 
+                     "newRepo 'dependency_obj' param is missing function(s): '%s'", paste(missingNames, collapse = ', '))
+  
+  # Check scidb version
+  fullScidbVersion = dependency_obj$get_scidb_version()
+  # Use major version for now
+  scidbVersion = gsub("\\..+", '', fullScidbVersion)
+  
+  repoClass = switch (scidbVersion,
+                      '18' = RepoV18Old,
+                      '19' = RepoV19Old
   )
-  if(.as.list) res = as.list(res)
-  res
+  assert(!is.null(repoClass), "ERROR in newRepo: unsupported scidb version %s", fullScidbVersion)
+  result = repoClass$new(dependency_obj)
+  return(result)
 }
+
+#' RepoBase class manages ArrayOp objects in one scidb installation
+#' @description 
+#' A repository for scidb arrays and derived ArrayOp objects that reside in one scidb installation
+#' @details 
+#' RepoBase is the base class of scidb-version-specific Repo classes. 
+#' Common ogic/behaviors across all supported scidb versions are placed here. 
+#' Version-specific logic/behaviors should be implemented in RepoBase sub-classes. 
+#' @export
+Repo <- R6::R6Class(
+  "Repo",
+  private = list(
+    dep = NULL
+  )
+  ,
+  public = list(
+    
+  )
+)
 

@@ -6,7 +6,7 @@
 #' Common ogic/behaviors across all supported scidb versions are placed here. 
 #' Version-specific logic/behaviors should be implemented in RepoBase sub-classes. 
 #' @export
-RepoV18 <- R6::R6Class("RepoV18",
+RepoV18Old <- R6::R6Class("RepoV18Old",
   inherit = RepoBase,
   private = NULL,
   active = NULL
@@ -22,7 +22,7 @@ RepoV18 <- R6::R6Class("RepoV18",
     #' @param dbAccess A DbAccess instantance that manages scidb connection
     initialize = function(...) {
       super$initialize(...)
-      private$set_meta('repo_version', "RepoV18")
+      private$set_meta('repo_version', "RepoV18Old")
     }
     ,
     ArrayOp = function(...) ArrayOpV18$new(...)

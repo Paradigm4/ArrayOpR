@@ -34,6 +34,20 @@ assert_no_fields <- function(fields, errorMsgFmt = "Field(s) not empty: %s", ...
 `%n%` = function(lhs, rhs) base::intersect(lhs, rhs)
 
 
+#' Invert names and values of a list (or named vector)
+#'
+#' @param obj a named list
+#' @param .as.list Return a list if set TRUE; otherwise a named vector
+#' @return A list or named vector whose key/values are inverted from the original `obj`
+invert.list = function(obj, .as.list = T) {
+  res = structure(
+    unlist(mapply(rep, names(obj), sapply(obj, length)), use.names=F),
+    names = unlist(obj)
+  )
+  if(.as.list) res = as.list(res)
+  res
+}
+
 .to_signed_integer_str = function(values) {
   single_value = function(v) {
     if(v == 0) '' else sprintf("%+d", v)
