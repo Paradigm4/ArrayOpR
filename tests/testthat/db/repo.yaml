@@ -2,7 +2,7 @@ namespace: arrayop_unittest
 arrays:
   - alias: alias_a
     name: A
-    schema: "<a:string compression 'zlib', b:int32> [da=0:*:0:*]"
+    schema: "<a:string COMPRESSION 'zlib', b:int32> [da=0:*:0:*]"
   - alias: alias_b
     name: B
     schema: "<a:string, b:int32> [da=0:*:0:*]"
@@ -12,4 +12,9 @@ arrays:
 
   - alias: template_a
     name: D
-    schema: "<fa:string compression 'zlib', fb:int32, fc:int64, fd: bool> [da=0:*:0:*]"
+    schema: "<fa:string COMPRESSION 'zlib', fb:int32, fc:int64, fd: bool> [da=0:*:0:*]"
+
+  - alias: arrayOutOfDefaultNamespace
+    # add a z prefix to ensure it'll be the last one in scidb qurey result
+    name: arrayop_unittest.zArrayOutOfDefaultNamespace
+    schema: "<fa:string COMPRESSION 'zlib', fb:int32, fc:int64, fd: bool> [da=0:*:0:*]"

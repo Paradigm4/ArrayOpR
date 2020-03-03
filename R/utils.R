@@ -56,6 +56,13 @@ invert.list = function(obj, .as.list = T) {
   res
 }
 
+log_job = function(job, msg = '', done_msg = 'done') {
+  cat(sprintf("%s ... ", msg))
+  result = force(job)
+  cat(sprintf("%s. [%s]\n", done_msg, Sys.time()))
+  invisible(result)
+}
+
 .to_signed_integer_str = function(values) {
   single_value = function(v) {
     if(v == 0) '' else sprintf("%+d", v)

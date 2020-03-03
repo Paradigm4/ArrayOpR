@@ -560,10 +560,11 @@ Repo <- R6::R6Class(
     load_array_from_scidb = function(full_array_name){
       assert_single_str(full_array_name,
              "ERROR:Repo$load_array_from_scidb: param 'full_array_name' must be a single scidb array name")
-      schemaStr = query_raw(afl(full_array_name %project% 'schema'))[['schema']]
+      schemaStr = query_raw(afl(full_array_name %show% NULL %project% 'schema'))[['schema']]
       assert_single_str(schemaStr,
              "ERROR:Repo$load_array_from_scidb: '%s' is not a valid scidb array", full_array_name)
-      get_array(schemaStr)
+      # schemaStr only contains an array name without the namespace. We need to change it to the full array name.
+      get_array(schemaStr)$create_new_with_same_schema(full_array_name)
     }
     ,
     #' Get a list of arrays from a scidb namespace
