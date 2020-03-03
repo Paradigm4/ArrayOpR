@@ -19,6 +19,8 @@ assert_afl_equal <- function(actual, expected) {
   testthat::expect_identical(actual, expected)
 }
 
+options(stringsAsFactors = FALSE)
+
 # When runnning devtools::test(), the working directory is (package root)/tests/testthat/
 
 # source("array_op/__source.R", local = TRUE)

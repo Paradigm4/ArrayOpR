@@ -12,7 +12,9 @@ arrays:
 
   - alias: template_a
     name: D
-    schema: "<fa:string COMPRESSION 'zlib', fb:int32, fc:int64, fd: bool> [da=0:*:0:*]"
+    schema: >
+      <f_str:string COMPRESSION 'zlib', f_int32:int32, f_int64:int64, f_bool: bool, f_double: double, f_datetime: datetime> 
+      [da=0:*:0:*]
 
   - alias: arrayOutOfDefaultNamespace
     # add a z prefix to ensure it'll be the last one in scidb qurey result

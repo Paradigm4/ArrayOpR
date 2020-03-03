@@ -38,5 +38,20 @@ test_that("Get array by raw name", {
 })
 
 
-
+# Upload data frame to scidb ---- 
+test_that("Upload data frame to scidb", {
+  df = data.frame(f_str = letters[1:5], f_double = c(3.14, 2.0, NA, 0, -99), f_bool = c(T,NA,F,NA,F), f_int64 = 1:5 * 10.0, 
+                  f_datetime = c('2020-03-14 01:23:45', '2000-01-01', '01/01/1999 12:34:56', as.character(Sys.time()), "2020-01-01 3:14:15"))
+  # Cannot pass datetime directly from data frame
+  # df2 = data.frame(f_str = letters[1:5], f_double = c(3.14, 2.0, NA, 0, -99), f_bool = c(T,NA,F,NA,F), f_int64 = 1:5 * 10.0, 
+  #                 f_datetime = Sys.time())
+  template = CfgArrays[['template_a']]
+  
+  uploaded = repo$upload_df(df, template, use_aio_input = F)
+  uploaded2 = repo$upload_df(df, template, use_aio_input = T)
+  
+  templateMatchedDTypes = template$get_field_types(names(df), .raw=TRUE)
+  expect_identical(uploaded$get_field_types(uploaded$attrs), templateMatchedDTypes)
+  expect_identical(uploaded2$get_field_types(uploaded2$attrs), templateMatchedDTypes)
+})
 

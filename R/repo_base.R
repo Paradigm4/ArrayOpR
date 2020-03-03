@@ -384,10 +384,6 @@ Repo <- R6::R6Class(
       if(is.null(val)) default else val
     }
     ,
-    ignore_error = function(){
-      get_meta('ignore_error', FALSE)
-    }
-    ,
     evaluate_statement = function(stmt, .env = parent.frame()) {
       parsedExpr = parser$parse_arrayop_expr(stmt)
       aliases = names(repo$meta$schema_registry)
@@ -400,11 +396,11 @@ Repo <- R6::R6Class(
     }
     ,
     execute_raw = function(what, ...) {
-      try(dep$execute(what, ...), silent = ignore_error())
+      try(dep$execute(what, ...), silent = setting_ignore_error)
     }
     ,
     query_raw = function(what, ...) {
-      try(dep$query(what, ...), silent = ignore_error())
+      try(dep$query(what, ...), silent = setting_ignore_error)
     }
     ,
     # Get an operand represented by 'what'
@@ -450,6 +446,12 @@ Repo <- R6::R6Class(
   active = list(
     #' @field .private For internal testing only. Do not access this field to avoid unintended consequences!!!
     .private = function() private
+    ,
+    #' @field setting_ignore_error Whether to ignore internal database errors. Default FALSE.
+    setting_ignore_error = function() get_meta('ignore_error', FALSE)
+    ,
+    #' @field setting_use_aio_input Whether to use aio_input for data frame uploading. Default FALSE.
+    setting_use_aio_input = function() get_meta('use_aio_input', FALSE)
   )
   ,
   public = list(
@@ -629,6 +631,45 @@ Repo <- R6::R6Class(
       
       arrayInstances = lapply(arraySection, read_array)
       return(rlang::set_names(arrayInstances, aliases))
+    }
+    ,
+    #' @description
+    #' Upload a data frame to scidb
+    #'
+    #' Upload a data frame into scidb with data types from the template.
+    #' The data frame can have fewer columns than the template, but it can NOT have columns absent in the template.
+    #'
+    #' @param df a data frame whose column names has been sanitized
+    #' @param template An array alias, schema string, arrayOp; or a named list of data types
+    #' @param temp Whether to upload the df as a temporary array. Default TRUE.
+    #' @param use_aio_input Whether to use aio_input for upload. Default FALSE. Same meaning as in scidb::as.scidb
+    #' @param ... Other args passed to scidb::as.scidb, e.g. gc = TRUE
+    #' @return An arrayOp instance with uploaded data.
+    #' The resultant arrayOp$to_afl() is the temporary array name R_array****, unless specified explicitly with name='newName'
+    #' The resultant arrayOp schema is consisted of 1. artificial dimension(s) from upload or aio_input;
+    #' 2. attributes whose names are the data frame column names and data types are those in the template.
+    upload_df = function(df, template, temp = TRUE, use_aio_input = setting_use_aio_input, ...) {
+      
+      array_template = if(is.list(template))
+        repo$ArrayOp('', attrs = names(template), dtypes = template)
+      else get_array(template)
+      
+      dfFieldsNotInArray = names(df) %-% array_template$dims_n_attrs
+      matchedFields = names(df) %n% array_template$dims_n_attrs
+      # browser() #repo_dao
+      assert_not_has_len(
+        dfFieldsNotInArray,
+        "ERROR: Data frame has non-matching field(s): %s for array %s", paste(dfFieldsNotInArray, collapse = ','),
+        str(array_template))
+      
+      # df = convert_columns(df)
+      uploaded = scidb::as.scidb(dep$.db, df, use_aio_input = use_aio_input, temp = temp, 
+                                 types =  template$get_field_types(names(df), .raw=TRUE), ...)
+      
+      res = get_array(get('schema', uploaded@meta))$
+        create_new_with_same_schema(uploaded@name)
+      res$.set_meta('.ref', uploaded)
+      res
     }
   )
 )
