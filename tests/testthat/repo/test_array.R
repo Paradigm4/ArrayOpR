@@ -78,4 +78,24 @@ test_that("Load arrays from a config", {
   expect_identical(arrayList[['aa']]$to_schema_str(), "<a:string compression 'zlib',b:int32> [da=0:*:0:*]")
   expect_identical(arrayList[['ab']]$to_afl(), "anotherNS.rawB")
   expect_identical(arrayList[['ab']]$to_schema_str(), "<a:string,b:int32> [da=0:*:0:*]")
+  
+  # Return an empty list of 'arrays' section is empty.
+  expect_identical(repo$load_arrays_from_config(list(namespace='NS', arrays=list())), list())
+})
+
+test_that("Load arrays with bad config", {
+  repo = newRepo(dependency_obj = mockDep)
+  expect_error(repo$load_arrays_from_config(list()), "'config' missing section")
+  expect_error(
+    repo$load_arrays_from_config(list(namespace='NS', arrays = list(list('alias'='aa')))), 
+    "bad config format")
+  expect_error(
+    repo$load_arrays_from_config(list(namespace='NS', arrays = list(list('alias'='aa')))), 
+    "bad config format")
+  expect_error(
+    repo$load_arrays_from_config(list(namespace='NS', arrays = list(list('alias'='aa', 'name'=42, schema='schema')))), 
+    "bad config format")
+  expect_error(
+    repo$load_arrays_from_config(list(namespace='NS', arrays = list(list('alias'='aa', 'name'='A', schema='schema')))), 
+    "invalid array schema")
 })
