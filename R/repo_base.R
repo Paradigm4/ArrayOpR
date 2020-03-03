@@ -523,6 +523,8 @@ Repo <- R6::R6Class(
         } else {
           aliasArray = array_alias_registry[[what]]
           assert_has_len(aliasArray, "ERROR:Repo$get_array: '%s' is not a registered array alias.", what)
+          # If the array alias is registered with an array name, then first time access trigers a `load_array_from_scidb`
+          # call. Later access will return the cached arrayOp instance.
           if(is.character(aliasArray)){
             cached = load_array_from_scidb(aliasArray)
             private$array_alias_registry[[what]] <- cached
@@ -530,7 +532,8 @@ Repo <- R6::R6Class(
           }
           return(aliasArray)
         }
-      } else if(inherits(what, "ArrayOpBase")){
+      } 
+      else if(inherits(what, "ArrayOpBase")){
         return(what)
       }
       stopf("ERROR:Repo$get_array: param 'what' is not an array alias, schema string or an ArrayOp instance. class(what)=%s",
@@ -558,7 +561,7 @@ Repo <- R6::R6Class(
       assert(is.character(full_array_name) && length(full_array_name) == 1,
              "ERROR:Repo$load_array_from_scidb: param 'full_array_name' must be a single scidb array name")
       schemaStr = query_raw(afl(full_array_name %project% 'schema'))[['schema']]
-      assert(is.character(schemaStr),
+      assert_single_str(schemaStr,
              "ERROR:Repo$load_array_from_scidb: '%s' is not a valid scidb array", full_array_name)
       get_array(schemaStr)
     }

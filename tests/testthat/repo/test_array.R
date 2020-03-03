@@ -59,11 +59,26 @@ test_that("Register array with invalid array name", {
   repo$register_array(list('alias'='wrong name'))
   # Simulate a scidb query error
   stub(repo$get_array, 'dep$query', function(...) stop("wrong array name"))
-  # So no error here
+  # An error is throw when we try to retrieve the array
   expect_error(repo$get_array('alias'), 'not a valid scidb array')
 })
 
 # Load arrays from a config ----
+
+test_that("Load arrays from scidb", {
+  repo = newRepo(dependency_obj = mockDep)
+  arrayOp = repo$get_array("ns.raw_array_name <a:string zip, b:int32> [dim=0:1:2:3]")
+  stub(repo$load_array_from_scidb, 'query_raw', list(schema=arrayOp$to_schema_str()))
+  loaded = repo$load_array_from_scidb('rawArrayName')
+  expect_identical(loaded$to_schema_str(), arrayOp$to_schema_str())
+})
+
+test_that("Load arrays from scidb with exception", {
+  repo = newRepo(dependency_obj = mockDep)
+  arrayOp = repo$get_array("ns.raw_array_name <a:string zip, b:int32> [dim=0:1:2:3]")
+  stub(repo$load_array_from_scidb, 'query_raw', function(...) stop("Some scidb error"))
+  expect_error(repo$load_array_from_scidb('badRawArrayName'), "scidb error")
+})
 
 test_that("Load arrays from a config", {
   repo = newRepo(dependency_obj = mockDep)
