@@ -13,3 +13,8 @@ arrays:
   - alias: template_a
     name: D
     schema: "<fa:string compression 'zlib', fb:int32, fc:int64, fd: bool> [da=0:*:0:*]"
+
+  - alias: arrayOutOfDefaultNamespace
+    # add a z prefix to ensure it'll be the last one in scidb qurey result
+    name: arrayop_unittest.zArrayOutOfDefaultNamespace
+    schema: "<fa:string compression 'zlib', fb:int32, fc:int64, fd: bool> [da=0:*:0:*]"
