@@ -9,7 +9,6 @@ cleanUpNamespace = function(ns = NS){
   ), .raw = T)[['name']]
   for(arr in arrayNames){
     fullName = sprintf("%s.%s", ns, arr)
-    log_job(NULL, sprintf("Removing array %s", fullName))
     repo$execute(afl(fullName %remove% NULL), .raw = T)
   }
 }
@@ -20,6 +19,8 @@ config = yaml::yaml.load_file(relative_path("repo.yaml"))
 # config = yaml::yaml.load_file("tests/testthat/db/repo.yaml")
 NS = config$namespace
 repo = newRepo(db = db)
+# Comment out for no debug
+# repo$.private$set_meta('debug', T)
 cleanUpNamespace(NS)
 ## Run tests ----
 source(relative_path('test_with_scidb.R'), local = T)

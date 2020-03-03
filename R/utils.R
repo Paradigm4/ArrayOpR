@@ -63,6 +63,22 @@ log_job = function(job, msg = '', done_msg = 'done') {
   invisible(result)
 }
 
+# Output job duration.
+# 
+# Fields of durations are `names(proc.time())`, i.e. [user.self, sys.self, elapsed, user.child, sys.child]
+# Units are seconds.
+# @param job An R expression to be evaluated and returned
+# @param msg A message shown as the log entry, followed by a timestamp and time durations.
+# @return evaluated 'job' 
+log_job_duration = function(job, msg = '', done_msg = 'done') {
+  cat(sprintf("%s ... ", msg))
+  start = proc.time()
+  result = force(job)
+  duration = proc.time() - start
+  cat(sprintf("%s. \t[%s]\t%s\n", done_msg, Sys.time(), paste(duration, collapse = '\t')))
+  invisible(result)
+}
+
 .to_signed_integer_str = function(values) {
   single_value = function(v) {
     if(v == 0) '' else sprintf("%+d", v)

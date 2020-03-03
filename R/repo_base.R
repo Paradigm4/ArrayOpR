@@ -395,12 +395,46 @@ Repo <- R6::R6Class(
       eval(parsedExpr, envSchemas)
     }
     ,
+    get_afl_statement = function(what){
+      if(is.character(what))
+        what
+      else if(inherits(what, 'ArrayOpBase'))
+        what$to_df_afl()
+    }
+    ,
     execute_raw = function(what, ...) {
-      try(dep$execute(what, ...), silent = setting_ignore_error)
+      aflStmt = if(is.character(what)) what
+        else if(inherits(what, 'ArrayOpBase')) what$to_afl()
+        else stopf("ERROR:Repo$execute_raw:param 'what' must be a string or arrayOp instance, but got [%s]",
+                 paste(class(what), collapse = ','))
+      tryCatch({
+        nullResult <- if(!setting_debug) dep$execute(aflStmt, ...) else 
+          log_job_duration(dep$execute(aflStmt, ...), sprintf("Repo execute: %s", aflStmt))
+      },
+      error = function(e) {
+        print(afl) # Print out AFL only when error occurs.
+        stop(e)
+      })
+      return(nullResult)
     }
     ,
     query_raw = function(what, ...) {
-      try(dep$query(what, ...), silent = setting_ignore_error)
+      # If ... contains only_attributes = TRUE, then op's dimensions are effectively dropped.
+      drop_dims = methods::hasArg('only_attributes') && list(...)[['only_attributes']]
+      aflStmt = if(is.character(what)) what
+        else if(inherits(what, 'ArrayOpBase'))
+          what$to_df_afl(drop_dims)
+        else stopf("ERROR:Repo$query_raw:param 'what' must be a string or arrayOp instance, but got [%s]",
+                 paste(class(what), collapse = ','))
+      tryCatch({
+        df <- if(!setting_debug) dep$query(aflStmt, ...) else 
+          log_job_duration(dep$query(aflStmt, ...), sprintf("Repo query: %s", aflStmt))
+      },
+      error = function(e) {
+        print(afl) # Print out AFL only when error occurs.
+        stop(e)
+      })
+      return(df)
     }
     ,
     # Get an operand represented by 'what'
@@ -446,6 +480,9 @@ Repo <- R6::R6Class(
   active = list(
     #' @field .private For internal testing only. Do not access this field to avoid unintended consequences!!!
     .private = function() private
+    ,
+    #' @field setting_ignore_error Whether to ignore internal database errors. Default FALSE.
+    setting_debug = function() get_meta('debug', FALSE)
     ,
     #' @field setting_ignore_error Whether to ignore internal database errors. Default FALSE.
     setting_ignore_error = function() get_meta('ignore_error', FALSE)
@@ -666,7 +703,7 @@ Repo <- R6::R6Class(
       uploaded = scidb::as.scidb(dep$.db, df, use_aio_input = use_aio_input, temp = temp, 
                                  types =  template$get_field_types(names(df), .raw=TRUE), ...)
       
-      res = get_array(get('schema', uploaded@meta))$
+      res = get_array(uploaded@meta$schema)$
         create_new_with_same_schema(uploaded@name)
       res$.set_meta('.ref', uploaded)
       res
