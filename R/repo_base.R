@@ -396,17 +396,15 @@ Repo <- R6::R6Class(
     }
     ,
     get_afl_statement = function(what){
-      if(is.character(what))
-        what
-      else if(inherits(what, 'ArrayOpBase'))
-        what$to_df_afl()
+      aflStmt = if(is.character(what)) what
+      else if(inherits(what, 'ArrayOpBase')) what$to_afl()
+      else stopf("ERROR:Repo$get_afl_statement:param 'what' must be a string or arrayOp instance, but got [%s]",
+                 paste(class(what), collapse = ','))
+      return(aflStmt)
     }
     ,
     execute_raw = function(what, ...) {
-      aflStmt = if(is.character(what)) what
-        else if(inherits(what, 'ArrayOpBase')) what$to_afl()
-        else stopf("ERROR:Repo$execute_raw:param 'what' must be a string or arrayOp instance, but got [%s]",
-                 paste(class(what), collapse = ','))
+      aflStmt = get_afl_statement(what)
       tryCatch({
         nullResult <- if(!setting_debug) dep$execute(aflStmt, ...) else 
           log_job_duration(dep$execute(aflStmt, ...), sprintf("Repo execute: %s", aflStmt))
@@ -706,6 +704,25 @@ Repo <- R6::R6Class(
       res = get_array(uploaded@meta$schema)$
         create_new_with_same_schema(uploaded@name)
       res$.set_meta('.ref', uploaded)
+      res
+    }
+    ,
+    #' @description 
+    #' Save an arrayOp or AFL statement as a scidb array wrapped as a new arrayOp
+    #' 
+    #' No all things can be done in one scidb operation, sometimes we need to store intermediate results as arrays.
+    #' 
+    #' @param what an arrayOp or an AFL statement (string)
+    #' @param ... Same params as used in scidb::store function, e.g. temp = F, gc = T
+    #' @return An arrayOp whose `to_afl()` is the newly created array name
+    save_as_array = function(what, ...) {
+      aflStmt = get_afl_statement(what)
+      storedAfl = scidb::scidb(dep$.db, aflStmt)
+      storedArray = scidb::store(dep$.db, storedAfl, ...)
+      
+      res = get_array(storedArray@meta$schema)$
+        create_new_with_same_schema(storedArray@name)
+      res$.set_meta('.ref', storedArray)
       res
     }
   )

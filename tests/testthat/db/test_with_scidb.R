@@ -64,3 +64,17 @@ test_that("Upload data frame to scidb", {
   expect_equal(dbdf2, dfCopy)
 })
 
+# Store AFL as a scidb array and return arrayOp ----
+
+test_that("Store AFL as scidb array and return arrayOp", {
+  aflStmt = "list('namespaces')"
+  arrayOp = repo$save_as_array(aflStmt)
+  arrayOp2 = repo$save_as_array(aflStmt, temp = F) # Here we creaet a temporary array
+  
+  resultFromStmt = repo$query(aflStmt, .raw = T, only_attributes = T)
+  resultFromaArrayOp = repo$query(arrayOp, only_attributes = T)
+  resultFromaArrayOp2 = repo$query(arrayOp2, only_attributes = T)
+  expect_identical(resultFromaArrayOp, resultFromStmt)
+  expect_identical(resultFromaArrayOp2, resultFromStmt)
+})
+
