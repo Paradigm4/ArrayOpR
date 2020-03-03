@@ -63,7 +63,7 @@ test_that("Register array with invalid array name", {
   expect_error(repo$get_array('alias'), 'not a valid scidb array')
 })
 
-# Load arrays from a config ----
+# Load a single array from scidb ----
 
 test_that("Load arrays from scidb", {
   repo = newRepo(dependency_obj = mockDep)
@@ -79,6 +79,30 @@ test_that("Load arrays from scidb with exception", {
   stub(repo$load_array_from_scidb, 'query_raw', function(...) stop("Some scidb error"))
   expect_error(repo$load_array_from_scidb('badRawArrayName'), "scidb error")
 })
+
+# Load arrays from a scidb namespace ----
+
+test_that("Load arrays from a scidb namespace", {
+  to_schema_str = function(x) x$to_schema_str()
+  to_afl = function(x) x$to_afl()
+  
+  repo = newRepo(dependency_obj = mockDep)
+  array1 = repo$get_array("array1 <a:string zip, b:int32> [dim=0:1:2:3]")
+  array2 = repo$get_array("array2 <a:string, b:int32> [da=*; db=0:1:2:3]")
+  array3 = repo$get_array("array3 <aa:string, ab:bool null> [da=*; db=0:1:2:3]")
+  sourceArrays = c(array1, array2, array3)
+  schemaStrs = sapply(sourceArrays, function(x) str(x))
+  
+  stub(repo$load_arrays_from_scidb_namespace, "query_raw", list(schema=schemaStrs))
+  loadedArrays = repo$load_arrays_from_scidb_namespace('NS')
+  expect_identical(length(loadedArrays), 3L)
+  expect_identical(names(loadedArrays), sapply(sourceArrays, to_afl))
+  expect_identical(rlang::set_names(sapply(loadedArrays, to_afl), NULL), 
+                   sprintf("NS.%s", sapply(sourceArrays, to_afl)))
+  expect_identical(rlang::set_names(sapply(loadedArrays, to_schema_str), NULL), sapply(sourceArrays, to_schema_str))
+})
+
+# Load arrays from a config ----
 
 test_that("Load arrays from a config", {
   repo = newRepo(dependency_obj = mockDep)

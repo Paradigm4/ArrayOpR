@@ -558,12 +558,31 @@ Repo <- R6::R6Class(
     #' @param full_array_name A fully qualified array name (e.g. myNamespace.arrayName)
     #' @return An ArrayOp instance
     load_array_from_scidb = function(full_array_name){
-      assert(is.character(full_array_name) && length(full_array_name) == 1,
+      assert_single_str(full_array_name,
              "ERROR:Repo$load_array_from_scidb: param 'full_array_name' must be a single scidb array name")
       schemaStr = query_raw(afl(full_array_name %project% 'schema'))[['schema']]
       assert_single_str(schemaStr,
              "ERROR:Repo$load_array_from_scidb: '%s' is not a valid scidb array", full_array_name)
       get_array(schemaStr)
+    }
+    ,
+    #' Get a list of arrays from a scidb namespace
+    #' 
+    #' @param namespace A scidb namespace
+    #' @return A list of ArrayOp instances where names are the array names (without namespace) and 
+    #' values are the arrayOp instances whose to_afl() function return fully qualified array names
+    load_arrays_from_scidb_namespace = function(namespace){
+      assert_single_str(namespace,
+             "ERROR:Repo$load_arrays_from_scidb_namespace: param 'namespace' must be a single scidb namespace")
+      schemaStr = query_raw(afl(sprintf("list(ns:%s)", namespace) %project% 'schema'))[['schema']]
+      assert(is.character(schemaStr),
+             "ERROR:Repo$load_arrays_from_scidb_namespace: '%s' is not a valid scidb namespace", namespace)
+      rawArrays = sapply(schemaStr, get_array) # The arrays only have names with the namespace prefix
+      arrayNamesWithoutNs = sapply(rawArrays, function(x) x$to_afl())
+      fullNameArrays = sapply(rawArrays, function(x){
+        x$create_new_with_same_schema(sprintf("%s.%s", namespace, x$to_afl()))
+      })
+      return(as.list(rlang::set_names(fullNameArrays, arrayNamesWithoutNs)))
     }
     ,
     #' Load a list of ArrayOp instances from a config object
