@@ -215,29 +215,35 @@ Please select on left operand's fields OR do not select on either operand. Look 
     # Reshape an arrayOp on a compound key (consisted of one or multiple fields) according to the template (self)
     # 
     # If the operands have the same dimensions as the template, then only 'project' fields
-    # If the key contains all template's dimensions, then 'redimension' the operand and 'project' unrelated fields
+    # If the key contains all template's dimensions, then 'redimension' the operand and 'project' away unrelated fields
     # Otherwise, 'equi_join' is needed
     # 
-    # Return an arrayOp that has the same shape as the template (self)
-    key_to_coordinates = function(arr, keys, reserved_fields,
+    # @param operand The araryOp operand
+    # @param keys Which fields to identify matching cells
+    # @param reserved_fields Which fields of `operand` should be reserved
+    # @param .redimension_setting A list of settings if scidb redimension is needed.
+    # @param .join_setting A list of settings if ArrayOp$join is needed.
+    # 
+    # @return an arrayOp that has the same shape as the template (self)
+    key_to_coordinates = function(operand, keys, reserved_fields,
                                   .redimension_setting = NULL, .join_setting = NULL){
-      if(length(arr$dims) == length(self$dims) && all(arr$dims == self$dims))
+      if(length(operand$dims) == length(self$dims) && all(operand$dims == self$dims))
         # If all dimensions match, no need to do anything about dimensions.
-        return(arr$reshape(reserved_fields))
+        return(operand$reshape(reserved_fields))
       
-      arrKeyFields = .get_element_names(keys)
+      operandKeyFields = .get_element_names(keys)
       templateKeyFields = as.character(keys)
-      extraFields = arr$attrs %-% keys %-% reserved_fields
+      extraFields = operand$attrs %-% keys %-% reserved_fields
       
-      if(all(self$dims %in% arrKeyFields)){
+      if(all(self$dims %in% operandKeyFields)){
         if(.has_len(extraFields))
-          arr = arr$reshape(c(keys, reserved_fields))
-        return(private$afl_redimension(arr, .setting = .redimension_setting)$reshape(reserved_fields, .force_project = FALSE))
+          operand = operand$reshape(c(keys, reserved_fields))
+        return(private$afl_redimension(operand, .setting = .redimension_setting)$reshape(reserved_fields, .force_project = FALSE))
       }
       
-      joinOp = arr$select(reserved_fields %u% (self$dims %n% arr$dims_n_attrs))$
+      joinOp = operand$select(reserved_fields %u% (self$dims %n% operand$dims_n_attrs))$
         join(self$select(self$dims), 
-             on_left = arrKeyFields, on_right = templateKeyFields, settings = .join_setting)
+             on_left = operandKeyFields, on_right = templateKeyFields, settings = .join_setting)
       private$afl_redimension(joinOp, .setting = .redimension_setting)
     }
     ### Implement raw AFL function ----
@@ -1031,11 +1037,35 @@ Only data.frame is supported", class(df))
     }
     ,
     #' @description 
-    #' Mutate the content of a target arrayOp (self)
+    #' Generate a mutated arrayOp of the source `self` by the `data_source`.
     #' 
-    #' @param data_source A named list of mutated field expressions or an arrayOp instance
-    #' If 'data_source' is a named list that contains target's dimensions, then the number of matching cells should be
-    #' 0 or 1. Mutiple matching cells would cause dimension collision error. 
+    #' Neither `self` or `data_source` is mutated. The resultant arrayOp is a 'mutated' version of `self` in the sense 
+    #' that `result` has the exact same schema as `self` and a subset of cells that match to `self`. 
+    #' 
+    #' This function works in two modes: 1. `data_source` is a named list that specifies the expression for mutation.
+    #' 2. `data_source` is an arrayOp that contains the mutated data and 'key' data for cell identification.
+    #'
+    #' Mode-1: `data_source` is a named list.
+    #' The `data_source` list should only contain names as the mutated fields and string values as the mutate expression.
+    #' All other fields not present in the list would remain the same. 
+    #' Normally, the list should only have `self`'s attributes as the mutated fields. 
+    #' But if `data_source` contains target's dimensions, then the number of matching cells should be no more than 1, 
+    #' otherwise mutiple matching cells would cause dimension collision error thrown by scidb. 
+    #' 
+    #' Mode-2: `data_source` is an arrayOp instance.
+    #' The `data_source` arrayOp must have two types of data. One type is the 'key' data that are used to identify which
+    #' cells to mutate. The other is the 'mutated' data of the matching cells. 
+    #' If the `keys` have all `self`'s dimensions, then no join is needed to match cell coordinates.
+    #' Otherwise we need to map `keys` to cell coordinates using join and redimension. 
+    #' 
+    #' @param data_source A named list of mutated field expressions or an arrayOp instance.
+    #' @param keys Which fields of `data_source` to identify the matching cells. Only applicable when `data_source` is arrayOp.
+    #' @param updated_fields Which fields of `data_source` to mutate for the matching cells. 
+    #' Only applicable when `data_source` is arrayOp.
+    #' @param artificial_field The attribute name in unpack if we need to drop `self`'s dimensions. 
+    #' Only applicable when `data_source` is a list and contains `self`'s dimensions, which is rare.
+    #' @param .redimension_setting Only applicable when `data_source` is arrayOp.
+    #' @param .join_setting Only applicable when `data_source` is arrayOp and it does not have all `self`'s dimensions.
     #' @return a new arrayOp instance that carries the mutated data and has the exact same schema as the target
     mutate = function(data_source, keys = NULL, updated_fields = NULL, artificial_field = .random_attr_name(), 
                       .redimension_setting = NULL, .join_setting = NULL) {
