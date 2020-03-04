@@ -1,17 +1,8 @@
 namespace: arrayop_unittest
 arrays:
-  - alias: alias_a
-    name: A
-    schema: "<a:string COMPRESSION 'zlib', b:int32> [da=0:*:0:*]"
-  - alias: alias_b
-    name: B
-    schema: "<a:string, b:int32> [da=0:*:0:*]"
-  - alias: alias_c
-    name: C
-    schema: "<a:string, b:int32, c:bool> [da=0:*:0:*]"
 
   - alias: template_a
-    name: D
+    name: UPLOAD_TEMPLATE
     schema: >
       <f_str:string COMPRESSION 'zlib', f_int32:int32, f_int64:int64, f_bool: bool, f_double: double, f_datetime: datetime> 
       [da=0:*:0:*]
@@ -20,3 +11,9 @@ arrays:
     # add a z prefix to ensure it'll be the last one in scidb qurey result
     name: arrayop_unittest.zArrayOutOfDefaultNamespace
     schema: "<fa:string COMPRESSION 'zlib', fb:int32, fc:int64, fd: bool> [da=0:*:0:*]"
+
+  - alias: mutate_array
+    name: MUTATE_ARRAY
+    schema: >
+      <lower:string COMPRESSION 'zlib', upper:string, f_int32:int32, f_int64:int64, f_bool: bool, f_double: double> 
+      [da=0:*:0:*; db=0:*:0:*]

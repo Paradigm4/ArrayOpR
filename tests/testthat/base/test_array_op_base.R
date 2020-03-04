@@ -462,6 +462,39 @@ test_that("Output a schema representation for the ArrayOp with dimension specs",
   assert_afl_equal(t$to_schema_str(), "<aa:string, ab:int32> [da=0:*:0:*;db=1:23:0:23]")
 })
 
+# Redimension ----
+
+create_source_array = function(template, array_name = 'Source', dims = template$dims, attrs = template$attrs, dtypes = template$get_field_types()) {
+  newArrayOp(array_name, dims, attrs, dtypes = dtypes, dim_specs = template$get_dim_specs())
+}
+
+test_that("Redimension according to a template, strict mode", {
+  Template = newArrayOp('Template', c('da', 'db'), c('aa', 'ab'), dtypes = list(da='int64', db='int64', aa="string compression 'zlib'", ab='int32 not null'))
+  source = create_source_array(Template, dims='x', attrs=Template$dims_n_attrs)
+  changed = source$change_schema(Template)
+  assert_afl_equal(changed$to_afl(), sprintf("redimension(Source, %s)", Template$to_schema_str()))
+  assert_afl_equal(changed$to_schema_str(), Template$to_schema_str())
+})
+
+test_that("Redimension according to a template, strict mode with customized setting", {
+  Template = newArrayOp('Template', c('da', 'db'), c('aa', 'ab'), dtypes = list(da='int64', db='int64', aa="string compression 'zlib'", ab='int32 not null'))
+  source = create_source_array(Template, dims='x', attrs=Template$dims_n_attrs)
+  changed = source$change_schema(Template, .setting=list('chunk_size_limit:1024'))
+  assert_afl_equal(changed$to_afl(), sprintf("redimension(Source, %s, chunk_size_limit:1024)", Template$to_schema_str()))
+  assert_afl_equal(changed$to_schema_str(), Template$to_schema_str())
+})
+
+test_that("Redimension according to a template, non-strict mode", {
+  Template = newArrayOp('Template', c('da', 'db'), c('aa', 'ab'), dtypes = list(da='int64', db='int64', aa="string compression 'zlib'", ab='int32 not null'))
+  source = create_source_array(Template, dims='x', attrs=c('da', 'ab'))
+  changed = source$change_schema(Template, strict = FALSE)
+  schemaStr = "<ab:int32 not null> [da]"
+  assert_afl_equal(changed$to_afl(), sprintf("redimension(Source, %s)", schemaStr))
+  assert_afl_equal(changed$to_schema_str(), schemaStr)
+  
+  # Cannot change_schema if strict = T because `source` does NOT have all the template's fields
+  expect_error(source$change_schema(Template, strict = TRUE), "not found")
+})
 
 # create, delete, delete_versions ---------------------------------------------------------------------------------
 

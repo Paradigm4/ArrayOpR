@@ -224,7 +224,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
     # @param .redimension_setting A list of settings if scidb redimension is needed.
     # @param .join_setting A list of settings if ArrayOp$join is needed.
     # 
-    # @return an arrayOp that has the same shape as the template (self)
+    # @return an arrayOp that has the same dimensions as the template (self), only reserved fields are retained.
     key_to_coordinates = function(operand, keys, reserved_fields,
                                   .redimension_setting = NULL, .join_setting = NULL){
       if(length(operand$dims) == length(self$dims) && all(operand$dims == self$dims))
@@ -238,13 +238,14 @@ Please select on left operand's fields OR do not select on either operand. Look 
       if(all(self$dims %in% operandKeyFields)){
         if(.has_len(extraFields))
           operand = operand$reshape(c(keys, reserved_fields))
-        return(private$afl_redimension(operand, .setting = .redimension_setting)$reshape(reserved_fields, .force_project = FALSE))
+        return(operand$change_schema(self, strict = FALSE, .setting = .redimension_setting)$
+                 reshape(reserved_fields, .force_project = FALSE))
       }
       
       joinOp = operand$select(reserved_fields %u% (self$dims %n% operand$dims_n_attrs))$
         join(self$select(self$dims), 
              on_left = operandKeyFields, on_right = templateKeyFields, settings = .join_setting)
-      private$afl_redimension(joinOp, .setting = .redimension_setting)
+      joinOp$change_schema(self, strict = FALSE, .setting = .redimension_setting)
     }
     ### Implement raw AFL function ----
     # Functions prefixed with 'afl_' are implemented according to scidb operators with sanity checks.
@@ -276,18 +277,17 @@ Please select on left operand's fields OR do not select on either operand. Look 
                       attrs = self$attrs %u% fields, dtypes = newDTypes, dim_specs = self$get_dim_specs())
     }
     ,
-    # Redimension the operand arrayOp instance
+    # Redimension `self` according to a template.
     # 
     # @param .setting a string vector, where each item will be appended to the redimension operand.
     # E.g. .setting = c('false', 'cells_per_chunk: 1234') ==> redimension(source, template, false, cells_per_chunk: 1234)
     # Similar to scidb redimension operator
-    afl_redimension = function(operand, .setting = NULL) {
-      matchingFields = operand$dims_n_attrs %n% self$dims_n_attrs
-      assert_has_len(matchingFields, "ERROR: ArrayOp$afl_redimension: No matching fields found.\nSource:%s\nTemplate:\n",
-                     str(self), str(operand))
-      template = self$spawn(excluded = self$dims_n_attrs %-% matchingFields)
-      
-      template$create_new_with_same_schema(afl(operand %redimension% c(template$to_schema_str(), as.character(.setting)) ))
+    afl_redimension = function(template, .setting = NULL) {
+      assert_no_fields(template$dims_n_attrs %-% self$dims_n_attrs, 
+                       "ERROR:ArrayOp$afl_redimension:Field(s) '%s' of the template not found in the source.")
+      return(template$create_new_with_same_schema(afl(
+        self %redimension% c(template$to_schema_str(), as.character(.setting)) 
+      )))
     }
     ,
     # Insert to a target array (scidb `insert` operator)
@@ -531,6 +531,29 @@ Please select on left operand's fields OR do not select on either operand. Look 
         # 'ignore_in_parent' = ignore_in_parent,
         stopf("ERROR: ArrayOp$reshape: invalid 'dim_mode' %s.", dim_mode)
       ) ()
+    }
+    ,
+    #' @description 
+    #' Change `self` schema according to a template
+    #' 
+    #' This operation throws away any fields that do not exist in `template` while keeping the `self`'s data of the 
+    #' matching fields. Implemented by scidb `redimension` operator, but it allows for partial-fields match if `strict=F`.
+    #' 
+    #' @param template an arrayOp instance that determines the resultant schema.
+    #' @param strict If TRUE(default), requires `self` has all the `template` fields.
+    #' @param .setting a string vector, where each item will be appended to the redimension operand. 
+    #' E.g. .setting = c('false', 'cells_per_chunk: 1234') ==> redimension(source, template, false, cells_per_chunk: 1234)
+    change_schema = function(template, strict = TRUE, .setting = NULL){
+      realTemplate = if(strict) template
+      else {
+        matchingDims = template$dims %n% self$dims_n_attrs
+        assert_has_len(matchingDims, 
+                       "ERROR:ArrayOp$change_schema:None of the template dimension(s) '%s' found in the source.",
+                       paste(template$dims, collapse = ','))
+        matchedFileds = template$dims_n_attrs %n% self$dims_n_attrs
+        template$spawn(excluded = template$dims_n_attrs %-% matchedFileds)
+      }
+      private$afl_redimension(realTemplate, .setting)
     }
     ,
     #' @description 
@@ -1083,10 +1106,14 @@ Only data.frame is supported", class(df))
         if(!.has_len(mutatedFields %n% self$dims)) { # Only attrs muated
           self$reshape(utils::modifyList(as.list(self$attrs), data_source))
         } else {
-          private$afl_redimension(
-            self$reshape(utils::modifyList(as.list(self$dims_n_attrs), data_source), 
-                         dim_mode = 'drop', artificial_field = artificial_field)
-          )
+          self$reshape(utils::modifyList(as.list(self$dims_n_attrs), data_source), 
+                       dim_mode = 'drop', artificial_field = artificial_field)$
+              change_schema(self, strict = FALSE)
+          
+          # private$afl_redimension(
+          #   self$reshape(utils::modifyList(as.list(self$dims_n_attrs), data_source), 
+          #                dim_mode = 'drop', artificial_field = artificial_field)
+          # )
         }
       }
       

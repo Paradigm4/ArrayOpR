@@ -366,6 +366,7 @@ newRepo = function(dependency_obj = NULL, db = NULL){
 Repo <- R6::R6Class(
   "Repo",
   portable = FALSE,
+  # Private ----
   private = list(
     dep = NULL
     ,
@@ -475,6 +476,7 @@ Repo <- R6::R6Class(
     }
   )
   ,
+  # Active bindings ----
   active = list(
     #' @field .private For internal testing only. Do not access this field to avoid unintended consequences!!!
     .private = function() private
@@ -489,6 +491,7 @@ Repo <- R6::R6Class(
     setting_use_aio_input = function() get_meta('use_aio_input', FALSE)
   )
   ,
+  # Public ----
   public = list(
     #' @description
     #' Initialize function.

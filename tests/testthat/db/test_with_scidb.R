@@ -2,6 +2,8 @@ context("Repo tests with scidb connection")
 
 # arrays loaded from the config file
 CfgArrays = repo$load_arrays_from_config(config)
+# Get array's raw names (without namespace)
+CfgArraysRawNames = sapply(CfgArrays, function(x) gsub("^[^\\.]+\\.", '', x$to_afl()))
 
 # Populate the empty namespace ----
 test_that("No arrays in the namespace", {
@@ -19,6 +21,7 @@ test_that("Loaded arrays are created in the namespace", {
   
   # Ensure the newly created arrays can be loaded
   scidbCfgArrays = repo$load_arrays_from_scidb_namespace(NS)
+  scidbCfgArrays = scidbCfgArrays[CfgArraysRawNames]
   expect_identical(length(scidbCfgArrays), length(CfgArrays))
   for(i in 1:length(scidbCfgArrays)){
     fromConfig = CfgArrays[[i]]
@@ -92,3 +95,21 @@ test_that("Store AFL as scidb array and return arrayOp", {
   repo$execute(afl(stored3 %remove% NULL), .raw = T)
 })
 
+# Mutate array content ----
+
+get_mutate_array = function(reset = TRUE){
+  target = CfgArrays[['mutate_array']]
+  if(reset){
+    try(repo$execute(afl(target %remove% NULL)), silent = T)
+    repo$execute(target$create_array_cmd(target$to_afl()))
+  }
+  target
+}
+
+test_that("Mutate an array", {
+  df = data.frame(lower = letters[1:5], upper = LETTERS[1:5],
+                  f_double = c(3.14, 2.0, NA, 0, -99), f_bool = c(T,NA,F,NA,F), f_int64 = 1:5 * 10.0)
+  target = get_mutate_array()
+  
+  
+})
