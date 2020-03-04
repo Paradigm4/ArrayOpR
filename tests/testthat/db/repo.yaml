@@ -17,3 +17,9 @@ arrays:
     schema: >
       <lower:string COMPRESSION 'zlib', upper:string, f_int32:int32, f_int64:int64, f_bool: bool, f_double: double> 
       [da=0:*:0:*; db=0:*:0:*]
+
+  - alias: auto_fields_array
+    name: AUTO_FIELDS
+    schema: >
+      <f_str:string, f_int32:int32, f_int64:int64> 
+      [da=0:*:0:1000; db=0:*:0:1000]
