@@ -683,7 +683,47 @@ test_that("Auto increment the reference attribute", {
 })
 
 
+# Update/Overwrite ----
 
+test_that("Update a target array", {
+  target = newArrayOp("Target", c('da', 'db'), c('aa', 'ab'),
+                      dtypes = list(da='int64', db='int64', aa="string COMPRESSION 'zip'", ab='double NULL'),
+                      dim_specs = list(da="da_spec", db='db_spec'))
+  source1 = newArrayOp("Source", c('da', 'db'), c('aa', 'ab'),
+                      dtypes = list(da='int64', db='int64', aa="string COMPRESSION 'zip'", ab='double NULL'),
+                      dim_specs = list(da="da_spec", db='db_spec'))
+  source2 = newArrayOp("Source", c('da', 'db'), c('aa', 'ab'),
+                      dtypes = list(da='int64', db='int64', aa="string", ab='double'),
+                      dim_specs = list(da="da_spec", db='db_spec'))
+  source3 = newArrayOp("Source", c('sda', 'sdb'), c('saa', 'sab'),
+                      dtypes = list(sab='double', saa="string", sda='int64', sdb='int64'),
+                      dim_specs = list(sda="da_spec", sdb='db_spec'))
+  
+  for(s in list(source1, source2, source3)){
+    assert_afl_equal(s$update(target)$to_afl(), "insert(Source, Target)")
+    assert_afl_equal(s$overwrite(target)$to_afl(), "store(Source, Target)")
+  }
+})
+
+
+test_that("Update/Overwrite negative tests", {
+  Target = newArrayOp("Target", dims = c('da', 'db', 'dc'), attrs = c('aa', 'ab', 'ac'), 
+                      dtypes = list('da'='int64', 'db'='int64', 'dc'='int64', 'aa'='string zip', 'ab'='bool', 'ac'='double nullable'),
+                      dim_specs = list('da' = 'da_spec', 'db' = 'db_spec', 'dc' = 'dc_spec'))
+  
+  create_source_array = function(dims = Target$dims, attrs = Target$attrs, array_name = 'Source', dtypes = Target$get_field_types()) {
+    newArrayOp(array_name, dims, attrs, dtypes = dtypes, dim_specs = Target$get_dim_specs())
+  }
+  expect_error(create_source_array(dims = c('da', 'db'))$update(Target), "dimension number mismatch")
+  expect_error(create_source_array(attrs = c('aa', 'ac'))$update(Target), "attribute number mismatch")
+  expect_error(create_source_array(dtypes = utils::modifyList(Target$get_field_types(), list('aa'='newType')))$
+                 update(Target), "attribute data type mismatch")
+  
+  expect_error(create_source_array(dims = c('da', 'db'))$overwrite(Target), "dimension number mismatch")
+  expect_error(create_source_array(attrs = c('aa', 'ac'))$overwrite(Target), "attribute number mismatch")
+  expect_error(create_source_array(dtypes = utils::modifyList(Target$get_field_types(), list('aa'='newType')))$
+                 overwrite(Target), "attribute data type mismatch")
+})
 
 # Mutate array content ----
 
@@ -906,16 +946,4 @@ test_that("Update with 'where' clause ", {
   Target)")
 })
 
-test_that("Update() negative tests", {
-  create_source_array = function(dims = Target$dims, attrs = Target$attrs, array_name = 'Source', dtypes = Target$get_field_types()) {
-    newArrayOp(array_name, dims, attrs, dtypes = dtypes, dim_specs = Target$get_dim_specs())
-  }
-  expect_error(create_source_array(dims = c('da', 'db'))$update(Target), "dimension number mismtach")
-  expect_error(create_source_array(attrs = c('aa', 'ac'))$update(Target), "attribute number mismtach")
-  expect_error(create_source_array(dtypes = utils::modifyList(Target$get_field_types(), list('aa'='newType')))$
-                 update(Target), "attribute data type mismatch")
-  # Only requires raw data type matches
-  assert_afl_equal(create_source_array(dtypes = utils::modifyList(Target$get_field_types(), list('aa'='string zip zip zip')))$
-                     update(Target)$to_afl(), "insert(Source, Target)")
-})
 

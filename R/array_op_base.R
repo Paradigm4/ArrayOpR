@@ -284,21 +284,38 @@ Please select on left operand's fields OR do not select on either operand. Look 
       template$create_new_with_same_schema(afl(operand %redimension% c(template$to_schema_str(), as.character(.setting)) ))
     }
     ,
-    # Insert to a target array
+    # Insert to a target array (scidb `insert` operator)
     # 
     # Perform field data types check. Field names are irrelevant
     # 
     # @param target: Target array
     # @return An scidb insert operation
     afl_insert = function(target) {
-      assert(length(self$dims) == length(target$dims), "ERROR: ArrayOp$afl_insert: dimension number mismtach: %d[%s] != %d[%s]",
+      assert(length(self$dims) == length(target$dims), "ERROR: ArrayOp$afl_insert: dimension number mismatch: %d[%s] != %d[%s]",
              length(self$dims), paste(self$dims, collapse=','), length(target$dims), paste(target$dims, collapse = ','))
-      assert(length(self$attrs) == length(target$attrs), "ERROR: ArrayOp$afl_insert: attribute number mismtach: %d[%s] != %d[%s]",
+      assert(length(self$attrs) == length(target$attrs), "ERROR: ArrayOp$afl_insert: attribute number mismatch: %d[%s] != %d[%s]",
              length(self$attrs), paste(self$attrs, collapse = ','), length(target$attrs), paste(target$attrs, collapse = ','))
       assert(all(as.character(self$get_field_types(.raw = TRUE)) == as.character(target$get_field_types(.raw = TRUE))),
              "ERROR: ArrayOp$afl_insert: attribute data type mismatch. \nSource: %s\nTarget: %s", 
              self$to_schema_str(), target$to_schema_str())
       target$create_new_with_same_schema(afl(self %insert% target))
+    }
+    ,
+    # Overwrite a target array (scidb `store` operator)
+    # 
+    # Perform field data types check. Field names are irrelevant
+    # 
+    # @param target: Target array
+    # @return An scidb insert operation
+    afl_store = function(target, new_target = FALSE) {
+      assert(length(self$dims) == length(target$dims), "ERROR: ArrayOp$afl_store: dimension number mismatch: %d[%s] != %d[%s]",
+             length(self$dims), paste(self$dims, collapse=','), length(target$dims), paste(target$dims, collapse = ','))
+      assert(length(self$attrs) == length(target$attrs), "ERROR: ArrayOp$afl_store: attribute number mismatch: %d[%s] != %d[%s]",
+             length(self$attrs), paste(self$attrs, collapse = ','), length(target$attrs), paste(target$attrs, collapse = ','))
+      assert(all(as.character(self$get_field_types(.raw = TRUE)) == as.character(target$get_field_types(.raw = TRUE))),
+             "ERROR: ArrayOp$afl_store: attribute data type mismatch. \nSource: %s\nTarget: %s", 
+             self$to_schema_str(), target$to_schema_str())
+      target$create_new_with_same_schema(afl(self %store% target))
     }
   ),
   active = list(
@@ -934,7 +951,7 @@ Only data.frame is supported", class(df))
     set_auto_fields = function(target, source_auto_increment = NULL, target_auto_increment = NULL, anti_collision_field = NULL
                                ,join_setting = NULL, source_anti_collision_dim_spec = NULL) {
       assert(inherits(target, 'ArrayOpBase'),
-        "ERROR: ArrayOp$write_to: param target must be ArrayOp, but got '%s' instead.", class(target))
+        "ERROR: ArrayOp$set_auto_fields: param target must be ArrayOp, but got '%s' instead.", class(target))
       
       result = self
         
@@ -957,7 +974,10 @@ Only data.frame is supported", class(df))
     }
     ,
     #' @description 
-    #' Create a new ArrayOp instance that represents a writing data operation
+    #' (Deprecated) Create a new ArrayOp instance that represents a writing data operation
+    #' 
+    #' NOTE: this function is deprecated. 
+    #' Please use ArrayOp's set_auto_fields, mutate, update and overwrite functions instead.
     #' 
     #' If the dimension count, attribute count and data types match between the source(self) and target, 
     #' then no redimension will be performed, otherwise redimension on the source first.
@@ -1085,12 +1105,29 @@ Only data.frame is supported", class(df))
     #' Update Target array with self's content
     #' 
     #' Similar behavior to scidb insert operator
+    #' Fields of self and Target must match by raw data type. Field names are irrelevant.
     #' 
     #' @param target An arrayOp instance where self's content is written to.
     #' @return A new arrayOp that encapsulates the insert operation
     update = function(target) {
-      assert(inherits(target, 'ArrayOpBase'), "ERROR: ArrayOp$update: param 'target' must be an arrayOp, but got [%s]", paste(class(data_source), collapse = ', '))
+      assert(inherits(target, 'ArrayOpBase'), "ERROR: ArrayOp$update: param 'target' must be an arrayOp, but got [%s]",
+             paste(class(target), collapse = ', '))
       private$afl_insert(target)
+    }
+    ,
+    #' @description 
+    #' Overwrite Target array with self's content
+    #' 
+    #' Warning: Target's content will be erased and filled with self's content.
+    #' Similar behavior to scidb overwrite operator. 
+    #' Fields of self and Target must match by raw data type. Field names are irrelevant.
+    #' 
+    #' @param target An arrayOp instance where self's content is written to.
+    #' @return A new arrayOp that encapsulates the insert operation
+    overwrite = function(target) {
+      assert(inherits(target, 'ArrayOpBase'), "ERROR: ArrayOp$target: param 'target' must be an arrayOp, but got [%s]",
+             paste(class(target), collapse = ', '))
+      private$afl_store(target)
     }
     ,
     #' @description 
