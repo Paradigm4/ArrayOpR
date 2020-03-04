@@ -47,8 +47,8 @@ test_that("Upload data frame to scidb", {
   #                 f_datetime = Sys.time())
   template = CfgArrays[['template_a']]
   
-  uploaded = repo$upload_df(df, template, use_aio_input = F)
-  uploaded2 = repo$upload_df(df, template, use_aio_input = T)
+  uploaded = repo$upload_df(df, template, temp = F, use_aio_input = F)
+  uploaded2 = repo$upload_df(df, template, temp = T, use_aio_input = T)
   
   templateMatchedDTypes = template$get_field_types(names(df), .raw=TRUE)
   expect_identical(uploaded$get_field_types(uploaded$attrs), templateMatchedDTypes)
@@ -67,14 +67,28 @@ test_that("Upload data frame to scidb", {
 # Store AFL as a scidb array and return arrayOp ----
 
 test_that("Store AFL as scidb array and return arrayOp", {
-  aflStmt = "list('namespaces')"
-  arrayOp = repo$save_as_array(aflStmt)
-  arrayOp2 = repo$save_as_array(aflStmt, temp = F) # Here we creaet a temporary array
+  df = data.frame(f_str = letters[1:5], f_double = c(3.14, 2.0, NA, 0, -99), f_bool = c(T,NA,F,NA,F), f_int64 = 1:5 * 10.0)
+  template = CfgArrays[['template_a']]
   
-  resultFromStmt = repo$query(aflStmt, .raw = T, only_attributes = T)
-  resultFromaArrayOp = repo$query(arrayOp, only_attributes = T)
-  resultFromaArrayOp2 = repo$query(arrayOp2, only_attributes = T)
-  expect_identical(resultFromaArrayOp, resultFromStmt)
-  expect_identical(resultFromaArrayOp2, resultFromStmt)
+  uploaded = repo$upload_df(df, template, temp = F)
+  filtered = uploaded$where(f_double > 0)
+  
+  randomName = sprintf('myStoredArray%s', .random_attr_name())
+  stored1 = repo$save_as_array(filtered, name = randomName, temp = F, gc = F)
+  stored2 = repo$save_as_array(filtered, temp = T)
+  filteredDf = dplyr::filter(df, f_double > 0)
+  
+  result1 = repo$query(stored1, only_attributes = T)
+  result2 = repo$query(stored2, only_attributes = T)
+  expect_equal(result1, filteredDf)
+  expect_equal(result2, filteredDf)
+  
+  # We can 'overwrite' an existing array
+  filtered = uploaded$where(f_double < 0)
+  filteredDf = dplyr::filter(df, f_double < 0)
+  stored3 = repo$save_as_array(filtered, name = randomName, temp = F, gc = F)
+  result3 = repo$query(stored3, only_attributes = T)
+  expect_equal(result3, filteredDf)
+  repo$execute(afl(stored3 %remove% NULL), .raw = T)
 })
 

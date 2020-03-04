@@ -691,13 +691,10 @@ Repo <- R6::R6Class(
       
       dfFieldsNotInArray = names(df) %-% array_template$dims_n_attrs
       matchedFields = names(df) %n% array_template$dims_n_attrs
-      # browser() #repo_dao
       assert_not_has_len(
         dfFieldsNotInArray,
         "ERROR: Data frame has non-matching field(s): %s for array %s", paste(dfFieldsNotInArray, collapse = ','),
         str(array_template))
-      
-      # df = convert_columns(df)
       uploaded = scidb::as.scidb(dep$.db, df, use_aio_input = use_aio_input, temp = temp, 
                                  types =  template$get_field_types(names(df), .raw=TRUE), ...)
       
@@ -711,9 +708,15 @@ Repo <- R6::R6Class(
     #' Save an arrayOp or AFL statement as a scidb array wrapped as a new arrayOp
     #' 
     #' No all things can be done in one scidb operation, sometimes we need to store intermediate results as arrays.
+    #' This is when we need to save materialized arrayOp into a new array, which is then wrapped in a new arrayOp
+    #' instance. To get the new array's raw name, call the result `arrayOp$to_afl()` function.
+    #' 
+    #' The ... params are passed in to scidb::store. 
+    #' We can specify an array name `name='myArray'`(default:a random name in public namespace), create a temporary
+    #' array `temp=T`(default:F), or suppress auto gc `gc=F`(default:T). Refer to scidb documentation for more details.
     #' 
     #' @param what an arrayOp or an AFL statement (string)
-    #' @param ... Same params as used in scidb::store function, e.g. temp = F, gc = T
+    #' @param ... Same params as used in scidb::store function, e.g. temp = F, gc = T, name = 'myArray'
     #' @return An arrayOp whose `to_afl()` is the newly created array name
     save_as_array = function(what, ...) {
       aflStmt = get_afl_statement(what)
