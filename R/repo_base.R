@@ -444,7 +444,7 @@ Repo <- R6::R6Class(
     get_operand = function(what, .raw, .env) {
       assert(inherits(what, 'ArrayOpBase') || 
                (inherits(what, 'character') && length(what) == 1), 
-             "ERROR: RepoDAO: get_operand: param 'what' must be a single ArrayOp instance or string, but got: [%s]",
+             "ERROR: Repo: get_operand: param 'what' must be a single ArrayOp instance or string, but got: [%s]",
              paste(class(what), collapse = ','))
       if(is.character(what) && !.raw) # 'what' is an R expression
         evaluate_statement(what, .env = .env)  # Eval the expression and return an arrayOp
@@ -516,9 +516,11 @@ Repo <- R6::R6Class(
     #' 4. any other variables in `.env` will be replaced by its values
     #' @param ... Arguments passed directly to scidb::iquery function
     #' @param .dry_run If TRUE, only return evaluated query statement. Default FALSE
+    #' @param .raw If TRUE and what is a string, do not evaluate, otherwise evaluate `what`. Default FALSE.
+    #' Only applicable if `what` is a string.
     #' @param .env An R env or list for R variable substitution
     #' @return A data frame
-    query = function(what, ..., .dry_run = FALSE, .raw = FALSE, .env = parent.frame()) {
+    query = function(what, ..., .dry_run = FALSE, .raw = TRUE, .env = parent.frame()) {
       op = get_operand(what, .raw = .raw, .env = .env)
       if(.dry_run)
         op
@@ -536,9 +538,11 @@ Repo <- R6::R6Class(
     #' 4. any other variables in `.env` will be replaced by its values
     #' @param ... Arguments passed directly to scidb::iquery function
     #' @param .dry_run If TRUE, only return evaluated query statement. Default FALSE
+    #' @param .raw If TRUE and what is a string, do not evaluate, otherwise evaluate `what`. Default FALSE.
+    #' Only applicable if `what` is a string.
     #' @param .env An R env or list for R variable substitution
     #' @return NULL
-    execute = function(what, ..., .dry_run = FALSE, .raw = FALSE, .env = parent.frame()) {
+    execute = function(what, ..., .dry_run = FALSE, .raw = TRUE, .env = parent.frame()) {
       op = get_operand(what, .raw = .raw, .env = .env)
       if(.dry_run)
         op

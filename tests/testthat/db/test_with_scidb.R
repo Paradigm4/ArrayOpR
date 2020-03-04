@@ -1,5 +1,7 @@
 context("Repo tests with scidb connection")
 
+`%>%` = dplyr::`%>%`
+
 # arrays loaded from the config file
 CfgArrays = repo$load_arrays_from_config(config)
 # Get array's raw names (without namespace)
@@ -16,7 +18,7 @@ test_that("Loaded arrays are created in the namespace", {
   
   # Create arrays manually
   for(arr in CfgArrays){
-    repo$execute(sprintf("create array %s", str(arr)), .raw = T)
+    repo$execute(sprintf("create array %s", str(arr)))
   }
   
   # Ensure the newly created arrays can be loaded
@@ -53,7 +55,7 @@ test_that("Upload data frame to scidb", {
   uploaded = repo$upload_df(df, template, temp = F, use_aio_input = F)
   uploaded2 = repo$upload_df(df, template, temp = T, use_aio_input = T)
   
-  templateMatchedDTypes = template$get_field_types(names(df), .raw=TRUE)
+  templateMatchedDTypes = template$get_field_types(names(df), .raw = T)
   expect_identical(uploaded$get_field_types(uploaded$attrs), templateMatchedDTypes)
   expect_identical(uploaded2$get_field_types(uploaded2$attrs), templateMatchedDTypes)
   
@@ -92,7 +94,7 @@ test_that("Store AFL as scidb array and return arrayOp", {
   stored3 = repo$save_as_array(filtered, name = randomName, temp = F, gc = F)
   result3 = repo$query(stored3, only_attributes = T)
   expect_equal(result3, filteredDf)
-  repo$execute(afl(stored3 %remove% NULL), .raw = T)
+  repo$execute(afl(stored3 %remove% NULL))
 })
 
 # Mutate array content ----
@@ -100,16 +102,129 @@ test_that("Store AFL as scidb array and return arrayOp", {
 get_mutate_array = function(reset = TRUE){
   target = CfgArrays[['mutate_array']]
   if(reset){
-    try(repo$execute(afl(target %remove% NULL)), silent = T)
-    repo$execute(target$create_array_cmd(target$to_afl()))
+    
   }
   target
 }
 
-test_that("Mutate an array", {
-  df = data.frame(lower = letters[1:5], upper = LETTERS[1:5],
-                  f_double = c(3.14, 2.0, NA, 0, -99), f_bool = c(T,NA,F,NA,F), f_int64 = 1:5 * 10.0)
-  target = get_mutate_array()
+MutateArray = CfgArrays[['mutate_array']]
+DfMutateArray = data.frame(da=0:4, db=10:14,
+                                  lower = letters[1:5], upper = LETTERS[1:5],
+                                  f_int32 = -5:-1, f_int64 = 1:5 * 10.0,
+                                  f_bool = c(T,NA,F,NA,F), f_double = c(3.14, 2.0, NA, 0, -99))
+
+reset_array_with_content = function(target, content, recreate = TRUE) {
+  # Reset array
+  if(recreate){
+    try(repo$execute(afl(target %remove% NULL)), silent = T)
+    repo$execute(target$create_array_cmd(target$to_afl()))
+  }
+  # Upload data 
+  repo$execute(
+    repo$
+      upload_df(content, target)$
+      change_schema(target)$
+      overwrite(target)
+    )
+}
+
+
+test_that("Array content is correctly populated", {
+  reset_array_with_content(MutateArray, DfMutateArray)
   
+  # Validate the target array
+  # sort by lower, needed because scidb doesn't keep the order of inserted data
+  dfFromDb = dplyr::arrange(repo$query(MutateArray), lower)
+  expect_equal(dfFromDb, DfMutateArray)
+})
+
+test_that("Mutate an array by expression", {
+  reset_array_with_content(MutateArray, DfMutateArray)
+  target = MutateArray
+  df = DfMutateArray
   
+  mutated = target$where(is_null(f_bool))$
+    mutate(list('f_bool'='iif(f_double > 1, true, false)', 'upper'="'mutated'"))
+  repo$execute(mutated$update(target))
+  dfFromDb = dplyr::arrange(repo$query(target), lower)
+  expect_equal(dfFromDb, dplyr::mutate(df, upper=c('A', 'mutated', 'C', 'mutated', 'E'), f_bool=c(T,T,F,F,F)))
+})
+
+test_that("Mutate an array by another array", {
+  
+  mutate_by_one_attr = function(){
+    reset_array_with_content(MutateArray, DfMutateArray, recreate = F)
+    mutateDataSource = MutateArray$build_new(
+      df %>% dplyr::filter(da %% 2 == 0) %>% dplyr::select(lower, upper) %>% dplyr::mutate(f_int32 = 1:3)
+    )
+    repo$execute(
+     MutateArray$
+        mutate(mutateDataSource, keys = c('lower'), updated_fields = 'f_int32')$
+        update(MutateArray)
+    )
+  }
+  
+  mutate_by_two_attrs = function(){
+    reset_array_with_content(MutateArray, DfMutateArray, recreate = F)
+    mutateDataSource = MutateArray$build_new(
+      df %>% dplyr::filter(da %% 2 == 0) %>% dplyr::select(lower, upper) %>% dplyr::mutate(f_int32 = 1:3)
+    )
+    repo$execute(
+     MutateArray$
+        mutate(mutateDataSource, keys = c('lower', 'upper'), updated_fields = 'f_int32')$
+        update(MutateArray)
+    )
+    validate_result()
+  }
+  
+  mutate_by_one_dim = function(){
+    reset_array_with_content(MutateArray, DfMutateArray, recreate = F)
+    mutateDataSource = MutateArray$build_new(
+      df %>% dplyr::filter(da %% 2 == 0) %>% dplyr::select(da) %>% dplyr::mutate(f_int32 = 1:3)
+    )
+    repo$execute(
+     MutateArray$
+        mutate(mutateDataSource, keys = c('da'), updated_fields = 'f_int32')$
+        update(MutateArray)
+    )
+    validate_result()
+  }
+  
+  mutate_by_two_dims = function(){
+    reset_array_with_content(MutateArray, DfMutateArray, recreate = F)
+    mutateDataSource = MutateArray$build_new(
+      df %>% dplyr::filter(da %% 2 == 0) %>% dplyr::select(da, db) %>% dplyr::mutate(f_int32 = 1:3)
+    )
+    repo$execute(
+     MutateArray$
+        mutate(mutateDataSource, keys = c('da', 'db'), updated_fields = 'f_int32')$
+        update(MutateArray)
+    )
+    validate_result()
+  }
+  
+  mutate_by_dim_n_attr = function(){
+    reset_array_with_content(MutateArray, DfMutateArray, recreate = F)
+    mutateDataSource = MutateArray$build_new(
+      df %>% dplyr::filter(da %% 2 == 0) %>% dplyr::select(db, lower) %>% dplyr::mutate(f_int32 = 1:3)
+    )
+    repo$execute(
+     MutateArray$
+        mutate(mutateDataSource, keys = c('lower', 'db'), updated_fields = 'f_int32')$
+        update(MutateArray)
+    )
+    validate_result()
+  }
+  
+  validate_result = function(){
+    dfFromDb = dplyr::arrange(repo$query(MutateArray), lower)
+    expect_equal(dfFromDb, df %>% dplyr::mutate(f_int32 = c(1,-4,2,-2,3)))
+  }
+  # repo$.private$set_meta('debug', T)
+  mutate_by_one_attr()
+  mutate_by_two_attrs()
+  mutate_by_one_dim()
+  mutate_by_two_dims()
+  mutate_by_dim_n_attr()
+  # repo$.private$set_meta('debug', F)
 })
