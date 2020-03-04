@@ -387,9 +387,9 @@ Repo <- R6::R6Class(
     ,
     evaluate_statement = function(stmt, .env = parent.frame()) {
       parsedExpr = parser$parse_arrayop_expr(stmt)
-      aliases = names(repo$meta$schema_registry)
+      aliases = names(array_alias_registry)
       envSchemas = list2env(
-        rlang::set_names(lapply(aliases, repo$get_alias_schema), aliases),
+        rlang::set_names(lapply(aliases, self$get_array), aliases),
         parent = .env
       )
       # 'evaluated' should be an ArrayOp object or a string
@@ -404,6 +404,11 @@ Repo <- R6::R6Class(
       return(aflStmt)
     }
     ,
+    # Execute a scidb statement. No result is returned.
+    # 
+    # If scidb error occurs, the AFL will be printed.
+    # @param what arrayOp instance or a raw AFL statement
+    # @return NULL
     execute_raw = function(what, ...) {
       aflStmt = get_afl_statement(what)
       tryCatch({
@@ -417,6 +422,11 @@ Repo <- R6::R6Class(
       return(nullResult)
     }
     ,
+    # Run a scidb query. 
+    # 
+    # If scidb error occurs, the AFL will be printed.
+    # @param what arrayOp instance or a raw AFL statement
+    # @return a data frame
     query_raw = function(what, ...) {
       # If ... contains only_attributes = TRUE, then op's dimensions are effectively dropped.
       drop_dims = methods::hasArg('only_attributes') && list(...)[['only_attributes']]
@@ -528,10 +538,10 @@ Repo <- R6::R6Class(
         query_raw(op, ...)
     }
     ,
-    #' Execute a query.
+    #' Execute a query. No result is returned.
     #'
     #' The query statement `stmt` is a string. No result is returned.
-    #' @param stmt A string, where
+    #' @param what A string, where
     #' 1. array aliases are replaced by corresponding arrayOp instances
     #' 2. functions following arrays are called as arrayOp functions
     #' 3. extra arrayOp functions can be provided in parentheses
@@ -693,7 +703,7 @@ Repo <- R6::R6Class(
     upload_df = function(df, template, temp = TRUE, use_aio_input = setting_use_aio_input, ...) {
       
       array_template = if(is.list(template))
-        repo$ArrayOp('', attrs = names(template), dtypes = template)
+        self$ArrayOp('', attrs = names(template), dtypes = template)
       else get_array(template)
       
       dfFieldsNotInArray = names(df) %-% array_template$dims_n_attrs
@@ -703,7 +713,7 @@ Repo <- R6::R6Class(
         "ERROR: Data frame has non-matching field(s): %s for array %s", paste(dfFieldsNotInArray, collapse = ','),
         str(array_template))
       uploaded = scidb::as.scidb(dep$.db, df, use_aio_input = use_aio_input, temp = temp, 
-                                 types =  template$get_field_types(names(df), .raw=TRUE), ...)
+                                 types =  array_template$get_field_types(names(df), .raw=TRUE), ...)
       
       res = get_array(uploaded@meta$schema)$
         create_new_with_same_schema(uploaded@name)
@@ -733,6 +743,65 @@ Repo <- R6::R6Class(
       res = get_array(storedArray@meta$schema)$
         create_new_with_same_schema(storedArray@name)
       res$.set_meta('.ref', storedArray)
+      res
+    }
+    ,
+    # Convenience functions ----
+    #' @description 
+    #' Create a new array using the operand's schema
+    #' @param array_or_alias The array operand as a template, either an arrayOp isntance or a registered array alias
+    #' @param new_array_name The new array name. If NULL, it uses the operand's `to_afl()` result as the new name.
+    .create_array = function(array_or_alias, new_array_name = NULL) {
+      operand = get_array(array_or_alias)
+      if(is.null(new_array_name)) new_array_name = operand$to_afl()
+      assert_single_str(new_array_name, 
+                        "ERROR:Repo$.create_array:param 'new_array_name' must be a single string, but got: [%s]",
+                        paste(class(new_array_name), collapse = ','))
+      execute_raw(operand$create_array_cmd(new_array_name))
+    }
+    ,
+    #' @description 
+    #' Remove array versions
+    #' @param array_or_alias The array operand as a template, either an arrayOp isntance or a registered array alias
+    .remove_array_versions = function(array_or_alias, ...) {
+      execute_raw(
+        get_array(array_or_alias)$remove_array_versions_cmd(...)
+      )
+    }
+    ,
+    #' @description 
+    #' Remove array. Careful: Cannot be undone!!!
+    #' @param array_or_alias The array operand as a template, either an arrayOp isntance or a registered array alias
+    .remove_array = function(array_or_alias) {
+      execute_raw(
+        get_array(array_or_alias)$remove_array_cmd()
+      )
+    }
+    ,
+    #' @description 
+    #' Get the number of rows of an arrayOp
+    #' @param what An arrayOp, raw AFL or R expression string
+    #' @param .raw If TRUE, and `what` is string, treat it as raw AFL. Otherwise parse `what` as R expression
+    #' @param .env The env where `what` is evaluated as R expression. 
+    #' Only applicable when `what` is R expression string and `.raw = F`
+    nrow = function(what, .raw = TRUE, .env = parent.frame()) {
+      op = get_operand(what, .raw = .raw, .env = .env)
+      res = query_raw(arrayop::afl(op %op_count% NULL))
+      res$count
+    }
+    #' @description 
+    #' Get the first `count` rows of an array
+    #' @param what An arrayOp, raw AFL or R expression string
+    #' @param count How many rows to take
+    #' @param offset How many rows to skip before taking
+    #' @param ... Arguments passed directly to scidb::iquery function
+    #' @param .raw If TRUE, and `what` is string, treat it as raw AFL. Otherwise parse `what` as R expression
+    #' @param .env The env where `what` is evaluated as R expression. 
+    #' Only applicable when `what` is R expression string and `.raw = F`
+    ,
+    limit = function(what, count, offset = NULL, ..., .raw = TRUE, .env = parent.frame()) {
+      op = get_operand(what, .raw = .raw, .env = .env)
+      res = query_raw(arrayop::afl(op %limit% c(count, offset)), ...)
       res
     }
   )

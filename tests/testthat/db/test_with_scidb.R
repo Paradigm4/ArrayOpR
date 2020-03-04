@@ -18,7 +18,7 @@ test_that("Loaded arrays are created in the namespace", {
   
   # Create arrays manually
   for(arr in CfgArrays){
-    repo$execute(sprintf("create array %s", str(arr)))
+    repo$.create_array(arr)
   }
   
   # Ensure the newly created arrays can be loaded
@@ -53,7 +53,8 @@ test_that("Upload data frame to scidb", {
   template = CfgArrays[['template_a']]
   
   uploaded = repo$upload_df(df, template, temp = F, use_aio_input = F)
-  uploaded2 = repo$upload_df(df, template, temp = T, use_aio_input = T)
+  # Template can also be a list of data types 
+  uploaded2 = repo$upload_df(df, template$get_field_types(), temp = T, use_aio_input = T)
   
   templateMatchedDTypes = template$get_field_types(names(df), .raw = T)
   expect_identical(uploaded$get_field_types(uploaded$attrs), templateMatchedDTypes)
@@ -67,6 +68,15 @@ test_that("Upload data frame to scidb", {
   dfCopy$f_datetime = dbdf1[['f_datetime']] 
   expect_equal(dbdf1, dfCopy)
   expect_equal(dbdf2, dfCopy)
+  
+  # Test repo$limit function
+  expect_equal(repo$limit(uploaded, 3, only_attributes=TRUE), dfCopy[1:3,])
+  expect_equal(repo$limit(uploaded, 3, offset=1, only_attributes=TRUE), 
+               data.frame(dfCopy[2:4,], row.names = NULL))
+  
+  # Validate number of rows
+  expect_equal(repo$nrow(uploaded), nrow(df))
+  expect_equal(repo$nrow(uploaded2), nrow(df))
 })
 
 # Store AFL as a scidb array and return arrayOp ----
@@ -116,8 +126,8 @@ DfMutateArray = data.frame(da=0:4, db=10:14,
 reset_array_with_content = function(target, content, recreate = TRUE) {
   # Reset array
   if(recreate){
-    try(repo$execute(afl(target %remove% NULL)), silent = T)
-    repo$execute(target$create_array_cmd(target$to_afl()))
+    try(repo$.remove_array(target), silent = T)
+    repo$.create_array(target)
   }
   # Upload data 
   repo$execute(
