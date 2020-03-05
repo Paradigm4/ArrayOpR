@@ -27,6 +27,7 @@ in another operation. Operands and Opreration results can all be denoted by Arra
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id=".to_afl_explicit">}\href{../../arrayop/html/ArrayOpBase.html#method-.to_afl_explicit}{\code{arrayop::ArrayOpBase$.to_afl_explicit()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id=".to_join_operand_afl">}\href{../../arrayop/html/ArrayOpBase.html#method-.to_join_operand_afl}{\code{arrayop::ArrayOpBase$.to_join_operand_afl()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="build_new">}\href{../../arrayop/html/ArrayOpBase.html#method-build_new}{\code{arrayop::ArrayOpBase$build_new()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="change_schema">}\href{../../arrayop/html/ArrayOpBase.html#method-change_schema}{\code{arrayop::ArrayOpBase$change_schema()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="create_array_cmd">}\href{../../arrayop/html/ArrayOpBase.html#method-create_array_cmd}{\code{arrayop::ArrayOpBase$create_array_cmd()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="create_new">}\href{../../arrayop/html/ArrayOpBase.html#method-create_new}{\code{arrayop::ArrayOpBase$create_new()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="create_new_with_same_schema">}\href{../../arrayop/html/ArrayOpBase.html#method-create_new_with_same_schema}{\code{arrayop::ArrayOpBase$create_new_with_same_schema()}}\out{</span>}
@@ -37,6 +38,8 @@ in another operation. Operands and Opreration results can all be denoted by Arra
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="join">}\href{../../arrayop/html/ArrayOpBase.html#method-join}{\code{arrayop::ArrayOpBase$join()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="load_file">}\href{../../arrayop/html/ArrayOpBase.html#method-load_file}{\code{arrayop::ArrayOpBase$load_file()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="match">}\href{../../arrayop/html/ArrayOpBase.html#method-match}{\code{arrayop::ArrayOpBase$match()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="mutate">}\href{../../arrayop/html/ArrayOpBase.html#method-mutate}{\code{arrayop::ArrayOpBase$mutate()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="overwrite">}\href{../../arrayop/html/ArrayOpBase.html#method-overwrite}{\code{arrayop::ArrayOpBase$overwrite()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="remove_array_cmd">}\href{../../arrayop/html/ArrayOpBase.html#method-remove_array_cmd}{\code{arrayop::ArrayOpBase$remove_array_cmd()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="remove_array_versions_cmd">}\href{../../arrayop/html/ArrayOpBase.html#method-remove_array_versions_cmd}{\code{arrayop::ArrayOpBase$remove_array_versions_cmd()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="reshape">}\href{../../arrayop/html/ArrayOpBase.html#method-reshape}{\code{arrayop::ArrayOpBase$reshape()}}\out{</span>}
@@ -49,6 +52,7 @@ in another operation. Operands and Opreration results can all be denoted by Arra
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="to_afl">}\href{../../arrayop/html/ArrayOpBase.html#method-to_afl}{\code{arrayop::ArrayOpBase$to_afl()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="to_df_afl">}\href{../../arrayop/html/ArrayOpBase.html#method-to_df_afl}{\code{arrayop::ArrayOpBase$to_df_afl()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="to_schema_str">}\href{../../arrayop/html/ArrayOpBase.html#method-to_schema_str}{\code{arrayop::ArrayOpBase$to_schema_str()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="update">}\href{../../arrayop/html/ArrayOpBase.html#method-update}{\code{arrayop::ArrayOpBase$update()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="where">}\href{../../arrayop/html/ArrayOpBase.html#method-where}{\code{arrayop::ArrayOpBase$where()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="ArrayOpBase" data-id="write_to">}\href{../../arrayop/html/ArrayOpBase.html#method-write_to}{\code{arrayop::ArrayOpBase$write_to()}}\out{</span>}
 }

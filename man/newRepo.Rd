@@ -4,18 +4,14 @@
 \alias{newRepo}
 \title{Create a scidb-version-specific Repo instance}
 \usage{
-newRepo(
-  default_namespace = "public",
-  dependency_obj = NULL,
-  db = NULL,
-  config = NULL
-)
+newRepo(dependency_obj = NULL, db = NULL)
 }
 \arguments{
 \item{dependency_obj}{A named list that contains 4 functions: get_scidb_version, query, execute and get_schema_df
 If left NULL, will require a scidb connection 'db' to create the dependency_obj automatically.}
 
-\item{db}{a scidb connection returned by scidb::scidbconnect}
+\item{db}{a scidb connection returned by scidb::scidbconnect. If provided, a \code{dependency_obj} is automatically created
+with default implementations.}
 }
 \description{
 The created Repo instance is automatically selected based on Repo-Scidb compatibility
