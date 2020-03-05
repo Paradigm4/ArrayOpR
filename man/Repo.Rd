@@ -53,9 +53,6 @@ Initialize function.
 Create a new Repo instance
 
 Do NOT call this \code{initialize} function directly. Call \code{newRepo} instead to get a new Repo instance.
-Run a query and get a data frame
-
-The query statement \code{stmt} is a string.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Repo$new(dependency_object = NULL)}\if{html}{\out{</div>}}
 }
@@ -64,6 +61,9 @@ The query statement \code{stmt} is a string.
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-query"></a>}}
 \subsection{Method \code{query()}}{
+Run a query and get a data frame
+
+The query statement \code{stmt} is a string.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Repo$query(what, ..., .dry_run = FALSE, .raw = TRUE, .env = parent.frame())}\if{html}{\out{</div>}}
 }
@@ -92,14 +92,14 @@ Only applicable if \code{what} is a string.}
 }
 \subsection{Returns}{
 A data frame
-Execute a query. No result is returned.
-
-The query statement \code{stmt} is a string. No result is returned.
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-execute"></a>}}
 \subsection{Method \code{execute()}}{
+Execute a query. No result is returned.
+
+The query statement \code{stmt} is a string. No result is returned.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Repo$execute(what, ..., .dry_run = FALSE, .raw = TRUE, .env = parent.frame())}\if{html}{\out{</div>}}
 }
@@ -128,17 +128,17 @@ Only applicable if \code{what} is a string.}
 }
 \subsection{Returns}{
 NULL
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-get_array"></a>}}
+\subsection{Method \code{get_array()}}{
 Get an ArrayOp instance
 
 Param \code{what} can be a string or arrayOp instance. If a string, then \code{what} is either a registered array alias,
 or raw array schema (e.g. myArray <a:int32, b:string> \link[=d=0:*:0:*]{d=0:\emph{:0:}})
 
 This function is provide unified access of arrayOp instances
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-get_array"></a>}}
-\subsection{Method \code{get_array()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Repo$get_array(what)}\if{html}{\out{</div>}}
 }
@@ -152,14 +152,14 @@ This function is provide unified access of arrayOp instances
 }
 \subsection{Returns}{
 An ArrayOp instance
-Register a list of arrays with aliases
-
-Register a list of arrays which can be later accessed via their aliases
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-register_array"></a>}}
 \subsection{Method \code{register_array()}}{
+Register a list of arrays with aliases
+
+Register a list of arrays which can be later accessed via their aliases
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Repo$register_array(items)}\if{html}{\out{</div>}}
 }
@@ -167,11 +167,7 @@ Register a list of arrays which can be later accessed via their aliases
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{items}}{A list where names are aliases and values are arrayOp instances or raw array names
-Get an ArrayOp instance from scidb by its full name
-
-No cache is provided with this function.
-See \code{register_array} for details on registering an array alias with cache.}
+\item{\code{items}}{A list where names are aliases and values are arrayOp instances or raw array names}
 }
 \if{html}{\out{</div>}}
 }
@@ -179,6 +175,10 @@ See \code{register_array} for details on registering an array alias with cache.}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-load_array_from_scidb"></a>}}
 \subsection{Method \code{load_array_from_scidb()}}{
+Get an ArrayOp instance from scidb by its full name
+
+No cache is provided with this function.
+See \code{register_array} for details on registering an array alias with cache.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Repo$load_array_from_scidb(full_array_name)}\if{html}{\out{</div>}}
 }
@@ -192,12 +192,12 @@ See \code{register_array} for details on registering an array alias with cache.}
 }
 \subsection{Returns}{
 An ArrayOp instance
-Get a list of arrays from a scidb namespace
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-load_arrays_from_scidb_namespace"></a>}}
 \subsection{Method \code{load_arrays_from_scidb_namespace()}}{
+Get a list of arrays from a scidb namespace
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Repo$load_arrays_from_scidb_namespace(namespace)}\if{html}{\out{</div>}}
 }
@@ -212,15 +212,15 @@ Get a list of arrays from a scidb namespace
 \subsection{Returns}{
 A list of ArrayOp instances where names are the array names (without namespace) and
 values are the arrayOp instances whose to_afl() function return fully qualified array names
-Load a list of ArrayOp instances from a config object
-
-Only load and return a list of arrayOp instances. Repo's array registery will not be updated.
-If desired, you can \verb{loaded = repo$load_arrays_from_config; repo$register_array(loaded)} to register loaded arrays.
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-load_arrays_from_config"></a>}}
 \subsection{Method \code{load_arrays_from_config()}}{
+Load a list of ArrayOp instances from a config object
+
+Only load and return a list of arrayOp instances. Repo's array registery will not be updated.
+If desired, you can \verb{loaded = repo$load_arrays_from_config; repo$register_array(loaded)} to register loaded arrays.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Repo$load_arrays_from_config(config)}\if{html}{\out{</div>}}
 }

@@ -226,6 +226,7 @@ Repo <- R6::R6Class(
       private$array_alias_registry = list()
     }
     ,
+    #' @description 
     #' Run a query and get a data frame
     #'
     #' The query statement `stmt` is a string.
@@ -248,6 +249,7 @@ Repo <- R6::R6Class(
         query_raw(op, ...)
     }
     ,
+    #' @description 
     #' Execute a query. No result is returned.
     #'
     #' The query statement `stmt` is a string. No result is returned.
@@ -270,6 +272,7 @@ Repo <- R6::R6Class(
         execute_raw(op, ...)
     }
     ,
+    #' @description 
     #' Get an ArrayOp instance
     #'
     #' Param `what` can be a string or arrayOp instance. If a string, then `what` is either a registered array alias,
@@ -304,6 +307,7 @@ Repo <- R6::R6Class(
             paste(class(what), collapse = ','))
     }
     ,
+    #' @description 
     #' Register a list of arrays with aliases
     #'  
     #' Register a list of arrays which can be later accessed via their aliases
@@ -314,6 +318,7 @@ Repo <- R6::R6Class(
       private$array_alias_registry = utils::modifyList(private$array_alias_registry, items)
     }
     ,
+    #' @description 
     #' Get an ArrayOp instance from scidb by its full name 
     #' 
     #' No cache is provided with this function. 
@@ -331,6 +336,7 @@ Repo <- R6::R6Class(
       get_array(schemaStr)$create_new_with_same_schema(full_array_name)
     }
     ,
+    #' @description 
     #' Get a list of arrays from a scidb namespace
     #' 
     #' @param namespace A scidb namespace
@@ -350,6 +356,7 @@ Repo <- R6::R6Class(
       return(as.list(rlang::set_names(fullNameArrays, arrayNamesWithoutNs)))
     }
     ,
+    #' @description 
     #' Load a list of ArrayOp instances from a config object
     #' 
     #' Only load and return a list of arrayOp instances. Repo's array registery will not be updated.
