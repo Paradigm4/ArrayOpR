@@ -276,7 +276,7 @@ Repo <- R6::R6Class(
     #' Get an ArrayOp instance
     #'
     #' Param `what` can be a string or arrayOp instance. If a string, then `what` is either a registered array alias,
-    #' or raw array schema (e.g. myArray <a:int32, b:string> [d=0:*:0:*])
+    #' or raw array schema (e.g. myArray <a:int32, b:string> \[d=0:*:0:*\])
     #'
     #' This function is provide unified access of arrayOp instances
     #' @param what An array alias, raw array schema or arrayOp instance

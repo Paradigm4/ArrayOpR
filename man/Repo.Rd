@@ -136,7 +136,7 @@ NULL
 Get an ArrayOp instance
 
 Param \code{what} can be a string or arrayOp instance. If a string, then \code{what} is either a registered array alias,
-or raw array schema (e.g. myArray <a:int32, b:string> \link[=d=0:*:0:*]{d=0:\emph{:0:}})
+or raw array schema (e.g. myArray <a:int32, b:string> [d=0:\emph{:0:}])
 
 This function is provide unified access of arrayOp instances
 \subsection{Usage}{
