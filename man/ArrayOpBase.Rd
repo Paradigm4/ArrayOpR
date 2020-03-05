@@ -24,6 +24,8 @@ in another operation. Operands and Opreration results can all be denoted by Arra
 \item{\code{dims_n_attrs}}{Dimension and attribute names}
 
 \item{\code{attrs_n_dims}}{Attribute and dimension names}
+
+\item{\code{.private}}{For internal testing only. Do not access this field to avoid unintended consequences!!!}
 }
 \if{html}{\out{</div>}}
 }
@@ -39,6 +41,7 @@ in another operation. Operands and Opreration results can all be denoted by Arra
 \item \href{#method-where}{\code{ArrayOpBase$where()}}
 \item \href{#method-select}{\code{ArrayOpBase$select()}}
 \item \href{#method-reshape}{\code{ArrayOpBase$reshape()}}
+\item \href{#method-change_schema}{\code{ArrayOpBase$change_schema()}}
 \item \href{#method-join}{\code{ArrayOpBase$join()}}
 \item \href{#method-load_file}{\code{ArrayOpBase$load_file()}}
 \item \href{#method-match}{\code{ArrayOpBase$match()}}
@@ -48,6 +51,9 @@ in another operation. Operands and Opreration results can all be denoted by Arra
 \item \href{#method-set_null_fields}{\code{ArrayOpBase$set_null_fields()}}
 \item \href{#method-set_auto_fields}{\code{ArrayOpBase$set_auto_fields()}}
 \item \href{#method-write_to}{\code{ArrayOpBase$write_to()}}
+\item \href{#method-mutate}{\code{ArrayOpBase$mutate()}}
+\item \href{#method-update}{\code{ArrayOpBase$update()}}
+\item \href{#method-overwrite}{\code{ArrayOpBase$overwrite()}}
 \item \href{#method-spawn}{\code{ArrayOpBase$spawn()}}
 \item \href{#method-create_array_cmd}{\code{ArrayOpBase$create_array_cmd()}}
 \item \href{#method-remove_array_cmd}{\code{ArrayOpBase$remove_array_cmd()}}
@@ -231,7 +237,8 @@ Create a new ArrayOp instance with a different schema/shape
   select = NULL,
   dtypes = NULL,
   dim_mode = "keep",
-  artificial_field = .random_attr_name()
+  artificial_field = .random_attr_name(),
+  .force_project = TRUE
 )}\if{html}{\out{</div>}}
 }
 
@@ -254,6 +261,30 @@ In 'drop' mode, dimensions are first converted to attributes, then selected.}
 \item{\code{artificial_field}}{ONLY relevant when \code{dim_mode='drop'}.
 A field name used as the artificial dimension name in 'drop' dim_mode
 (internally used by \code{unpack} scidb operator). By default, a random string is generated.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-change_schema"></a>}}
+\subsection{Method \code{change_schema()}}{
+Change \code{self} schema according to a template
+
+This operation throws away any fields that do not exist in \code{template} while keeping the \code{self}'s data of the
+matching fields. Implemented by scidb \code{redimension} operator, but it allows for partial-fields match if \code{strict=F}.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$change_schema(template, strict = TRUE, .setting = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{template}}{an arrayOp instance that determines the resultant schema.}
+
+\item{\code{strict}}{If TRUE(default), requires \code{self} has all the \code{template} fields.}
+
+\item{\code{.setting}}{a string vector, where each item will be appended to the redimension operand.
+E.g. .setting = c('false', 'cells_per_chunk: 1234') ==> redimension(source, template, false, cells_per_chunk: 1234)}
 }
 \if{html}{\out{</div>}}
 }
@@ -456,7 +487,8 @@ treated as the anti-collision field.
 \if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$set_anti_collision_field(
   target,
   anti_collision_field = NULL,
-  join_setting = NULL
+  join_setting = NULL,
+  source_anti_collision_dim_spec = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -505,7 +537,8 @@ occurs within scidb where necessary/applicable.
   source_auto_increment = NULL,
   target_auto_increment = NULL,
   anti_collision_field = NULL,
-  join_setting = NULL
+  join_setting = NULL,
+  source_anti_collision_dim_spec = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -528,7 +561,10 @@ Here the \code{target_auto_increment} param only affects the initial load when t
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-write_to"></a>}}
 \subsection{Method \code{write_to()}}{
-Create a new ArrayOp instance that represents a writing data operation
+(Deprecated) Create a new ArrayOp instance that represents a writing data operation
+
+NOTE: this function is deprecated.
+Please use ArrayOp's set_auto_fields, mutate, update and overwrite functions instead.
 
 If the dimension count, attribute count and data types match between the source(self) and target,
 then no redimension will be performed, otherwise redimension on the source first.
@@ -566,6 +602,108 @@ Here the \code{target_auto_increment} param only affects the initial load when t
 (ie. cells with the same dimension coordinate).}
 }
 \if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-mutate"></a>}}
+\subsection{Method \code{mutate()}}{
+Generate a mutated arrayOp of the source \code{self} by the \code{data_source}.
+
+Neither \code{self} or \code{data_source} is mutated. The resultant arrayOp is a 'mutated' version of \code{self} in the sense
+that \code{result} has the exact same schema as \code{self} and a subset of cells that match to \code{self}.
+
+This function works in two modes: 1. \code{data_source} is a named list that specifies the expression for mutation.
+2. \code{data_source} is an arrayOp that contains the mutated data and 'key' data for cell identification.
+
+Mode-1: \code{data_source} is a named list.
+The \code{data_source} list should only contain names as the mutated fields and string values as the mutate expression.
+All other fields not present in the list would remain the same.
+Normally, the list should only have \code{self}'s attributes as the mutated fields.
+But if \code{data_source} contains target's dimensions, then the number of matching cells should be no more than 1,
+otherwise mutiple matching cells would cause dimension collision error thrown by scidb.
+
+Mode-2: \code{data_source} is an arrayOp instance.
+The \code{data_source} arrayOp must have two types of data. One type is the 'key' data that are used to identify which
+cells to mutate. The other is the 'mutated' data of the matching cells.
+If the \code{keys} have all \code{self}'s dimensions, then no join is needed to match cell coordinates.
+Otherwise we need to map \code{keys} to cell coordinates using join and redimension.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$mutate(
+  data_source,
+  keys = NULL,
+  updated_fields = NULL,
+  artificial_field = .random_attr_name(),
+  .redimension_setting = NULL,
+  .join_setting = NULL
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{data_source}}{A named list of mutated field expressions or an arrayOp instance.}
+
+\item{\code{keys}}{Which fields of \code{data_source} to identify the matching cells. Only applicable when \code{data_source} is arrayOp.}
+
+\item{\code{updated_fields}}{Which fields of \code{data_source} to mutate for the matching cells.
+Only applicable when \code{data_source} is arrayOp.}
+
+\item{\code{artificial_field}}{The attribute name in unpack if we need to drop \code{self}'s dimensions.
+Only applicable when \code{data_source} is a list and contains \code{self}'s dimensions, which is rare.}
+
+\item{\code{.redimension_setting}}{Only applicable when \code{data_source} is arrayOp.}
+
+\item{\code{.join_setting}}{Only applicable when \code{data_source} is arrayOp and it does not have all \code{self}'s dimensions.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+a new arrayOp instance that carries the mutated data and has the exact same schema as the target
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-update"></a>}}
+\subsection{Method \code{update()}}{
+Update Target array with self's content
+
+Similar behavior to scidb insert operator
+Fields of self and Target must match by raw data type. Field names are irrelevant.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$update(target)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{target}}{An arrayOp instance where self's content is written to.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A new arrayOp that encapsulates the insert operation
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-overwrite"></a>}}
+\subsection{Method \code{overwrite()}}{
+Overwrite Target array with self's content
+
+Warning: Target's content will be erased and filled with self's content.
+Similar behavior to scidb overwrite operator.
+Fields of self and Target must match by raw data type. Field names are irrelevant.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$overwrite(target)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{target}}{An arrayOp instance where self's content is written to.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A new arrayOp that encapsulates the insert operation
 }
 }
 \if{html}{\out{<hr>}}

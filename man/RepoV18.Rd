@@ -12,7 +12,7 @@ Common ogic/behaviors across all supported scidb versions are placed here.
 Version-specific logic/behaviors should be implemented in RepoBase sub-classes.
 }
 \section{Super class}{
-\code{\link[arrayop:RepoBase]{arrayop::RepoBase}} -> \code{RepoV18}
+\code{\link[arrayop:Repo]{arrayop::Repo}} -> \code{RepoV18}
 }
 \section{Methods}{
 \subsection{Public methods}{
@@ -25,13 +25,20 @@ Version-specific logic/behaviors should be implemented in RepoBase sub-classes.
 \if{html}{
 \out{<details ><summary>Inherited methods</summary>}
 \itemize{
-\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="RepoBase" data-id=".get_meta">}\href{../../arrayop/html/RepoBase.html#method-.get_meta}{\code{arrayop::RepoBase$.get_meta()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="RepoBase" data-id=".set_meta">}\href{../../arrayop/html/RepoBase.html#method-.set_meta}{\code{arrayop::RepoBase$.set_meta()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="RepoBase" data-id="execute">}\href{../../arrayop/html/RepoBase.html#method-execute}{\code{arrayop::RepoBase$execute()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="RepoBase" data-id="get_alias_schema">}\href{../../arrayop/html/RepoBase.html#method-get_alias_schema}{\code{arrayop::RepoBase$get_alias_schema()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="RepoBase" data-id="load_schema_from_db">}\href{../../arrayop/html/RepoBase.html#method-load_schema_from_db}{\code{arrayop::RepoBase$load_schema_from_db()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="RepoBase" data-id="query">}\href{../../arrayop/html/RepoBase.html#method-query}{\code{arrayop::RepoBase$query()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="RepoBase" data-id="register_schema_alias_by_array_name">}\href{../../arrayop/html/RepoBase.html#method-register_schema_alias_by_array_name}{\code{arrayop::RepoBase$register_schema_alias_by_array_name()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="Repo" data-id=".create_array">}\href{../../arrayop/html/Repo.html#method-.create_array}{\code{arrayop::Repo$.create_array()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="Repo" data-id=".remove_array">}\href{../../arrayop/html/Repo.html#method-.remove_array}{\code{arrayop::Repo$.remove_array()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="Repo" data-id=".remove_array_versions">}\href{../../arrayop/html/Repo.html#method-.remove_array_versions}{\code{arrayop::Repo$.remove_array_versions()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="Repo" data-id="execute">}\href{../../arrayop/html/Repo.html#method-execute}{\code{arrayop::Repo$execute()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="Repo" data-id="get_array">}\href{../../arrayop/html/Repo.html#method-get_array}{\code{arrayop::Repo$get_array()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="Repo" data-id="limit">}\href{../../arrayop/html/Repo.html#method-limit}{\code{arrayop::Repo$limit()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="Repo" data-id="load_array_from_scidb">}\href{../../arrayop/html/Repo.html#method-load_array_from_scidb}{\code{arrayop::Repo$load_array_from_scidb()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="Repo" data-id="load_arrays_from_config">}\href{../../arrayop/html/Repo.html#method-load_arrays_from_config}{\code{arrayop::Repo$load_arrays_from_config()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="Repo" data-id="load_arrays_from_scidb_namespace">}\href{../../arrayop/html/Repo.html#method-load_arrays_from_scidb_namespace}{\code{arrayop::Repo$load_arrays_from_scidb_namespace()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="Repo" data-id="nrow">}\href{../../arrayop/html/Repo.html#method-nrow}{\code{arrayop::Repo$nrow()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="Repo" data-id="query">}\href{../../arrayop/html/Repo.html#method-query}{\code{arrayop::Repo$query()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="Repo" data-id="register_array">}\href{../../arrayop/html/Repo.html#method-register_array}{\code{arrayop::Repo$register_array()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="Repo" data-id="save_as_array">}\href{../../arrayop/html/Repo.html#method-save_as_array}{\code{arrayop::Repo$save_as_array()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="Repo" data-id="upload_df">}\href{../../arrayop/html/Repo.html#method-upload_df}{\code{arrayop::Repo$upload_df()}}\out{</span>}
 }
 \out{</details>}
 }
