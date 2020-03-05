@@ -235,7 +235,7 @@ Value of 'arrays' is a list of unamed elements, where each element is a list of 
 \item 'alias': a single string for array alias
 \item 'name': raw array name. If without a namespace, then the default namespace is applied.
 Otherwise, if in 'namespace.rawArrayName', then use it directly disregard of the default namespace.
-\item 'schema': a single string for array schema. E.g. "<aa:string, b:bool null> \link[=da=0:*:0:*]{da=0:\emph{:0:}}
+\item 'schema': a single string for array schema. E.g. "<aa:string, b:bool null> [da=0:\emph{:0:}]
 }}
 }
 \if{html}{\out{</div>}}

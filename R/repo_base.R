@@ -367,7 +367,7 @@ Repo <- R6::R6Class(
     #' 1. 'alias': a single string for array alias
     #' 2. 'name': raw array name. If without a namespace, then the default namespace is applied.
     #'  Otherwise, if in 'namespace.rawArrayName', then use it directly disregard of the default namespace.
-    #' 3. 'schema': a single string for array schema. E.g. "<aa:string, b:bool null> [da=0:*:0:*]
+    #' 3. 'schema': a single string for array schema. E.g. "<aa:string, b:bool null> \[da=0:*:0:*\]
     #' @return A list of ArrayOp instances where names are array aliases and values are the ArrayOp instances
     load_arrays_from_config = function(config) {
       assert(is.list(config), "ERROR:Repo$load_arrays_from_config:'config' must be a list, but got [%s] instead.", paste(class(config), collapse = ','))
