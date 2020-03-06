@@ -421,6 +421,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
     #' This function is useful for validating fields in use cases:
     #    1. whether fields are valid for 'select' or 'filter';
     #    2. whether fields can be used as keys in JoinOp
+    #' @return A list of absent field names
     get_absent_fields = function(fieldNames) {
       if(!private$get_meta('validate_fields'))
         return(NULL)
@@ -430,10 +431,11 @@ Please select on left operand's fields OR do not select on either operand. Look 
     # Functions that creat new ArrayOps -------------------------------------------------------------------------------
     ,
     #' @description 
-    #' Return the class constructor function. 
+    #' Return a new arrayOp instance with the same version as `self`
     #' 
     #' Work in sub-class without requiring class names or constructor function.
     #' @param ... The samme params with Repo$ArrayOp(...)
+    #' @return A new arrayOp 
     create_new = function(...){
       classConstructor = get(class(self))$new
       classConstructor(...)
@@ -445,6 +447,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
     #' The new instance shares all meta data with the template
     #' @param new_afl AFL for the new ArrayOp
     #' @param ... Named params in `...` will replace the items in the template's metaList
+    #' @return A new arrayOp 
     create_new_with_same_schema = function(new_afl, ...) {
       metaList = utils::modifyList(private$metaList, list(...))
       self$create_new(new_afl, metaList = metaList)
@@ -456,6 +459,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
     #' Similar to SQL where clause.
     #' @param missing_fields_error_template Error template for missing fields. 
     #' Only one %s is allowed which is substituted with an concatnation of the missing fields separated by commas.
+    #' @return A new arrayOp 
     where = function(..., expr, missing_fields_error_template = NULL) {
       filterExpr = if(methods::hasArg('expr')) expr else e_merge(e(...))
       status = validate_filter_expr(filterExpr, self$dims_n_attrs)
@@ -480,6 +484,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
     #' NOTE: this does NOT change the to_afl output, but explicitly state which field(s) are retained if used in
     #' a parent operation that changes its schema, e.g. equi_join or to_df(only_attributes = T)
     #' @param ... Which field(s) are retained during a schema-change operation
+    #' @return A new arrayOp 
     select = function(...) {
       fieldNames = c(...)
       assert(is.character(fieldNames) || is.null(fieldNames), 
@@ -506,6 +511,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
     #' @param artificial_field ONLY relevant when `dim_mode='drop'`.
     #' A field name used as the artificial dimension name in 'drop' dim_mode 
     #' (internally used by `unpack` scidb operator). By default, a random string is generated.
+    #' @return A new arrayOp 
     reshape = function(select=NULL, dtypes = NULL, dim_mode = 'keep', artificial_field = .random_attr_name(), 
                        .force_project = TRUE) {
       
@@ -543,6 +549,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
     #' @param strict If TRUE(default), requires `self` has all the `template` fields.
     #' @param .setting a string vector, where each item will be appended to the redimension operand. 
     #' E.g. .setting = c('false', 'cells_per_chunk: 1234') ==> redimension(source, template, false, cells_per_chunk: 1234)
+    #' @return A new arrayOp 
     change_schema = function(template, strict = TRUE, .setting = NULL){
       realTemplate = if(strict) template
       else {
@@ -572,6 +579,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
     #' are retained. If set to 'drop', the artificial dimensions will be removed. See `ArrayOp$reshape` for more details.
     #' @param .artificial_field As in `ArrayOp$reshpae`, it defaults to a random field name. It can be safely ignored in
     #' client code. It exists only for test purposes. 
+    #' @return A new arrayOp 
     join = function(right, on_left = NULL, on_right = NULL, settings = NULL, on_both = NULL, .auto_select = FALSE, join_mode = 'equi_join',
       .dim_mode = 'keep', .left_alias = '_L', .right_alias = '_R', .artificial_field = .random_attr_name()) {
       if(.has_len(on_both)){
@@ -603,7 +611,6 @@ Please select on left operand's fields OR do not select on either operand. Look 
     #' loaded. Names of the unmatching column headers are irrelevant. 
     #'
     #' @return A new ArrayOp instance with matching fields
-    #' @export
     load_file = function(filepath, aio_settings = list(), field_conversion = NULL, file_headers = NULL){
       
       if(!.has_len(file_headers))
@@ -771,7 +778,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' @param df a data.frame, where all column names must all validate template fields.
     #' @param artificial_field A field name used as the artificial dimension name in `build` scidb operator
     #' By default, a random string is generated, and the dimension starts from 0. 
-    #' A customized dimension can be provided e.g. 'z=42:*' or 'z=0:*:0:1000'.
+    #' A customized dimension can be provided e.g. `z=42:*` or `z=0:*:0:1000`.
     #' @return A new ArrayOp instance whose attributes share the same name and data types with the template's fields.
     build_new = function(df,  artificial_field = .random_attr_name()) {
       assert(inherits(df, c('data.frame')), "ERROR: ArrayOp$build_new: unknown df class '%s'. 
@@ -818,6 +825,7 @@ Only data.frame is supported", class(df))
     #' @param source_start 
     #' @param ref_start 
     #' @param new_field 
+    #' @return A new arrayOp 
     set_auto_increment_field = function(reference, source_field, ref_field, source_start, ref_start, new_field = NULL) {
       assert(inherits(reference, 'ArrayOpBase'),
         "ERROR: ArrayOp$set_auto_increment_field: param 'reference' must be ArrayOp, but got '%s' instead.", 
@@ -877,6 +885,7 @@ Only data.frame is supported", class(df))
     #' @param target A target arrayOp that the source draws anti-collision dimension from.
     #' @param anti_collision_field a target dimension name which exsits only to resolve cell collision 
     #' (ie. cells with the same dimension coordinate).
+    #' @return A new arrayOp 
     set_anti_collision_field = function(target, anti_collision_field = NULL, join_setting = NULL, source_anti_collision_dim_spec = NULL) {
       assert(inherits(target, 'ArrayOpBase'),
              "ERROR: ArrayOp$set_anti_collision_field: param target must be ArrayOp, but got '%s' instead.", class(target))
@@ -948,6 +957,7 @@ Only data.frame is supported", class(df))
     #' 
     #' @param reference An ArrayOp instance that has fields absent in the source; or a named list.
     #' If reference is ArrayOp, a named list is generated by calling `reference$get_field_types(reference$attrs, .raw = T)`
+    #' @return A new arrayOp 
     set_null_fields = function(reference) {
       
       refDtypes = if(is.list(reference)) reference else reference$get_field_types(reference$attrs, .raw = T)
@@ -977,6 +987,7 @@ Only data.frame is supported", class(df))
     #' Here the `target_auto_increment` param only affects the initial load when the field is still null in the target array.
     #' @param anti_collision_field a target dimension name which exsits only to resolve cell collision 
     #' (ie. cells with the same dimension coordinate).
+    #' @return A new arrayOp 
     set_auto_fields = function(target, source_auto_increment = NULL, target_auto_increment = NULL, anti_collision_field = NULL
                                ,join_setting = NULL, source_anti_collision_dim_spec = NULL) {
       assert(inherits(target, 'ArrayOpBase'),
@@ -1005,7 +1016,7 @@ Only data.frame is supported", class(df))
     #' @description 
     #' (Deprecated) Create a new ArrayOp instance that represents a writing data operation
     #' 
-    #' NOTE: this function is deprecated. 
+    #' NOTE: this function is deprecated. DO NOT USE except for legacy code. Will be removed in future versions.
     #' Please use ArrayOp's set_auto_fields, mutate, update and overwrite functions instead.
     #' 
     #' If the dimension count, attribute count and data types match between the source(self) and target, 
@@ -1023,6 +1034,7 @@ Only data.frame is supported", class(df))
     #' Here the `target_auto_increment` param only affects the initial load when the field is still null in the target array.
     #' @param anti_collision_field a target dimension name which exsits only to resolve cell collision 
     #' (ie. cells with the same dimension coordinate).
+    #' @return A new arrayOp 
     write_to = function(target, append = TRUE, force_redimension = TRUE, 
       source_auto_increment = NULL, target_auto_increment = NULL, 
       anti_collision_field = NULL) {
@@ -1092,7 +1104,7 @@ Only data.frame is supported", class(df))
     #' @return a new arrayOp instance that carries the mutated data and has the exact same schema as the target
     mutate = function(data_source, keys = NULL, updated_fields = NULL, artificial_field = .random_attr_name(), 
                       .redimension_setting = NULL, .join_setting = NULL) {
-      assert(inherits_any(data_source, c('list', 'ArrayOpBase')), 
+      assert(inherits(data_source, c('list', 'ArrayOpBase')), 
              "ERROR: ArrayOpBase$mutate: param 'data_source' must be a named list or ArrayOp instance, but got: [%s]",
              paste(class(data_source), collapse = ', '))
       
@@ -1109,11 +1121,6 @@ Only data.frame is supported", class(df))
           self$reshape(utils::modifyList(as.list(self$dims_n_attrs), data_source), 
                        dim_mode = 'drop', artificial_field = artificial_field)$
               change_schema(self, strict = FALSE)
-          
-          # private$afl_redimension(
-          #   self$reshape(utils::modifyList(as.list(self$dims_n_attrs), data_source), 
-          #                dim_mode = 'drop', artificial_field = artificial_field)
-          # )
         }
       }
       
@@ -1176,8 +1183,9 @@ Only data.frame is supported", class(df))
     #' Overwrite Target array with self's content
     #' 
     #' Warning: Target's content will be erased and filled with self's content.
-    #' Similar behavior to scidb overwrite operator. 
+    #' Similar behavior to scidb `store` operator. 
     #' Fields of self and Target must match by raw data type. Field names are irrelevant.
+    #' See `ArrayOp$change_schema`
     #' 
     #' @param target An arrayOp instance where self's content is written to.
     #' @return A new arrayOp that encapsulates the insert operation
@@ -1195,6 +1203,12 @@ Only data.frame is supported", class(df))
     #' 
     #' Note: except for scidb build or aio_input operators, the spawned ArrayOp is not meaningful semantically. So do not
     #' use this function for operations other than 'build'/ArrayOp$build_new and 'aio_input'/ArrayOp$load_file
+    #' @param renamed Rename fields
+    #' @param added New fields
+    #' @param excluded Fields to exclude from `self`
+    #' @param dtypes Data types for any existing or new fields, which default to `self`'s data types if available.
+    #' @param dim_specs A list of array dimension specs if dimensions are changed.
+    #' @return A new arrayOp instance
     spawn = function(renamed = NULL, added = NULL, excluded = NULL, dtypes = NULL, dim_specs = NULL) {
       if(.has_len(renamed)){
         assert_named_list(renamed, "ERROR: ArrayOp$spawn: 'renamed' param must be a named list, but got: %s", renamed)
@@ -1247,18 +1261,22 @@ Only data.frame is supported", class(df))
     #' @description 
     #' Generate a command string that creates a new array based on the caller's schema
     #' 
+    #' @param array_name Full array name
+    #' @return An AFL string
     create_array_cmd = function(array_name) {
       sprintf("create array %s %s", array_name, self$to_schema_str())
     }
     ,
     #' @description 
     #' Generate a command string that removes the array (use with CAUTION!!!)
+    #' @return An AFL string
     remove_array_cmd = function() {
       sprintf("remove(%s)", self$to_afl())
     }
     ,
     #' @description 
     #' Generate a command string that removes the versions of the array (use with CAUTION!!!)
+    #' @return An AFL string
     remove_array_versions_cmd = function(version_id = NULL) {
       if(is.null(version_id)) sprintf("remove_versions(%s)", self$to_afl())
       else sprintf("remove_versions(%s, %s)", self$to_afl(), version_id)
@@ -1283,7 +1301,7 @@ Only data.frame is supported", class(df))
     #'
     #' scidb::iquery has a param `only_attributes`, which, if set TRUE, will effectively drop all dims.
     #' @param drop_dims Whether self's dimensions are dropped when generating AFL for data.frame conversion
-    #' @return AFL string
+    #' @return An AFL string
     to_df_afl = function(drop_dims = FALSE, artificial_field = .random_attr_name()) {
       return(self$.to_afl_explicit(drop_dims, self$selected, artificial_field = artificial_field))
     }
@@ -1291,7 +1309,7 @@ Only data.frame is supported", class(df))
     #' @description 
     #' Return a schema representation of the ArrayOp <attr1 [, attr2 ...]> \[dim1 [;dim2]\]
     #' 
-    #' @return AFL string
+    #' @return An AFL string
     to_schema_str = function() {
       attrStr = paste(self$attrs, self$get_field_types(self$attrs), sep = ':', collapse = ',')
       dimStrItems = mapply(function(dimName, dimSpec){
@@ -1312,6 +1330,7 @@ Only data.frame is supported", class(df))
     #' @param drop_dims Whether self dimensions will be dropped in parent operations
     #' @param selected_fields which fields are selected no matter what the parent operation is.
     #' If NULL, self fields will pass on by default depending on the parent operation.
+    #' @return An AFL string
     .to_afl_explicit = function(drop_dims = FALSE, selected_fields = NULL, artificial_field = .random_attr_name()){
 
       # No intent to select fields
@@ -1353,6 +1372,7 @@ Only data.frame is supported", class(df))
     # https://docs.google.com/spreadsheets/d/1kN7QgvQXXxcovW9q25d4TNb6tsf888-xhWdZW-WELWw/edit?usp=sharing
     #' @param keyFileds Field names as join keys
     #' @param keep_dimensiosn If `keep_dimensions` is specified in scidb `equi_join` operator
+    #' @return An AFL string
     .to_join_operand_afl = function(keyFields, keep_dimensions = FALSE, artificial_field = .random_attr_name()) {
       
       selectedFields = self$selected
@@ -1389,10 +1409,17 @@ Only data.frame is supported", class(df))
     ,
     #' @description 
     #' Set ArrayOp meta data directly
+    #'
+    #' Useful in keeping reference of other relevant R objects that should have a same life cycle with the ArrayOp instance.
+    #' @param key A string key
+    #' @param value A value of any type
+    #' @return NULL
     .set_meta = function(key, value) private$set_meta(key, value)
     ,
     #' @description 
     #' Get ArrayOp meta data directly
+    #' @param key A string key
+    #' @return An metadata object of any type registered with `key`
     .get_meta = function(key) private$get_meta(key)
   )
 )
