@@ -290,10 +290,10 @@ Repo <- R6::R6Class(
         } else {
           aliasArray = array_alias_registry[[what]]
           assert_has_len(aliasArray, "ERROR:Repo$get_array: '%s' is not a registered array alias.", what)
-          # If the array alias is registered with an array name, then first time access trigers a `load_array_from_scidb`
+          # If the array alias is registered with an array name, then first time access trigers a `load_arrayop_from_scidb`
           # call. Later access will return the cached arrayOp instance.
           if(is.character(aliasArray)){
-            cached = load_array_from_scidb(aliasArray)
+            cached = load_arrayop_from_scidb(aliasArray)
             private$array_alias_registry[[what]] <- cached
             return(cached)
           }
@@ -326,12 +326,12 @@ Repo <- R6::R6Class(
     #' 
     #' @param full_array_name A fully qualified array name (e.g. myNamespace.arrayName)
     #' @return An ArrayOp instance
-    load_array_from_scidb = function(full_array_name){
+    load_arrayop_from_scidb = function(full_array_name){
       assert_single_str(full_array_name,
-             "ERROR:Repo$load_array_from_scidb: param 'full_array_name' must be a single scidb array name")
+             "ERROR:Repo$load_arrayop_from_scidb: param 'full_array_name' must be a single scidb array name")
       schemaStr = query_raw(afl(full_array_name %show% NULL %project% 'schema'))[['schema']]
       assert_single_str(schemaStr,
-             "ERROR:Repo$load_array_from_scidb: '%s' is not a valid scidb array", full_array_name)
+             "ERROR:Repo$load_arrayop_from_scidb: '%s' is not a valid scidb array", full_array_name)
       # schemaStr only contains an array name without the namespace. We need to change it to the full array name.
       get_array(schemaStr)$create_new_with_same_schema(full_array_name)
     }
@@ -342,12 +342,12 @@ Repo <- R6::R6Class(
     #' @param namespace A scidb namespace
     #' @return A list of ArrayOp instances where names are the array names (without namespace) and 
     #' values are the arrayOp instances whose to_afl() function return fully qualified array names
-    load_arrays_from_scidb_namespace = function(namespace){
+    load_arrayops_from_scidb_namespace = function(namespace){
       assert_single_str(namespace,
-             "ERROR:Repo$load_arrays_from_scidb_namespace: param 'namespace' must be a single scidb namespace")
+             "ERROR:Repo$load_arrayops_from_scidb_namespace: param 'namespace' must be a single scidb namespace")
       schemaStr = query_raw(afl(sprintf("list(ns:%s)", namespace) %project% 'schema'))[['schema']]
       assert(is.character(schemaStr),
-             "ERROR:Repo$load_arrays_from_scidb_namespace: '%s' is not a valid scidb namespace", namespace)
+             "ERROR:Repo$load_arrayops_from_scidb_namespace: '%s' is not a valid scidb namespace", namespace)
       rawArrays = sapply(schemaStr, get_array) # The arrays only have names with the namespace prefix
       arrayNamesWithoutNs = sapply(rawArrays, function(x) x$to_afl())
       fullNameArrays = sapply(rawArrays, function(x){
@@ -360,7 +360,7 @@ Repo <- R6::R6Class(
     #' Load a list of ArrayOp instances from a config object
     #' 
     #' Only load and return a list of arrayOp instances. Repo's array registery will not be updated.
-    #' If desired, you can `loaded = repo$load_arrays_from_config; repo$register_array(loaded)` to register loaded arrays.
+    #' If desired, you can `loaded = repo$load_arrayops_from_config; repo$register_array(loaded)` to register loaded arrays.
     #' @param config A config object (R list) normally loaded from a yaml config file. The config list must have
     #' 'namespace' and 'arrays' keys. Value of 'namespace' is a single string for the default namespace.
     #' Value of 'arrays' is a list of unamed elements, where each element is a list of three items: 
@@ -369,28 +369,28 @@ Repo <- R6::R6Class(
     #'  Otherwise, if in 'namespace.rawArrayName', then use it directly disregard of the default namespace.
     #' 3. 'schema': a single string for array schema. E.g. "<aa:string, b:bool null> \[da=0:*:0:*\]
     #' @return A list of ArrayOp instances where names are array aliases and values are the ArrayOp instances
-    load_arrays_from_config = function(config) {
-      assert(is.list(config), "ERROR:Repo$load_arrays_from_config:'config' must be a list, but got [%s] instead.", paste(class(config), collapse = ','))
+    load_arrayops_from_config = function(config) {
+      assert(is.list(config), "ERROR:Repo$load_arrayops_from_config:'config' must be a list, but got [%s] instead.", paste(class(config), collapse = ','))
       assert_no_fields(c('namespace', 'arrays') %-% names(config),
-                         "ERROR:Repo$load_arrays_from_config:param 'config' missing section(s): %s")
+                         "ERROR:Repo$load_arrayops_from_config:param 'config' missing section(s): %s")
       defaultNamespace = config$namespace
       arraySection = config$arrays
       aliases = sapply(arraySection, function(x) x$alias)
-      assert_single_str(defaultNamespace, "ERROR:Repo$load_arrays_from_config:config$namespace must be a single string")
-      assert(is.list(arraySection), "ERROR:Repo$load_arrays_from_config:config$arrays must be a list.")
+      assert_single_str(defaultNamespace, "ERROR:Repo$load_arrayops_from_config:config$namespace must be a single string")
+      assert(is.list(arraySection), "ERROR:Repo$load_arrayops_from_config:config$arrays must be a list.")
       
       if(!.has_len(arraySection)) return(list())
       
       read_array = function(arrayConfigObj) {
         assert_no_fields(c('alias', 'name', 'schema') %-% names(arrayConfigObj),
-                           "ERROR:Repo$load_arrays_from_config:bad config format: missing name(s) '%s'.\n%%s", 
+                           "ERROR:Repo$load_arrayops_from_config:bad config format: missing name(s) '%s'.\n%%s", 
                          deparse(arrayConfigObj))
         alias = arrayConfigObj[['alias']]
         name = arrayConfigObj[['name']]
         schema = arrayConfigObj[['schema']]
-        assert_single_str(alias, "ERROR:Repo$load_arrays_from_config:bad config format: 'alias' must be a single string")
-        assert_single_str(name, "ERROR:Repo$load_arrays_from_config:bad config format: 'name' must be a single string")
-        assert_single_str(schema, "ERROR:Repo$load_arrays_from_config:bad config format: 'schema' must be a single string")
+        assert_single_str(alias, "ERROR:Repo$load_arrayops_from_config:bad config format: 'alias' must be a single string")
+        assert_single_str(name, "ERROR:Repo$load_arrayops_from_config:bad config format: 'name' must be a single string")
+        assert_single_str(schema, "ERROR:Repo$load_arrayops_from_config:bad config format: 'schema' must be a single string")
         isFullName = grepl('\\.', name)
         fullArrayName = if(isFullName) name else sprintf("%s.%s", defaultNamespace, name)
         parsedArray = try(get_array(sprintf("%s %s", fullArrayName, schema)), silent = TRUE)

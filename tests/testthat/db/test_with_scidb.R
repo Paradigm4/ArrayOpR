@@ -3,7 +3,7 @@ context("Repo tests with scidb connection")
 `%>%` = dplyr::`%>%`
 
 # arrays loaded from the config file
-CfgArrays = repo$load_arrays_from_config(config)
+CfgArrays = repo$load_arrayops_from_config(config)
 # Get array's raw names (without namespace)
 CfgArraysRawNames = sapply(CfgArrays, function(x) gsub("^[^\\.]+\\.", '', x$to_afl()))
 
@@ -26,7 +26,7 @@ reset_array_with_content = function(target, content, recreate = TRUE) {
 
 # Populate the empty namespace ----
 test_that("No arrays in the namespace", {
-  arrays = repo$load_arrays_from_scidb_namespace(NS)
+  arrays = repo$load_arrayops_from_scidb_namespace(NS)
   expect_identical(length(arrays), 0L)
 })
 
@@ -39,7 +39,7 @@ test_that("Loaded arrays are created in the namespace", {
   }
   
   # Ensure the newly created arrays can be loaded
-  scidbCfgArrays = repo$load_arrays_from_scidb_namespace(NS)
+  scidbCfgArrays = repo$load_arrayops_from_scidb_namespace(NS)
   scidbCfgArrays = scidbCfgArrays[CfgArraysRawNames]
   expect_identical(length(scidbCfgArrays), length(CfgArrays))
   for(i in 1:length(scidbCfgArrays)){
@@ -53,7 +53,7 @@ test_that("Loaded arrays are created in the namespace", {
 
 test_that("Get array by raw name", {
   for(arr in CfgArrays){
-    fromScidb = repo$load_array_from_scidb(arr$to_afl())
+    fromScidb = repo$load_arrayop_from_scidb(arr$to_afl())
     expect_identical(str(fromScidb), str(arr))
   }
 })
@@ -158,7 +158,7 @@ test_that("Mutate an array by another array", {
   mutate_by_one_attr = function(){
     reset_array_with_content(MutateArray, DfMutateArray, recreate = F)
     mutateDataSource = MutateArray$build_new(
-      df %>% dplyr::filter(da %% 2 == 0) %>% dplyr::select(lower, upper) %>% dplyr::mutate(f_int32 = 1:3)
+      DfMutateArray %>% dplyr::filter(da %% 2 == 0) %>% dplyr::select(lower, upper) %>% dplyr::mutate(f_int32 = 1:3)
     )
     repo$execute(
      MutateArray$
@@ -170,7 +170,7 @@ test_that("Mutate an array by another array", {
   mutate_by_two_attrs = function(){
     reset_array_with_content(MutateArray, DfMutateArray, recreate = F)
     mutateDataSource = MutateArray$build_new(
-      df %>% dplyr::filter(da %% 2 == 0) %>% dplyr::select(lower, upper) %>% dplyr::mutate(f_int32 = 1:3)
+      DfMutateArray %>% dplyr::filter(da %% 2 == 0) %>% dplyr::select(lower, upper) %>% dplyr::mutate(f_int32 = 1:3)
     )
     repo$execute(
      MutateArray$
@@ -183,7 +183,7 @@ test_that("Mutate an array by another array", {
   mutate_by_one_dim = function(){
     reset_array_with_content(MutateArray, DfMutateArray, recreate = F)
     mutateDataSource = MutateArray$build_new(
-      df %>% dplyr::filter(da %% 2 == 0) %>% dplyr::select(da) %>% dplyr::mutate(f_int32 = 1:3)
+      DfMutateArray %>% dplyr::filter(da %% 2 == 0) %>% dplyr::select(da) %>% dplyr::mutate(f_int32 = 1:3)
     )
     repo$execute(
      MutateArray$
@@ -196,7 +196,7 @@ test_that("Mutate an array by another array", {
   mutate_by_two_dims = function(){
     reset_array_with_content(MutateArray, DfMutateArray, recreate = F)
     mutateDataSource = MutateArray$build_new(
-      df %>% dplyr::filter(da %% 2 == 0) %>% dplyr::select(da, db) %>% dplyr::mutate(f_int32 = 1:3)
+      DfMutateArray %>% dplyr::filter(da %% 2 == 0) %>% dplyr::select(da, db) %>% dplyr::mutate(f_int32 = 1:3)
     )
     repo$execute(
      MutateArray$
@@ -209,7 +209,7 @@ test_that("Mutate an array by another array", {
   mutate_by_dim_n_attr = function(){
     reset_array_with_content(MutateArray, DfMutateArray, recreate = F)
     mutateDataSource = MutateArray$build_new(
-      df %>% dplyr::filter(da %% 2 == 0) %>% dplyr::select(db, lower) %>% dplyr::mutate(f_int32 = 1:3)
+      DfMutateArray %>% dplyr::filter(da %% 2 == 0) %>% dplyr::select(db, lower) %>% dplyr::mutate(f_int32 = 1:3)
     )
     repo$execute(
      MutateArray$
@@ -221,7 +221,7 @@ test_that("Mutate an array by another array", {
   
   validate_result = function(){
     dfFromDb = dplyr::arrange(repo$query(MutateArray), lower)
-    expect_equal(dfFromDb, df %>% dplyr::mutate(f_int32 = c(1,-4,2,-2,3)))
+    expect_equal(dfFromDb, DfMutateArray %>% dplyr::mutate(f_int32 = c(1,-4,2,-2,3)))
   }
   # repo$.private$set_meta('debug', T)
   mutate_by_one_attr()

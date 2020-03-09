@@ -43,11 +43,11 @@ test_that("Register array alias as the raw array name", {
   arrayOp = repo$get_array("ns.raw_array_name <a:string zip, b:int32> [dim=0:1:2:3]")
   anotherArray = repo$get_array("NS2.another <a:string, b:int32> [da=*; db=0:1:2:3]")
   repo$register_array(list('alias'='ns.raw_array_name', 'another'=anotherArray))
-  stub(repo$get_array, 'load_array_from_scidb', arrayOp)
+  stub(repo$get_array, 'load_arrayop_from_scidb', arrayOp)
   expect_identical(repo$get_array('alias'), arrayOp)
   expect_identical(repo$get_array('another'), anotherArray)
   # Registered raw arrays are cached
-  stub(repo$get_array, 'load_array_from_scidb', function(...) stop("error"))
+  stub(repo$get_array, 'load_arrayop_from_scidb', function(...) stop("error"))
   # So no error here
   expect_identical(repo$get_array('alias'), arrayOp)
 })
@@ -68,16 +68,16 @@ test_that("Register array with invalid array name", {
 test_that("Load arrays from scidb", {
   repo = newRepo(dependency_obj = mockDep)
   arrayOp = repo$get_array("ns.raw_array_name <a:string zip, b:int32> [dim=0:1:2:3]")
-  stub(repo$load_array_from_scidb, 'query_raw', list(schema=arrayOp$to_schema_str()))
-  loaded = repo$load_array_from_scidb('rawArrayName')
+  stub(repo$load_arrayop_from_scidb, 'query_raw', list(schema=arrayOp$to_schema_str()))
+  loaded = repo$load_arrayop_from_scidb('rawArrayName')
   expect_identical(loaded$to_schema_str(), arrayOp$to_schema_str())
 })
 
 test_that("Load arrays from scidb with exception", {
   repo = newRepo(dependency_obj = mockDep)
   arrayOp = repo$get_array("ns.raw_array_name <a:string zip, b:int32> [dim=0:1:2:3]")
-  stub(repo$load_array_from_scidb, 'query_raw', function(...) stop("Some scidb error"))
-  expect_error(repo$load_array_from_scidb('badRawArrayName'), "scidb error")
+  stub(repo$load_arrayop_from_scidb, 'query_raw', function(...) stop("Some scidb error"))
+  expect_error(repo$load_arrayop_from_scidb('badRawArrayName'), "scidb error")
 })
 
 # Load arrays from a scidb namespace ----
@@ -93,8 +93,8 @@ test_that("Load arrays from a scidb namespace", {
   sourceArrays = c(array1, array2, array3)
   schemaStrs = sapply(sourceArrays, function(x) str(x))
   
-  stub(repo$load_arrays_from_scidb_namespace, "query_raw", list(schema=schemaStrs))
-  loadedArrays = repo$load_arrays_from_scidb_namespace('NS')
+  stub(repo$load_arrayops_from_scidb_namespace, "query_raw", list(schema=schemaStrs))
+  loadedArrays = repo$load_arrayops_from_scidb_namespace('NS')
   expect_identical(length(loadedArrays), 3L)
   expect_identical(names(loadedArrays), sapply(sourceArrays, to_afl))
   expect_identical(rlang::set_names(sapply(loadedArrays, to_afl), NULL), 
@@ -110,7 +110,7 @@ test_that("Load arrays from a config", {
     list('alias' = 'aa', 'name' = 'rawA', 'schema' = "<a:string compression 'zlib', b:int32> [da=0:*:0:*]")
     , list('alias' = 'ab', 'name' = 'anotherNS.rawB', 'schema' = "<a:string, b:int32> [da=0:*:0:*]")
   ))
-  arrayList = repo$load_arrays_from_config(config)
+  arrayList = repo$load_arrayops_from_config(config)
   arr1 = repo$get_array("NS.rawA<a:string compression 'zlib', b:int32> [da=0:*:0:*]")
   arr2 = repo$get_array("another.rawB <a:string, b:int32> [da=0:*:0:*]")
   expect_identical(arrayList[['aa']]$to_afl(), "NS.rawA")
@@ -119,22 +119,22 @@ test_that("Load arrays from a config", {
   expect_identical(arrayList[['ab']]$to_schema_str(), "<a:string,b:int32> [da=0:*:0:*]")
   
   # Return an empty list of 'arrays' section is empty.
-  expect_identical(repo$load_arrays_from_config(list(namespace='NS', arrays=list())), list())
+  expect_identical(repo$load_arrayops_from_config(list(namespace='NS', arrays=list())), list())
 })
 
 test_that("Load arrays with bad config", {
   repo = newRepo(dependency_obj = mockDep)
-  expect_error(repo$load_arrays_from_config(list()), "'config' missing section")
+  expect_error(repo$load_arrayops_from_config(list()), "'config' missing section")
   expect_error(
-    repo$load_arrays_from_config(list(namespace='NS', arrays = list(list('alias'='aa')))), 
+    repo$load_arrayops_from_config(list(namespace='NS', arrays = list(list('alias'='aa')))), 
     "bad config format")
   expect_error(
-    repo$load_arrays_from_config(list(namespace='NS', arrays = list(list('alias'='aa')))), 
+    repo$load_arrayops_from_config(list(namespace='NS', arrays = list(list('alias'='aa')))), 
     "bad config format")
   expect_error(
-    repo$load_arrays_from_config(list(namespace='NS', arrays = list(list('alias'='aa', 'name'=42, schema='schema')))), 
+    repo$load_arrayops_from_config(list(namespace='NS', arrays = list(list('alias'='aa', 'name'=42, schema='schema')))), 
     "bad config format")
   expect_error(
-    repo$load_arrays_from_config(list(namespace='NS', arrays = list(list('alias'='aa', 'name'='A', schema='schema')))), 
+    repo$load_arrayops_from_config(list(namespace='NS', arrays = list(list('alias'='aa', 'name'='A', schema='schema')))), 
     "invalid array schema")
 })
