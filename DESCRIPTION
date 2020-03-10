@@ -38,5 +38,4 @@ Collate:
     'repo_v19.R'
     'package.R'
     'statement_parser.R'
-    'test_db.R'
 VignetteBuilder: knitr

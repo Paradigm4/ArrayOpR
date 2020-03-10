@@ -25,15 +25,15 @@ test_that("Get array from registered array alias", {
   
   arrayOp = repo$get_array("myNamespace.raw_array_name <a:string zip, b:int32> [dim=0:1:2:3]")
   anotherArray = repo$get_array("NS2.another <a:string, b:int32> [da=*; db=0:1:2:3]")
-  repo$register_array(list('alias'=arrayOp))
+  repo$register_arrayops(list('alias'=arrayOp))
   expect_identical(repo$get_array('alias'), arrayOp)
   expect_error(repo$get_array('alias_non_existent', 'not a reigstered array'))
   
-  repo$register_array(list('alias'=anotherArray))
+  repo$register_arrayops(list('alias'=anotherArray))
   expect_identical(repo$get_array('alias'), anotherArray)
   
   # Register an alias as NULL effectively remove it from the array_alias_registry
-  repo$register_array(list('alias'=NULL))
+  repo$register_arrayops(list('alias'=NULL))
   expect_error(repo$get_array('alias', 'not a reigstered array'))
   
 })
@@ -42,7 +42,7 @@ test_that("Register array alias as the raw array name", {
   repo = newRepo(dependency_obj = mockDep)
   arrayOp = repo$get_array("ns.raw_array_name <a:string zip, b:int32> [dim=0:1:2:3]")
   anotherArray = repo$get_array("NS2.another <a:string, b:int32> [da=*; db=0:1:2:3]")
-  repo$register_array(list('alias'='ns.raw_array_name', 'another'=anotherArray))
+  repo$register_arrayops(list('alias'='ns.raw_array_name', 'another'=anotherArray))
   stub(repo$get_array, 'load_arrayop_from_scidb', arrayOp)
   expect_identical(repo$get_array('alias'), arrayOp)
   expect_identical(repo$get_array('another'), anotherArray)
@@ -56,7 +56,7 @@ test_that("Register array with invalid array name", {
   repo = newRepo(dependency_obj = mockDep)
   arrayOp = repo$get_array("ns.raw_array_name <a:string zip, b:int32> [dim=0:1:2:3]")
 
-  repo$register_array(list('alias'='wrong name'))
+  repo$register_arrayops(list('alias'='wrong name'))
   # Simulate a scidb query error
   stub(repo$get_array, 'dep$query', function(...) stop("wrong array name"))
   # An error is throw when we try to retrieve the array
@@ -109,6 +109,8 @@ test_that("Load arrays from a config", {
   config = list(namespace='NS', arrays = list(
     list('alias' = 'aa', 'name' = 'rawA', 'schema' = "<a:string compression 'zlib', b:int32> [da=0:*:0:*]")
     , list('alias' = 'ab', 'name' = 'anotherNS.rawB', 'schema' = "<a:string, b:int32> [da=0:*:0:*]")
+    , list('alias' = 'ac', 'name' = 'myns.array1')
+    , list('alias' = 'ad', 'name' = 'array2')
   ))
   arrayList = repo$load_arrayops_from_config(config)
   arr1 = repo$get_array("NS.rawA<a:string compression 'zlib', b:int32> [da=0:*:0:*]")
@@ -117,7 +119,18 @@ test_that("Load arrays from a config", {
   expect_identical(arrayList[['aa']]$to_schema_str(), "<a:string compression 'zlib',b:int32> [da=0:*:0:*]")
   expect_identical(arrayList[['ab']]$to_afl(), "anotherNS.rawB")
   expect_identical(arrayList[['ab']]$to_schema_str(), "<a:string,b:int32> [da=0:*:0:*]")
+  # An array with empty schema will return its full array name only
+  expect_identical(arrayList[['ac']], 'myns.array1')
+  expect_identical(arrayList[['ad']], 'NS.array2')
   
+  # Register the loaded arrayops from config
+  repo$register_arrayops(arrayList)
+  expect_identical(str(repo$get_array('aa')), "NS.rawA <a:string compression 'zlib',b:int32> [da=0:*:0:*]")
+  expect_identical(str(repo$get_array('ab')), "anotherNS.rawB <a:string,b:int32> [da=0:*:0:*]")
+  stub(repo$get_array, "load_arrayop_from_scidb", identity)
+  expect_identical(repo$get_array('ac'), "myns.array1")
+  expect_identical(repo$get_array('ad'), "NS.array2")
+
   # Return an empty list of 'arrays' section is empty.
   expect_identical(repo$load_arrayops_from_config(list(namespace='NS', arrays=list())), list())
 })

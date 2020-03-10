@@ -16,11 +16,11 @@ Version-specific logic/behaviors should be implemented in RepoBase sub-classes.
 \describe{
 \item{\code{.private}}{For internal testing only. Do not access this field to avoid unintended consequences!!!}
 
-\item{\code{setting_ignore_error}}{Whether to ignore internal database errors. Default FALSE.}
+\item{\code{setting_debug}}{Whether to enable debug mode. Default FALSE.
+\code{Repo$setting_debug} to get current setting; or \code{Repo$setting_debug = T} to change current setting.}
 
-\item{\code{setting_ignore_error}}{Whether to ignore internal database errors. Default FALSE.}
-
-\item{\code{setting_use_aio_input}}{Whether to use aio_input for data frame uploading. Default FALSE.}
+\item{\code{setting_use_aio_input}}{Whether to use aio_input for data frame uploading. Default FALSE.
+\code{Repo$setting_use_aio_input} to get current setting; or \code{Repo$setting_use_aio_input = T} to change current setting.}
 }
 \if{html}{\out{</div>}}
 }
@@ -32,9 +32,9 @@ Version-specific logic/behaviors should be implemented in RepoBase sub-classes.
 \item \href{#method-execute}{\code{Repo$execute()}}
 \item \href{#method-get_array}{\code{Repo$get_array()}}
 \item \href{#method-register_array}{\code{Repo$register_array()}}
-\item \href{#method-load_array_from_scidb}{\code{Repo$load_array_from_scidb()}}
-\item \href{#method-load_arrays_from_scidb_namespace}{\code{Repo$load_arrays_from_scidb_namespace()}}
-\item \href{#method-load_arrays_from_config}{\code{Repo$load_arrays_from_config()}}
+\item \href{#method-load_arrayop_from_scidb}{\code{Repo$load_arrayop_from_scidb()}}
+\item \href{#method-load_arrayops_from_scidb_namespace}{\code{Repo$load_arrayops_from_scidb_namespace()}}
+\item \href{#method-load_arrayops_from_config}{\code{Repo$load_arrayops_from_config()}}
 \item \href{#method-upload_df}{\code{Repo$upload_df()}}
 \item \href{#method-save_as_array}{\code{Repo$save_as_array()}}
 \item \href{#method-.create_array}{\code{Repo$.create_array()}}
@@ -173,14 +173,14 @@ Register a list of arrays which can be later accessed via their aliases
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-load_array_from_scidb"></a>}}
-\subsection{Method \code{load_array_from_scidb()}}{
+\if{html}{\out{<a id="method-load_arrayop_from_scidb"></a>}}
+\subsection{Method \code{load_arrayop_from_scidb()}}{
 Get an ArrayOp instance from scidb by its full name
 
 No cache is provided with this function.
 See \code{register_array} for details on registering an array alias with cache.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Repo$load_array_from_scidb(full_array_name)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Repo$load_arrayop_from_scidb(full_array_name)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -195,11 +195,11 @@ An ArrayOp instance
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-load_arrays_from_scidb_namespace"></a>}}
-\subsection{Method \code{load_arrays_from_scidb_namespace()}}{
+\if{html}{\out{<a id="method-load_arrayops_from_scidb_namespace"></a>}}
+\subsection{Method \code{load_arrayops_from_scidb_namespace()}}{
 Get a list of arrays from a scidb namespace
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Repo$load_arrays_from_scidb_namespace(namespace)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Repo$load_arrayops_from_scidb_namespace(namespace)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -215,14 +215,14 @@ values are the arrayOp instances whose to_afl() function return fully qualified 
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-load_arrays_from_config"></a>}}
-\subsection{Method \code{load_arrays_from_config()}}{
+\if{html}{\out{<a id="method-load_arrayops_from_config"></a>}}
+\subsection{Method \code{load_arrayops_from_config()}}{
 Load a list of ArrayOp instances from a config object
 
 Only load and return a list of arrayOp instances. Repo's array registery will not be updated.
-If desired, you can \verb{loaded = repo$load_arrays_from_config; repo$register_array(loaded)} to register loaded arrays.
+If desired, you can \verb{loaded = repo$load_arrayops_from_config; repo$register_array(loaded)} to register loaded arrays.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Repo$load_arrays_from_config(config)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Repo$load_arrayops_from_config(config)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

@@ -201,14 +201,13 @@ Repo <- R6::R6Class(
     #' @field .private For internal testing only. Do not access this field to avoid unintended consequences!!!
     .private = function() private
     ,
-    #' @field setting_ignore_error Whether to ignore internal database errors. Default FALSE.
-    setting_debug = function() get_meta('debug', FALSE)
-    ,
-    #' @field setting_ignore_error Whether to ignore internal database errors. Default FALSE.
-    setting_ignore_error = function() get_meta('ignore_error', FALSE)
+    #' @field setting_debug Whether to enable debug mode. Default FALSE. 
+    #' `Repo$setting_debug` to get current setting; or `Repo$setting_debug = T` to change current setting.
+    setting_debug = function(value) if(missing(value)) get_meta('debug', FALSE) else set_meta('debug', as.logical(value))
     ,
     #' @field setting_use_aio_input Whether to use aio_input for data frame uploading. Default FALSE.
-    setting_use_aio_input = function() get_meta('use_aio_input', FALSE)
+    #' `Repo$setting_use_aio_input` to get current setting; or `Repo$setting_use_aio_input = T` to change current setting.
+    setting_use_aio_input = function(value) if(missing(value)) get_meta('use_aio_input', FALSE) else set_meta('use_aio_input', as.logical(value))
   )
   ,
   # Public ----
@@ -313,8 +312,12 @@ Repo <- R6::R6Class(
     #' Register a list of arrays which can be later accessed via their aliases
     #' 
     #' @param items A list where names are aliases and values are arrayOp instances or raw array names
-    register_array = function(items){
-      assert_named_list(items, "ERROR:Repo$register_array: param 'items' must be a named list where every element has a name, and the value is an ArrayOp instance or raw array name.")
+    #' For arrayop values, they will be directly returned. 
+    #' For string values, first access `Repo$get_array('alias')` will triger a `load_arrayop_from_scidb` call and 
+    #' cache the returned arrayop for later access.
+    #' @return NULL Use `Repo$get_array('alias')` to retrieve registered arrays
+    register_arrayops = function(items){
+      assert_named_list(items, "ERROR:Repo$register_arrayops: param 'items' must be a named list where every element has a name, and the value is an ArrayOp instance or raw array name.")
       private$array_alias_registry = utils::modifyList(private$array_alias_registry, items)
     }
     ,
@@ -322,7 +325,7 @@ Repo <- R6::R6Class(
     #' Get an ArrayOp instance from scidb by its full name 
     #' 
     #' No cache is provided with this function. 
-    #' See `register_array` for details on registering an array alias with cache.
+    #' See `register_arrayops` for details on registering an array alias with cache.
     #' 
     #' @param full_array_name A fully qualified array name (e.g. myNamespace.arrayName)
     #' @return An ArrayOp instance
@@ -360,7 +363,7 @@ Repo <- R6::R6Class(
     #' Load a list of ArrayOp instances from a config object
     #' 
     #' Only load and return a list of arrayOp instances. Repo's array registery will not be updated.
-    #' If desired, you can `loaded = repo$load_arrayops_from_config; repo$register_array(loaded)` to register loaded arrays.
+    #' If desired, you can `loaded = repo$load_arrayops_from_config; repo$register_arrayops(loaded)` to register loaded arrays.
     #' @param config A config object (R list) normally loaded from a yaml config file. The config list must have
     #' 'namespace' and 'arrays' keys. Value of 'namespace' is a single string for the default namespace.
     #' Value of 'arrays' is a list of unamed elements, where each element is a list of three items: 
@@ -368,6 +371,7 @@ Repo <- R6::R6Class(
     #' 2. 'name': raw array name. If without a namespace, then the default namespace is applied.
     #'  Otherwise, if in 'namespace.rawArrayName', then use it directly disregard of the default namespace.
     #' 3. 'schema': a single string for array schema. E.g. "<aa:string, b:bool null> \[da=0:*:0:*\]
+    #' If 'schema' missing, the array's full name will be returned, which later can be registered as well.
     #' @return A list of ArrayOp instances where names are array aliases and values are the ArrayOp instances
     load_arrayops_from_config = function(config) {
       assert(is.list(config), "ERROR:Repo$load_arrayops_from_config:'config' must be a list, but got [%s] instead.", paste(class(config), collapse = ','))
@@ -382,7 +386,7 @@ Repo <- R6::R6Class(
       if(!.has_len(arraySection)) return(list())
       
       read_array = function(arrayConfigObj) {
-        assert_no_fields(c('alias', 'name', 'schema') %-% names(arrayConfigObj),
+        assert_no_fields(c('alias', 'name') %-% names(arrayConfigObj),
                            "ERROR:Repo$load_arrayops_from_config:bad config format: missing name(s) '%s'.\n%%s", 
                          deparse(arrayConfigObj))
         alias = arrayConfigObj[['alias']]
@@ -390,11 +394,13 @@ Repo <- R6::R6Class(
         schema = arrayConfigObj[['schema']]
         assert_single_str(alias, "ERROR:Repo$load_arrayops_from_config:bad config format: 'alias' must be a single string")
         assert_single_str(name, "ERROR:Repo$load_arrayops_from_config:bad config format: 'name' must be a single string")
-        assert_single_str(schema, "ERROR:Repo$load_arrayops_from_config:bad config format: 'schema' must be a single string")
         isFullName = grepl('\\.', name)
         fullArrayName = if(isFullName) name else sprintf("%s.%s", defaultNamespace, name)
-        parsedArray = try(get_array(sprintf("%s %s", fullArrayName, schema)), silent = TRUE)
-        assert(inherits(parsedArray, 'ArrayOpBase'), "ERROR:Repo$laod_arrays_from_config:bad config format:invalid array schema: %s", schema)
+        if(.has_len(schema)){
+          assert_single_str(schema, "ERROR:Repo$load_arrayops_from_config:bad config format: 'schema' must be a single string")
+          parsedArray = try(get_array(sprintf("%s %s", fullArrayName, schema)), silent = TRUE)
+          assert(inherits(parsedArray, 'ArrayOpBase'), "ERROR:Repo$laod_arrays_from_config:bad config format:invalid array schema: %s", schema)
+        } else parsedArray = fullArrayName
         parsedArray
       }
       
