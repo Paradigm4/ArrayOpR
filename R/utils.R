@@ -63,6 +63,10 @@ log_job = function(job, msg = '', done_msg = 'done') {
   invisible(result)
 }
 
+print_error <- function(...){ 
+  cat(sprintf(...), file=stderr())
+}
+
 # Output job duration.
 # 
 # Fields of durations are `names(proc.time())`, i.e. [user.self, sys.self, elapsed, user.child, sys.child]

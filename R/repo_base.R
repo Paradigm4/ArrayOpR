@@ -126,7 +126,7 @@ Repo <- R6::R6Class(
           log_job_duration(dep$execute(aflStmt, ...), sprintf("Repo execute: %s", aflStmt))
       },
       error = function(e) {
-        print(afl) # Print out AFL only when error occurs.
+        print_error("ERROR:Repo$execute:\n%s", aflStmt) # Print out AFL only when error occurs.
         stop(e)
       })
       return(nullResult)
@@ -150,7 +150,7 @@ Repo <- R6::R6Class(
           log_job_duration(dep$query(aflStmt, ...), sprintf("Repo query: %s", aflStmt))
       },
       error = function(e) {
-        print(afl) # Print out AFL only when error occurs.
+        print_error("ERROR:Repo$query:\n%s", aflStmt) # Print out AFL only when error occurs.
         stop(e)
       })
       return(df)
