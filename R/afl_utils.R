@@ -74,14 +74,19 @@ afl_filter_from_expr <- function(e) {
       # Speical operator, e.g. >=, <=, != NOTE: 'and', 'or' are treated as comparison operators.
       return(paste(operands, collapse = sprintf(' %s ', operator)))
     } else if (is.name(node)) {
-      return(as.character(node))
+      s = as.character(node)
+      # if(s == 'T') return('true')
+      # if(s == 'F') return('false')
+      return(s)
     } else if (is.atomic(node)) {
       if(is.numeric(node))
         return(as.character(node))
-      else
+      else if(is.logical(node))
+        return(tolower(as.character(node)))
+      else if(is.character(node))
         return(sprintf("'%s'", node))
     } else {
-      stop(sprintf('Unknow class: %s', print(node)))
+      stop(sprintf('Unknow class: [%s]', paste(class(node), collapse = ',')))
     }
   }
 
@@ -99,19 +104,23 @@ afl_filter_from_expr <- function(e) {
 #' Eg. value_range = c(1, 9) => c(value >= 1, value <= 9)
 #' @seealso See \code{\link{e}} for more.
 #' @param ... API ellipsis arg
+#' @param .param_list Explicitly provide a parameter list. If not NULL, the ellipsis params are ignored
 #' @return R expression vector
 #' @export
-args_to_expressions <- function(...) {
+args_to_expressions <- function(..., .param_list = NULL) {
   rangeExpr <- function(name, value) {
     if (is.numeric(value)) {
-      concateExprs <- c()
       # 1st lower bound, 2nd upper bound, either can be missing (NA/NULL)
-      if(!is.na(value[[1]]))  concateExprs <- c(concateExprs, e(!!name >= !!value[[1]]))
-      if(!is.na(value[[2]]))  concateExprs <- c(concateExprs, e(!!name <= !!value[[2]]))
-      return(concateExprs)
+      if(!is.na(value[[1]]) && !is.na(value[[2]])) {
+        assert(value[[1]] <= value[[2]], "ERROR: Illegal range values for param '%s': [%s,%s]. Min must <= max.", 
+               as.character(name), value[[1]], value[[2]])
+        return(e(AND(!!name >= !!value[[1]], !!name <= !!value[[2]])))
+      }
+      if(!is.na(value[[1]]))  return(e(!!name >= !!value[[1]]))
+      if(!is.na(value[[2]]))  return(e(!!name <= !!value[[2]]))
     }
-    stop(sprintf("Range values for field '%s' must be a two-number vector, but got '%s' indstead.
-                 Eg. c(5, 99)", refField, toString(value)))
+    stop(sprintf("Range values for param '%s' must be a one-number or two-number vector, but got '%s' indstead.
+                 Eg. c(5, 99)", as.character(name), toString(value)))
   }
 
   containsExpr <- function(name, value) {
@@ -123,11 +132,14 @@ args_to_expressions <- function(...) {
   }
 
   notExpr <- function(name, value) {
-    if(length(value) == 1)
+    if(length(value) == 0) return(e(is_not_null(!!name)))
+    if(length(value) == 1){
+      if(is.na(value)) return(e(is_not_null(!!name)))
       return(e(!!name != !!value))
+    }
     else if(length(value) > 1)
       return(e(!!name %not_in% !!value))
-    stopf("Right hand side of a Not expression must be a non-empty value, but got: %s", value)
+    stopf("Right hand side of a Not expression must be a non-empty value, but got: %s", paste(class(value), collapse = ','))
   }
 
   convert <- function(nameExpr, value) {
@@ -137,15 +149,21 @@ args_to_expressions <- function(...) {
     if (length(matchedSuffix) == 1) { # If this is a special name which has a 'contains' or 'range' suffix
       fieldName <- gsub(matchedSuffix, "", nameExpr) # strip out the suffix to get field name
       return(conversionFunc[[1]](as.name(fieldName), value))
-    } else {
+    } 
+    else { # Regular equality tests
       quotedName <- as.name(nameExpr)
       if(length(value) > 1)
         return(e(!!quotedName %in% !!value))
+      if(is.na(value) || is.null(value))
+        return(e(is_null(!!quotedName)))
       return(e(!!quotedName == !!value)) # Just a regular equal expression
     }
   }
-
-  optionalArgs <- list(...)
+  optionalArgs = if(is.null(.param_list)) list(...) else {
+    assert(is.list(.param_list), "ERROR:args_to_expressions:.param_list if provided must be a named list")
+    .param_list
+  }
+  # optionalArgs <- list(...)
   argNames <- names(optionalArgs)
   if (length(optionalArgs) == 0) {
     return(list())
@@ -278,7 +296,7 @@ afl <- function(...) {
     # Here 'func' is a Scidb operator
     rawName = as.character(func)
     callName = gsub('%', '', rawName)
-    operatorArgs = plyr::compact(sapply(callObj[-1], convert_operand))
+    operatorArgs = .remove_null_values(sapply(callObj[-1], convert_operand))
     sprintf("%s(%s)", callName, paste(operatorArgs, collapse = ','))
   }
 

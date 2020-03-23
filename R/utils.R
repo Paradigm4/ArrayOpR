@@ -103,3 +103,8 @@ log_job_duration = function(job, msg = '', done_msg = 'done') {
     }, names(named_values), named_values, USE.NAMES = F)
   }
 }
+
+# Remove all NULL entrieds from a list. Same as plyr::compact
+.remove_null_values = function(list_values) {
+  Filter(Negate(is.null), list_values)
+}

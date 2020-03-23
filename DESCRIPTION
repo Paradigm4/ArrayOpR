@@ -19,7 +19,6 @@ Imports:
     scidb,
     rlang,
     methods,
-    plyr,
     dplyr,
     R6,
     bit64,

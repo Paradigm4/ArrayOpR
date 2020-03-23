@@ -104,22 +104,42 @@ test_that("Identity of expressions is only defined by the abstract syntax tree (
 test_that("Convert a named list to an ExprsList", {
   check <- function(argsList, expectedExprList) {
     converted <- do.call(args_to_expressions, argsList)
-    expect_identical(converted, expectedExprList)
+    expect_equal(converted, expectedExprList)
   }
 
   check(list(), e())
   check(list(a=3, b='B', c=4), e(a==3, b=='B', c==4))
+  check(list(a_contains = 'a', b_contains = c('a', 'b')), e(a %like% '.*a.*', b %like% c('.*a.*', '.*b.*')))
   check(list(a_range = c(1,2), b_contains = 'substr', c = c('a', 'b')),
-        e(a >= 1, a <= 2, b %like% '.*substr.*', c %in% !!c('a', 'b')))
+        e(AND(a >= 1, a <= 2), b %like% '.*substr.*', c %in% !!c('a', 'b')))
 
   # If a range bound is NA, do not create an expression.
   check(list(a_range = c(NA, 2), b_range = c(1, NA)), e(a <= 2, b >= 1))
+  
+  check(list(a = T, b = F, c = TRUE, d = FALSE), e(a == TRUE, b == FALSE, c == TRUE, d == FALSE))
+  check(list(a = NA, b_not = NA), e(is_null(a), is_not_null(b)))
+  check(list(a = NULL, b_not = NULL), e(is_null(a), is_not_null(b)))
 })
+
+test_that("Explicitly provide a param list", {
+  expect_equal(args_to_expressions(.param_list = list(a=3, b=T, c=c('abc', 'def'), d_range=c(3,4))),
+                   e(a==3, b==TRUE, c %in% c('abc', 'def'), AND(d >= 3, d <= 4)))
+})
+
+test_that("Error cases", {
+  expect_error(args_to_expressions(a_range = c(2, 1)), "Illegal range values")
+})
+
 
 
 # afl_filter_from_expr --------------------------------------------------------------------------------------------
 
 test_that("Generate afl filter expressions from R expressions", {
+  assert_afl_equal(afl_filter_from_expr(e(a == TRUE)), "a = true")
+  assert_afl_equal(afl_filter_from_expr(e(a == !!T)), "a = true")
+  assert_afl_equal(afl_filter_from_expr(e(a == FALSE)), "a = false")
+  assert_afl_equal(afl_filter_from_expr(e(a == !!F)), "a = false")
+  
   assert_afl_equal(afl_filter_from_expr(e(a == 42)), "a = 42")
   assert_afl_equal(afl_filter_from_expr(e(is_null(a))), "a is null")
   assert_afl_equal(afl_filter_from_expr(e(not_null(a))), "a is not null")

@@ -123,7 +123,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
           ))
         }
       }) ()
-      dtypes = plyr::compact(c(dims, c(left$dtypes, right$dtypes)[attrs]))
+      dtypes = .remove_null_values(c(dims, c(left$dtypes, right$dtypes)[attrs]))
       selectedFields = if(hasSelected) attrs else NULL
       joinedOp = self$create_new(joinExpr, names(dims), attrs, dtypes = dtypes)
       if(hasSelected) {
@@ -1226,12 +1226,12 @@ Only data.frame is supported", class(df))
       # Rename the existing
       if(.has_len(renamed)){
         renamedOldFields = names(renamed)
-        attrs = as.character(replace(attrs, attrs %in% renamedOldFields, plyr::compact(renamed[attrs])))
-        dims = as.character(replace(dims, dims %in% renamedOldFields, plyr::compact(renamed[dims])))
+        attrs = as.character(replace(attrs, attrs %in% renamedOldFields, .remove_null_values(renamed[attrs])))
+        dims = as.character(replace(dims, dims %in% renamedOldFields, .remove_null_values(renamed[dims])))
         namesOldDtypes = names(oldDtypes)
-        names(oldDtypes) <- replace(namesOldDtypes, namesOldDtypes %in% renamedOldFields, plyr::compact(renamed[namesOldDtypes]))
+        names(oldDtypes) <- replace(namesOldDtypes, namesOldDtypes %in% renamedOldFields, .remove_null_values(renamed[namesOldDtypes]))
         namesOldDimSpecs = names(oldDimSpecs)
-        names(oldDimSpecs) <- replace(namesOldDimSpecs, namesOldDimSpecs %in% renamedOldFields, plyr::compact(renamed[namesOldDimSpecs]))
+        names(oldDimSpecs) <- replace(namesOldDimSpecs, namesOldDimSpecs %in% renamedOldFields, .remove_null_values(renamed[namesOldDimSpecs]))
       }
       
       # Add new fields
