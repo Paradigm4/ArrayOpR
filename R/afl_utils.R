@@ -307,11 +307,84 @@ afl <- function(...) {
         return(convert_operator_call(obj))
       }
     }
+    # Treat dot(.) as NULL
+    evaluated = if(is.name(obj) && as.character(obj) == '.') NULL 
+      else eval(obj, envir = envir)
+    
+    assert(inherits(evaluated, c('character', 'numeric', 'logical', 'ArrayOpBase')) || is.null(evaluated), 
+           "afl(...): unsupported operand data type. 
+      Operand must be (or inherit) character, numeric, logical, or ArrayOpBase, but got '%s'", 
+           paste(class(evaluated), collapse = ','))
+    if(inherits(evaluated, 'ArrayOpBase')){
+      evaluated = evaluated$to_afl()
+    } else if(is.logical(evaluated)) {
+      evaluated = tolower(paste(evaluated, collapse = ','))
+    } else if(!is.null(evaluated)) {
+      evaluated = paste(evaluated, collapse = ',')
+    }
+    return(evaluated)
+  }
+
+  return(convert_operand(e))
+}
+
+#' Create AFL expressions from R expressions
+#' 
+#' This is a convenience function for AFL generation.
+#' 
+#' Any ```a %op_name% b``` call will be translated to `%op_name%(a, b)` in R, then translated to AFL:
+#'   `op_name(a, b)`
+#'   
+#' Using this syntax, we can chain multiple AFL operators
+#' 
+#' E.g. `'array' %filter% 'a > 3 and b < 4' %project% c('a', 'b')`
+#' will be translated into: `project(filter(array, a > 3 and b < 4), 'a', 'b')`
+#' Use NULL if no 2nd operand is needed. E.g. 'array' %op_count% NULL => op_count(array)
+#' @param ... In the ellipsis arg, only R infix functions `%name%` are converted to operators, 
+#' All regular functions are first evaluated in the calling environment, and then convereted to strings 
+#' depending on the result types. ArrayOp => ArrayOp$to_afl(), v:NonEmptyVector => paste(v, collapse=','), 
+#' NULL is ignored.
+#' @return AFL string
+#' @export
+afl2 <- function(...) {
+  e = rlang::expr(...)
+  envir = parent.frame()
+  
+  # The param 'callObj' is a R call expression
+  # a | b => b(a)
+  # a | b(c) => b(a, c)
+  # (a|b) | m => m(b(a))
+  # In all above cases, the right operand of | expression is the key of scidb operator
+  convert_operator_call <- function(callObj){
+    rightOperand = callObj[[3]]
+    first = convert_operand(callObj[[2]]) # The 1st scidb operator param
+    if(is.name(rightOperand)){
+      operator = as.character(rightOperand)
+      sprintf("%s(%s)", operator, first)
+    }
+    else if(is.call(rightOperand)){
+      operator = as.character(rightOperand[[1]])
+      params = c(first, sapply(as.list(rightOperand)[-1], convert_operand))
+      sprintf("%s(%s)", operator, paste(params, collapse = ','))
+    }
+    else
+      stopf("ERROR:arrayop:afl2: wrong class type of the right operand of '|' [%s]. Must be a symbol or a call. ", 
+            paste(class(rightOperand), collapse = ','))
+  }
+  
+  # The param 'obj' can be [call, primitive, ArrayOp]
+  convert_operand <- function(obj) {
+    if(is.call(obj)){
+      func = obj[[1]]
+      if(is.name(func) && as.character(func) == '|'){ # pipe operator treated specially
+        return(convert_operator_call(obj))
+      }
+    }
     evaluated = eval(obj, envir = envir)
     assert(inherits(evaluated, c('character', 'numeric', 'logical', 'ArrayOpBase')) || is.null(evaluated), 
-      "afl(...): unsupported operand data type. 
-      Operand must be (or inherit) character, numeric, logical, or ArrayOpBase, but class(%s) = '%s'", 
-      deparse(obj), class(evaluated))
+      "afl2(...): unsupported operand data type. 
+      Operand must be (or inherit) character, numeric, logical, or ArrayOpBase, but got '%s'", 
+      paste(class(evaluated), collapse = ','))
     if(inherits(evaluated, 'ArrayOpBase')){
       evaluated = evaluated$to_afl()
     } else if(is.logical(evaluated)) {
