@@ -102,6 +102,14 @@ test_that("Supported operand types: character, numeric, logical, NULL and ArrayO
   # strings can be quoted
   expect_identical(afl2("'a'" | op("'b'")), "op('a','b')")
   
+  # Use %as% to construct AFL aliases
+  expect_identical(afl2('a' %as% 'b'), "a as b")
+  expect_identical(afl2(
+    ('array' %as% 'A' | op_count | apply("b", "count+3")) %as% 'LEFT' | 
+      join('array2' %as% 'RIGHT')
+    
+  ),
+  "join(apply(op_count(array as A),b,count+3) as LEFT,array2 as RIGHT)")
 })
 
 anArray = ArrayOpBase$new('array', dims = c('da', 'db'), attrs = c('aa', 'ab'))

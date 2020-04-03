@@ -346,9 +346,8 @@ afl <- function(...) {
 #' NULL is ignored.
 #' @return AFL string
 #' @export
-afl2 <- function(...) {
+afl2 <- function(..., envir = parent.frame()) {
   e = rlang::expr(...)
-  envir = parent.frame()
   
   # The param 'callObj' is a R call expression
   # a | b => b(a)
@@ -376,8 +375,15 @@ afl2 <- function(...) {
   convert_operand <- function(obj) {
     if(is.call(obj)){
       func = obj[[1]]
-      if(is.name(func) && as.character(func) == '|'){ # pipe operator treated specially
-        return(convert_operator_call(obj))
+      # if(length(func) > 1 || !is.name(func)) printf("==%s%==", as.character(func))
+      if(is.name(func)){
+        funcName = as.character(func)
+        if(funcName == '|') # pipe operator treated specially
+          return(convert_operator_call(obj))
+        else if(funcName == '%as%')
+          return(sprintf("%s as %s", convert_operand(obj[[2]]), convert_operand(obj[[3]])))
+        else if(funcName == '(')
+          return(convert_operand(obj[[2]]))
       }
     }
     evaluated = eval(obj, envir = envir)
