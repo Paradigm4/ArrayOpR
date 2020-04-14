@@ -273,80 +273,24 @@ validate_filter_expr = function(filterExpr, allFieldNames) {
 #' 
 #' This is a convenience function for AFL generation.
 #' 
-#' Any ```a %op_name% b``` call will be translated to `%op_name%(a, b)` in R, then translated to AFL:
+#' Any ```a | op_name(b)``` call will be translated to `op_name(a, b)` in R, then translated to AFL:
 #'   `op_name(a, b)`
 #'   
 #' Using this syntax, we can chain multiple AFL operators
 #' 
-#' E.g. `'array' %filter% 'a > 3 and b < 4' %project% c('a', 'b')`
+#' E.g. `'array' | filter('a > 3 and b < 4') | project('a', 'b')`
 #' will be translated into: `project(filter(array, a > 3 and b < 4), 'a', 'b')`
-#' Use NULL if no 2nd operand is needed. E.g. 'array' %op_count% NULL => op_count(array)
-#' @param ... In the ellipsis arg, only R infix functions `%name%` are converted to operators, 
+#' Use NULL if no 2nd operand is needed. E.g. `'array' | op_count` => `op_count(array)`
+#' @param ... In the ellipsis arg, any R functions right after a pipe sign `|`` is converted to 
+#' a scidb operator of the same name. 
 #' All regular functions are first evaluated in the calling environment, and then convereted to strings 
-#' depending on the result types. ArrayOp => ArrayOp$to_afl(), v:NonEmptyVector => paste(v, collapse=','), 
+#' depending on the result types. 
+#' ArrayOp => ArrayOp$to_afl(), v:NonEmptyVector => paste(v, collapse=','), 
 #' NULL is ignored.
+#' @param envir The environment where expressions are evaluated. Default: the calling env.
 #' @return AFL string
 #' @export
-afl <- function(...) {
-  e = rlang::expr(...)
-  envir = parent.frame()
-  
-  convert_operator_call <- function(callObj){
-    func = callObj[[1]]
-    # Here 'func' is a Scidb operator
-    rawName = as.character(func)
-    callName = gsub('%', '', rawName)
-    operatorArgs = .remove_null_values(sapply(callObj[-1], convert_operand))
-    sprintf("%s(%s)", callName, paste(operatorArgs, collapse = ','))
-  }
-
-  convert_operand <- function(obj) {
-    if(is.call(obj)){
-      func = obj[[1]]
-      if(is.name(func) && substr(as.character(func), 1, 1) == '%'){ # an R infix function as a scidb operator
-        return(convert_operator_call(obj))
-      }
-    }
-    # Treat dot(.) as NULL
-    evaluated = if(is.name(obj) && as.character(obj) == '.') NULL 
-      else eval(obj, envir = envir)
-    
-    assert(inherits(evaluated, c('character', 'numeric', 'logical', 'ArrayOpBase')) || is.null(evaluated), 
-           "afl(...): unsupported operand data type. 
-      Operand must be (or inherit) character, numeric, logical, or ArrayOpBase, but got '%s'", 
-           paste(class(evaluated), collapse = ','))
-    if(inherits(evaluated, 'ArrayOpBase')){
-      evaluated = evaluated$to_afl()
-    } else if(is.logical(evaluated)) {
-      evaluated = tolower(paste(evaluated, collapse = ','))
-    } else if(!is.null(evaluated)) {
-      evaluated = paste(evaluated, collapse = ',')
-    }
-    return(evaluated)
-  }
-
-  return(convert_operand(e))
-}
-
-#' Create AFL expressions from R expressions
-#' 
-#' This is a convenience function for AFL generation.
-#' 
-#' Any ```a %op_name% b``` call will be translated to `%op_name%(a, b)` in R, then translated to AFL:
-#'   `op_name(a, b)`
-#'   
-#' Using this syntax, we can chain multiple AFL operators
-#' 
-#' E.g. `'array' %filter% 'a > 3 and b < 4' %project% c('a', 'b')`
-#' will be translated into: `project(filter(array, a > 3 and b < 4), 'a', 'b')`
-#' Use NULL if no 2nd operand is needed. E.g. 'array' %op_count% NULL => op_count(array)
-#' @param ... In the ellipsis arg, only R infix functions `%name%` are converted to operators, 
-#' All regular functions are first evaluated in the calling environment, and then convereted to strings 
-#' depending on the result types. ArrayOp => ArrayOp$to_afl(), v:NonEmptyVector => paste(v, collapse=','), 
-#' NULL is ignored.
-#' @return AFL string
-#' @export
-afl2 <- function(..., envir = parent.frame()) {
+afl <- function(..., envir = parent.frame()) {
   e = rlang::expr(...)
   
   # The param 'callObj' is a R call expression

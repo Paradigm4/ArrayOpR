@@ -187,25 +187,25 @@ Please select on left operand's fields OR do not select on either operand. Look 
       attrs = selectFieldNames %-% self$dims
       
       newAfl = if(.has_len(replacedFieldNames)){
-        afl(self %apply% afl_join_fields(replacedFieldNamesAlt, replacedFields)
-            %project% (attrs %-% newFieldNames %-% replacedFieldNames %u% replacedFieldNamesAlt) 
-            %apply% afl_join_fields(replacedFieldNames %u% newFieldNames, replacedFieldNamesAlt %u% newFields)
-            %project% attrs
+        afl(self | apply(afl_join_fields(replacedFieldNamesAlt, replacedFields))
+            | project(attrs %-% newFieldNames %-% replacedFieldNames %u% replacedFieldNamesAlt) 
+            | apply(afl_join_fields(replacedFieldNames %u% newFieldNames, replacedFieldNamesAlt %u% newFields))
+            | project(attrs)
             )
       }
       else if(.has_len(attrs)) {
         inner = self
         if(.has_len(newFieldNames))
-          inner = afl(self %apply% afl_join_fields(newFieldNames, newFields))
+          inner = afl(self | apply(afl_join_fields(newFieldNames, newFields)))
         if(!.force_project && length(attrs) == length(self$attrs) && all(attrs == self$attrs))
           afl(inner)
         else
-          afl(inner %project% attrs)
+          afl(inner | project(attrs))
       }
       else {
         attrs = artificial_field
         mergedDtypes[[artificial_field]] = 'void'
-        afl(self %apply% c(artificial_field, 'null') %project% artificial_field)
+        afl(self | apply(c(artificial_field, 'null')) | project(artificial_field))
       }
       self$create_new(newAfl, self$dims, attrs, mergedDtypes, dim_specs = self$get_dim_specs(),
                       validate_fields = private$get_meta('validate_fields'))
@@ -258,7 +258,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
       nonAttrs = fields %-% self$attrs
       assert_not_has_len(nonAttrs, "ERROR: afl_project: %d non-attribute field(s) found: %s", length(nonAttrs), paste(nonAttrs, collapse = ', '))
       if(!.has_len(fields)) return(self)
-      self$create_new(afl(self %project% fields), dims = self$dims, attrs = fields, 
+      self$create_new(afl(self | project(fields)), dims = self$dims, attrs = fields, 
                       dtypes = self$get_field_types(c(self$dims, fields)), dim_specs = self$get_dim_specs())
     }
     ,
@@ -273,7 +273,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
       assert_not_has_len(conflictFields, "ERROR: afl_apply: cannot apply existing attribute(s): %s", paste(conflictFields, collapse = ', '))
       
       newDTypes = utils::modifyList(self$get_field_types(), as.list(dtypes))
-      self$create_new(afl(self %apply% afl_join_fields(fieldNames, fieldExprs)), dims = self$dims, 
+      self$create_new(afl(self | apply(afl_join_fields(fieldNames, fieldExprs))), dims = self$dims, 
                       attrs = self$attrs %u% fields, dtypes = newDTypes, dim_specs = self$get_dim_specs())
     }
     ,
@@ -286,7 +286,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
       assert_no_fields(template$dims_n_attrs %-% self$dims_n_attrs, 
                        "ERROR:ArrayOp$afl_redimension:Field(s) '%s' of the template not found in the source.")
       return(template$create_new_with_same_schema(afl(
-        self %redimension% c(template$to_schema_str(), as.character(.setting)) 
+        self | redimension(c(template$to_schema_str(), as.character(.setting)))
       )))
     }
     ,
@@ -304,7 +304,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
       assert(all(as.character(self$get_field_types(.raw = TRUE)) == as.character(target$get_field_types(.raw = TRUE))),
              "ERROR: ArrayOp$afl_insert: attribute data type mismatch. \nSource: %s\nTarget: %s", 
              self$to_schema_str(), target$to_schema_str())
-      target$create_new_with_same_schema(afl(self %insert% target))
+      target$create_new_with_same_schema(afl(self | insert(target)))
     }
     ,
     # Overwrite a target array (scidb `store` operator)
@@ -321,7 +321,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
       assert(all(as.character(self$get_field_types(.raw = TRUE)) == as.character(target$get_field_types(.raw = TRUE))),
              "ERROR: ArrayOp$afl_store: attribute data type mismatch. \nSource: %s\nTarget: %s", 
              self$to_schema_str(), target$to_schema_str())
-      target$create_new_with_same_schema(afl(self %store% target))
+      target$create_new_with_same_schema(afl(self | store(target)))
     }
   ),
   active = list(
@@ -473,7 +473,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
         stop(paste(status$error_msgs, collapse = '\n'))
       }
       newRawAfl = if(.has_len(filterExpr)) 
-        afl(self %filter% afl_filter_from_expr(filterExpr)) 
+        afl(self | filter(afl_filter_from_expr(filterExpr)))
       else self$to_afl()
       self$create_new_with_same_schema(newRawAfl)
     }
@@ -521,7 +521,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
       
       drop = function() {
         unpacked = self$create_new(
-          afl(self %unpack% artificial_field), 
+          afl(self | unpack(artificial_field)), 
           attrs = self$dims_n_attrs, dims = artificial_field,
           dtypes = utils::modifyList(self$get_field_types(), as.list(rlang::set_names('int64', artificial_field)))
         )
@@ -639,9 +639,9 @@ Please select on left operand's fields OR do not select on either operand. Look 
           sprintf(fmt, attrName)
       }, fieldTypes, colIndexes, names(fieldTypes))
       
-      aioExpr = afl(afl_join_fields(settingItems) %aio_input% NULL)
-      applyExpr = afl(aioExpr %apply% afl_join_fields(names(fieldTypes), castedItems))
-      projectedExpr = afl(applyExpr %project% names(fieldTypes))
+      aioExpr = afl(afl_join_fields(settingItems) | aio_input)
+      applyExpr = afl(aioExpr | apply(afl_join_fields(names(fieldTypes), castedItems)))
+      projectedExpr = afl(applyExpr | project(names(fieldTypes)))
       # return(self$create_new(projectedExpr, metaList = list()))
       return(self$create_new(projectedExpr, c(), names(fieldTypes), dtypes = fieldTypes))
     }
@@ -707,7 +707,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
         }
         
         filter_afl = paste( apply(template, 1, convertRow, names(template)), collapse = ' or ' )
-        return(afl(self %filter% filter_afl))
+        return(afl(self | filter(filter_afl)))
       }
       
       cross_between_mode = function(...){
@@ -755,9 +755,9 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
         # apply new attributes as the region array in 'cross_between'
         applyExpr = afl_join_fields(regionLowAttrNames, regionLowAttrValues, regionHighAttrNames, regionHighAttrValues)
         afl_literal = afl(
-          self %cross_between%
-            afl(template %apply% applyExpr %project%
-                c(regionLowAttrNames, regionHighAttrNames))
+          self | cross_between(
+            template | apply(applyExpr) | 
+              project(regionLowAttrNames, regionHighAttrNames))
         )
         return(afl_literal)
       }
@@ -863,13 +863,14 @@ Only data.frame is supported", class(df))
         source_field, .to_signed_integer_str(defaultOffset), 
         maxRefFields, source_field, .to_signed_integer_str(nonDefaultOffset))
       
-      forAggregate = if(.has_len(refDims)) afl(reference %apply% afl_join_fields(refDims, refDims)) else reference
-      aggregated = afl(forAggregate %aggregate% aggFields)
+      forAggregate = if(.has_len(refDims)) afl(reference | apply(afl_join_fields(refDims, refDims))) else reference
+      aggregated = afl(forAggregate | aggregate(aggFields))
       crossJoined = afl(
-        self 
-        %cross_join% aggregated 
-        %apply% 
+        self |
+        cross_join(aggregated) | 
+        apply( 
           afl_join_fields(new_field, newFieldExpr)
+        )
       )
       self$spawn(added = new_field, dtypes = rlang::set_names(reference$get_field_types(ref_field, .strict = FALSE), new_field))$
       # self$spawn(added = new_field, dtypes = as.list(rlang::rep_named(new_field, 'int64')))$
@@ -922,14 +923,14 @@ Only data.frame is supported", class(df))
                                             dtypes = utils::modifyList(self$get_field_types(), renamedTarget$get_field_types(renamedTarget$dims)),
                                             dim_specs = redimensionTemplateDimSpecs)
       redimenedSource = redimensionTemplate$create_new_with_same_schema(afl(
-        self %redimension% redimensionTemplate$to_schema_str() %apply% c(srcAltId, srcAltId)
+        self | redimension(redimensionTemplate$to_schema_str()) | apply(srcAltId, srcAltId)
       ))
       
       # Get the max anti-collision-field from group aggregating the target on the remainder of target dimensions
       targetAltIdMax = sprintf("_max_%s", anti_collision_field)
       groupedTarget = target$create_new_with_same_schema(afl(
-        target %apply% c(anti_collision_field, anti_collision_field) %grouped_aggregate%
-          c(sprintf("max(%s) as %s", anti_collision_field, targetAltIdMax), regularTargetDims)
+        target | apply(anti_collision_field, anti_collision_field) | grouped_aggregate(
+          sprintf("max(%s) as %s", anti_collision_field, targetAltIdMax), regularTargetDims)
       ))
       
       # Left join on the remainder of the target dimensions
@@ -944,7 +945,7 @@ Only data.frame is supported", class(df))
       result = redimensionTemplate$
         spawn(renamed = invert.list(renamedList))$
         create_new_with_same_schema(afl(
-          joined %apply% c(anti_collision_field, sprintf(
+          joined | apply(anti_collision_field, sprintf(
             "iif(%s is null, %s, %s + %s + 1)", targetAltIdMax, srcAltId, srcAltId, targetAltIdMax
           )))
         )
@@ -966,7 +967,7 @@ Only data.frame is supported", class(df))
       missingDtypes = refDtypes[missingFields]
       
       nullStrings = sprintf("%s(null)", missingDtypes)
-      self$create_new(afl(self %apply% afl_join_fields(missingFields, nullStrings)),
+      self$create_new(afl(self | apply(afl_join_fields(missingFields, nullStrings))),
                       dims = self$dims, attrs = self$attrs %u% missingFields, 
                       dtypes = utils::modifyList(self$get_field_types(), missingDtypes),
                       dim_specs = self$get_dim_specs())
@@ -1065,9 +1066,9 @@ Only data.frame is supported", class(df))
         resultOp = self$set_auto_fields(target, source_auto_increment, target_auto_increment, anti_collision_field)
       }
       if(needRedimension){
-        resultOp = target$create_new_with_same_schema(afl(resultOp %redimension% target))
+        resultOp = target$create_new_with_same_schema(afl(resultOp | redimension(target)))
       }
-      writeAfl = if(append) afl(resultOp %insert% target) else afl(resultOp %store% target)
+      writeAfl = if(append) afl(resultOp | insert(target)) else afl(resultOp | store(target))
       return(resultOp$create_new_with_same_schema(writeAfl))
     }
     ,
@@ -1132,8 +1133,9 @@ Only data.frame is supported", class(df))
         assert_has_len(updatedFields, "ERROR: ArrayOp$mutate: param 'data_source' does not have any target attributes to mutate.")
         self$create_new_with_same_schema(
           afl(
-            source$reshape(updatedFields, .force_project = FALSE) %join% 
+            source$reshape(updatedFields, .force_project = FALSE) | join( 
               .ifelse(.has_len(reservedFields), self$reshape(reservedFields), self)
+            )
           )
         )$reshape(self$attrs)
       }
@@ -1344,20 +1346,20 @@ Only data.frame is supported", class(df))
       if(drop_dims){
         selectedDims = base::intersect(selected_fields, self$dims)
         inner = if(.has_len(selectedDims))
-          afl(self %apply% paste(selectedDims, selectedDims, sep = ',', collapse = ','))
+          afl(self | apply(afl_join_fields(selectedDims, selectedDims)))
           else self$to_afl()
-        return(afl(inner %project% afl_join_fields(selected_fields)))
+        return(afl(inner | project(afl_join_fields(selected_fields))))
       }
 
       # drop_dims = F. All dims are preserved in parent operations, we can only select/drop attrs.
       selectedAttrs = base::intersect(selected_fields, self$attrs)
       if(.has_len(selectedAttrs))  # If some attributes selected
-        return(afl(self %project% selectedAttrs))
+        return(afl(self | project(selectedAttrs)))
 
       # If no attributes selected, we have to create an artificial attribute, then project it.
       # Because 'apply' doesn't work on array dimensions
-      return(afl(self %apply% c(artificial_field, 'null')
-            %project% artificial_field))
+      return(afl(self | apply(artificial_field, 'null') |
+            project(artificial_field)))
     }
     ,
     
@@ -1393,15 +1395,15 @@ Only data.frame is supported", class(df))
       } 
       # case-1: When no attrs projected && selected dimensions, we need to create an artificial attr to project on.
       if(.has_len(specialList) && !.has_len(projectList) && .has_len(selectedFields)){
-        res = afl(arrName %apply% c(artificial_field, 'null') %project% artificial_field)
+        res = afl(arrName | apply(artificial_field, 'null') | project(artificial_field))
       }
       # case-2: Regular mode. Just 'apply'/'project' for dimensions/attributes when needed.
       else{
         applyExpr = if(.has_len(applyList))
-          afl(arrName %apply% afl_join_fields(applyList, applyList))
+          afl(arrName | apply(afl_join_fields(applyList, applyList)))
         else arrName
         res =  if(.has_len(projectList))
-          afl(applyExpr %project% projectList)
+          afl(applyExpr | project(projectList))
         else applyExpr
       }
       return(res)

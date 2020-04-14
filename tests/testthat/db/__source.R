@@ -4,12 +4,12 @@ db = get_scidb_connection()
 expect_true(!is.null(db), "db is not null")
 
 cleanUpNamespace = function(ns = NS){
-  arrayNames = repo$query(afl(
-    sprintf("list(ns:%s)", ns) %project% 'name'
-  ), .raw = T)[['name']]
+  arrayNames = repo$query(
+    sprintf("project(list(ns:%s), name)", ns)
+  , .raw = T)[['name']]
   for(arr in arrayNames){
     fullName = sprintf("%s.%s", ns, arr)
-    repo$execute(afl(fullName %remove% NULL), .raw = T)
+    repo$execute(afl(fullName | remove), .raw = T)
   }
 }
 

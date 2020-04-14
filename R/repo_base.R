@@ -332,7 +332,7 @@ Repo <- R6::R6Class(
     load_arrayop_from_scidb = function(full_array_name){
       assert_single_str(full_array_name,
              "ERROR:Repo$load_arrayop_from_scidb: param 'full_array_name' must be a single scidb array name")
-      schemaStr = query_raw(afl(full_array_name %show% NULL %project% 'schema'))[['schema']]
+      schemaStr = query_raw(afl(full_array_name | show | project('schema')))[['schema']]
       assert_single_str(schemaStr,
              "ERROR:Repo$load_arrayop_from_scidb: '%s' is not a valid scidb array", full_array_name)
       # schemaStr only contains an array name without the namespace. We need to change it to the full array name.
@@ -348,7 +348,7 @@ Repo <- R6::R6Class(
     load_arrayops_from_scidb_namespace = function(namespace){
       assert_single_str(namespace,
              "ERROR:Repo$load_arrayops_from_scidb_namespace: param 'namespace' must be a single scidb namespace")
-      schemaStr = query_raw(afl(sprintf("list(ns:%s)", namespace) %project% 'schema'))[['schema']]
+      schemaStr = query_raw(afl(sprintf("list(ns:%s)", namespace) | project('schema')))[['schema']]
       assert(is.character(schemaStr),
              "ERROR:Repo$load_arrayops_from_scidb_namespace: '%s' is not a valid scidb namespace", namespace)
       rawArrays = sapply(schemaStr, get_array) # The arrays only have names with the namespace prefix
@@ -509,7 +509,7 @@ Repo <- R6::R6Class(
     #' Only applicable when `what` is R expression string and `.raw = F`
     nrow = function(what, .raw = TRUE, .env = parent.frame()) {
       op = get_operand(what, .raw = .raw, .env = .env)
-      res = query_raw(arrayop::afl(op %op_count% NULL))
+      res = query_raw(arrayop::afl(op | op_count))
       res$count
     }
     #' @description 
@@ -524,7 +524,7 @@ Repo <- R6::R6Class(
     ,
     limit = function(what, count, offset = NULL, ..., .raw = TRUE, .env = parent.frame()) {
       op = get_operand(what, .raw = .raw, .env = .env)
-      res = query_raw(arrayop::afl(op %limit% c(count, offset)), ...)
+      res = query_raw(arrayop::afl(op | limit(count, offset)), ...)
       res
     }
   )

@@ -121,7 +121,7 @@ test_that("Store AFL as scidb array and return arrayOp", {
   stored3 = repo$save_as_array(filtered, name = randomName, temp = F, gc = F)
   result3 = repo$query(stored3, only_attributes = T)
   expect_equal(result3, filteredDf)
-  repo$execute(afl(stored3 %remove% NULL))
+  repo$execute(afl(stored3 | remove))
 })
 
 # Mutate array content ----
