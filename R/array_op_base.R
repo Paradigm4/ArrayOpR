@@ -38,14 +38,6 @@ ArrayOpBase <- R6::R6Class("ArrayOpBase",
       private$metaList[[key]]
     }
     ,
-    assert_fields_exist = function(field_names, 
-      errorMsgTemplate = sprintf("ERROR: Field(s) '%%s' not found in ArrayOp: %s", private$raw_afl)) {
-      missingFields = base::setdiff(field_names, self$dims_n_attrs)
-      assert_not_has_len(missingFields, 
-        errorMsgTemplate, paste(missingFields, collapse = ',')
-      )
-    }
-    ,
     validate_join_operand = function(side, operand, keys){
       assert(inherits(operand, class(self)),
         "JoinOp arg '%s' must be class of [%s], but got '%s' instead.",
@@ -489,7 +481,8 @@ Please select on left operand's fields OR do not select on either operand. Look 
       fieldNames = c(...)
       assert(is.character(fieldNames) || is.null(fieldNames), 
         "ERROR: ArrayOp$select: ... must be a character or NULL, but got: %s", fieldNames)
-      private$assert_fields_exist(fieldNames, "ArrayOp$select")
+      # private$assert_fields_exist(fieldNames, "ArrayOp$select")
+      assert_no_fields(fieldNames %-% self$dims_n_attrs, "ERROR: ArrayOp$select: invalid select fields [%s] in: %%s", self$to_afl())
       newMeta = private$metaList
       newMeta[['selected']] <- fieldNames
       self$create_new(private$raw_afl, metaList = newMeta)
@@ -577,7 +570,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
     #' @param .dim_mode How to reshape the resultant ArrayOp. Same meaning as in `ArrayOp$reshape` function. 
     #' By default, dim_mode = 'keep', the artificial dimensions, namely `instance_id` and `value_no` from `equi_join`
     #' are retained. If set to 'drop', the artificial dimensions will be removed. See `ArrayOp$reshape` for more details.
-    #' @param .artificial_field As in `ArrayOp$reshpae`, it defaults to a random field name. It can be safely ignored in
+    #' @param .artificial_field As in `ArrayOp$reshape`, it defaults to a random field name. It can be safely ignored in
     #' client code. It exists only for test purposes. 
     #' @return A new arrayOp 
     join = function(right, on_left = NULL, on_right = NULL, settings = NULL, on_both = NULL, .auto_select = FALSE, join_mode = 'equi_join',
