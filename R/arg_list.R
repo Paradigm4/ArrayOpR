@@ -39,13 +39,13 @@ ArgList <- R6::R6Class('ArgList',
     },
 
     # Return if all the args specified in 'argNames' are present
-    has_all_args = function(argNames, explicit = FALSE){
-      all(has_args(argNames, explicit))
+    has_all_args = function(..., explicit = FALSE){
+      all(has_args(c(...), explicit = explicit))
     },
 
     # Return if all the args specified in 'argNames' are present
-    has_any_args = function(argNames, explicit = FALSE){
-      any(has_args(argNames, explicit))
+    has_any_args = function(..., explicit = FALSE){
+      any(has_args(c(...), explicit = explicit))
     },
 
     # Return if there are 'count' argNames' if the ArgList
@@ -53,12 +53,13 @@ ArgList <- R6::R6Class('ArgList',
       sum(has_args(argNames, explicit)) == count
     },
 
-    has_scalar_args = function(argNames, explicit = FALSE) {
-      has_all_args(argNames, explicit) && all(lapply(self[argNames], length) == 1)
+    has_scalar_args = function(..., explicit = FALSE) {
+      argNames = c(...)
+      has_all_args(argNames, explicit = explicit) && all(lapply(self[argNames], length) == 1)
     },
 
     has_multi_len_args = function(argNames, explicit = FALSE) {
-      has_all_args(argNames, explicit) && all(lapply(self[argNames], length) > 1)
+      has_all_args(argNames, explicit = explicit) && all(lapply(self[argNames], length) > 1)
     },
 
     # Return how many args in 'argNames' are present in the ArgList
@@ -104,6 +105,10 @@ ArgList <- R6::R6Class('ArgList',
     to_exprs_list = function(explicit = FALSE) {
       do.call(args_to_expressions, .choose_list(explicit))
     }
+    ,
+    to_list = function() {
+      effective_args
+    }
   )
 )
 
@@ -129,10 +134,12 @@ ArgList <- R6::R6Class('ArgList',
 #' @param default_args A list of default arguments
 #' @return ArgList instance
 #' @export
-newArgList = function(envir = parent.frame(), default_args = list()) {
+newArgList = function(envir = parent.frame(), default_args = list(), ellipsis_func = list) {
   # Get explicitly passed-in args from parent's match.call() formals
   explicitArgs = as.list(do.call(match.call, list(), envir = envir)[-1])
-  tripleDot = do.call(list, list(quote(...)), envir = envir)
+  # tripleDot = do.call(list, list(quote(...)), envir = envir)
+  unexpandedArgs = do.call(match.call, list(expand.dots = FALSE), envir = envir)
+  tripleDot = if(!is.null(unexpandedArgs[['...']])) do.call(list, list(quote(...)), envir = envir) else NULL
   # Force evaluate non-missing args
   for(argName in names(explicitArgs)){
     # If arg is not missing OR arg is a triple-dot arg (..1, ..2)

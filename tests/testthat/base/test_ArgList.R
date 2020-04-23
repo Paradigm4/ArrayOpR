@@ -1,6 +1,50 @@
 context('Test ArgList class')
 
 
+# api functions without ... arg
+
+test_that("without ... args", {
+  simple_api = function(aa, ab, ac, ad) {
+    newArgList()
+  }
+  simple_api_with_default = function(aa, ab = 'dab', ac, ad) {
+    newArgList(default_args = list(ab = ab))
+  }
+  expect_identical(simple_api()$to_list(), list())
+  expect_identical(simple_api(ab = "ab")$to_list(), list(ab = "ab"))
+  expect_identical(simple_api_with_default()$to_list(), list(ab = 'dab'))
+  expect_identical(simple_api_with_default(ab = "ab")$to_list(), list(ab = "ab"))
+  expect_identical(simple_api_with_default(aa = "aa")$to_list(), list(aa = "aa", ab = "dab"))
+})
+
+test_that("Nested function calls", {
+  func_level1 = function(aa, ...){
+    func_level2(aa = aa, ab = 'AB', ...)
+  }
+  
+  func_level2 = function(aa, ab, ac = 'AC', ...){
+    func_level3(ab = ab, aa = aa, ac = ac, ax = 'AX', ...)
+  }
+  
+  func_level3 = function(aa, ab = 'inner ab', ac, ax, ext1, ext2, long_arg){
+    newArgList()
+  }
+  
+  argList = func_level1()
+  expect_equal(argList$to_list(), list(ab = 'AB', ac = 'AC', ax = 'AX'))
+  
+  argList = func_level2()
+  expect_equal(argList$to_list(), list(ac = 'AC', ax = 'AX'))
+  
+  argList = func_level2(ac = 'ac', long_arg = 'long')
+  expect_equal(argList$to_list(), list(ac = 'ac', ax = 'AX', long_arg = 'long'))
+  expect_true(argList$has_all_args(c('ac', 'ax', 'long_arg')))
+  expect_true(argList$has_all_args('ac', 'ax', 'long_arg'))
+})
+
+
+# api functions with ... arg
+
 api_func = function(a, b, cc =3, ..., x, y = FALSE, z){
   newArgList(default_args = list(cc=cc, y=y))
 }
@@ -89,19 +133,19 @@ test_that('Args can be converted to an ExprsList even when there are nested func
 test_that('Get a subset of ArgList', {
   al = api_func(a = 1, b = 2, x = 'x')
   expect_true(al$has_all_args(c('a', 'b', 'x', 'cc', 'y')))
-  expect_true(al$has_all_args(c('a', 'b', 'x'), T))
+  expect_true(al$has_all_args(c('a', 'b', 'x')), T)
 
   als = al$subset(c('a', 'cc', 'z'))
   expect_equal(als$get_len(), 2)
   expect_equal(als$get_len(T), 1)
   expect_true(als$has_all_args(c('a', 'cc')))
-  expect_true(als$has_all_args(c('a'), T))
+  expect_true(als$has_all_args('a'))
 
   als = al$subset(c('a', 'z'), inverse = TRUE)
   expect_equal(als$get_len(), 4)
   expect_equal(als$get_len(T), 2)
   expect_true(als$has_all_args(c('b', 'x', 'cc', 'y')))
-  expect_true(als$has_all_args(c('b', 'x'), T))
+  expect_true(als$has_all_args(c('b', 'x')))
 
 })
 
