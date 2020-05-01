@@ -147,8 +147,8 @@ test_that("Generate afl filter expressions from R expressions", {
   
   assert_afl_equal(afl_filter_from_expr(e(a %in% !!c(1,2,3))), "(a = 1 or a = 2 or a = 3)")
   assert_afl_equal(afl_filter_from_expr(e(a %like% '.+a.+')), "(a <> '' and (rsub(a, 's/.+a.+//i') = ''))")
- 
   
+  assert_afl_equal(afl_filter_from_expr(e((a + b + "c") == 'value')), "(a + b + 'c') = 'value'")
 })
 
 test_that("Generate complex filter expression with logical operators", {

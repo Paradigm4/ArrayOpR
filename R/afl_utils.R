@@ -29,35 +29,35 @@ afl_filter_from_expr <- function(e) {
         operator <- lookup # Convert to AFL compliant operator if found in operatorList
       }
 
-      fieldName = as.character(node[[2]])
+      leftOp = walkThru(node[[2]])
       # Special operators are treated specially. E.g. %like%, %in%
 
       if(operator == '%in%'){
         compared = node[[3]]  # can be single or multiple numbers/strings
         if(is.character(compared))  compared = sprintf("'%s'", compared)  # Sigle-quote strings if applicable
-        subExprs = paste0(sprintf("%s = %s", fieldName, compared), collapse = ' or ')
+        subExprs = paste0(sprintf("%s = %s", leftOp, compared), collapse = ' or ')
         return(sprintf("(%s)", subExprs))
       }
 
       if(operator == '%like%'){
         compared = node[[3]]  # can be single or multiple strings
-        rsubExpr = paste0(sprintf("rsub(%s, 's/%s//i') = ''", fieldName, compared), collapse = ' or ')
-        return(sprintf("(%s <> '' and (%s))", fieldName, rsubExpr))
+        rsubExpr = paste0(sprintf("rsub(%s, 's/%s//i') = ''", leftOp, compared), collapse = ' or ')
+        return(sprintf("(%s <> '' and (%s))", leftOp, rsubExpr))
       }
 
       if(operator == '%not_in%'){
         compared = node[[3]]
         if(is.character(compared))  compared = sprintf("'%s'", compared)  # Sigle-quote strings if applicable
-        subExprs = paste0(sprintf("%s <> %s", fieldName, compared), collapse = ' and ')
+        subExprs = paste0(sprintf("%s <> %s", leftOp, compared), collapse = ' and ')
         return(sprintf("(%s)", subExprs))
       }
       
       if(operator == 'is_null'){
-        return(sprintf("%s is null", fieldName))
+        return(sprintf("%s is null", leftOp))
       }
       
       if(operator == 'not_null'){
-        return(sprintf("%s is not null", fieldName))
+        return(sprintf("%s is not null", leftOp))
       }
       
       if(operator == '('){
