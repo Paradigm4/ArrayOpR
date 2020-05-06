@@ -10,16 +10,34 @@
 #' @param e An R expression vector of length 1 or more
 #' @return An AFL filter string
 #' @export
-afl_filter_from_expr <- function(e) {
+afl_filter_from_expr <- function(e, regex_func = 'rsub', ignore_case = TRUE) {
 
   # If 'e' is an ExprsList, then we merge it with 'AND' call by default
   # Otherwise 'e' is already a single Expression ready to be translated to AFL
   if(is.list(e)){
     e = e_merge(e)
   }
-
+  
   operatorList <- list(AND = 'and', OR = 'or', `==` = '=', `!=` = '<>', 
                        '&&' = 'and', '&' = 'and', '||' = 'or', '|' = 'or')
+
+  regexWithRsub <- function(leftOpStr, rightOpStr) {
+    pattern = if(ignore_case) 's/%s//i' else 's/%s//'
+    rsubExpr = sprintf("rsub(%s, '%s') = ''", leftOpStr, sprintf(pattern, rightOpStr))
+    sprintf("(%s <> '' and %s)", leftOpStr, rsubExpr)
+  }
+
+  regexWithRegex <- function(leftOpStr, rightOpStr) {
+    prefix = if(ignore_case) '(?i)' else ''
+    sprintf("regex(%s, '%s%s')", leftOpStr, prefix, rightOpStr)
+  }
+  
+  regexImplFunc = switch(
+    regex_func,
+    'rsub' = regexWithRsub,
+    'regex' = regexWithRegex,
+    stopf("ERROR:arrayop:Unknown regex function '%s'", regex_func)
+  )
 
   walkThru <- function(node){
     if(is.call(node)){
@@ -39,10 +57,19 @@ afl_filter_from_expr <- function(e) {
         return(sprintf("(%s)", subExprs))
       }
 
-      if(operator == '%like%'){
+      if(operator == '%like%' || operator %in% c('%contains%', '%starts_with%', '%ends_with%')){
         compared = node[[3]]  # can be single or multiple strings
-        rsubExpr = paste0(sprintf("rsub(%s, 's/%s//i') = ''", leftOp, compared), collapse = ' or ')
-        return(sprintf("(%s <> '' and (%s))", leftOp, rsubExpr))
+        assert_single_str(compared, "ERROR:arrayop: right operand of %%like%% function must be a single string.")
+        if(operator != '%like%')  # escape special chars if not directly using regex pattern
+          escaped = gsub("([][*()'\\])", "\\\\\\1", compared) # \\1 is for the original char
+        rightOp = switch(
+          operator,
+          '%contains%' = sprintf(".*%s.*", escaped),
+          '%starts_with%' = sprintf("%s.*", escaped),
+          '%ends_with%' = sprintf(".*%s", escaped),
+          compared
+        )
+        return(regexImplFunc(leftOp, rightOp))
       }
 
       if(operator == '%not_in%'){
@@ -75,8 +102,6 @@ afl_filter_from_expr <- function(e) {
       return(paste(operands, collapse = sprintf(' %s ', operator)))
     } else if (is.name(node)) {
       s = as.character(node)
-      # if(s == 'T') return('true')
-      # if(s == 'F') return('false')
       return(s)
     } else if (is.atomic(node)) {
       if(is.numeric(node))
