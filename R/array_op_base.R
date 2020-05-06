@@ -457,7 +457,9 @@ Please select on left operand's fields OR do not select on either operand. Look 
     #' @param ignore_case A Boolean. If TRUE, ignore case in string match patterns. 
     #' Otherwise, perform case-sensitive regex matches.
     #' @return A new arrayOp 
-    where = function(..., expr, missing_fields_error_template = NULL, regex_func = 'rsub', ignore_case = TRUE) {
+    where = function(..., expr, missing_fields_error_template = NULL, 
+                     regex_func = getOption('arrayop.regex_func', default = 'rsub'), 
+                     ignore_case = getOption('arrayop.ignore_case', default = TRUE)) {
       filterExpr = if(methods::hasArg('expr')) expr else e_merge(e(...))
       status = validate_filter_expr(filterExpr, self$dims_n_attrs)
       if(!status$success){

@@ -181,7 +181,7 @@ test_that("Regular expressions", {
   
   # escape special characters in contains, starts_with and ends_with
   assert_afl_equal(afl_filter_from_expr(e(field %contains% ' a*b(par\\en)\\ '), regex_func = 'regex'), 
-                   "regex(field, '(?i) .*a\\*b\\(par\\\\en\\)\\\\ .*')")
+                   "regex(field, '(?i) .*a\\*b\\(par\\\\\\en\\)\\\\\\ .*')")
   assert_afl_equal(afl_filter_from_expr(e(field %starts_with% ' ]"[ '), regex_func = 'regex'), 
                    "regex(field, '(?i) \\]\"\\[ .*')")
   assert_afl_equal(afl_filter_from_expr(e(field %ends_with% "a'a"), regex_func = 'regex'), 
