@@ -60,8 +60,11 @@ afl_filter_from_expr <- function(e, regex_func = 'rsub', ignore_case = TRUE) {
       if(operator == '%like%' || operator %in% c('%contains%', '%starts_with%', '%ends_with%')){
         compared = node[[3]]  # can be single or multiple strings
         assert_single_str(compared, "ERROR:arrayop: right operand of %%like%% function must be a single string.")
-        if(operator != '%like%')  # escape special chars if not directly using regex pattern
-          escaped = gsub("([][*()'\\])", "\\\\\\1", compared) # \\1 is for the original char
+        if(operator != '%like%'){  # escape special chars if not directly using regex pattern
+          escaped = compared
+          escaped = gsub("(\\\\)", "\\\\\\\\\\1", escaped)
+          escaped = gsub("([][*()'])", "\\\\\\1", escaped) # \\1 is for the original char
+        }
         rightOp = switch(
           operator,
           '%contains%' = sprintf(".*%s.*", escaped),

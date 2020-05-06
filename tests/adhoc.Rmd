@@ -1,0 +1,56 @@
+```{r}
+# Create a db connection
+dbconn = scidb::scidbconnect(
+      host = "172.25.132.63",
+      username = "unittest",
+      password = readLines("~/.arrayop/unittest.pwd"),
+      port = 8083,
+      protocol = "https"
+  )
+options(scidb.aio = TRUE)
+options(scidb.result_size_limit = 1*1024)
+```
+```{r}
+# Create a new repo
+devtools::load_all()
+repo = newRepo(db = dbconn)
+```
+
+## create a new array with special characters
+```{r}
+arr = repo$get_array("public.array_with_special_chars <info:string> [i]")
+df = data.table::fread(
+"info
+a'b
+c\"d
+e[f]
+g\\h
+j(k)m
+a'bc\"de[f]g\\hj(k)m
+")
+df = dplyr::mutate(df, info, "i" = 1:nrow(df))
+```
+
+```{r}
+repo$execute(
+  arr$build_new(df)$change_schema(arr)$overwrite(arr)
+)
+repo$query(arr)
+```
+## Test queries
+```{r}
+repo$setting_debug = T
+arr = repo$get_array("public.array_with_special_chars <info:string> [i]")
+repo$query(arr$where(info %contains% "'" ,regex_func = 'regex'))
+repo$query(arr$where(info %contains% "[" ,regex_func = 'regex'))
+repo$query(arr$where(info %contains% "(" ,regex_func = 'regex'))
+repo$query(arr$where(info %contains% "\\" ,regex_func = 'regex'))
+```
+
+```{r}
+repo$query(arr$where(info %contains% "g\\h" ,regex_func = 'regex'))
+repo$query(arr$where(info %contains% "g\\h" ,regex_func = 'rsub'))
+# repo$query("filter(public.array_with_special_chars,regex(info, 'g\\\\\\h'))")
+```
+
+

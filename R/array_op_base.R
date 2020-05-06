@@ -451,8 +451,13 @@ Please select on left operand's fields OR do not select on either operand. Look 
     #' Similar to SQL where clause.
     #' @param missing_fields_error_template Error template for missing fields. 
     #' Only one %s is allowed which is substituted with an concatnation of the missing fields separated by commas.
+    #' @param regex_func A string of regex function implementation. 
+    #' Due to scidb compatiblity issue with its dependencies, the regex function from boost library may not be available
+    #' Supported values: rsub, regex
+    #' @param ignore_case A Boolean. If TRUE, ignore case in string match patterns. 
+    #' Otherwise, perform case-sensitive regex matches.
     #' @return A new arrayOp 
-    where = function(..., expr, missing_fields_error_template = NULL) {
+    where = function(..., expr, missing_fields_error_template = NULL, regex_func = 'rsub', ignore_case = TRUE) {
       filterExpr = if(methods::hasArg('expr')) expr else e_merge(e(...))
       status = validate_filter_expr(filterExpr, self$dims_n_attrs)
       if(!status$success){
@@ -465,7 +470,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
         stop(paste(status$error_msgs, collapse = '\n'))
       }
       newRawAfl = if(.has_len(filterExpr)) 
-        afl(self | filter(afl_filter_from_expr(filterExpr)))
+        afl(self | filter(afl_filter_from_expr(filterExpr, regex_func = regex_func, ignore_case = ignore_case)))
       else self$to_afl()
       self$create_new_with_same_schema(newRawAfl)
     }
