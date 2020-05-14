@@ -37,6 +37,12 @@ test_that("Filter mode with bounds on one field", {
     (da >= 1 and da <= 3) or (da >= 2 and da <= 4)
   )")
   expect_identical(MatchSource$dims_n_attrs, matchOp$dims_n_attrs)
+  
+  df2 = data.frame(middle = 1:2)
+  matchOp = MatchSource$match(df2, op_mode = 'filter', lower_bound = list(da = 'middle'), upper_bound = list(db = 'middle'))
+  assert_afl_equal(matchOp$to_afl(), "filter(s,
+    (da >= 1 and db <= 1) or (da >= 2 and db <= 2)
+  )")
 })
 
 test_that("Filter mode errors", {

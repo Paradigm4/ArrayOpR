@@ -689,19 +689,24 @@ Please select on left operand's fields OR do not select on either operand. Look 
           rowValues = mapply(sprintf, valueStrTemplates, eachRow)
           # Each filter item per row per field
           rowItems = mapply(function(name, val){
+            operator = as.character(NULL)
+            sourceFieldName = as.character(NULL)
             if(name %in% lower_bound) {
-              operator = '>='
-              name = names(lower_bound)[lower_bound == name][[1]]
+              operator = c(operator, '>=')
+              sourceFieldName = c(sourceFieldName, names(lower_bound)[lower_bound == name][[1]])
             }
-            else if(name %in% upper_bound) {
-              operator = '<='
-              name = names(upper_bound)[upper_bound == name][[1]]
+            if(name %in% upper_bound) {
+              operator = c(operator, '<=')
+              sourceFieldName = c(sourceFieldName, names(upper_bound)[upper_bound == name][[1]])
             }
-            else operator = '='
-            sprintf("%s%s%s", name, operator, val)
+            if(!name %in% lower_bound && !name %in% upper_bound){
+              operator = c(operator, '=')
+              sourceFieldName = c(sourceFieldName, name)
+            }
+            sprintf("%s%s%s", sourceFieldName, operator, val)
           }, colNames, rowValues)
           sprintf(
-            .ifelse(length(rowValues) > 1, "(%s)", "%s"), # String template for a row
+            .ifelse(length(rowValues) > 1 || length(rowItems) > 1, "(%s)", "%s"), # String template for a row
             paste(rowItems, collapse = ' and ')
           )
         }
