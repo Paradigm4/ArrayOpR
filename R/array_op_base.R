@@ -705,8 +705,10 @@ Please select on left operand's fields OR do not select on either operand. Look 
             }
             sprintf("%s%s%s", sourceFieldName, operator, val)
           }, colNames, rowValues)
+          if(is.list(rowItems))
+            rowItems = do.call(c, rowItems) # in case of mixed vector and string
           sprintf(
-            .ifelse(length(rowValues) > 1 || length(rowItems) > 1, "(%s)", "%s"), # String template for a row
+            .ifelse(length(rowItems) > 1, "(%s)", "%s"), # String template for a row
             paste(rowItems, collapse = ' and ')
           )
         }
