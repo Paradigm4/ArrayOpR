@@ -1,6 +1,6 @@
 context('Tests with scidb connection')
 
-db = get_scidb_connection()
+db = arrayop.unittest.get_scidb_connection()
 expect_true(!is.null(db), "db is not null")
 
 cleanUpNamespace = function(ns = NS){
@@ -14,16 +14,26 @@ cleanUpNamespace = function(ns = NS){
 }
 
 ## Setup ----
-config = yaml::yaml.load_file(relative_path("repo.yaml"))
+config = yaml::yaml.load_file("repo.yaml")
 # Run tests directly from console
 # config = yaml::yaml.load_file("tests/testthat/db/repo.yaml")
 NS = config$namespace
+
 repo = newRepo(db = db)
+tryCatch(
+  {
+    repo$execute(afl(NS | create_namespace))
+    printf("Created namespace '%s'", NS)
+  },
+  error = function(e){
+    printf("Namespace '%s' already exists.", NS)
+  }
+)
 # Comment out for no debug
-# repo$.private$set_meta('debug', T)
+# repo$setting_debug = T
 cleanUpNamespace(NS)
 ## Run tests ----
-source(relative_path('test_with_scidb.R'), local = T)
+source('test_with_scidb.R', local = T)
 ## Teardown ----
 
 cleanUpNamespace(NS)
