@@ -1,7 +1,5 @@
 ## Internal ----
 config = yaml::yaml.load_file("repo.yaml")
-# Run tests directly from console
-# config = yaml::yaml.load_file("tests/testthat/db/repo.yaml")
 NS = config$namespace
 
 .remove_arrays_from_namespace = function(ns = NS){
@@ -50,7 +48,33 @@ db_cleanup = function() {
   .try_drop_ns()
 }
 
+## Shared code for individual tests in this folder ----
+`%>%` = dplyr::`%>%`
 
+# arrays loaded from the config file
+CfgArrays = repo$load_arrayops_from_config(config)
+# Get array's raw names (without namespace)
+CfgArraysRawNames = sapply(CfgArrays, function(x) gsub("^[^\\.]+\\.", '', x$to_afl()))
 
+# Get array names without namespace
+get_array_names = function() {
+  repo$query(
+    sprintf("project(list(ns:%s), name)", NS), only_attributes = T
+  )[['name']]
+}
 
+reset_array_with_content = function(target, content, recreate = TRUE) {
+  # Reset array
+  if(recreate){
+    try(repo$.remove_array(target), silent = T)
+    repo$.create_array(target)
+  }
+  # Upload data 
+  repo$execute(
+    target$
+      build_new(content)$
+      change_schema(target)$
+      overwrite(target)
+  )
+}
 

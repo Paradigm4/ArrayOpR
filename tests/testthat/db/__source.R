@@ -44,6 +44,9 @@ choose_in_db_tests = function(setting = SETTING) {
   source("shared.R", local = T, chdir = T)
   
   db_setup()
+  # After the db setup, there should be an empty namespace for our in-db unit tests
+  # The namespace and array config are in shared.R
+  # Two shared variables for all tests are 1. repo; 2. config (loaded from repo.yaml)
   
   # Run individual tests with a shared 'repo' instance
   for (test_file in list.files(".", "^test.+\\.R")) {

@@ -1,63 +1,5 @@
 context("Repo tests with scidb connection")
 
-`%>%` = dplyr::`%>%`
-
-# arrays loaded from the config file
-CfgArrays = repo$load_arrayops_from_config(config)
-# Get array's raw names (without namespace)
-CfgArraysRawNames = sapply(CfgArrays, function(x) gsub("^[^\\.]+\\.", '', x$to_afl()))
-
-# Shared functions ---- 
-
-reset_array_with_content = function(target, content, recreate = TRUE) {
-  # Reset array
-  if(recreate){
-    try(repo$.remove_array(target), silent = T)
-    repo$.create_array(target)
-  }
-  # Upload data 
-  repo$execute(
-    target$
-      build_new(content)$
-      change_schema(target)$
-      overwrite(target)
-  )
-}
-
-# Populate the empty namespace ----
-test_that("No arrays in the namespace", {
-  arrays = repo$load_arrayops_from_scidb_namespace(NS)
-  expect_identical(length(arrays), 0L)
-})
-
-test_that("Loaded arrays are created in the namespace", {
-  expect_identical(length(CfgArrays), length(config$arrays))
-  
-  # Create arrays manually
-  for(arr in CfgArrays){
-    repo$.create_array(arr)
-  }
-  
-  # Ensure the newly created arrays can be loaded
-  scidbCfgArrays = repo$load_arrayops_from_scidb_namespace(NS)
-  scidbCfgArrays = scidbCfgArrays[CfgArraysRawNames]
-  expect_identical(length(scidbCfgArrays), length(CfgArrays))
-  for(i in 1:length(scidbCfgArrays)){
-    fromConfig = CfgArrays[[i]]
-    fromScidb = scidbCfgArrays[[i]]
-    expect_identical(fromScidb$to_afl(), fromConfig$to_afl())
-    # Schema strings from scidb may be upper-cased
-    expect_identical(fromScidb$to_schema_str(), fromConfig$to_schema_str())
-  }
-})
-
-test_that("Get array by raw name", {
-  for(arr in CfgArrays){
-    fromScidb = repo$load_arrayop_from_scidb(arr$to_afl())
-    expect_identical(str(fromScidb), str(arr))
-  }
-})
-
 
 # Upload data frame to scidb ---- 
 
@@ -223,13 +165,12 @@ test_that("Mutate an array by another array", {
     dfFromDb = dplyr::arrange(repo$query(MutateArray), lower)
     expect_equal(dfFromDb, DfMutateArray %>% dplyr::mutate(f_int32 = c(1,-4,2,-2,3)))
   }
-  # repo$.private$set_meta('debug', T)
+  
   mutate_by_one_attr()
   mutate_by_two_attrs()
   mutate_by_one_dim()
   mutate_by_two_dims()
   mutate_by_dim_n_attr()
-  # repo$.private$set_meta('debug', F)
 })
 
 
