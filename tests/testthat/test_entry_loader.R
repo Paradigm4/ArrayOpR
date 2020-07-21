@@ -20,11 +20,8 @@ source("repo/__source.R", local = TRUE, chdir = TRUE)
 
 # Tests that run with a scidb connection
 # Only run these tests if a db connection is configured; otherwise skip them altogether
-ALLOW_DB_TEST = TRUE
 ALLOW_DB_TEST = FALSE
-if(file.exists("~/.arrayop/db.R") && ALLOW_DB_TEST) {
-  source("~/.arrayop/db.R", local = TRUE, chdir = TRUE)
-  if(exists('arrayop.unittest.get_scidb_connection')) {
-    source("db/__source.R", local = TRUE, chdir = TRUE)
-  }
-}
+ALLOW_DB_TEST = TRUE
+
+
+source("db/__source.R", local = TRUE, chdir = TRUE)

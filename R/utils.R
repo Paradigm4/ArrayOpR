@@ -6,6 +6,7 @@
 stopf <- function(fmt, ...) { stop(sprintf(fmt, ...)) }
 
 printf <- function(fmt, ...) { print(sprintf(fmt, ...)) }
+catf <- function(fmt, ...) { cat(sprintf(fmt, ...)) }
 
 assert <- function(cond, errorMsgFmt = '', ...) { if(!cond) stop(sprintf(errorMsgFmt, ...))}
 

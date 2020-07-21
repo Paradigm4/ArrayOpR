@@ -1,44 +1,60 @@
 context('Tests with scidb connection')
 
-db = arrayop.unittest.get_scidb_connection()
-expect_true(!is.null(db), "db is not null")
+# Settings ----
 
-cleanUpNamespace = function(ns = NS){
-  arrayNames = repo$query(
-    sprintf("project(list(ns:%s), name)", ns)
-  , .raw = T)[['name']]
-  for(arr in arrayNames){
-    fullName = sprintf("%s.%s", ns, arr)
-    repo$execute(afl(fullName | remove), .raw = T)
+# To enable in-db tests, create a `setting_file` which contains a function with `db_function_name`.
+# The db function should return a scidb connection which we will use to create a arrayop:Repo class instance.
+# E.g. >>> cat ~/.arrayop/unittest.setting.R
+# arrayop.unittest.get_scidb_connection = function() {
+#   result = scidb::scidbconnect(host="localhost", username="your_user_name", password="pwd", port=8083, protocol="https")
+#   options(scidb.aio = TRUE)
+#   result
+# }
+CONSTANTS = list(
+  setting_file = "~/.arrayop/unittest.setting.R",
+  db_function_name = "arrayop.unittest.get_scidb_connection"
+)
+
+SETTING = list(
+  allow_db_test = ALLOW_DB_TEST,
+  if_unittest_setting_exist = file.exists(CONSTANTS$setting_file)
+)
+
+
+choose_in_db_tests = function(setting = SETTING) {
+  if(!setting$allow_db_test) 
+    return(cat("Skipping in-database tests due to ALLOW_DB_TEST = F\n"))
+  if(!setting$if_unittest_setting_exist) 
+    return(catf("Skipping in-database tests due to absent '%s' \n", CONSTANTS$setting_file))
+  
+  # Run the array unittest config R script
+  source(CONSTANTS$setting_file, local = T, chdir = T)
+  if(!exists(CONSTANTS$db_function_name))
+    return(catf("Skipping in-database tests due to absent function '%s' in %s \n", 
+                CONSTANTS$db_function_name,
+                CONSTANTS$setting_file))
+  
+  db_func = get(CONSTANTS$db_function_name)
+  db = db_func()
+  repo = newRepo(db = db)
+  
+  expect_true(!is.null(repo), "repo should not be null!")
+  
+  # 'repo' class version is determined by the scidb version, which is not hard-coded.
+  source("shared.R", local = T, chdir = T)
+  
+  db_setup()
+  
+  # Run individual tests with a shared 'repo' instance
+  for (test_file in list.files(".", "^test.+\\.R")) {
+    source(test_file, local = T, chdir = T)
   }
+  
+  db_cleanup()
 }
 
-## Setup ----
-config = yaml::yaml.load_file("repo.yaml")
-# Run tests directly from console
-# config = yaml::yaml.load_file("tests/testthat/db/repo.yaml")
-NS = config$namespace
+# Main entry for in-db tests ---
+# May not run tests if unable to create a repo instance
+choose_in_db_tests()
 
-repo = newRepo(db = db)
-tryCatch(
-  {
-    repo$execute(afl(NS | create_namespace))
-    printf("Created namespace '%s'", NS)
-  },
-  error = function(e){
-    printf("Namespace '%s' already exists.", NS)
-  }
-)
-# Comment out for no debug
-# repo$setting_debug = T
-cleanUpNamespace(NS)
-## Run tests ----
-source('test_with_scidb.R', local = T)
-## Teardown ----
 
-cleanUpNamespace(NS)
-tryCatch(
-  repo$execute(afl(NS | drop_namespace))
-)
-
-rm(repo)
