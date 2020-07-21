@@ -20,8 +20,8 @@ source("repo/__source.R", local = TRUE, chdir = TRUE)
 
 # Tests that run with a scidb connection
 # Only run these tests if a db connection is configured; otherwise skip them altogether
-ALLOW_DB_TEST = FALSE
 ALLOW_DB_TEST = TRUE
+ALLOW_DB_TEST = FALSE
 
 
 source("db/__source.R", local = TRUE, chdir = TRUE)
