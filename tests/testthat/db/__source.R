@@ -37,4 +37,8 @@ source('test_with_scidb.R', local = T)
 ## Teardown ----
 
 cleanUpNamespace(NS)
+tryCatch(
+  repo$execute(afl(NS | drop_namespace))
+)
+
 rm(repo)
