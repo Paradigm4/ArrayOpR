@@ -2,7 +2,7 @@ context("Load arrays from namespace")
 
 
 test_that("No arrays in an empty namespace", {
-  arrays = repo$load_arrayops_from_scidb_namespace(NS)
+  arrays = repo$load_arrayops_from_scidb_namespace(testNS$NS)
   expect_identical(length(arrays), 0L)
 })
 
@@ -21,7 +21,7 @@ test_that("Load all arrayOps from a namespace", {
   }
   
   # Load arrayOps from namespace NS
-  dbArrays = repo$load_arrayops_from_scidb_namespace(NS)
+  dbArrays = repo$load_arrayops_from_scidb_namespace(testNS$NS)
   
   # Tests
   expect_identical(length(localArrays), length(dbArrays))

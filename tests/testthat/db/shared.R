@@ -1,39 +1,19 @@
 ## Internal ----
-config = yaml::yaml.load_file("repo.yaml")
-NS = config$namespace
+# config = yaml::yaml.load_file("repo.yaml")
+# NS = config$namespace
 
 
 
 ## Shared code for individual tests in this folder ----
 `%>%` = dplyr::`%>%`
 
-# arrays loaded from the config file
-CfgArrays = repo$load_arrayops_from_config(config)
-# Get array's raw names (without namespace)
-CfgArraysRawNames = sapply(CfgArrays, function(x) gsub("^[^\\.]+\\.", '', x$to_afl()))
 
-
-reset_array_with_content = function(target, content, recreate = TRUE) {
-  # Reset array
-  if(recreate){
-    try(repo$.remove_array(target), silent = T)
-    repo$.create_array(target)
-  }
-  # Upload data 
-  repo$execute(
-    target$
-      build_new(content)$
-      change_schema(target)$
-      overwrite(target)
-  )
-}
 
 # Wrap up shared functions in a class for easy-access
 TestNS <- R6::R6Class(
   "TestNS", 
   portable = FALSE,
   private = list(
-    NS = NULL, # namespace
     repo = NULL, # arrayop::ArrayOp instance
     # Private functions ----
     .remove_arrays_from_namespace = function(){
@@ -73,8 +53,9 @@ TestNS <- R6::R6Class(
   ,
   # Public functions ----
   public = list(
+    NS = NULL, # namespace
     initialize = function(namespace, repo){
-      private$NS = namespace
+      self$NS = namespace
       private$repo = repo
     }
     ,
@@ -108,6 +89,23 @@ TestNS <- R6::R6Class(
       repo$query(
         sprintf("project(list(ns:%s), name)", NS), only_attributes = T
       )[['name']]
+    }
+    ,
+    # param target: an arrayOp instance
+    # param content: R data frame
+    reset_array_with_content = function(target, content, recreate = TRUE) {
+      # Reset array
+      if(recreate){
+        try(repo$.remove_array(target), silent = T)
+        repo$.create_array(target)
+      }
+      # Upload data 
+      repo$execute(
+        target$
+          build_new(content)$
+          change_schema(target)$
+          overwrite(target)
+      )
     }
   )
 )
