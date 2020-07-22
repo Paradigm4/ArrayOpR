@@ -48,6 +48,10 @@ db_cleanup = function() {
   .try_drop_ns()
 }
 
+cleanup_after_each_test = function() {
+  .remove_arrays_from_namespace()
+}
+
 ## Shared code for individual tests in this folder ----
 `%>%` = dplyr::`%>%`
 
@@ -61,6 +65,13 @@ get_array_names = function() {
   repo$query(
     sprintf("project(list(ns:%s), name)", NS), only_attributes = T
   )[['name']]
+}
+
+# Create a local arrayOp instance in R
+create_local_arrayop = function(name, schema) {
+  repo$get_array(sprintf(
+    "%s.%s %s", NS, name, schema
+  ))
 }
 
 reset_array_with_content = function(target, content, recreate = TRUE) {
