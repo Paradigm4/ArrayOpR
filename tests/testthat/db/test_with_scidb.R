@@ -1,33 +1,6 @@
 context("Repo tests with scidb connection")
 
 
-# Store AFL as a scidb array and return arrayOp ----
-
-test_that("Store AFL as scidb array and return arrayOp", {
-  df = data.frame(f_str = letters[1:5], f_double = c(3.14, 2.0, NA, 0, -99), f_bool = c(T,NA,F,NA,F), f_int64 = 1:5 * 10.0)
-  template = CfgArrays[['template_a']]
-  
-  uploaded = repo$upload_df(df, template, temp = F)
-  filtered = uploaded$where(f_double > 0)
-  
-  randomName = sprintf('myStoredArray%s', .random_attr_name())
-  stored1 = repo$save_as_array(filtered, name = randomName, temp = F, gc = F)
-  stored2 = repo$save_as_array(filtered, temp = T)
-  filteredDf = dplyr::filter(df, f_double > 0)
-  
-  result1 = repo$query(stored1, only_attributes = T)
-  result2 = repo$query(stored2, only_attributes = T)
-  expect_equal(result1, filteredDf)
-  expect_equal(result2, filteredDf)
-  
-  # We can 'overwrite' an existing array
-  filtered = uploaded$where(f_double < 0)
-  filteredDf = dplyr::filter(df, f_double < 0)
-  stored3 = repo$save_as_array(filtered, name = randomName, temp = F, gc = F)
-  result3 = repo$query(stored3, only_attributes = T)
-  expect_equal(result3, filteredDf)
-  repo$execute(afl(stored3 | remove))
-})
 
 # Mutate array content ----
 

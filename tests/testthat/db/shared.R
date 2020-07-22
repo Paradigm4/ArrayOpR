@@ -92,6 +92,11 @@ TestNS <- R6::R6Class(
       .remove_arrays_from_namespace()
     }
     ,
+    # Return an array name prefixed with the test namespace
+    full_array_name = function(name) {
+      sprintf("%s.%s", NS, name)  
+    }
+    ,
     create_local_arrayop = function(name, schema){
       repo$get_array(sprintf(
         "%s.%s %s", NS, name, schema
