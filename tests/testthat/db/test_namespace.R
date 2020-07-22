@@ -7,8 +7,8 @@ test_that("No arrays in an empty namespace", {
 })
 
 localArrays = (function(){
-  aa = create_local_arrayop("A", "<f_str:string COMPRESSION 'zlib', f_datetime: datetime>  [da=0:*:0:*]")
-  ab = create_local_arrayop("B", "<f_int32:int32, f_int64:int64, f_bool: bool, f_double: double>  [da=0:*:0:1;db=0:*:0:*]")
+  aa = testNS$create_local_arrayop("A", "<f_str:string COMPRESSION 'zlib', f_datetime: datetime>  [da=0:*:0:*]")
+  ab = testNS$create_local_arrayop("B", "<f_int32:int32, f_int64:int64, f_bool: bool, f_double: double>  [da=0:*:0:1;db=0:*:0:*]")
   list("A" = aa, "B" = ab)
 })()
 
@@ -35,7 +35,7 @@ test_that("Load all arrayOps from a namespace", {
   }
   
   # Clean up
-  cleanup_after_each_test()
+  testNS$cleanup_after_each_test()
 })
 
 
@@ -58,6 +58,6 @@ test_that("Load arrayOps one-by-one from a namespace", {
   }
   
   # Clean up
-  cleanup_after_each_test()
+  testNS$cleanup_after_each_test()
 })
 

@@ -43,7 +43,7 @@ choose_in_db_tests = function(setting = SETTING) {
   # 'repo' class version is determined by the scidb version, which is not hard-coded.
   source("shared.R", local = T, chdir = T)
   
-  db_setup()
+  testNS$db_setup()
   # After the db setup, there should be an empty namespace for our in-db unit tests
   # The namespace and array config are in shared.R
   # Two shared variables for all tests are 1. repo; 2. config (loaded from repo.yaml)
@@ -53,7 +53,7 @@ choose_in_db_tests = function(setting = SETTING) {
     source(test_file, local = T, chdir = T)
   }
   
-  db_cleanup()
+  testNS$db_cleanup()
 }
 
 # Main entry for in-db tests ---
