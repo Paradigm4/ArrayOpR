@@ -208,6 +208,10 @@ Repo <- R6::R6Class(
     #' @field setting_use_aio_input Whether to use aio_input for data frame uploading. Default FALSE.
     #' `Repo$setting_use_aio_input` to get current setting; or `Repo$setting_use_aio_input = T` to change current setting.
     setting_use_aio_input = function(value) if(missing(value)) get_meta('use_aio_input', FALSE) else set_meta('use_aio_input', as.logical(value))
+    ,
+    #' @field setting_build_or_upload_threshold Whether to use aio_input for data frame uploading. Default FALSE.
+    #' `Repo$setting_build_or_upload_threshold` to get current setting; or `Repo$setting_build_or_upload_threshold = a_number` to change current setting.
+    setting_build_or_upload_threshold = function(value) if(missing(value)) get_meta('build_or_upload_threshold', 5000L) else set_meta('build_or_upload_threshold', as.integer(value))
   )
   ,
   # Public ----
@@ -442,6 +446,31 @@ Repo <- R6::R6Class(
         create_new_with_same_schema(uploaded@name)
       res$.set_meta('.ref', uploaded)
       res
+    }
+    ,
+    #' Get an arrayOp instance from 'build' or upload depending on the threshold
+    #'
+    #' @param df: a dataframe that has template's fields as columns
+    #' @param template: an arrayOp instance as a template in `build` or `upload` mode
+    #' @param threshold: use `build` if number of df cells <= threshold; otherwise `upload`.
+    #' Default: `repo$setting_build_or_upload_threshold`
+    #' @param build_dim: used as `artificial_field` in 'build' mode
+    #' @param ...: arguments used in `repo$upload`
+    #'
+    #' @return an arrayOp instance
+    build_or_upload_df = function(
+      df, 
+      template,
+      threshold = setting_build_or_upload_threshold,
+      build_dim = 'z',
+      ...
+    ){
+      cells = nrow(df) * length(names(df))
+      if(cells <= threshold){
+        template$build_new(df, artificial_field = build_dim)
+      } else {
+        upload_df(df, template = template, ...)
+      }
     }
     ,
     #' @description 

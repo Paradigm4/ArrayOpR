@@ -109,3 +109,7 @@ log_job_duration = function(job, msg = '', done_msg = 'done') {
 .remove_null_values = function(list_values) {
   Filter(Negate(is.null), list_values)
 }
+
+new_named_list = function(values, names){
+  as.list(structure(values, names = as.character(names)))
+}

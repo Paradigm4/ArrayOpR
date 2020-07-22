@@ -1,15 +1,8 @@
-## Internal ----
-# config = yaml::yaml.load_file("repo.yaml")
-# NS = config$namespace
-
-
-
 ## Shared code for individual tests in this folder ----
 `%>%` = dplyr::`%>%`
 
+# Wrap up shared functions in a class for easy-access ----
 
-
-# Wrap up shared functions in a class for easy-access
 TestNS <- R6::R6Class(
   "TestNS", 
   portable = FALSE,
@@ -110,4 +103,5 @@ TestNS <- R6::R6Class(
   )
 )
 
+# Shared instance for all in-db tests ----
 testNS = TestNS$new(namespace = "arrayop_unittest", repo = repo)

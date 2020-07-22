@@ -768,10 +768,67 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
         )
         return(afl_literal)
       }
+      
+      index_lookup_mode = function() {
+        assert(inherits(template, 'ArrayOpBase'), 
+               "ERROR: ArrayOp$match: index_lookup mode: template must be an ArrayOp instance, but got: [%s]", paste(class(template), collapse = ","))
+        assert(length(template$attrs) == 1 && length(template$dims) == 1,
+               "ERROR: ArrayOp$match: index_lookup mode: template must have only one dimension and one attribute")
+        if(is.null(field_mapping)){
+          matchedFields = template$attrs %n% self$dims_n_attrs # find matched fields from template's attrs only (not in dims)
+          assert(length(matchedFields) == 1, 
+                 "ERROR: ArrayOp$match: index_lookup mode: param 'field_mapping' == NULL, but template field '%s' does not match any source fields",
+                 template$attrs)
+          field_mapping = new_named_list(matchedFields, names = matchedFields)
+        }
+        assert(length(field_mapping) == 1, 
+               "ERROR: ArrayOp$match: index_lookup mode: there should be exactly one template attribute that matches source's fields, but %d field(s) found: %s",
+               length(field_mapping), paste(field_mapping, collapse = ","))
+        assert_not_has_len(lower_bound,
+                       "ERROR: ArrayOp$match: index_lookup mode: param 'lower_bound' is not allowed in this mode.")
+        assert_not_has_len(upper_bound,
+                       "ERROR: ArrayOp$match: index_lookup mode: param 'upper_bound' is not allowed in this mode.")
         
+        
+        if(is.null(names(field_mapping))){ 
+          # e.g. field_mapping = 'field_a' 
+          sourceField = as.character(field_mapping)
+          templateField = template$attrs
+        } else {
+          sourceField = names(field_mapping)
+          templateField = as.character(field_mapping)
+        }
+        assert(sourceField %in% self$dims_n_attrs,
+               "ERROR: ArrayOp$match: index_lookup mode: '%s' is not a valid source field.", sourceField)
+        assert(templateField %in% template$attrs,
+               "ERROR: ArrayOp$match: index_lookup mode: '%s' is not a valid template field.", templateField)
+        
+        isSourceAttrMatched = sourceField %in% self$attrs
+        sourceMatchField = if(isSourceAttrMatched) sourceField else sprintf("attr_%s", sourceField)
+        
+        sourceOp = if(isSourceAttrMatched) self else {
+          afl(self | apply(sourceMatchField, sourceField))
+        }
+        indexName = sprintf("index_%s", sourceField)
+        templateOp = template
+        if(templateField %in% self$dims_n_attrs) { 
+          # if the template field name exist on the source too, there will be field name conflicts when we 'project'
+          templateOp = template$reshape(new_named_list(templateField, names = sprintf("alt_%s_", templateField)))
+        }
+          
+        afl(
+          sourceOp | 
+            index_lookup(templateOp, sourceMatchField, indexName) |
+            filter(sprintf("%s is not null", indexName)) |
+            project(self$attrs)
+        )
+      }
+      
+      # Select the mode function which returns an AFL statement
       aflExpr = switch(op_mode,
         'filter' = filter_mode,
         'cross_between' = cross_between_mode,
+        'index_lookup' = index_lookup_mode,
         stopf("ERROR: ArrayOp$match: unknown op_mode '%s'.", op_mode)
       )(...)
       self$create_new_with_same_schema(aflExpr)

@@ -2,7 +2,7 @@ context("Test match function in newArrayOp base class")
 
 newArrayOp = function(...) ArrayOpBase$new(...)
 
-# Match with filter mode ------------------------------------------------------------------------------------------
+# filter mode ------------------------------------------------------------------------------------------
 
 MatchSource = newArrayOp("s", c("da", "db"), c("aa", "ab"), dtypes = list(aa='dtaa', ab='dtab', da='dtda', db='dtdb'))
 
@@ -74,7 +74,7 @@ test_that("Filter mode errors", {
   ), "named list")
 })
 
-# Match with cross_between mode -----------------------------------------------------------------------------------
+# cross_between mode -----------------------------------------------------------------------------------
 MatchSource = newArrayOp("s", c("da", "db"), c("aa", "ab"), dtypes = list(aa='dtaa', ab='dtab', da='dtda', db='dtdb'))
 
 test_that("cross_between on only matching dimensions", {
@@ -317,4 +317,85 @@ test_that("cross_between mode only works on dimensions", {
   t = newArrayOp('template', dims = c('x'), attrs = c('aa', 'ab'))
   expect_error(MatchSource$match(t, op_mode = 'cross_between'), "source's dimensions")
   expect_error(MatchSource$match(t, op_mode = 'cross_between', field_mapping = list(aa = 'aa')), "source's dimensions")
+})
+
+# index_lookup mode ----
+
+MatchSource = newArrayOp("s", c("da", "db"), c("aa", "ab"), dtypes = list(aa='dtaa', ab='dtab', da='dtda', db='dtdb'))
+
+test_that("index_lookup mode on attrbiute", {
+  template = newArrayOp('template', dims = 'da', attrs = 'aa')
+  matchOp = MatchSource$match(template, op_mode = 'index_lookup')
+  reshaped = template$reshape(list("alt_aa_"="aa"))
+  assert_afl_equal(matchOp$to_afl(), afl(
+    MatchSource | index_lookup(reshaped, 'aa', "index_aa") |
+      filter("index_aa is not null") | 
+      project(MatchSource$attrs)
+  ))
+})
+
+test_that("index_lookup mode on attrbiute with explicit field_mapping", {
+  template = newArrayOp('template', dims = 'z', attrs = 'x')
+  matchOp = MatchSource$match(template, op_mode = 'index_lookup', field_mapping = "aa")
+  
+  assert_afl_equal(matchOp$to_afl(), afl(
+    MatchSource | index_lookup(template, 'aa', "index_aa") |
+      filter("index_aa is not null") | 
+      project(MatchSource$attrs)
+  ))
+})
+
+test_that("index_lookup mode on source dimension", {
+  template = newArrayOp('template', dims = 'z', attrs = 'da')
+  matchOp = MatchSource$match(template, op_mode = 'index_lookup')
+  reshaped = template$reshape(list("alt_da_"="da"))
+  
+  assert_afl_equal(matchOp$to_afl(), afl(
+    MatchSource | 
+      apply("attr_da", "da") |
+      index_lookup(reshaped, 'attr_da', "index_da") |
+      filter("index_da is not null") | 
+      project(MatchSource$attrs)
+  ))
+})
+
+test_that("index_lookup mode on source dimension with explict field_mapping", {
+  template = newArrayOp('template', dims = 'z', attrs = 'x')
+  matchOp = MatchSource$match(template, op_mode = 'index_lookup', field_mapping = 'da')
+  
+  assert_afl_equal(matchOp$to_afl(), afl(
+    MatchSource | 
+      apply("attr_da", "da") |
+      index_lookup(template, 'attr_da', "index_da") |
+      filter("index_da is not null") | 
+      project(MatchSource$attrs)
+  ))
+})
+
+test_that("index_lookup mode: error cases", {
+  expect_error(
+    MatchSource$match(data.frame(), op_mode = 'index_lookup', field_mapping = 'aa'),
+    "must be an ArrayOp instance"
+  )
+  expect_error(
+    MatchSource$match(newArrayOp("template", dims=c('da', 'db'), attrs='aa'), op_mode = 'index_lookup', field_mapping = 'aa'),
+    "one dimension and one attribute"
+  )
+  expect_error(
+    MatchSource$match(newArrayOp("template", dims='z', attrs='aa'), op_mode = 'index_lookup', field_mapping = 'xxx'),
+    "not a valid source field"
+  )
+  expect_error(
+    MatchSource$match(newArrayOp("template", dims='z', attrs='t'), op_mode = 'index_lookup', field_mapping = list('aa'='x')),
+    "not a valid template field"
+  )
+  expect_error(
+    MatchSource$match(newArrayOp("template", dims='z', attrs='aa'), op_mode = 'index_lookup', lower_bound = list('aa'='aa')),
+    "not allowed"
+  )
+  expect_error(
+    MatchSource$match(newArrayOp("template", dims='z', attrs='aa'), op_mode = 'index_lookup', upper_bound = list('aa'='aa')),
+    "not allowed"
+  )
+  
 })
