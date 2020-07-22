@@ -1,39 +1,72 @@
 context("Load arrays from namespace")
 
 
-test_that("No arrays in the namespace", {
+test_that("No arrays in an empty namespace", {
   arrays = repo$load_arrayops_from_scidb_namespace(NS)
   expect_identical(length(arrays), 0L)
 })
 
-test_that("Loaded arrays are created in the namespace", {
-  expect_identical(length(CfgArrays), length(config$arrays))
+test_that("Load all arrayOps from a namespace", {
+  new_arrayop = function(name, schema) {
+    repo$get_array(sprintf("%s.%s %s", NS, name, schema))
+  }
+  
+  aa = new_arrayop("A", "<f_str:string COMPRESSION 'zlib', f_datetime: datetime>  [da=0:*:0:*]")
+  ab = new_arrayop("B", "<f_int32:int32, f_int64:int64, f_bool: bool, f_double: double>  [da=0:*:0:1;db=0:*:0:*]")
+  
+  localArrays = list("A" = aa, "B" = ab)
   
   # Create arrays manually
-  for(arr in CfgArrays){
+  for(arr in localArrays){
     repo$.create_array(arr)
   }
   
-  # Ensure the newly created arrays can be loaded
-  scidbCfgArrays = repo$load_arrayops_from_scidb_namespace(NS)
-  scidbCfgArrays = scidbCfgArrays[CfgArraysRawNames]
-  expect_identical(length(scidbCfgArrays), length(CfgArrays))
-  for(i in 1:length(scidbCfgArrays)){
-    fromConfig = CfgArrays[[i]]
-    fromScidb = scidbCfgArrays[[i]]
-    expect_identical(fromScidb$to_afl(), fromConfig$to_afl())
-    # Schema strings from scidb may be converted to upper-case
-    expect_identical(fromScidb$to_schema_str(), fromConfig$to_schema_str())
-  }
+  # Load arrayOps from namespace NS
+  dbArrays = repo$load_arrayops_from_scidb_namespace(NS)
   
-  # Test loading arrays one-by-one 
-  for(arr in CfgArrays){
-    fromScidb = repo$load_arrayop_from_scidb(arr$to_afl())
-    expect_identical(str(fromScidb), str(arr))
+  # Tests
+  expect_identical(length(localArrays), length(dbArrays))
+  for(name in names(localArrays)){
+    fromLocal = localArrays[[name]]
+    fromDB = dbArrays[[name]]
+    expect_identical(
+      toupper(str(fromLocal)), 
+      toupper(str(fromDB))
+    )
   }
   
   # Clean up
   .remove_arrays_from_namespace()
 })
 
+
+test_that("Load arrayOps one-by-one from a namespace", {
+  new_arrayop = function(name, schema) {
+    repo$get_array(sprintf("%s.%s %s", NS, name, schema))
+  }
+  
+  aa = new_arrayop("A", "<f_str:string COMPRESSION 'zlib', f_datetime: datetime>  [da=0:*:0:*]")
+  ab = new_arrayop("B", "<f_int32:int32, f_int64:int64, f_bool: bool, f_double: double>  [da=0:*:0:1;db=0:*:0:*]")
+  
+  localArrays = list("A" = aa, "B" = ab)
+  
+  # Create arrays manually
+  for(arr in localArrays){
+    repo$.create_array(arr)
+  }
+  
+  # Tests
+  for(name in names(localArrays)){
+    fromLocal = localArrays[[name]]
+    # Load arrayOp from scidb
+    fromDB = repo$load_arrayop_from_scidb(fromLocal$to_afl())
+    expect_identical(
+      toupper(str(fromLocal)), 
+      toupper(str(fromDB))
+    )
+  }
+  
+  # Clean up
+  .remove_arrays_from_namespace()
+})
 
