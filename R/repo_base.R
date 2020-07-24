@@ -209,9 +209,16 @@ Repo <- R6::R6Class(
     #' `Repo$setting_use_aio_input` to get current setting; or `Repo$setting_use_aio_input = T` to change current setting.
     setting_use_aio_input = function(value) if(missing(value)) get_meta('use_aio_input', FALSE) else set_meta('use_aio_input', as.logical(value))
     ,
-    #' @field setting_build_or_upload_threshold Whether to use aio_input for data frame uploading. Default FALSE.
+    #' @field setting_build_or_upload_threshold A threshold that determines whether to upload or build arrayOps. Default 5000.
+    #' If number of data frame cells <= the threshold, choose 'build' operator where data frames are passed to scdib server in AFL; 
+    #' otherwise, data frames are uploaded. 'build' mode is normally faster than 'upload'.
     #' `Repo$setting_build_or_upload_threshold` to get current setting; or `Repo$setting_build_or_upload_threshold = a_number` to change current setting.
     setting_build_or_upload_threshold = function(value) if(missing(value)) get_meta('build_or_upload_threshold', 5000L) else set_meta('build_or_upload_threshold', as.integer(value))
+    ,
+    #' @field setting_auto_match_filter_mode_threshold 
+    #' A threshold that determines when to use 'filter' mode in `Repo$auto_match` function. Default 200.
+    #' `Repo$setting_auto_match_filter_mode_threshold` to get current setting; or `Repo$setting_auto_match_filter_mode_threshold = a_number` to change current setting.
+    setting_auto_match_filter_mode_threshold = function(value) if(missing(value)) get_meta('auto_match_filter_mode_threshold', 200L) else set_meta('auto_match_filter_mode_threshold', as.integer(value))
   )
   ,
   # Public ----
@@ -496,6 +503,31 @@ Repo <- R6::R6Class(
         create_new_with_same_schema(storedArray@name)
       res$.set_meta('.ref', storedArray)
       res
+    }
+    ,
+    #' Get an arrayOp instance by matching a data frame `df` against an arrayOp `reference`
+    #'
+    #' Whether `filter` or `index_lookup` mode is determined by the `setting_match_filter_mode_threshold`.
+    #' Use `filter` mode if number of cells in `df` < `setting_match_filter_mode_threshold`
+    #'
+    #' @param ... params for `cross_between` mode
+    #'
+    #' @return an arrayOp instance with the same schema as `reference`
+    auto_match = function(df, reference, filter_threshold = setting_auto_match_filter_mode_threshold, ...) {
+      assert_no_fields(names(df) %-% reference$dims_n_attrs,
+                       "ERROR: Repo$auto_match: param df has unmatched fields to the reference: '%s'")
+      assert(inherits(reference, 'ArrayOpBase'), 
+             "ERROR: Repo$auto_match: param 'reference' must be an ArrayOp instance, but got: [%s]", 
+             paste(class(reference), collapse = ","))
+      
+      cells = base::nrow(df) * length(names(df))
+      if(cells <= filter_threshold){
+        reference$match(df, op_mode = "filter")
+      } else {
+        dfOp = build_or_upload_df(df, reference)
+        op_mode = if(length(names(df)) == 1) "index_lookup" else "cross_between"
+        reference$match(df, op_mode = op_mode, ...)
+      }
     }
     ,
     # Convenience functions ----

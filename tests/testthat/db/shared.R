@@ -7,7 +7,6 @@ TestNS <- R6::R6Class(
   "TestNS", 
   portable = FALSE,
   private = list(
-    repo = NULL, # arrayop::ArrayOp instance
     # Private functions ----
     .remove_arrays_from_namespace = function(){
       arrayNames = repo$query(
@@ -47,9 +46,11 @@ TestNS <- R6::R6Class(
   # Public functions ----
   public = list(
     NS = NULL, # namespace
+    repo = NULL, # arrayop::ArrayOp instance
+    
     initialize = function(namespace, repo){
       self$NS = namespace
-      private$repo = repo
+      self$repo = repo
     }
     ,
     db_setup = function() {
