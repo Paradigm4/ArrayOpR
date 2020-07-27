@@ -19,8 +19,8 @@ ArrayContent = data.frame(
 
 change_repo_settings = function() {
   repo = testNS$repo
-  repo$setting_auto_match_filter_mode_threshold = 5
-  repo$setting_build_or_upload_threshold = 10
+  repo$setting_semi_join_filter_mode_threshold = 10
+  repo$setting_build_or_upload_threshold = 20
 }
 
 change_repo_settings()
@@ -30,7 +30,7 @@ test_that("Match with filter mode on dimension", {
   testNS$reset_array_with_content(RefArray, ArrayContent)
   
   df = data.frame(da = c(3,5,8,11))
-  resultOp = repo$auto_match(df, RefArray)
+  resultOp = repo$semi_join(df, RefArray)
   resultDf = repo$query(resultOp)
   expectedDf = dplyr::filter(ArrayContent, da %in% c(3,5,8,11))
   
@@ -44,9 +44,24 @@ test_that("Match with filter mode on attribute", {
   
   values = c(-10, -11, -12)
   df = data.frame(f_int32 = values)
-  resultOp = repo$auto_match(df, RefArray)
+  resultOp = repo$semi_join(df, RefArray)
   resultDf = repo$query(resultOp)
   expectedDf = dplyr::filter(ArrayContent, f_int32 %in% values)
+  
+  expect_match(resultOp$to_afl(), "filter")
+  expect_identical(resultOp$to_schema_str(), RefArray$to_schema_str())
+  expect_equal(resultDf, expectedDf)
+})
+
+test_that("Match with filter mode on two attributes", {
+  testNS$reset_array_with_content(RefArray, ArrayContent)
+  
+  values1 = c(-20, -17, -16)
+  values2 = c("no_match", "d", "e")
+  df = data.frame(f_int32 = values1, lower = values2)
+  resultOp = repo$semi_join(df, RefArray)
+  resultDf = repo$query(resultOp)
+  expectedDf = dplyr::semi_join(ArrayContent, df)
   
   expect_match(resultOp$to_afl(), "filter")
   expect_identical(resultOp$to_schema_str(), RefArray$to_schema_str())

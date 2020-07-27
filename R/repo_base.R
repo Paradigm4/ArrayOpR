@@ -215,10 +215,10 @@ Repo <- R6::R6Class(
     #' `Repo$setting_build_or_upload_threshold` to get current setting; or `Repo$setting_build_or_upload_threshold = a_number` to change current setting.
     setting_build_or_upload_threshold = function(value) if(missing(value)) get_meta('build_or_upload_threshold', 5000L) else set_meta('build_or_upload_threshold', as.integer(value))
     ,
-    #' @field setting_auto_match_filter_mode_threshold 
-    #' A threshold that determines when to use 'filter' mode in `Repo$auto_match` function. Default 200.
-    #' `Repo$setting_auto_match_filter_mode_threshold` to get current setting; or `Repo$setting_auto_match_filter_mode_threshold = a_number` to change current setting.
-    setting_auto_match_filter_mode_threshold = function(value) if(missing(value)) get_meta('auto_match_filter_mode_threshold', 200L) else set_meta('auto_match_filter_mode_threshold', as.integer(value))
+    #' @field setting_semi_join_filter_mode_threshold 
+    #' A threshold that determines when to use 'filter' mode in `Repo$semi_join` function. Default 200.
+    #' `Repo$setting_semi_join_filter_mode_threshold` to get current setting; or `Repo$setting_semi_join_filter_mode_threshold = a_number` to change current setting.
+    setting_semi_join_filter_mode_threshold = function(value) if(missing(value)) get_meta('semi_join_filter_mode_threshold', 200L) else set_meta('semi_join_filter_mode_threshold', as.integer(value))
   )
   ,
   # Public ----
@@ -472,7 +472,7 @@ Repo <- R6::R6Class(
       build_dim = 'z',
       ...
     ){
-      cells = nrow(df) * length(names(df))
+      cells = base::nrow(df) * length(names(df))
       if(cells <= threshold){
         template$build_new(df, artificial_field = build_dim)
       } else {
@@ -513,11 +513,11 @@ Repo <- R6::R6Class(
     #' @param ... params for `cross_between` mode
     #'
     #' @return an arrayOp instance with the same schema as `reference`
-    auto_match = function(df, reference, filter_threshold = setting_auto_match_filter_mode_threshold, ...) {
+    semi_join = function(df, reference, filter_threshold = setting_semi_join_filter_mode_threshold, ...) {
       assert_no_fields(names(df) %-% reference$dims_n_attrs,
-                       "ERROR: Repo$auto_match: param df has unmatched fields to the reference: '%s'")
+                       "ERROR: Repo$semi_join: param df has unmatched fields to the reference: '%s'")
       assert(inherits(reference, 'ArrayOpBase'), 
-             "ERROR: Repo$auto_match: param 'reference' must be an ArrayOp instance, but got: [%s]", 
+             "ERROR: Repo$semi_join: param 'reference' must be an ArrayOp instance, but got: [%s]", 
              paste(class(reference), collapse = ","))
       
       cells = base::nrow(df) * length(names(df))
