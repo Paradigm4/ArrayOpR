@@ -49,6 +49,7 @@ assert_no_fields <- function(fields, errorMsgFmt = "Field(s) not empty: %s", ...
 #' @param .as.list Return a list if set TRUE; otherwise a named vector
 #' @return A list or named vector whose key/values are inverted from the original `obj`
 invert.list = function(obj, .as.list = T) {
+  if(!.has_len(obj)) return(list())
   res = structure(
     unlist(mapply(rep, names(obj), sapply(obj, length)), use.names=F),
     names = unlist(obj)
@@ -111,5 +112,6 @@ log_job_duration = function(job, msg = '', done_msg = 'done') {
 }
 
 new_named_list = function(values, names){
+  if(!.has_len(values)) return(list())
   as.list(structure(values, names = as.character(names)))
 }

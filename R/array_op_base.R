@@ -661,7 +661,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
     #' If there is mapping fields in the template which are intended for lower or upper bound, 
     #' provide an empty list or a list with matching fields 
     #' @return A new ArrayOp instance which has the same schema as the source. 
-    match = function(template, op_mode, lower_bound = NULL, upper_bound = NULL, field_mapping = NULL, ...){
+    match = function(template, op_mode, lower_bound = NULL, upper_bound = NULL, field_mapping = NULL){
       assert_not_has_len(names(lower_bound) %n% names(field_mapping), 
         "ERROR: ArrayOp$match: Field names in param 'lower_bound' and 'field_mapping' cannot overlap: '%s'",
         paste(names(lower_bound) %n% names(field_mapping), collapse = ','))
@@ -673,7 +673,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
       if(.has_len(upper_bound))
         assert_named_list(upper_bound, "ERROR: ArrayOp$match: upper_bound if provided must be a named list.")
       
-      filter_mode = function(...){
+      filter_mode = function(){
         assert(inherits(template, 'data.frame'), 
           "ERROR: ArrayOp$match: filter mode: template must be a data.frame, but got: %s", class(template))
         unmatchedCols = names(template) %-% self$dims_n_attrs %-% lower_bound %-% upper_bound
@@ -717,7 +717,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
         return(afl(self | filter(filter_afl)))
       }
       
-      cross_between_mode = function(...){
+      cross_between_mode = function(){
         assert(inherits(template, 'ArrayOpBase'), 
           "ERROR: ArrayOp$match: cross_between mode: template must be a ArrayOp instance, but got: %s", class(template))
         if(is.null(field_mapping)){
@@ -830,7 +830,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
         'cross_between' = cross_between_mode,
         'index_lookup' = index_lookup_mode,
         stopf("ERROR: ArrayOp$match: unknown op_mode '%s'.", op_mode)
-      )(...)
+      )()
       self$create_new_with_same_schema(aflExpr)
     }
     ,

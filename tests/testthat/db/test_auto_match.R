@@ -17,58 +17,208 @@ ArrayContent = data.frame(
   f_double = c(3.14, 2.0, NA, 0, -99)
 )
 
-change_repo_settings = function() {
-  repo = testNS$repo
-  repo$setting_semi_join_filter_mode_threshold = 10
-  repo$setting_build_or_upload_threshold = 20
+
+assert_df_match = function(result_op, expected_df, afl_patterns) {
+  resultAfl = result_op$to_afl()
+  sapply(afl_patterns, function(x) expect_match(resultAfl, x))
+  expect_identical(result_op$to_schema_str(), RefArray$to_schema_str())
+  # Scidb doesn't have a deterministic ordering rule, so we need to sort the result data frame and then compare
+  expect_equal(
+    dplyr::arrange(data.frame(repo$query(result_op)), da),
+    dplyr::arrange(expected_df, da)
+  )
 }
 
-change_repo_settings()
+# Filter mode ----
 
-
-test_that("Match with filter mode on dimension", {
+test_that("filter, 1-dim", {
   testNS$reset_array_with_content(RefArray, ArrayContent)
   
   df = data.frame(da = c(3,5,8,11))
-  resultOp = repo$semi_join(df, RefArray)
-  resultDf = repo$query(resultOp)
-  expectedDf = dplyr::filter(ArrayContent, da %in% c(3,5,8,11))
   
-  expect_match(resultOp$to_afl(), "filter")
-  expect_identical(resultOp$to_schema_str(), RefArray$to_schema_str())
-  expect_equal(resultDf, expectedDf)
+  assert_df_match(
+    repo$semi_join(df, RefArray, filter_threshold=10, upload_threshold=20),
+    dplyr::semi_join(ArrayContent, df),
+    "filter"
+  )
 })
 
-test_that("Match with filter mode on attribute", {
+test_that("filter, 1-attr", {
   testNS$reset_array_with_content(RefArray, ArrayContent)
   
   values = c(-10, -11, -12)
   df = data.frame(f_int32 = values)
-  resultOp = repo$semi_join(df, RefArray)
-  resultDf = repo$query(resultOp)
-  expectedDf = dplyr::filter(ArrayContent, f_int32 %in% values)
   
-  expect_match(resultOp$to_afl(), "filter")
-  expect_identical(resultOp$to_schema_str(), RefArray$to_schema_str())
-  expect_equal(resultDf, expectedDf)
+  assert_df_match(
+    repo$semi_join(df, RefArray, filter_threshold=10, upload_threshold=20),
+    dplyr::semi_join(ArrayContent, df),
+    "filter"
+  )
 })
 
-test_that("Match with filter mode on two attributes", {
+test_that("filter, 2-attrs", {
   testNS$reset_array_with_content(RefArray, ArrayContent)
   
   values1 = c(-20, -17, -16)
   values2 = c("no_match", "d", "e")
   df = data.frame(f_int32 = values1, lower = values2)
-  resultOp = repo$semi_join(df, RefArray)
-  resultDf = repo$query(resultOp)
-  expectedDf = dplyr::semi_join(ArrayContent, df)
   
-  expect_match(resultOp$to_afl(), "filter")
-  expect_identical(resultOp$to_schema_str(), RefArray$to_schema_str())
-  expect_equal(resultDf, expectedDf)
+  assert_df_match(
+    repo$semi_join(df, RefArray, filter_threshold=10, upload_threshold=20),
+    dplyr::semi_join(ArrayContent, df),
+    "filter"
+  )
+})
+
+test_that("filter, 1-dim + 1-attr", {
+  testNS$reset_array_with_content(RefArray, ArrayContent)
+  
+  values1 = c(-1, 4, 5)
+  values2 = c("no_match", "d", "e")
+  df = data.frame(da = values1, lower = values2)
+  
+  assert_df_match(
+    repo$semi_join(df, RefArray, filter_threshold=10, upload_threshold=20),
+    dplyr::semi_join(ArrayContent, df),
+    "filter"
+  )
+})
+
+test_that("filter, lower/upper bounds on same dimension", {
+  testNS$reset_array_with_content(RefArray, ArrayContent)
+  
+  df = data.frame(da_low = c(1,3), da_hi = c(5, 8))
+  
+  assert_df_match(
+    repo$semi_join(df, RefArray, 
+                   lower_bound = list(da = 'da_low'), 
+                   upper_bound = list(da = 'da_hi'),
+                   filter_threshold=10, upload_threshold=20),
+    dplyr::filter(ArrayContent, (da >= 1 & da <= 5) | (da >=3 & da <=8)),
+    "filter"
+  )
+})
+
+test_that("filter, lower/upper bounds on different dimensions", {
+  testNS$reset_array_with_content(RefArray, ArrayContent)
+  
+  df = data.frame(da = c(1,3), db = c(105, 108))
+  
+  assert_df_match(
+    repo$semi_join(df, RefArray, 
+                   lower_bound = list(da = 'da'), 
+                   upper_bound = list(db = 'db'),
+                   filter_threshold=10, upload_threshold=20),
+    dplyr::filter(ArrayContent, (da >= 1 & db <= 105) | (da >=3 & db <=108)),
+    "filter"
+  )
+})
+
+# Cross_between mode ----
+
+test_that("cross_between, 2 dimension, build", {
+  testNS$reset_array_with_content(RefArray, ArrayContent)
+  
+  df = data.frame(da = c(1:5, -1), db = c(101:105, -1))
+  
+  assert_df_match(
+    repo$semi_join(df, RefArray, filter_threshold=10, upload_threshold=20),
+    dplyr::semi_join(ArrayContent, df, filter_threshold=5, upload_threshold=20),
+    c("cross_between", "build")
+  )
+})
+
+test_that("cross_between, error, no attribute allowed", {
+  testNS$reset_array_with_content(RefArray, ArrayContent)
+  
+  df = data.frame(da = c(1:5, -1), db = c(101:105, -1), lower = letters[1:6])
+  expect_error(repo$semi_join(df, RefArray, filter_threshold=10, upload_threshold=20),
+               "not reference dimensions")
 })
 
 
+test_that("cross_between, lower/upper bounds on same dimension", {
+  testNS$reset_array_with_content(RefArray, ArrayContent)
+  
+  df = data.frame(da_low = c(1,3), da_hi = c(5, 8))
+  
+  assert_df_match(
+    repo$semi_join(df, RefArray, 
+                   lower_bound = list(da = 'da_low'), 
+                   upper_bound = list(da = 'da_hi'),
+                   filter_threshold=2, upload_threshold=20),
+    dplyr::filter(ArrayContent, (da >= 1 & da <= 5) | (da >=3 & da <=8)),
+    "cross_between"
+  )
+})
+
+test_that("cross_between, lower/upper bounds on different dimensions", {
+  testNS$reset_array_with_content(RefArray, ArrayContent)
+  
+  df = data.frame(da = c(1,3), db = c(105, 108))
+  
+  assert_df_match(
+    repo$semi_join(df, RefArray, 
+                   lower_bound = list(da = 'da'), 
+                   upper_bound = list(db = 'db'),
+                   field_mapping = list(),
+                   filter_threshold=2, upload_threshold=20),
+    dplyr::filter(ArrayContent, (da >= 1 & db <= 105) | (da >=3 & db <=108)),
+    "cross_between"
+  )
+})
+
+# index_lookup mode ----
+
+test_that("index_lookup, 1 dimension, build", {
+  testNS$reset_array_with_content(RefArray, ArrayContent)
+  
+  df = data.frame(da = 1:15)
+  
+  assert_df_match(
+    repo$semi_join(df, RefArray, filter_threshold=5, upload_threshold=20),
+    dplyr::semi_join(ArrayContent, df),
+    c("index_lookup", "build")
+  )
+})
+
+
+test_that("index_lookup, 1 attribute, build", {
+  testNS$reset_array_with_content(RefArray, ArrayContent)
+  
+  df = data.frame(lower = letters[5:15])
+  
+  assert_df_match(
+    repo$semi_join(df, RefArray, filter_threshold=5, upload_threshold=20),
+    dplyr::semi_join(ArrayContent, df),
+    c("index_lookup", "build")
+  )
+})
+
+test_that("index_lookup, 1 dimension, upload", {
+  testNS$reset_array_with_content(RefArray, ArrayContent)
+  
+  df = data.frame(da = 1:15)
+  
+  assert_df_match(
+    repo$semi_join(df, RefArray, filter_threshold = 5, upload_threshold = 10),
+    dplyr::semi_join(ArrayContent, df),
+    c("index_lookup", "R_")
+  )
+})
+
+
+test_that("index_lookup, 1 attribute, upload", {
+  testNS$reset_array_with_content(RefArray, ArrayContent)
+  
+  df = data.frame(lower = letters[5:15])
+  
+  assert_df_match(
+    repo$semi_join(df, RefArray, filter_threshold = 2, upload_threshold = 5),
+    dplyr::semi_join(ArrayContent, df),
+    c("index_lookup", "R_")
+  )
+})
 
 
 

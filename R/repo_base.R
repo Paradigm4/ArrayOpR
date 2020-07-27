@@ -513,21 +513,84 @@ Repo <- R6::R6Class(
     #' @param ... params for `cross_between` mode
     #'
     #' @return an arrayOp instance with the same schema as `reference`
-    semi_join = function(df, reference, filter_threshold = setting_semi_join_filter_mode_threshold, ...) {
-      assert_no_fields(names(df) %-% reference$dims_n_attrs,
+    semi_join = function(df, reference, 
+                         field_mapping = NULL,
+                         lower_bound = NULL,
+                         upper_bound = NULL,
+                         mode = "auto",
+                         filter_threshold = setting_semi_join_filter_mode_threshold, 
+                         upload_threshold = setting_build_or_upload_threshold
+                         ) {
+      assert_no_fields(names(df) %-% 
+                         reference$dims_n_attrs %-% 
+                         as.character(field_mapping) %-% 
+                         as.character(lower_bound) %-% 
+                         as.character(upper_bound)
+                       ,
                        "ERROR: Repo$semi_join: param df has unmatched fields to the reference: '%s'")
+      
+      assert_no_fields((names(field_mapping) %u% 
+                          names(lower_bound) %u% 
+                          names(upper_bound)
+                        ) %-% reference$dims_n_attrs,
+                        "ERROR: Repo$semi_join: field(s) '%s' are not valid fields of the reference array:
+'%%s'", reference$to_afl())
+      
       assert(inherits(reference, 'ArrayOpBase'), 
              "ERROR: Repo$semi_join: param 'reference' must be an ArrayOp instance, but got: [%s]", 
              paste(class(reference), collapse = ","))
       
-      cells = base::nrow(df) * length(names(df))
-      if(cells <= filter_threshold){
-        reference$match(df, op_mode = "filter")
-      } else {
-        dfOp = build_or_upload_df(df, reference)
-        op_mode = if(length(names(df)) == 1) "index_lookup" else "cross_between"
-        reference$match(df, op_mode = op_mode, ...)
+      VALID_MODES = c("auto", "filter", "cross_between", "index_lookup")
+      assert(mode %in% VALID_MODES,
+             "ERROR: Repo$semi_join: invalid param 'mode' %s. Should be one of [%s]",
+             mode, paste(VALID_MODES, collapse = ","))
+      
+      numCells = base::nrow(df) * length(names(df))
+      numCols = length(names(df))
+      
+      op_mode = if(mode == "auto"){
+        if(numCells <= filter_threshold) { "filter" }
+        else if(numCols == 1) { "index_lookup" }
+        else { "cross_between" }
+      } else { mode }
+      
+      dfOrArray = if(op_mode == "filter"){ df } 
+      else {
+        if(op_mode == "cross_between"){
+          assert_no_fields(names(df) %-% reference$dims %-% as.character(lower_bound) %-% as.character(upper_bound),
+"ERROR: Repo$semi_join: df column(s) '%s' are not reference dimensions. Only dimensions are allowed in 'cross_between' mode.
+reference array afl: %%s", reference$to_afl())
+        }
+        
+        explicitFields = as.list(c(field_mapping, lower_bound, upper_bound))
+        # if(.has_len(as.character(explicitFields) %-% names(explicitFields))) browser()
+        implicitFields = names(df) %-% as.character(explicitFields)
+        implicitFields = new_named_list(implicitFields, implicitFields)
+        
+        dfFields = as.character(explicitFields) %u% names(implicitFields)
+        refFields = c(names(explicitFields), as.character(implicitFields)) # allow duplicates here
+        templateDtypes = new_named_list(
+          reference$get_field_types(refFields, .raw = T), 
+          names = dfFields
+        )
+        
+        arrayTemplate = reference$create_new(
+          "", dims = "x", 
+          attrs = dfFields, 
+          dtypes = templateDtypes
+        )
+        build_or_upload_df(df, arrayTemplate, threshold = upload_threshold)
       }
+      
+      result = reference$match(dfOrArray, op_mode = op_mode, 
+                      field_mapping = field_mapping,
+                      lower_bound = lower_bound,
+                      upper_bound = upper_bound)
+      # Add to ref count to avoid R's GC
+      result$.set_meta('.ref', 
+                       if(inherits(dfOrArray, "ArrayOpBase")) dfOrArray 
+                       else NULL)
+      result
     }
     ,
     # Convenience functions ----
