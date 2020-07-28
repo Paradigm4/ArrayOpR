@@ -31,6 +31,12 @@ connect = function(username, token,
   invisible(targetEnv)
 }
 
+#' Get the default ScidbConnection
+#' 
+#' Call `connect` to establish a connection 
+#' @export
+get_default_connection = function() { default_conn }
+
 # ScidbConnection class ----
 
 #' @export

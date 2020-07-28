@@ -13,9 +13,8 @@
 #' @name arrayop
 NULL
 
-# Set source file loading order -----------------------------------------------------------------------------------
+# initialize an empty connection
+default_conn = empty_connection()
 
 # Global utility functions/classes
-
-default_conn = empty_connection()
 
