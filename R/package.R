@@ -17,36 +17,5 @@ NULL
 
 # Global utility functions/classes
 
-default_conn = new.env(parent = emptyenv())
+default_conn = empty_connection()
 
-#' Connect to SciDB server
-#' 
-#' @export
-connect = function(username, token, 
-                   host = "127.0.0.1",
-                   port = 8083, protocol = "https", auth_type = "scidb",
-                   ..., # other optional args for scidb::scidbconnect
-                   save_to_default_conn = TRUE
-                   ) {
-  connectionArgs = list(
-    host = host,
-    username = username,
-    password = token,
-    port = port,
-    protocol = protocol,
-    auth_type = auth_type,
-    ...
-  )
-  
-  db = do.call(scidb::scidbconnect, connectionArgs)
-  repo = newRepo(db = db)
-  
-  scidb_version = repo$.private$dep$get_scidb_version()
-  savedNames = c("connectionArgs", "repo", "scidb_version", "username")
-  
-  targetEnv = if(save_to_default_conn) default_conn else new.env(parent = emptyenv())
-  
-  sapply(savedNames, function(x) assign(x, get(x), targetEnv))
-  
-  invisible(targetEnv)
-}

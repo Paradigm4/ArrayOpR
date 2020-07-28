@@ -21,4 +21,5 @@ test_that("get a non-default conn", {
                                  host = "localhost", save_to_default_conn = F)
   expect_identical(anotherConn$scidb_version, default_conn$scidb_version)
   expect_true(!identical(anotherConn, default_conn))
+  
 })
