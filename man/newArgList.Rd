@@ -4,7 +4,7 @@
 \alias{newArgList}
 \title{Create a ArgList isntance}
 \usage{
-newArgList(envir = parent.frame(), default_args = list())
+newArgList(envir = parent.frame(), default_args = list(), ellipsis_func = list)
 }
 \arguments{
 \item{envir}{an environment, default as the calling environment}

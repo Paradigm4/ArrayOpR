@@ -4,7 +4,7 @@
 \alias{afl_filter_from_expr}
 \title{Convert filter expression(s) to AFL filter}
 \usage{
-afl_filter_from_expr(e)
+afl_filter_from_expr(e, regex_func = "rsub", ignore_case = TRUE)
 }
 \arguments{
 \item{e}{An R expression vector of length 1 or more}

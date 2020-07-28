@@ -70,6 +70,7 @@ in another operation. Operands and Opreration results can all be denoted by Arra
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 Base class initialize function, to be called in sub-class
 \subsection{Usage}{
@@ -95,6 +96,7 @@ Base class initialize function, to be called in sub-class
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-get_field_types"></a>}}
+\if{latex}{\out{\hypertarget{method-get_field_types}{}}}
 \subsection{Method \code{get_field_types()}}{
 Return ArrayOp field types
 
@@ -120,6 +122,7 @@ unless \code{.strict=F}, absent fields are ignored
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-get_dim_specs"></a>}}
+\if{latex}{\out{\hypertarget{method-get_dim_specs}{}}}
 \subsection{Method \code{get_dim_specs()}}{
 Get dimension specifications
 
@@ -143,6 +146,7 @@ A named list where the name is dimension name and value is a dimension spec stri
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-get_absent_fields"></a>}}
+\if{latex}{\out{\hypertarget{method-get_absent_fields}{}}}
 \subsection{Method \code{get_absent_fields()}}{
 Validate fields existence according the 'type' which defaults to 'owned' fields
 
@@ -157,6 +161,7 @@ A list of absent field names
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-create_new"></a>}}
+\if{latex}{\out{\hypertarget{method-create_new}{}}}
 \subsection{Method \code{create_new()}}{
 Return a new arrayOp instance with the same version as \code{self}
 
@@ -178,6 +183,7 @@ A new arrayOp
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-create_new_with_same_schema"></a>}}
+\if{latex}{\out{\hypertarget{method-create_new_with_same_schema}{}}}
 \subsection{Method \code{create_new_with_same_schema()}}{
 Create a new ArrayOp instance of the same class
 
@@ -201,12 +207,19 @@ A new arrayOp
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-where"></a>}}
+\if{latex}{\out{\hypertarget{method-where}{}}}
 \subsection{Method \code{where()}}{
 Create a new ArrayOp instance by using a filter expression on the parent ArrayOp
 
 Similar to SQL where clause.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$where(..., expr, missing_fields_error_template = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$where(
+  ...,
+  expr,
+  missing_fields_error_template = NULL,
+  regex_func = getOption("arrayop.regex_func", default = "rsub"),
+  ignore_case = getOption("arrayop.ignore_case", default = TRUE)
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -214,6 +227,13 @@ Similar to SQL where clause.
 \describe{
 \item{\code{missing_fields_error_template}}{Error template for missing fields.
 Only one \%s is allowed which is substituted with an concatnation of the missing fields separated by commas.}
+
+\item{\code{regex_func}}{A string of regex function implementation.
+Due to scidb compatiblity issue with its dependencies, the regex function from boost library may not be available
+Supported values: rsub, regex}
+
+\item{\code{ignore_case}}{A Boolean. If TRUE, ignore case in string match patterns.
+Otherwise, perform case-sensitive regex matches.}
 }
 \if{html}{\out{</div>}}
 }
@@ -223,6 +243,7 @@ A new arrayOp
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-select"></a>}}
+\if{latex}{\out{\hypertarget{method-select}{}}}
 \subsection{Method \code{select()}}{
 Create a new ArrayOp instance with selected fields
 
@@ -245,6 +266,7 @@ A new arrayOp
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-reshape"></a>}}
+\if{latex}{\out{\hypertarget{method-reshape}{}}}
 \subsection{Method \code{reshape()}}{
 Create a new ArrayOp instance with a different schema/shape
 \subsection{Usage}{
@@ -285,6 +307,7 @@ A new arrayOp
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-change_schema"></a>}}
+\if{latex}{\out{\hypertarget{method-change_schema}{}}}
 \subsection{Method \code{change_schema()}}{
 Change \code{self} schema according to a template
 
@@ -312,6 +335,7 @@ A new arrayOp
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-join"></a>}}
+\if{latex}{\out{\hypertarget{method-join}{}}}
 \subsection{Method \code{join()}}{
 Create a new ArrayOp instance by joining with another ArrayOp
 
@@ -352,7 +376,7 @@ that are selected in the left and right operands but not in the right join keys 
 By default, dim_mode = 'keep', the artificial dimensions, namely \code{instance_id} and \code{value_no} from \code{equi_join}
 are retained. If set to 'drop', the artificial dimensions will be removed. See \code{ArrayOp$reshape} for more details.}
 
-\item{\code{.artificial_field}}{As in \code{ArrayOp$reshpae}, it defaults to a random field name. It can be safely ignored in
+\item{\code{.artificial_field}}{As in \code{ArrayOp$reshape}, it defaults to a random field name. It can be safely ignored in
 client code. It exists only for test purposes.}
 }
 \if{html}{\out{</div>}}
@@ -363,6 +387,7 @@ A new arrayOp
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-load_file"></a>}}
+\if{latex}{\out{\hypertarget{method-load_file}{}}}
 \subsection{Method \code{load_file()}}{
 Create a new ArrayOp instance by loading a file and checking it against an ArrayOp template (self).
 
@@ -401,6 +426,7 @@ A new ArrayOp instance with matching fields
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-match"></a>}}
+\if{latex}{\out{\hypertarget{method-match}{}}}
 \subsection{Method \code{match()}}{
 Create a new ArrayOp by matching a template against a source (self).
 
@@ -413,8 +439,7 @@ lower_bound/upper_bound which will be used as a range \verb{[lower_bound, upper_
   op_mode,
   lower_bound = NULL,
   upper_bound = NULL,
-  field_mapping = NULL,
-  ...
+  field_mapping = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -442,6 +467,7 @@ A new ArrayOp instance which has the same schema as the source.
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-build_new"></a>}}
+\if{latex}{\out{\hypertarget{method-build_new}{}}}
 \subsection{Method \code{build_new()}}{
 Create a new ArrayOp instance from 'build'ing a data.frame
 
@@ -469,6 +495,7 @@ Create a build expression from a data.frame and specified scidb data types
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-set_auto_increment_field"></a>}}
+\if{latex}{\out{\hypertarget{method-set_auto_increment_field}{}}}
 \subsection{Method \code{set_auto_increment_field()}}{
 Create a new ArrayOp instance that with added auto incremented fields
 \subsection{Usage}{
@@ -505,6 +532,7 @@ A new arrayOp
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-set_anti_collision_field"></a>}}
+\if{latex}{\out{\hypertarget{method-set_anti_collision_field}{}}}
 \subsection{Method \code{set_anti_collision_field()}}{
 Create a new ArrayOp instance that has an anti-collision field set according to a template arrayOp
 
@@ -535,6 +563,7 @@ A new arrayOp
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-set_null_fields"></a>}}
+\if{latex}{\out{\hypertarget{method-set_null_fields}{}}}
 \subsection{Method \code{set_null_fields()}}{
 Create a new ArrayOp instance that added null values to the missing fields compared to a reference ArrayOp
 \subsection{Usage}{
@@ -555,6 +584,7 @@ A new arrayOp
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-set_auto_fields"></a>}}
+\if{latex}{\out{\hypertarget{method-set_auto_fields}{}}}
 \subsection{Method \code{set_auto_fields()}}{
 Create a new ArrayOp instance that has auto incremented fields and/or anti-collision fields according to a template arrayOp
 
@@ -596,6 +626,7 @@ A new arrayOp
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-write_to"></a>}}
+\if{latex}{\out{\hypertarget{method-write_to}{}}}
 \subsection{Method \code{write_to()}}{
 (Deprecated) Create a new ArrayOp instance that represents a writing data operation
 
@@ -645,6 +676,7 @@ A new arrayOp
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-mutate"></a>}}
+\if{latex}{\out{\hypertarget{method-mutate}{}}}
 \subsection{Method \code{mutate()}}{
 Generate a mutated arrayOp of the source \code{self} by the \code{data_source}.
 
@@ -702,6 +734,7 @@ a new arrayOp instance that carries the mutated data and has the exact same sche
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-update"></a>}}
+\if{latex}{\out{\hypertarget{method-update}{}}}
 \subsection{Method \code{update()}}{
 Update Target array with self's content
 
@@ -724,6 +757,7 @@ A new arrayOp that encapsulates the insert operation
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-overwrite"></a>}}
+\if{latex}{\out{\hypertarget{method-overwrite}{}}}
 \subsection{Method \code{overwrite()}}{
 Overwrite Target array with self's content
 
@@ -748,6 +782,7 @@ A new arrayOp that encapsulates the insert operation
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-spawn"></a>}}
+\if{latex}{\out{\hypertarget{method-spawn}{}}}
 \subsection{Method \code{spawn()}}{
 Create a new ArrayOp instance from a \code{self} template
 
@@ -787,6 +822,7 @@ A new arrayOp instance
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-create_array_cmd"></a>}}
+\if{latex}{\out{\hypertarget{method-create_array_cmd}{}}}
 \subsection{Method \code{create_array_cmd()}}{
 Generate a command string that creates a new array based on the caller's schema
 \subsection{Usage}{
@@ -806,6 +842,7 @@ An AFL string
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-remove_array_cmd"></a>}}
+\if{latex}{\out{\hypertarget{method-remove_array_cmd}{}}}
 \subsection{Method \code{remove_array_cmd()}}{
 Generate a command string that removes the array (use with CAUTION!!!)
 \subsection{Usage}{
@@ -818,6 +855,7 @@ An AFL string
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-remove_array_versions_cmd"></a>}}
+\if{latex}{\out{\hypertarget{method-remove_array_versions_cmd}{}}}
 \subsection{Method \code{remove_array_versions_cmd()}}{
 Generate a command string that removes the versions of the array (use with CAUTION!!!)
 \subsection{Usage}{
@@ -830,6 +868,7 @@ An AFL string
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-to_afl"></a>}}
+\if{latex}{\out{\hypertarget{method-to_afl}{}}}
 \subsection{Method \code{to_afl()}}{
 AFL representation of the ArrayOp instance
 
@@ -846,6 +885,7 @@ an AFL expression string
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-to_df_afl"></a>}}
+\if{latex}{\out{\hypertarget{method-to_df_afl}{}}}
 \subsection{Method \code{to_df_afl()}}{
 Return AFL suitable for retrieving data.frame.
 
@@ -870,6 +910,7 @@ An AFL string
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-to_schema_str"></a>}}
+\if{latex}{\out{\hypertarget{method-to_schema_str}{}}}
 \subsection{Method \code{to_schema_str()}}{
 Return a schema representation of the ArrayOp <attr1 \link{, attr2 ...}> [dim1 \link{;dim2}]
 \subsection{Usage}{
@@ -882,6 +923,7 @@ An AFL string
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-.to_afl_explicit"></a>}}
+\if{latex}{\out{\hypertarget{method-.to_afl_explicit}{}}}
 \subsection{Method \code{.to_afl_explicit()}}{
 Returns AFL when self used as an operand in another parent operation.
 
@@ -910,6 +952,7 @@ An AFL string
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-.to_join_operand_afl"></a>}}
+\if{latex}{\out{\hypertarget{method-.to_join_operand_afl}{}}}
 \subsection{Method \code{.to_join_operand_afl()}}{
 Generate afl for ArrayOp used in a join context (equi_join).
 \subsection{Usage}{
@@ -935,6 +978,7 @@ An AFL string
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-.set_meta"></a>}}
+\if{latex}{\out{\hypertarget{method-.set_meta}{}}}
 \subsection{Method \code{.set_meta()}}{
 Set ArrayOp meta data directly
 
@@ -958,6 +1002,7 @@ NULL
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-.get_meta"></a>}}
+\if{latex}{\out{\hypertarget{method-.get_meta}{}}}
 \subsection{Method \code{.get_meta()}}{
 Get ArrayOp meta data directly
 \subsection{Usage}{
@@ -977,6 +1022,7 @@ An metadata object of any type registered with \code{key}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

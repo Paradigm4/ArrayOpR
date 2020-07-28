@@ -33,7 +33,10 @@ connect = function(username, token,
 
 # ScidbConnection class ----
 
-print.ScidbConnection = str.ScidbConnection = function(conn) conn$to_str()
+#' @export
+print.ScidbConnection = function(conn) conn$to_str()
+#' @export
+str.ScidbConnection = function(conn) conn$to_str()
 
 empty_connection = function() ScidbConnection$new()
 
@@ -46,9 +49,9 @@ ScidbConnection <- R6::R6Class(
     .conn_args = NULL
   ),
   active = list(
-    scidb_version = function() .scidb_version,
-    username = function() .conn_args[["username"]],
-    host = function() .conn_args[["host"]]
+    # scidb_version = function() private$.scidb_version,
+    # username = function() private$.conn_args[["username"]],
+    # host = function() private$.conn_args[["host"]]
   ),
   public = list(
     initialize = function(){
@@ -59,8 +62,14 @@ ScidbConnection <- R6::R6Class(
       private$.scidb_version = scidb_version
       private$.conn_args = connection_args
     },
+    scidb_version = function() .scidb_version,
+    conn_args = function() .conn_args,
     to_str = function() {
-      sprintf("ScidbConnection: %s@%s [%s]", username, host, scidb_version)
+      sprintf("ScidbConnection: %s@%s [%s]", 
+              .conn_args[["username"]], 
+              .conn_args[["host"]], 
+              scidb_version()
+              )
     }
   )
 )

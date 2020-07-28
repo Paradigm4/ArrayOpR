@@ -21,6 +21,14 @@ Version-specific logic/behaviors should be implemented in RepoBase sub-classes.
 
 \item{\code{setting_use_aio_input}}{Whether to use aio_input for data frame uploading. Default FALSE.
 \code{Repo$setting_use_aio_input} to get current setting; or \code{Repo$setting_use_aio_input = T} to change current setting.}
+
+\item{\code{setting_build_or_upload_threshold}}{A threshold that determines whether to upload or build arrayOps. Default 5000.
+If number of data frame cells <= the threshold, choose 'build' operator where data frames are passed to scdib server in AFL;
+otherwise, data frames are uploaded. 'build' mode is normally faster than 'upload'.
+\code{Repo$setting_build_or_upload_threshold} to get current setting; or \code{Repo$setting_build_or_upload_threshold = a_number} to change current setting.}
+
+\item{\code{setting_semi_join_filter_mode_threshold}}{A threshold that determines when to use 'filter' mode in \code{Repo$semi_join} function. Default 200.
+\code{Repo$setting_semi_join_filter_mode_threshold} to get current setting; or \code{Repo$setting_semi_join_filter_mode_threshold = a_number} to change current setting.}
 }
 \if{html}{\out{</div>}}
 }
@@ -31,12 +39,14 @@ Version-specific logic/behaviors should be implemented in RepoBase sub-classes.
 \item \href{#method-query}{\code{Repo$query()}}
 \item \href{#method-execute}{\code{Repo$execute()}}
 \item \href{#method-get_array}{\code{Repo$get_array()}}
-\item \href{#method-register_array}{\code{Repo$register_array()}}
+\item \href{#method-register_arrayops}{\code{Repo$register_arrayops()}}
 \item \href{#method-load_arrayop_from_scidb}{\code{Repo$load_arrayop_from_scidb()}}
 \item \href{#method-load_arrayops_from_scidb_namespace}{\code{Repo$load_arrayops_from_scidb_namespace()}}
 \item \href{#method-load_arrayops_from_config}{\code{Repo$load_arrayops_from_config()}}
 \item \href{#method-upload_df}{\code{Repo$upload_df()}}
+\item \href{#method-build_or_upload_df}{\code{Repo$build_or_upload_df()}}
 \item \href{#method-save_as_array}{\code{Repo$save_as_array()}}
+\item \href{#method-semi_join}{\code{Repo$semi_join()}}
 \item \href{#method-.create_array}{\code{Repo$.create_array()}}
 \item \href{#method-.remove_array_versions}{\code{Repo$.remove_array_versions()}}
 \item \href{#method-.remove_array}{\code{Repo$.remove_array()}}
@@ -47,6 +57,7 @@ Version-specific logic/behaviors should be implemented in RepoBase sub-classes.
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 Initialize function.
 
@@ -60,6 +71,7 @@ Do NOT call this \code{initialize} function directly. Call \code{newRepo} instea
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-query"></a>}}
+\if{latex}{\out{\hypertarget{method-query}{}}}
 \subsection{Method \code{query()}}{
 Run a query and get a data frame
 
@@ -96,6 +108,7 @@ A data frame
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-execute"></a>}}
+\if{latex}{\out{\hypertarget{method-execute}{}}}
 \subsection{Method \code{execute()}}{
 Execute a query. No result is returned.
 
@@ -132,6 +145,7 @@ NULL
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-get_array"></a>}}
+\if{latex}{\out{\hypertarget{method-get_array}{}}}
 \subsection{Method \code{get_array()}}{
 Get an ArrayOp instance
 
@@ -155,30 +169,38 @@ An ArrayOp instance
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-register_array"></a>}}
-\subsection{Method \code{register_array()}}{
+\if{html}{\out{<a id="method-register_arrayops"></a>}}
+\if{latex}{\out{\hypertarget{method-register_arrayops}{}}}
+\subsection{Method \code{register_arrayops()}}{
 Register a list of arrays with aliases
 
 Register a list of arrays which can be later accessed via their aliases
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Repo$register_array(items)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Repo$register_arrayops(items)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{items}}{A list where names are aliases and values are arrayOp instances or raw array names}
+\item{\code{items}}{A list where names are aliases and values are arrayOp instances or raw array names
+For arrayop values, they will be directly returned.
+For string values, first access \code{Repo$get_array('alias')} will triger a \code{load_arrayop_from_scidb} call and
+cache the returned arrayop for later access.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+NULL Use \code{Repo$get_array('alias')} to retrieve registered arrays
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-load_arrayop_from_scidb"></a>}}
+\if{latex}{\out{\hypertarget{method-load_arrayop_from_scidb}{}}}
 \subsection{Method \code{load_arrayop_from_scidb()}}{
 Get an ArrayOp instance from scidb by its full name
 
 No cache is provided with this function.
-See \code{register_array} for details on registering an array alias with cache.
+See \code{register_arrayops} for details on registering an array alias with cache.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Repo$load_arrayop_from_scidb(full_array_name)}\if{html}{\out{</div>}}
 }
@@ -196,6 +218,7 @@ An ArrayOp instance
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-load_arrayops_from_scidb_namespace"></a>}}
+\if{latex}{\out{\hypertarget{method-load_arrayops_from_scidb_namespace}{}}}
 \subsection{Method \code{load_arrayops_from_scidb_namespace()}}{
 Get a list of arrays from a scidb namespace
 \subsection{Usage}{
@@ -216,11 +239,12 @@ values are the arrayOp instances whose to_afl() function return fully qualified 
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-load_arrayops_from_config"></a>}}
+\if{latex}{\out{\hypertarget{method-load_arrayops_from_config}{}}}
 \subsection{Method \code{load_arrayops_from_config()}}{
 Load a list of ArrayOp instances from a config object
 
 Only load and return a list of arrayOp instances. Repo's array registery will not be updated.
-If desired, you can \verb{loaded = repo$load_arrayops_from_config; repo$register_array(loaded)} to register loaded arrays.
+If desired, you can \verb{loaded = repo$load_arrayops_from_config; repo$register_arrayops(loaded)} to register loaded arrays.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Repo$load_arrayops_from_config(config)}\if{html}{\out{</div>}}
 }
@@ -236,6 +260,7 @@ Value of 'arrays' is a list of unamed elements, where each element is a list of 
 \item 'name': raw array name. If without a namespace, then the default namespace is applied.
 Otherwise, if in 'namespace.rawArrayName', then use it directly disregard of the default namespace.
 \item 'schema': a single string for array schema. E.g. "<aa:string, b:bool null> [da=0:\emph{:0:}]
+If 'schema' missing, the array's full name will be returned, which later can be registered as well.
 }}
 }
 \if{html}{\out{</div>}}
@@ -246,6 +271,7 @@ A list of ArrayOp instances where names are array aliases and values are the Arr
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-upload_df"></a>}}
+\if{latex}{\out{\hypertarget{method-upload_df}{}}}
 \subsection{Method \code{upload_df()}}{
 Upload a data frame to scidb
 
@@ -281,10 +307,46 @@ An arrayOp instance with uploaded data.
 The resultant arrayOp$to_afl() is the temporary array name R_array****, unless specified explicitly with name='newName'
 The resultant arrayOp schema is consisted of 1. artificial dimension(s) from upload or aio_input;
 2. attributes whose names are the data frame column names and data types are those in the template.
+Get an arrayOp instance from 'build' or upload depending on the threshold
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-build_or_upload_df"></a>}}
+\if{latex}{\out{\hypertarget{method-build_or_upload_df}{}}}
+\subsection{Method \code{build_or_upload_df()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Repo$build_or_upload_df(
+  df,
+  template,
+  threshold = setting_build_or_upload_threshold,
+  build_dim = "z",
+  ...
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{df:}}{a dataframe that has template's fields as columns}
+
+\item{\code{template:}}{an arrayOp instance as a template in \code{build} or \code{upload} mode}
+
+\item{\code{threshold:}}{use \code{build} if number of df cells <= threshold; otherwise \code{upload}.
+Default: \code{repo$setting_build_or_upload_threshold}}
+
+\item{\code{build_dim:}}{used as \code{artificial_field} in 'build' mode}
+
+\item{\code{...:}}{arguments used in \code{repo$upload}}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+an arrayOp instance
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-save_as_array"></a>}}
+\if{latex}{\out{\hypertarget{method-save_as_array}{}}}
 \subsection{Method \code{save_as_array()}}{
 Save an arrayOp or AFL statement as a scidb array wrapped as a new arrayOp
 
@@ -310,10 +372,43 @@ array \code{temp=T}(default:F), or suppress auto gc \code{gc=F}(default:T). Refe
 }
 \subsection{Returns}{
 An arrayOp whose \code{to_afl()} is the newly created array name
+Get an arrayOp instance by matching a data frame \code{df} against an arrayOp \code{reference}
+
+Whether \code{filter} or \code{index_lookup} mode is determined by the \code{setting_match_filter_mode_threshold}.
+Use \code{filter} mode if number of cells in \code{df} < \code{setting_match_filter_mode_threshold}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-semi_join"></a>}}
+\if{latex}{\out{\hypertarget{method-semi_join}{}}}
+\subsection{Method \code{semi_join()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Repo$semi_join(
+  df,
+  reference,
+  field_mapping = NULL,
+  lower_bound = NULL,
+  upper_bound = NULL,
+  mode = "auto",
+  filter_threshold = setting_semi_join_filter_mode_threshold,
+  upload_threshold = setting_build_or_upload_threshold
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{params for \code{cross_between} mode}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+an arrayOp instance with the same schema as \code{reference}
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-.create_array"></a>}}
+\if{latex}{\out{\hypertarget{method-.create_array}{}}}
 \subsection{Method \code{.create_array()}}{
 Create a new array using the operand's schema
 \subsection{Usage}{
@@ -332,6 +427,7 @@ Create a new array using the operand's schema
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-.remove_array_versions"></a>}}
+\if{latex}{\out{\hypertarget{method-.remove_array_versions}{}}}
 \subsection{Method \code{.remove_array_versions()}}{
 Remove array versions
 \subsection{Usage}{
@@ -348,6 +444,7 @@ Remove array versions
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-.remove_array"></a>}}
+\if{latex}{\out{\hypertarget{method-.remove_array}{}}}
 \subsection{Method \code{.remove_array()}}{
 Remove array. Careful: Cannot be undone!!!
 \subsection{Usage}{
@@ -364,6 +461,7 @@ Remove array. Careful: Cannot be undone!!!
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-nrow"></a>}}
+\if{latex}{\out{\hypertarget{method-nrow}{}}}
 \subsection{Method \code{nrow()}}{
 Get the number of rows of an arrayOp
 \subsection{Usage}{
@@ -385,6 +483,7 @@ Only applicable when \code{what} is R expression string and \code{.raw = F}}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-limit"></a>}}
+\if{latex}{\out{\hypertarget{method-limit}{}}}
 \subsection{Method \code{limit()}}{
 Get the first \code{count} rows of an array
 \subsection{Usage}{
@@ -412,6 +511,7 @@ Only applicable when \code{what} is R expression string and \code{.raw = F}}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

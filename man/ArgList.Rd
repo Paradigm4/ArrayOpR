@@ -25,11 +25,13 @@ Encapsulate arg list of function calls to avoid length argument passing among R 
 \item \href{#method-rename}{\code{ArgList$rename()}}
 \item \href{#method-assert_exclusive_args}{\code{ArgList$assert_exclusive_args()}}
 \item \href{#method-to_exprs_list}{\code{ArgList$to_exprs_list()}}
+\item \href{#method-to_list}{\code{ArgList$to_list()}}
 \item \href{#method-clone}{\code{ArgList$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ArgList$new(explicit_args, effective_args)}\if{html}{\out{</div>}}
@@ -38,6 +40,7 @@ Encapsulate arg list of function calls to avoid length argument passing among R 
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-get_len"></a>}}
+\if{latex}{\out{\hypertarget{method-get_len}{}}}
 \subsection{Method \code{get_len()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ArgList$get_len(explicit = FALSE)}\if{html}{\out{</div>}}
@@ -46,6 +49,7 @@ Encapsulate arg list of function calls to avoid length argument passing among R 
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-has_args"></a>}}
+\if{latex}{\out{\hypertarget{method-has_args}{}}}
 \subsection{Method \code{has_args()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ArgList$has_args(argNames, explicit = FALSE)}\if{html}{\out{</div>}}
@@ -54,22 +58,25 @@ Encapsulate arg list of function calls to avoid length argument passing among R 
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-has_all_args"></a>}}
+\if{latex}{\out{\hypertarget{method-has_all_args}{}}}
 \subsection{Method \code{has_all_args()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArgList$has_all_args(argNames, explicit = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ArgList$has_all_args(..., explicit = FALSE)}\if{html}{\out{</div>}}
 }
 
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-has_any_args"></a>}}
+\if{latex}{\out{\hypertarget{method-has_any_args}{}}}
 \subsection{Method \code{has_any_args()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArgList$has_any_args(argNames, explicit = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ArgList$has_any_args(..., explicit = FALSE)}\if{html}{\out{</div>}}
 }
 
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-has_args_count"></a>}}
+\if{latex}{\out{\hypertarget{method-has_args_count}{}}}
 \subsection{Method \code{has_args_count()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ArgList$has_args_count(argNames, count, explicit = FALSE)}\if{html}{\out{</div>}}
@@ -78,14 +85,16 @@ Encapsulate arg list of function calls to avoid length argument passing among R 
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-has_scalar_args"></a>}}
+\if{latex}{\out{\hypertarget{method-has_scalar_args}{}}}
 \subsection{Method \code{has_scalar_args()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArgList$has_scalar_args(argNames, explicit = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ArgList$has_scalar_args(..., explicit = FALSE)}\if{html}{\out{</div>}}
 }
 
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-has_multi_len_args"></a>}}
+\if{latex}{\out{\hypertarget{method-has_multi_len_args}{}}}
 \subsection{Method \code{has_multi_len_args()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ArgList$has_multi_len_args(argNames, explicit = FALSE)}\if{html}{\out{</div>}}
@@ -94,6 +103,7 @@ Encapsulate arg list of function calls to avoid length argument passing among R 
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-args_count"></a>}}
+\if{latex}{\out{\hypertarget{method-args_count}{}}}
 \subsection{Method \code{args_count()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ArgList$args_count(argNames, count, explicit = FALSE)}\if{html}{\out{</div>}}
@@ -102,6 +112,7 @@ Encapsulate arg list of function calls to avoid length argument passing among R 
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-subset"></a>}}
+\if{latex}{\out{\hypertarget{method-subset}{}}}
 \subsection{Method \code{subset()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ArgList$subset(argNames, inverse = FALSE)}\if{html}{\out{</div>}}
@@ -110,6 +121,7 @@ Encapsulate arg list of function calls to avoid length argument passing among R 
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-rename"></a>}}
+\if{latex}{\out{\hypertarget{method-rename}{}}}
 \subsection{Method \code{rename()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ArgList$rename(...)}\if{html}{\out{</div>}}
@@ -118,6 +130,7 @@ Encapsulate arg list of function calls to avoid length argument passing among R 
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-assert_exclusive_args"></a>}}
+\if{latex}{\out{\hypertarget{method-assert_exclusive_args}{}}}
 \subsection{Method \code{assert_exclusive_args()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ArgList$assert_exclusive_args(
@@ -129,6 +142,7 @@ Encapsulate arg list of function calls to avoid length argument passing among R 
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-to_exprs_list"></a>}}
+\if{latex}{\out{\hypertarget{method-to_exprs_list}{}}}
 \subsection{Method \code{to_exprs_list()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ArgList$to_exprs_list(explicit = FALSE)}\if{html}{\out{</div>}}
@@ -136,7 +150,17 @@ Encapsulate arg list of function calls to avoid length argument passing among R 
 
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-to_list"></a>}}
+\if{latex}{\out{\hypertarget{method-to_list}{}}}
+\subsection{Method \code{to_list()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArgList$to_list()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

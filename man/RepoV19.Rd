@@ -28,6 +28,7 @@ Version-specific logic/behaviors should be implemented in RepoBase sub-classes.
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="Repo" data-id=".create_array">}\href{../../arrayop/html/Repo.html#method-.create_array}{\code{arrayop::Repo$.create_array()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="Repo" data-id=".remove_array">}\href{../../arrayop/html/Repo.html#method-.remove_array}{\code{arrayop::Repo$.remove_array()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="Repo" data-id=".remove_array_versions">}\href{../../arrayop/html/Repo.html#method-.remove_array_versions}{\code{arrayop::Repo$.remove_array_versions()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="Repo" data-id="build_or_upload_df">}\href{../../arrayop/html/Repo.html#method-build_or_upload_df}{\code{arrayop::Repo$build_or_upload_df()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="Repo" data-id="execute">}\href{../../arrayop/html/Repo.html#method-execute}{\code{arrayop::Repo$execute()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="Repo" data-id="get_array">}\href{../../arrayop/html/Repo.html#method-get_array}{\code{arrayop::Repo$get_array()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="Repo" data-id="limit">}\href{../../arrayop/html/Repo.html#method-limit}{\code{arrayop::Repo$limit()}}\out{</span>}
@@ -36,14 +37,16 @@ Version-specific logic/behaviors should be implemented in RepoBase sub-classes.
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="Repo" data-id="load_arrayops_from_scidb_namespace">}\href{../../arrayop/html/Repo.html#method-load_arrayops_from_scidb_namespace}{\code{arrayop::Repo$load_arrayops_from_scidb_namespace()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="Repo" data-id="nrow">}\href{../../arrayop/html/Repo.html#method-nrow}{\code{arrayop::Repo$nrow()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="Repo" data-id="query">}\href{../../arrayop/html/Repo.html#method-query}{\code{arrayop::Repo$query()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="Repo" data-id="register_array">}\href{../../arrayop/html/Repo.html#method-register_array}{\code{arrayop::Repo$register_array()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="Repo" data-id="register_arrayops">}\href{../../arrayop/html/Repo.html#method-register_arrayops}{\code{arrayop::Repo$register_arrayops()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="Repo" data-id="save_as_array">}\href{../../arrayop/html/Repo.html#method-save_as_array}{\code{arrayop::Repo$save_as_array()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="Repo" data-id="semi_join">}\href{../../arrayop/html/Repo.html#method-semi_join}{\code{arrayop::Repo$semi_join()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="arrayop" data-topic="Repo" data-id="upload_df">}\href{../../arrayop/html/Repo.html#method-upload_df}{\code{arrayop::Repo$upload_df()}}\out{</span>}
 }
 \out{</details>}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 Initialize function.
 
@@ -66,6 +69,7 @@ Do NOT call this \code{initialize} function directly. Call \code{newRepo} instea
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ArrayOp"></a>}}
+\if{latex}{\out{\hypertarget{method-ArrayOp}{}}}
 \subsection{Method \code{ArrayOp()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RepoV19$ArrayOp(...)}\if{html}{\out{</div>}}
@@ -74,6 +78,7 @@ Do NOT call this \code{initialize} function directly. Call \code{newRepo} instea
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

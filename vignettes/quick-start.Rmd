@@ -22,6 +22,7 @@ knitr::opts_chunk$set(
 # First, load user name and token from an authentication file, which is also compatible with iquery.
 auth = yaml::yaml.load_file("~/.scidb_auth")
 conn = arrayop::connect(host = "localhost", username = auth[["user-name"]], token = auth[["user-password"]])
+conn
 ```
 
 

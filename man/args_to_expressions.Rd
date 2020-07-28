@@ -4,10 +4,12 @@
 \alias{args_to_expressions}
 \title{Convert API ... args to an R expression vector}
 \usage{
-args_to_expressions(...)
+args_to_expressions(..., .param_list = NULL)
 }
 \arguments{
 \item{...}{API ellipsis arg}
+
+\item{.param_list}{Explicitly provide a parameter list. If not NULL, the ellipsis params are ignored}
 }
 \value{
 R expression vector
