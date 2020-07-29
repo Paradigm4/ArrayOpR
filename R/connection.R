@@ -89,10 +89,6 @@ ScidbConnection <- R6::R6Class(
       invisible(self)
     }
     ,
-    array = function(array_name) {
-      repo$load_arrayop_from_scidb(array_name)
-    }
-    ,
     array_op_from_name = function(array_name) {
       repo$load_arrayop_from_scidb(array_name)
     }

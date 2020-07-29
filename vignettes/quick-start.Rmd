@@ -67,19 +67,21 @@ conn$query(arrayop::afl(
 We normally deal with a database with array already populated. 
 In this case, let's first create an array.
 ```{r}
-conn$execute("create array temp_disposable_array <a:int32, b:string, c:bool> [z]")
+# Try to remove the temp array just in case it exists
+try(conn$execute("remove(temparray_quick_start)"), silent = TRUE)
+conn$execute("create array temparray_quick_start <a:int32, b:string, c:bool> [z]")
 ```
 
 ## Get an Array instance 
 
 ```{r}
-tempArray = conn$array("public.temp_disposable_array") # here we use an explicit "public" namespace which is optional
+tempArray = conn$array_op_from_name("public.temparray_quick_start") # here we use an explicit "public" namespace which is optional
 print(tempArray) 
 print(tempArray$to_afl())
 print(tempArray$to_schema_str())
 ```
 
-## Store a data frame into Array
+## Store a data frame into an existing Array
 ```{r}
 df = data.frame(a=1:10, b=letters[1:10], c=c(T,F,F,T,NA), z=101:110)
 build = tempArray$build_new(df = df)
@@ -87,6 +89,16 @@ overwriteOp = build$change_schema(tempArray)$overwrite(tempArray)
 overwriteOp$execute()
 tempArray$to_df()
 ```
+
+## Handy methods to inspect Array
+
+```{r}
+tempArray$summarize()
+tempArray$row_count()
+tempArray$head(5)
+tempArray$head(5, skip = 3)
+```
+
 
 ## Filter Array data
 
@@ -122,5 +134,34 @@ build$change_schema(tempArray)$overwrite(tempArray)$execute()
 mutated$overwrite(tempArray)$execute()
 tempArray$to_df()
 
+```
+## Remove Arrays and array versions
+
+**Danger Zone Alert**
+Remove operations cannot be undone!!! 
+
+```{r}
+# Let's create many versions
+for(i in 1:10){
+  build$change_schema(tempArray)$overwrite(tempArray)$execute()
+}
+
+# List array versions
+tempArray$versions()
+
+# Remove versions up to a version_id so that the version_id is the earliest version remaining 
+tempArray$remove_versions(version_id = 5)
+tempArray$versions()
+
+# Or just remove all versions
+tempArray$remove_versions()
+tempArray$versions()
+```
+Ready to finally remove the temp array? 
+```{r}
+tempArray$remove_self()
+
+# tempArray is no longer available!
+tryCatch(tempArray$versions(), error = print)
 ```
 

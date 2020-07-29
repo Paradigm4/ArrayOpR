@@ -607,51 +607,7 @@ reference array afl: %%s", reference$to_afl())
                         paste(class(new_array_name), collapse = ','))
       execute_raw(operand$create_array_cmd(new_array_name))
     }
-    ,
-    #' @description 
-    #' Remove array versions
-    #' @param array_or_alias The array operand as a template, either an arrayOp isntance or a registered array alias
-    .remove_array_versions = function(array_or_alias, ...) {
-      execute_raw(
-        get_array(array_or_alias)$remove_array_versions_cmd(...)
-      )
-    }
-    ,
-    #' @description 
-    #' Remove array. Careful: Cannot be undone!!!
-    #' @param array_or_alias The array operand as a template, either an arrayOp isntance or a registered array alias
-    .remove_array = function(array_or_alias) {
-      execute_raw(
-        get_array(array_or_alias)$remove_array_cmd()
-      )
-    }
-    ,
-    #' @description 
-    #' Get the number of rows of an arrayOp
-    #' @param what An arrayOp, raw AFL or R expression string
-    #' @param .raw If TRUE, and `what` is string, treat it as raw AFL. Otherwise parse `what` as R expression
-    #' @param .env The env where `what` is evaluated as R expression. 
-    #' Only applicable when `what` is R expression string and `.raw = F`
-    nrow = function(what, .raw = TRUE, .env = parent.frame()) {
-      op = get_operand(what, .raw = .raw, .env = .env)
-      res = query_raw(arrayop::afl(op | op_count))
-      res$count
-    }
-    #' @description 
-    #' Get the first `count` rows of an array
-    #' @param what An arrayOp, raw AFL or R expression string
-    #' @param count How many rows to take
-    #' @param offset How many rows to skip before taking
-    #' @param ... Arguments passed directly to scidb::iquery function
-    #' @param .raw If TRUE, and `what` is string, treat it as raw AFL. Otherwise parse `what` as R expression
-    #' @param .env The env where `what` is evaluated as R expression. 
-    #' Only applicable when `what` is R expression string and `.raw = F`
-    ,
-    limit = function(what, count, offset = NULL, ..., .raw = TRUE, .env = parent.frame()) {
-      op = get_operand(what, .raw = .raw, .env = .env)
-      res = query_raw(arrayop::afl(op | limit(count, offset)), ...)
-      res
-    }
+    
   )
 )
 

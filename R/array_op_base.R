@@ -1325,29 +1325,28 @@ Only data.frame is supported", class(df))
     # Common array operators ------------------------------------------------------------------------------------------
     ,
     #' @description 
-    #' Generate a command string that creates a new array based on the caller's schema
-    #' 
-    #' @param array_name Full array name
-    #' @return An AFL string
-    create_array_cmd = function(array_name) {
-      sprintf("create array %s %s", array_name, self$to_schema_str())
+    #' Get the first `count` rows of an array
+    #' @param n How many rows to take
+    #' @param skip How many rows to skip before taking
+    head = function(n, skip = NULL, dry_run = FALSE, only_attributes = FALSE, conn = get_default_connection()) {
+      assert_single_number(n)
+      assert(is.null(skip) || is.numeric(skip))
+      headOp = self$create_new_with_same_schema(
+        afl(
+          self | limit(n, skip)
+        )
+      )
+      if(dry_run) headOp 
+      else headOp$to_df(only_attributes = only_attributes, conn = conn)
     }
     ,
-    #' @description 
-    #' Generate a command string that removes the array (use with CAUTION!!!)
-    #' @return An AFL string
-    remove_array_cmd = function() {
-      sprintf("remove(%s)", self$to_afl())
+    row_count = function(conn = get_default_connection()){
+      conn$query(afl(self | op_count), only_attributes = TRUE)[["count"]]
     }
     ,
-    #' @description 
-    #' Generate a command string that removes the versions of the array (use with CAUTION!!!)
-    #' @return An AFL string
-    remove_array_versions_cmd = function(version_id = NULL) {
-      if(is.null(version_id)) sprintf("remove_versions(%s)", self$to_afl())
-      else sprintf("remove_versions(%s, %s)", self$to_afl(), version_id)
+    summarize = function(conn = get_default_connection()){
+      conn$query(afl(self | summarize), only_attributes = TRUE)
     }
-    
     # AFL -------------------------------------------------------------------------------------------------------------
     ,
     #' @description 
@@ -1392,6 +1391,26 @@ Only data.frame is supported", class(df))
     ,
     execute = function(conn = get_default_connection()) {
       conn$private$repo$execute(self)
+      invisible(NULL)
+    }
+    ,
+    versions = function(conn = get_default_connection()){
+      conn$query(afl(self | versions))
+    }
+    ,
+    remove_versions = function(version_id = NULL, conn = get_default_connection()){
+      if(is.null(version_id)) {
+        conn$execute(afl(self | remove_versions))
+      } else {
+        version_id = as.character(version_id)
+        assert_single_str(version_id, "ERROR: param 'version_id' cannot be converted to a single str: %s", deparse(version_id))
+        conn$execute(afl(self | remove_versions(version_id)))
+      }
+      invisible(NULL)
+    }
+    ,
+    remove_self = function(conn = get_default_connection()){
+      conn$execute(afl(self | remove))
       invisible(NULL)
     }
     
