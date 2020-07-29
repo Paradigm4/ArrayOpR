@@ -13,8 +13,7 @@
 #' @name arrayop
 NULL
 
-# initialize an empty connection
+# initialize an empty connection, which will be initialized once `arrayop::connect` is called
 default_conn = empty_connection()
 
 # Global utility functions/classes
-

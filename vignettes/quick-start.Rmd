@@ -22,7 +22,100 @@ knitr::opts_chunk$set(
 # First, load user name and token from an authentication file, which is also compatible with iquery.
 auth = yaml::yaml.load_file("~/.scidb_auth")
 conn = arrayop::connect(host = "localhost", username = auth[["user-name"]], token = auth[["user-password"]])
-conn # print out `username@host [scidb version]`
+print(conn) # print out `username@host [scidb version]`
 ```
 
+
+# Run raw AFL in SciDB
+
+To run AFL statements (in string aka. R character format), use one of the methods of a `ScidbConnection`:
+
+  1. `ScidbConnection$query` if we expect results (normally as R data frames)
+  1. `ScidbConnection$execute` if we do not expect results 
+  
+```{r}
+conn$query("list('operators')")
+conn$query("op_scidbversion()")
+```
+  
+```{r}
+conn$execute("create array temp_disposable_array <a:int32, b:string, c:bool> [z]")
+conn$query("show(temp_disposable_array)")
+conn$execute("remove(temp_disposable_array)")
+# catch a query error
+tryCatch(conn$query("show(temp_disposable_array)"), error = print)
+```
+
+## Chain AFL operators with pipes
+
+We can pipe multiple SciDB operators in `arrayop::afl` function which returns an AFL string.
+
+```{r}
+conn$query(arrayop::afl(
+  "'operators'" | list | filter("library != 'scidb'") | limit(10)
+))
+```
+
+
+# Interact with SciDB Arrays
+
+We normally deal with a database with array already populated. 
+In this case, let's first create an array.
+```{r}
+conn$execute("create array temp_disposable_array <a:int32, b:string, c:bool> [z]")
+```
+
+## Get an Array instance 
+
+```{r}
+tempArray = conn$array("public.temp_disposable_array") # here we use an explicit "public" namespace which is optional
+print(tempArray) 
+print(tempArray$to_afl())
+print(tempArray$to_schema_str())
+```
+
+## Store a data frame into Array
+```{r}
+df = data.frame(a=1:10, b=letters[1:10], c=c(T,F,F,T,NA), z=101:110)
+build = tempArray$build_new(df = df)
+overwriteOp = build$change_schema(tempArray)$overwrite(tempArray)
+overwriteOp$execute()
+tempArray$to_df()
+```
+
+## Filter Array data
+
+```{r}
+tempArray$where(z >= 105)$to_df()
+tempArray$where(not_null(c))$to_df()
+
+tempArray$where(z >= 105, not_null(c))$to_df() # AND
+tempArray$where(z >= 105 || is_null(c))$to_df() # OR
+```
+## Modify Array data
+
+There is no in-place modification similar to SQL `update` in either `arrayop` package or SciDB. 
+So we need to create a mutated data array and then overwrite the original with it.
+
+```{r}
+mutated = tempArray$where(z > 105)$mutate(list(b = "'mutated'"))
+# notice that `mutated` is just an Array instance in R and a piece of AFL for SciDB, 
+# but not materialized or stored into any array
+mutated$to_afl()
+mutated$to_df()
+
+# The original tempArray is not changed
+tempArray$to_df()
+
+# Now let's update the tempArray. 
+mutated$update(tempArray)$execute()
+tempArray$to_df()
+
+# Now restore the array content
+build$change_schema(tempArray)$overwrite(tempArray)$execute()
+# And try 'overwrite' the tempArray
+mutated$overwrite(tempArray)$execute()
+tempArray$to_df()
+
+```
 

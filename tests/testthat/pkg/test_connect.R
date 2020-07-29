@@ -1,7 +1,8 @@
 context("Connect to SciDB")
 
-
-auth = yaml::yaml.load_file("~/.scidb_auth")
+test_that("default connection is connected", {
+  expect_true(!is.null(get_default_connection()$scidb_version()))
+})
 
 test_that("connect with auth file", {
   conn = arrayop::connect(username = auth[["user-name"]], token = auth[["user-password"]], host = "127.0.0.1")

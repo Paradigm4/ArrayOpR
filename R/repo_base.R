@@ -58,8 +58,9 @@ newRepo = function(dependency_obj = NULL, db = NULL){
   
   repoClass = switch(scidbVersion, 
                      '18' = RepoV18,
-                     '19' = RepoV19,
-                     stopf("ERROR:newRepo:Unsupported scidb version '%s'", fullScidbVersion)
+                     RepoV19 # for future-compatibility, defaults to V19
+                     # '19' = RepoV19,
+                     # stopf("ERROR:newRepo:Unsupported scidb version '%s'", fullScidbVersion)
   )
   result = repoClass$new(dependency_obj)
   return(result)

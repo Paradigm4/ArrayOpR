@@ -1385,6 +1385,15 @@ Only data.frame is supported", class(df))
       dimStr = paste(dimStrItems, collapse = ';')
       sprintf("<%s> [%s]", attrStr, dimStr)
     }
+    ,
+    to_df = function(only_attributes = FALSE, conn = get_default_connection()) {
+      conn$private$repo$query(self, only_attributes = only_attributes)
+    }
+    ,
+    execute = function(conn = get_default_connection()) {
+      conn$private$repo$execute(self)
+      invisible(NULL)
+    }
     
     # Old -------------------------------------------------------------------------------------------------------------
     ,

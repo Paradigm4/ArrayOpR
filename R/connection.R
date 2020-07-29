@@ -40,9 +40,9 @@ get_default_connection = function() { default_conn }
 # ScidbConnection class ----
 
 #' @export
-print.ScidbConnection = function(conn) conn$to_str()
+print.ScidbConnection = function(conn) conn$print()
 #' @export
-str.ScidbConnection = function(conn) conn$to_str()
+str.ScidbConnection = function(conn) conn$print()
 
 empty_connection = function() ScidbConnection$new()
 
@@ -70,12 +70,27 @@ ScidbConnection <- R6::R6Class(
     },
     scidb_version = function() .scidb_version,
     conn_args = function() .conn_args,
-    to_str = function() {
+    print = function() {
       sprintf("ScidbConnection: %s@%s [%s]", 
               .conn_args[["username"]], 
               .conn_args[["host"]], 
               scidb_version()
               )
+    }
+    ,
+    query = function(afl_str, only_attributes = FALSE){
+      assert_single_str(afl_str)
+      repo$query(afl_str, only_attributes = only_attributes)
+    }
+    ,
+    execute = function(afl_str) {
+      assert_single_str(afl_str)
+      repo$execute(afl_str, only_attributes = only_attributes)
+      invisible(self)
+    }
+    ,
+    array = function(array_name) {
+      repo$load_arrayop_from_scidb(array_name)
     }
   )
 )
