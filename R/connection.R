@@ -97,12 +97,17 @@ ScidbConnection <- R6::R6Class(
       repo$load_arrayop_from_scidb(array_name)
     }
     ,
+    array_op_from_schema_str = function(schema_str) {
+      repo$private$.get_array_from_schema_string(schema_str)
+    }
+    ,
     array_op_from_afl = function(afl_str, store_as_array = NULL) {
       if(!is.null(store_as_array))
         assert_single_str(store_as_array, "ERROR: param 'store_as_array' must be a single string or NULL")
       escapedAfl = gsub("'", "\\\\'", afl_str)
       schema = query(sprintf("project(show('%s', 'afl'), schema)", escapedAfl), only_attributes = T)
-      schemaArray = repo$private$.get_array_from_schema_string(schema[["schema"]])
+      # schemaArray = repo$private$.get_array_from_schema_string(schema[["schema"]])
+      schemaArray = array_op_from_schema_str(schema[["schema"]])
       
       if(!is.null(store_as_array)){
         execute(sprintf("store(%s, %s)", afl_str, store_as_array))
