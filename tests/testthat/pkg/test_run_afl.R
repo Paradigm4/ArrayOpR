@@ -5,5 +5,21 @@ CONN = arrayop::get_default_connection()
 test_that("run afl query", {
   operators = CONN$query("list('operators')")
   expect_true(nrow(operators) > 1)
-  browser()
+})
+
+test_that("create an array then remove it", {
+  name = "testarray_xyz"
+  
+  show_array = function(){
+    CONN$query(sprintf("show(%s)", name))
+  }
+  
+  CONN$execute(sprintf("create temp array %s <a:string> [z]", name))
+  # array should exist
+  expect_identical(nrow(show_array()), 1L)
+  
+  # Remove the array
+  CONN$execute(sprintf("remove(%s)", name))
+  expect_error(show_array())
+  
 })

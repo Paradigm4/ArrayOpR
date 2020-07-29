@@ -50,6 +50,11 @@ tryCatch(conn$query("show(temp_disposable_array)"), error = print)
 
 We can pipe multiple SciDB operators in `arrayop::afl` function which returns an AFL string.
 
+Depending on the number of operands:
+
+  - `afl(a | b)` is converted to `b(a)`
+  - `afl(a | b(c))` is converted to `b(a, c)`
+
 ```{r}
 conn$query(arrayop::afl(
   "'operators'" | list | filter("library != 'scidb'") | limit(10)
