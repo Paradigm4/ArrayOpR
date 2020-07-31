@@ -34,7 +34,7 @@ assert_no_fields <- function(fields, errorMsgFmt = "Field(s) not empty: %s", ...
 .has_len <- function(...) rlang::has_length(...)
 
 .random_attr_name <- function(n = 4){
-  sprintf("_%s", rawToChar(as.raw(sample(c(65:90,97:122), n, replace=TRUE))))
+  sprintf("%s_", rawToChar(as.raw(sample(c(65:90,97:122), n, replace=TRUE))))
 }
 
 

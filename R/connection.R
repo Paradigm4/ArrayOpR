@@ -35,7 +35,10 @@ connect = function(username, token,
 #' 
 #' Call `connect` to establish a connection 
 #' @export
-get_default_connection = function() { default_conn }
+get_default_connection = function() { 
+  assert(default_conn$is_connected(), "ERROR: please call `arrayop::connect` to create a valid connection first")
+  default_conn 
+}
 
 # ScidbConnection class ----
 
@@ -63,6 +66,10 @@ ScidbConnection <- R6::R6Class(
     initialize = function(){
       
     },
+    is_connected = function() {
+      .has_len(.conn_args)
+    }
+    ,
     connect = function(repo, scidb_version, connection_args) {
       private$repo = repo
       private$.scidb_version = scidb_version
@@ -107,7 +114,8 @@ ScidbConnection <- R6::R6Class(
       
       if(!is.null(store_as_array)){
         execute(sprintf("store(%s, %s)", afl_str, store_as_array))
-        schemaArray$create_new_with_same_schema(store_as_array)
+        array_op_from_name(store_as_array)
+        # schemaArray$create_new_with_same_schema(store_as_array)
       } else {
         schemaArray$create_new_with_same_schema(afl_str)
       }
