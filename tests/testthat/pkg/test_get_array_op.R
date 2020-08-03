@@ -31,15 +31,17 @@ test_that("get array_op from afl", {
 test_that("get array_op from afl and stored it as array", {
   rawAfl = "apply(list('operators'), extra, 'abc')"
   name = "testarray_stored_afl"
-  arr = CONN$array_op_from_afl(rawAfl, store_as_array = name)
-  expect_identical(arr$to_afl(), name)
-  expect_equal(arr$attrs, c("name", "library", "extra"))
-  expect_equal(
-    CONN$query(afl(arr | op_count))$count, 
-    CONN$query(afl(rawAfl | op_count))$count 
-  )
+  CONN$execute(afl(rawAfl | store(name)))
   
-  CONN$execute(afl(name | remove))
+  transientArr = CONN$array_op_from_afl(rawAfl)
+  storedArr = CONN$array_op_from_name(name)
+  
+  expect_identical(transientArr$to_afl(), rawAfl)
+  expect_identical(storedArr$to_afl(), name)
+  expect_identical(storedArr$attrs, transientArr$attrs)
+  expect_equal(storedArr$row_count(), transientArr$row_count())
+  
+  storedArr$remove_self()
 })
 
 
@@ -57,6 +59,10 @@ test_that("get array_op from schema string", {
   verify("temp <a:string, b:int32> [z]", "temp", c("a", "b"), c("z"))
   # schema without array name
   verify("<a:string, b:int32>[z]", "", c("a", "b"), c("z"))
+})
+
+test_that("get array_op from uploaded data frame", {
+  template = CONN$array_op_from_schema_str("new <a:string, b:int32> [z]")
 })
 
 
