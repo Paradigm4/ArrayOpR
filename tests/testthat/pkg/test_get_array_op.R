@@ -63,6 +63,17 @@ test_that("get array_op from schema string", {
 
 test_that("get array_op from uploaded data frame", {
   template = CONN$array_op_from_schema_str("new <a:string, b:int32> [z]")
+  df = data.frame(a = letters[1:5], b = 1:5)
+  name = "testarray_uploaded"
+  arr = CONN$array_op_from_uploaded_df(name, df, template)
+  saved = CONN$array_op_from_name(name)
+  
+  expect_identical(arr$to_afl(), name)
+  expect_identical(arr$to_schema_str(), saved$to_schema_str())
+  expect_equal(arr$row_count(), 5)
+  
+  # browser()
+  CONN$execute(afl(name | remove))
 })
 
 

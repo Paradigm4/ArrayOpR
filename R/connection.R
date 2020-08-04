@@ -18,15 +18,8 @@ connect = function(username, token,
     ...
   )
   
-  db = do.call(scidb::scidbconnect, connectionArgs)
-  repo = newRepo(db = db)
-  
-  scidb_version = repo$.private$dep$get_scidb_version()
-  savedNames = c("connectionArgs", "repo", "scidb_version", "username")
-  
   targetEnv = if(save_to_default_conn) default_conn else empty_connection()
-  
-  targetEnv$connect(repo = repo, scidb_version = scidb_version, connection_args = connectionArgs)
+  targetEnv$connect(connection_args = connectionArgs)
   
   invisible(targetEnv)
 }
@@ -55,6 +48,7 @@ ScidbConnection <- R6::R6Class(
   private = list(
     repo = NULL,
     .scidb_version = NULL,
+    .db = NULL,
     .conn_args = NULL
   ),
   active = list(
@@ -70,10 +64,20 @@ ScidbConnection <- R6::R6Class(
       .has_len(.conn_args)
     }
     ,
-    connect = function(repo, scidb_version, connection_args) {
+    connect = function(connection_args = NULL) {
+      if(is.null(connection_args)){
+        connection_args = conn_args()
+        stopifnot(!is.null(connection_args), 
+                  "ERROR: no 'connection_args' found. Please connect with username, token, etc at least once.")
+      }
+      db = do.call(scidb::scidbconnect, connection_args)
+      repo = newRepo(db = db)
+      scidb_version = repo$.private$dep$get_scidb_version()
+      
       private$repo = repo
       private$.scidb_version = scidb_version
       private$.conn_args = connection_args
+      private$.db = db
     },
     scidb_version = function() .scidb_version,
     conn_args = function() .conn_args,
@@ -113,6 +117,31 @@ ScidbConnection <- R6::R6Class(
       # schemaArray = repo$private$.get_array_from_schema_string(schema[["schema"]])
       schemaArray = array_op_from_schema_str(schema[["schema"]])
       schemaArray$create_new_with_same_schema(afl_str)
+    }
+    ,
+    array_op_from_uploaded_df = function(name = NULL, df, template,
+                                         .use_aio_input = TRUE, .temp = FALSE) {
+      # array_template = if(is.list(template))
+      #   self$ArrayOp('', attrs = names(template), dtypes = template)
+      # else get_array(template)
+      array_template = template
+      # browser()
+      dfFieldsNotInArray = names(df) %-% array_template$dims_n_attrs
+      matchedFields = names(df) %n% array_template$dims_n_attrs
+      assert_not_has_len(
+        dfFieldsNotInArray,
+        "ERROR: Data frame has non-matching field(s): %s for array %s", paste(dfFieldsNotInArray, collapse = ','),
+        str(array_template))
+      uploaded = scidb::as.scidb(
+        private$.db, df, 
+        name = name,
+        use_aio_input = .use_aio_input, temp = .temp, 
+        types =  array_template$get_field_types(names(df), .raw=TRUE)
+      )
+      
+      res = array_op_from_name(uploaded@name)
+      res$.set_meta('.ref', uploaded) # prevent GC
+      res
     }
   )
 )
