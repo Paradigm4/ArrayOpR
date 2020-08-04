@@ -150,11 +150,17 @@ ScidbConnection <- R6::R6Class(
       build_dim_spec = .random_field_name(),
       skip_scidb_schema_check = FALSE
     ) {
+      assert(nrow(df) >= 1, "ERROR: param 'df' must have at least one row")
       buildOp = template$build_new(df, build_dim_spec)
       if(skip_scidb_schema_check){
         buildOp
       } else {
-        array_op_from_afl(buildOp$to_afl())
+        # We need to infer schema from the 'build' afl, but avoid unnecessary data transfer to scidb/shim.
+        # So only the first row is sent to 'probe' the correct array schema
+        probeOp = template$build_new(df[1,], build_dim_spec)
+        remoteSchema = array_op_from_afl(probeOp$to_afl())
+        # Still use the buildOp for actual data
+        remoteSchema$create_new_with_same_schema(buildOp$to_afl())
       }
     }
   )

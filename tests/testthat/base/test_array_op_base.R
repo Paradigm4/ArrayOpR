@@ -69,9 +69,9 @@ test_that("Differentiate actual data types and raw types", {
   expect_identical(op$get_field_types(c('da','aa','ab','ac'), .raw=T), rawDtypes)
 })
 
-# Where ----------------------------------------------------------------------------------------------------------
+# filter ----------------------------------------------------------------------------------------------------------
 
-test_that("Where an Array using filter expressions", {
+test_that("filter an Array using filter expressions", {
   op = newArrayOp("rawafl", c("da", "db"), c("ac", "ad"), 
     dtypes = list(ac='string', ad='int32', da='int64', db='int64'))
   # Original op won't be affected
@@ -952,7 +952,7 @@ test_that("Update with matching dimensions and matching attributes", {
   assert_afl_equal(op2$to_afl(), "insert(Source, Target)")
 })
 
-test_that("Update with 'where' clause ", {
+test_that("Update with 'filter' clause ", {
   op = Target$filter(da > 2 && aa == 'string')$mutate(list('ac' = 42))$update(Target)
   assert_afl_equal(op$to_afl(), 
   "insert(
