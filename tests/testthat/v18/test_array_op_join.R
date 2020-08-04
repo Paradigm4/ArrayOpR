@@ -328,8 +328,8 @@ test_that("No selcted_fields on either operands. All attrs are selected", {
   for(joinOp in list(
     arrL$join(arrR, on_left = 'lda', on_right = 'raa'),
     arrL$join(arrR, on_left = 'lda', on_right = 'raa', settings = list(keep_dimensions=0)),
-    arrL$join(arrR$where(rab > 0), on_left = 'lda', on_right = 'raa', settings = list(keep_dimensions=0)),
-    arrL$where(ldc < 0)$join(arrR$where(rab > 0), on_left = 'lda', on_right = 'raa')
+    arrL$join(arrR$filter(rab > 0), on_left = 'lda', on_right = 'raa', settings = list(keep_dimensions=0)),
+    arrL$filter(ldc < 0)$join(arrR$filter(rab > 0), on_left = 'lda', on_right = 'raa')
   )){
     expect_identical(joinOp$dims, c('instance_id', 'value_no'))
     expect_identical(joinOp$selected, NULL)

@@ -77,19 +77,19 @@ test_that("Where an Array using filter expressions", {
   # Original op won't be affected
   expect_identical(op$to_afl(), 'rawafl')
   # Multiple filter expressions are treated as AND replation
-  assert_afl_equal(op$where(da < 0)$to_afl(), "filter(rawafl, da < 0)")
-  assert_afl_equal(op$where(da < 0, ad == 42)$to_afl(), "filter(rawafl, da < 0 and ad = 42)")
+  assert_afl_equal(op$filter(da < 0)$to_afl(), "filter(rawafl, da < 0)")
+  assert_afl_equal(op$filter(da < 0, ad == 42)$to_afl(), "filter(rawafl, da < 0 and ad = 42)")
   # Use special functions AND/OR to compose complex filter expressions
-  assert_afl_equal(op$where(OR(da != 0, db == 3))$to_afl(), "filter(rawafl, da <> 0 or db = 3)")
+  assert_afl_equal(op$filter(OR(da != 0, db == 3))$to_afl(), "filter(rawafl, da <> 0 or db = 3)")
   
   # Error if filter on non-existent fields
-  expect_error(op$where(nonExistent == 42), 'not found')
+  expect_error(op$filter(nonExistent == 42), 'not found')
 })
 
 test_that("Resultant newArrayOp has the same schema as the original", {
   op = newArrayOp("rawafl", c("da", "db"), c("ac", "ad"), 
     dtypes = list(ac='string', ad='int32', da='int64', db='int64'))
-  result = op$where(da <0 , ad == 42)
+  result = op$filter(da <0 , ad == 42)
   expect_identical(result$dims, c('da', 'db'))
   expect_identical(result$attrs, c('ac', 'ad'))
   expect_identical(result$get_field_types(), op$get_field_types())
@@ -496,17 +496,6 @@ test_that("Redimension according to a template, non-strict mode", {
   expect_error(source$change_schema(Template, strict = TRUE), "not found")
 })
 
-# create, delete, delete_versions ---------------------------------------------------------------------------------
-
-test_that("Common array operations", {
-  t = newArrayOp('t', c('da', 'db'), c('aa', 'ab'), dtypes = list(da='int64', db='int64', aa='string', ab='int32'),
-    dim_specs = list(da='1:24:0:1', db='*'))
-  assert_afl_equal(t$create_array_cmd('NEW'), "create array NEW <aa:string, ab:int32> [da=1:24:0:1; db=*]")
-  assert_afl_equal(t$remove_array_cmd(), "remove(t)")
-  assert_afl_equal(t$remove_array_versions_cmd(), "remove_versions(t)")
-  assert_afl_equal(t$remove_array_versions_cmd(version_id = NULL), "remove_versions(t)")
-  assert_afl_equal(t$remove_array_versions_cmd(version_id = 3), "remove_versions(t, 3)")
-})
 
 
 # To join operand -------------------------------------------------------------------------------------------------
@@ -788,7 +777,7 @@ test_that("Mutate array content by providing mutated dimension expressions", {
           da, _da),
         da, db, dc, aa, ab, ac),
   <aa:string zip, ab: bool, ac:double nullable> [da=da_spec; db=db_spec; dc=dc_spec])")
-  mutated = Target$where(ac > 3.14 && aa == 'pi')$mutate(list('aa' = "'PI'", 'da' = 42L), artificial_field = 'z')
+  mutated = Target$filter(ac > 3.14 && aa == 'pi')$mutate(list('aa' = "'PI'", 'da' = 42L), artificial_field = 'z')
   assert_afl_equal(mutated$to_afl(), 
      "
   redimension(
@@ -964,7 +953,7 @@ test_that("Update with matching dimensions and matching attributes", {
 })
 
 test_that("Update with 'where' clause ", {
-  op = Target$where(da > 2 && aa == 'string')$mutate(list('ac' = 42))$update(Target)
+  op = Target$filter(da > 2 && aa == 'string')$mutate(list('ac' = 42))$update(Target)
   assert_afl_equal(op$to_afl(), 
   "insert(
     project(

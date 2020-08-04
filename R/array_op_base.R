@@ -448,7 +448,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
     #' @description 
     #' Create a new ArrayOp instance by using a filter expression on the parent ArrayOp
     #' 
-    #' Similar to SQL where clause.
+    #' Similar to SQL where clause and dplyr::filter.
     #' @param missing_fields_error_template Error template for missing fields. 
     #' Only one %s is allowed which is substituted with an concatnation of the missing fields separated by commas.
     #' @param regex_func A string of regex function implementation. 
@@ -457,7 +457,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
     #' @param ignore_case A Boolean. If TRUE, ignore case in string match patterns. 
     #' Otherwise, perform case-sensitive regex matches.
     #' @return A new arrayOp 
-    where = function(..., expr, missing_fields_error_template = NULL, 
+    filter = function(..., expr, missing_fields_error_template = NULL, 
                      regex_func = getOption('arrayop.regex_func', default = 'rsub'), 
                      ignore_case = getOption('arrayop.ignore_case', default = TRUE)) {
       filterExpr = if(methods::hasArg('expr')) expr else e_merge(e(...))
@@ -1325,10 +1325,10 @@ Only data.frame is supported", class(df))
     # Common array operators ------------------------------------------------------------------------------------------
     ,
     #' @description 
-    #' Get the first `count` rows of an array
+    #' Get the first `n` rows of an array
     #' @param n How many rows to take
     #' @param skip How many rows to skip before taking
-    head = function(n, skip = NULL, dry_run = FALSE, only_attributes = FALSE, conn = get_default_connection()) {
+    head = function(n = 5, skip = NULL, dry_run = FALSE, only_attributes = FALSE, conn = get_default_connection()) {
       assert_single_number(n)
       assert(is.null(skip) || is.numeric(skip))
       headOp = self$create_new_with_same_schema(
