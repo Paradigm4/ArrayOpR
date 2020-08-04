@@ -1,5 +1,6 @@
 library(testthat)
 library(mockery)
+`%>%` = dplyr::`%>%`
 
 context('test entry')
 
@@ -32,7 +33,7 @@ wet_tests = function() {
   # source("db/__source.R", local = TRUE, chdir = TRUE)
 }
 
-dry_tests()
+# dry_tests()
 
-# wet_tests()
+wet_tests()
 

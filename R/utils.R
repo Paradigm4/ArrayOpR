@@ -37,6 +37,8 @@ assert_no_fields <- function(fields, errorMsgFmt = "Field(s) not empty: %s", ...
   sprintf("%s_", rawToChar(as.raw(sample(c(65:90,97:122), n, replace=TRUE))))
 }
 
+.random_field_name = .random_attr_name
+
 
 `%u%` = function(lhs, rhs) base::union(lhs, rhs)
 `%-%` = function(lhs, rhs) base::setdiff(lhs, rhs)

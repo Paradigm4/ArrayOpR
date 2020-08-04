@@ -119,7 +119,8 @@ ScidbConnection <- R6::R6Class(
       schemaArray$create_new_with_same_schema(afl_str)
     }
     ,
-    array_op_from_uploaded_df = function(name = NULL, df, template,
+    array_op_from_uploaded_df = function(df, template, 
+                                         name = NULL, 
                                          .use_aio_input = TRUE, .temp = FALSE) {
       # array_template = if(is.list(template))
       #   self$ArrayOp('', attrs = names(template), dtypes = template)
@@ -142,6 +143,19 @@ ScidbConnection <- R6::R6Class(
       res = array_op_from_name(uploaded@name)
       res$.set_meta('.ref', uploaded) # prevent GC
       res
+    }
+    ,
+    array_op_from_build_literal = function(
+      df, template, 
+      build_dim_spec = .random_field_name(),
+      skip_scidb_schema_check = FALSE
+    ) {
+      buildOp = template$build_new(df, build_dim_spec)
+      if(skip_scidb_schema_check){
+        buildOp
+      } else {
+        array_op_from_afl(buildOp$to_afl())
+      }
     }
   )
 )

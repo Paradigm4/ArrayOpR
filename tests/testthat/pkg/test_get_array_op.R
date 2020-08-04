@@ -62,18 +62,42 @@ test_that("get array_op from schema string", {
 })
 
 test_that("get array_op from uploaded data frame", {
-  template = CONN$array_op_from_schema_str("new <a:string, b:int32> [z]")
-  df = data.frame(a = letters[1:5], b = 1:5)
+  template = CONN$array_op_from_schema_str("new <a:string, b:int32, extra:bool> [z]")
+  df = data.frame(a = letters[1:5], b = 1:5, z = 11:15)
   name = "testarray_uploaded"
-  arr = CONN$array_op_from_uploaded_df(name, df, template)
+  arr = CONN$array_op_from_uploaded_df(df, template, name)
   saved = CONN$array_op_from_name(name)
   
+  # all matched fields are uploaded as attributes (dimensions vary with upload operators)
+  expect_identical(arr$attrs, c('a', 'b', 'z'))
   expect_identical(arr$to_afl(), name)
   expect_identical(arr$to_schema_str(), saved$to_schema_str())
   expect_equal(arr$row_count(), 5)
   
-  # browser()
   CONN$execute(afl(name | remove))
+})
+
+test_that("get array_op from build literal", {
+  template = CONN$array_op_from_schema_str("new <a:string, b:int32, extra:bool> [z]")
+  df = data.frame(
+    b = 1:5, z = 11:15,
+    a = c(
+      "slashes: http://a-b/c\\d%20%",
+      NA,
+      "quotes: 'a' \"|\" ",
+      "special: \t\n[abcd]",
+      "''"
+    )
+  )
+  
+  arr = CONN$array_op_from_build_literal(df, template, build_dim_spec = "i=1:*:0:*")
+  result = arr$to_df(only_attributes = T) %>% dplyr::arrange(z)
+  
+  expect_equal(arr$row_count(), 5)
+  expect_equal(result, df)
+  
+  # should report error if build_dim is invalid, verified by scidb show
+  expect_error(CONN$array_op_from_build_literal(df, template, build_dim_spec = "i=non-sense"))
 })
 
 
