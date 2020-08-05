@@ -23,7 +23,7 @@ test_that("Array content is correctly populated", {
   
   # Validate the target array
   # sort by lower, needed because scidb doesn't keep the order of inserted data
-  dfFromDb = dplyr::arrange(repo$query(MutateArray), lower)
+  dfFromDb = dplyr::arrange(MutateArray$to_df(), lower)
   expect_equal(dfFromDb, DfMutateArray)
 })
 
@@ -32,10 +32,10 @@ test_that("Mutate an array by expression", {
   target = MutateArray
   df = DfMutateArray
   
-  mutated = target$where(is_null(f_bool))$
+  mutated = target$filter(is_null(f_bool))$
     mutate(list('f_bool'='iif(f_double > 1, true, false)', 'upper'="'mutated'"))
-  repo$execute(mutated$update(target))
-  dfFromDb = dplyr::arrange(repo$query(target), lower)
+  mutated$update(target)$execute()
+  dfFromDb = dplyr::arrange(target$to_df(), lower)
   expect_equal(dfFromDb, dplyr::mutate(df, upper=c('A', 'mutated', 'C', 'mutated', 'E'), f_bool=c(T,T,F,F,F)))
 })
 
@@ -46,11 +46,11 @@ test_that("Mutate an array by another array", {
     mutateDataSource = MutateArray$build_new(
       DfMutateArray %>% dplyr::filter(da %% 2 == 0) %>% dplyr::select(lower, upper) %>% dplyr::mutate(f_int32 = 1:3)
     )
-    repo$execute(
-      MutateArray$
-        mutate(mutateDataSource, keys = c('lower'), updated_fields = 'f_int32')$
-        update(MutateArray)
-    )
+    
+    MutateArray$
+      mutate(mutateDataSource, keys = c('lower'), updated_fields = 'f_int32')$
+      update(MutateArray)$
+      execute()
   }
   
   mutate_by_two_attrs = function(){
@@ -58,11 +58,12 @@ test_that("Mutate an array by another array", {
     mutateDataSource = MutateArray$build_new(
       DfMutateArray %>% dplyr::filter(da %% 2 == 0) %>% dplyr::select(lower, upper) %>% dplyr::mutate(f_int32 = 1:3)
     )
-    repo$execute(
-      MutateArray$
-        mutate(mutateDataSource, keys = c('lower', 'upper'), updated_fields = 'f_int32')$
-        update(MutateArray)
-    )
+    
+    MutateArray$
+      mutate(mutateDataSource, keys = c('lower', 'upper'), updated_fields = 'f_int32')$
+      update(MutateArray)$
+      execute()
+    
     validate_result()
   }
   
@@ -71,11 +72,11 @@ test_that("Mutate an array by another array", {
     mutateDataSource = MutateArray$build_new(
       DfMutateArray %>% dplyr::filter(da %% 2 == 0) %>% dplyr::select(da) %>% dplyr::mutate(f_int32 = 1:3)
     )
-    repo$execute(
-      MutateArray$
-        mutate(mutateDataSource, keys = c('da'), updated_fields = 'f_int32')$
-        update(MutateArray)
-    )
+    MutateArray$
+      mutate(mutateDataSource, keys = c('da'), updated_fields = 'f_int32')$
+      update(MutateArray)$
+      execute()
+    
     validate_result()
   }
   
@@ -84,11 +85,12 @@ test_that("Mutate an array by another array", {
     mutateDataSource = MutateArray$build_new(
       DfMutateArray %>% dplyr::filter(da %% 2 == 0) %>% dplyr::select(da, db) %>% dplyr::mutate(f_int32 = 1:3)
     )
-    repo$execute(
-      MutateArray$
-        mutate(mutateDataSource, keys = c('da', 'db'), updated_fields = 'f_int32')$
-        update(MutateArray)
-    )
+  
+    MutateArray$
+      mutate(mutateDataSource, keys = c('da', 'db'), updated_fields = 'f_int32')$
+      update(MutateArray)$
+      execute()
+    
     validate_result()
   }
   
@@ -97,16 +99,16 @@ test_that("Mutate an array by another array", {
     mutateDataSource = MutateArray$build_new(
       DfMutateArray %>% dplyr::filter(da %% 2 == 0) %>% dplyr::select(db, lower) %>% dplyr::mutate(f_int32 = 1:3)
     )
-    repo$execute(
-      MutateArray$
-        mutate(mutateDataSource, keys = c('lower', 'db'), updated_fields = 'f_int32')$
-        update(MutateArray)
-    )
+    
+    MutateArray$
+      mutate(mutateDataSource, keys = c('lower', 'db'), updated_fields = 'f_int32')$
+      update(MutateArray)$
+      execute()
     validate_result()
   }
   
   validate_result = function(){
-    dfFromDb = dplyr::arrange(repo$query(MutateArray), lower)
+    dfFromDb = dplyr::arrange(MutateArray$to_df(), lower)
     expect_equal(dfFromDb, DfMutateArray %>% dplyr::mutate(f_int32 = c(1,-4,2,-2,3)))
   }
   

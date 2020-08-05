@@ -9,19 +9,17 @@ TestNS <- R6::R6Class(
   private = list(
     # Private functions ----
     .remove_arrays_from_namespace = function(){
-      arrayNames = repo$query(
-        sprintf("project(list(ns:%s), name)", NS)
-      )[['name']]
+      arrayNames = get_array_names()
       for(arr in arrayNames){
         fullName = sprintf("%s.%s", NS, arr)
-        repo$execute(afl(fullName | remove))
+        conn$execute(afl(fullName | remove))
       }
     }
     ,
     .try_create_ns = function() {
       tryCatch(
         {
-          repo$execute(afl(NS | create_namespace))
+          conn$execute(afl(NS | create_namespace))
           catf("Created namespace '%s'\n", NS)
         },
         error = function(e){
@@ -33,7 +31,7 @@ TestNS <- R6::R6Class(
     .try_drop_ns = function() {
       tryCatch(
         {
-          repo$execute(afl(NS | drop_namespace))
+          conn$execute(afl(NS | drop_namespace))
           catf("Dropped namespace '%s' \n", NS)
         },
         error = function(e) {
@@ -46,11 +44,11 @@ TestNS <- R6::R6Class(
   # Public functions ----
   public = list(
     NS = NULL, # namespace
-    repo = NULL, # arrayop::ArrayOp instance
+    conn = NULL, # arrayop::ArrayOp instance
     
-    initialize = function(namespace, repo){
+    initialize = function(namespace, conn){
       self$NS = namespace
-      self$repo = repo
+      self$conn = conn
     }
     ,
     db_setup = function() {
@@ -73,14 +71,14 @@ TestNS <- R6::R6Class(
     }
     ,
     create_local_arrayop = function(name, schema){
-      repo$get_array(sprintf(
+      conn$array_op_from_schema_str(sprintf(
         "%s.%s %s", NS, name, schema
       ))
     }
     ,
     # Get array names without namespace
     get_array_names = function() {
-      repo$query(
+      conn$query(
         sprintf("project(list(ns:%s), name)", NS), only_attributes = T
       )[['name']]
     }
@@ -90,19 +88,19 @@ TestNS <- R6::R6Class(
     reset_array_with_content = function(target, content, recreate = TRUE) {
       # Reset array
       if(recreate){
-        try(repo$.remove_array(target), silent = T)
-        repo$.create_array(target)
+        try(target$remove_self(conn = conn), silent = T)
+        conn$execute(sprintf("create array %s", str(target)))
       }
       # Upload data 
-      repo$execute(
-        target$
-          build_new(content)$
-          change_schema(target)$
-          overwrite(target)
-      )
+      target$
+        build_new(content)$
+        change_schema(target)$
+        overwrite(target)$
+        execute(conn)
+      
     }
   )
 )
 
 # Shared instance for all in-db tests ----
-testNS = TestNS$new(namespace = "arrayop_unittest", repo = repo)
+testNS = TestNS$new(namespace = "arrayop_unittest", conn = conn)

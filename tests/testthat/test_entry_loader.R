@@ -30,7 +30,7 @@ ALLOW_DB_TEST = TRUE
 
 wet_tests = function() {
   source("pkg/__source.R", local = TRUE, chdir = TRUE)
-  # source("db/__source.R", local = TRUE, chdir = TRUE)
+  source("db/__source.R", local = TRUE, chdir = TRUE)
 }
 
 # dry_tests()

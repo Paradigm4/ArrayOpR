@@ -53,7 +53,8 @@ ScidbConnection <- R6::R6Class(
     # Private methods
     upload_df_or_vector = function(v, ...) {
       uploaded = scidb::as.scidb(private$.db, v, ...)
-      res = array_op_from_schema_str(uploaded@meta$schema)$create_new_with_same_schema(uploaded@name)
+      # res = array_op_from_schema_str(uploaded@meta$schema)$create_new_with_same_schema(uploaded@name)
+      res = array_op_from_scidbr_obj(uploaded)
       res$.set_meta('.ref', uploaded) # prevent GC
       res
     },
@@ -73,6 +74,21 @@ ScidbConnection <- R6::R6Class(
         joinedItems = .do.join(joinedItems)
       }
       joinedItems
+    },
+    array_op_from_scidbr_obj = function(obj) {
+      array_op_from_schema_str(obj@meta$schema)$create_new_with_same_schema(
+        obj@name
+      )
+    },
+    get_array_template = function(t){
+      if(inherits(t, "ArrayOpBase")) t
+      else if(is.list(t)){
+        assert_named_list(t, "ERROR: get_array_template: a list as template must have names")
+        repo$ArrayOp('', attrs = names(t), dtypes = t)
+      } else {
+        stopf("ERROR: get_array_template: template must be an array_op or named list, but got: [%s]", 
+              paste(class(t), collapse = ','))
+      }
     }
   ),
   active = list(
@@ -143,12 +159,24 @@ ScidbConnection <- R6::R6Class(
       schemaArray$create_new_with_same_schema(afl_str)
     }
     ,
-    array_op_from_stored_afl = function(afl_str, save_array_name = .random_array_name()) {
+    array_op_from_stored_afl = function(
+      afl_str, 
+      save_array_name = .random_array_name(),
+      .temp = FALSE,
+      .gc = TRUE
+    ) {
       assert_single_str(afl_str, "ERROR: param 'afl_str' must be a single string")
       assert_single_str(save_array_name, "ERROR: param 'save_array_name' must be a single string")
       
-      execute(afl(afl_str | store(save_array_name)))
-      array_op_from_name(save_array_name)
+      storedAfl = scidb::scidb(.db, afl_str)
+      storedArray = scidb::store(.db, expr = storedAfl, name = save_array_name, 
+                                 temp = .temp, gc = .gc)
+      
+      res = array_op_from_scidbr_obj(storedArray)
+      res$.set_meta('.ref', storedArray)
+      res
+      # execute(afl(afl_str | store(save_array_name)))
+      # array_op_from_name(save_array_name)
     }
     ,
     array_op_from_uploaded_df = function(
@@ -163,7 +191,7 @@ ScidbConnection <- R6::R6Class(
       # array_template = if(is.list(template))
       #   self$ArrayOp('', attrs = names(template), dtypes = template)
       # else get_array(template)
-      array_template = template
+      array_template = get_array_template(template)
       # browser()
       dfFieldsNotInArray = names(df) %-% array_template$dims_n_attrs
       matchedFields = names(df) %n% array_template$dims_n_attrs
@@ -193,6 +221,7 @@ ScidbConnection <- R6::R6Class(
         private$upload_df_or_vector(
           df,
           name = name, 
+          # todo: names(df) -> matchedFields??
           types =  array_template$get_field_types(names(df), .raw=TRUE),
           use_aio_input = .use_aio_input, temp = .temp, gc = .gc
         )
@@ -206,13 +235,14 @@ ScidbConnection <- R6::R6Class(
       skip_scidb_schema_check = FALSE
     ) {
       assert(nrow(df) >= 1, "ERROR: param 'df' must have at least one row")
-      buildOp = template$build_new(df, build_dim_spec)
+      array_template = get_array_template(template)
+      buildOp = array_template$build_new(df, build_dim_spec)
       if(skip_scidb_schema_check){
         buildOp
       } else {
         # We need to infer schema from the 'build' afl, but avoid unnecessary data transfer to scidb/shim.
         # So only the first row is sent to 'probe' the correct array schema
-        probeOp = template$build_new(df[1,], build_dim_spec)
+        probeOp = array_template$build_new(df[1,], build_dim_spec)
         remoteSchema = array_op_from_afl(probeOp$to_afl())
         # Still use the buildOp for actual data
         remoteSchema$create_new_with_same_schema(buildOp$to_afl())

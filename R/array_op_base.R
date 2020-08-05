@@ -1328,16 +1328,14 @@ Only data.frame is supported", class(df))
     #' Get the first `n` rows of an array
     #' @param n How many rows to take
     #' @param skip How many rows to skip before taking
-    head = function(n = 5, skip = NULL, dry_run = FALSE, only_attributes = FALSE, conn = get_default_connection()) {
+    limit = function(n = 5, skip = NULL) {
       assert_single_number(n)
       assert(is.null(skip) || is.numeric(skip))
-      headOp = self$create_new_with_same_schema(
+      self$create_new_with_same_schema(
         afl(
           self | limit(n, skip)
         )
       )
-      if(dry_run) headOp 
-      else headOp$to_df(only_attributes = only_attributes, conn = conn)
     }
     ,
     row_count = function(conn = get_default_connection()){
@@ -1384,9 +1382,18 @@ Only data.frame is supported", class(df))
       dimStr = paste(dimStrItems, collapse = ';')
       sprintf("<%s> [%s]", attrStr, dimStr)
     }
+    # db functions ----
     ,
     to_df = function(only_attributes = FALSE, conn = get_default_connection()) {
       conn$private$repo$query(self, only_attributes = only_attributes)
+      # todo: remove repo
+      # conn$query(self$to_df_afl(), only_attributes = only_attributes)
+    }
+    ,
+    to_df_attrs = function(conn = get_default_connection()) {
+      # todo: remove repo
+      # conn$query(self, only_attributes = TRUE)
+      conn$private$repo$query(self, only_attributes = TRUE)
     }
     ,
     execute = function(conn = get_default_connection()) {
@@ -1412,6 +1419,24 @@ Only data.frame is supported", class(df))
     remove_self = function(conn = get_default_connection()){
       conn$execute(afl(self | remove))
       invisible(NULL)
+    }
+    ,
+    semi_join = function(df, 
+                         field_mapping = NULL,
+                         lower_bound = NULL,
+                         upper_bound = NULL,
+                         mode = "auto",
+                         ...,
+                         conn = get_default_connection()
+                         ){
+        repo = conn$private$repo
+        repo$semi_join(df, self, 
+                       field_mapping = field_mapping,
+                       lower_bound = lower_bound,
+                       upper_bound = upper_bound,
+                       mode = mode,
+                       ...
+                       )
     }
     
     # Old -------------------------------------------------------------------------------------------------------------
@@ -1525,6 +1550,7 @@ Only data.frame is supported", class(df))
           # printf("cleaning up: %s [gc=%s]\n%s", obj@name, obj@meta$remove, obj@meta$schema)
           if(!is.null(obj@meta$remove) && obj@meta$remove){
             # printf("remove(%s)", obj@name)
+            obj@meta$remove <- F
             try(scidb::iquery(obj@meta$db, sprintf("remove(%s)", obj@name)), silent = T)
           }
         }

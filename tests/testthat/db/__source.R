@@ -35,10 +35,10 @@ choose_in_db_tests = function(setting = SETTING) {
                 CONSTANTS$setting_file))
   
   db_func = get(CONSTANTS$db_function_name)
-  db = db_func()
-  repo = newRepo(db = db)
+  conn = db_func()
+  # repo = newRepo(db = db)
   
-  expect_true(!is.null(repo), "repo should not be null!")
+  expect_true(!is.null(conn), "ScidbConnection conn should not be null!")
   
   # 'repo' class version is determined by the scidb version, which is not hard-coded.
   source("shared.R", local = T, chdir = T)
@@ -49,7 +49,7 @@ choose_in_db_tests = function(setting = SETTING) {
   # Two shared variables for all tests are 1. repo; 2. config (loaded from repo.yaml)
   
   # Run individual tests with a shared 'repo' instance
-  for (test_file in list.files(".", "^test.+\\.R")) {
+  for (test_file in list.files(".", "^test_.+\\.R")) {
     source(test_file, local = T, chdir = T)
   }
   
