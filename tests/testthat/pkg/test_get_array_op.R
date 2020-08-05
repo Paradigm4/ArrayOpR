@@ -14,7 +14,9 @@ CONN = get_default_connection()
 
 .setup()
 
-# Tests begin
+# Tests begin ---- 
+
+# from array name ---- 
 
 test_that("get array_op from array name", {
   arr = CONN$array_op_from_name(.name)
@@ -44,6 +46,7 @@ test_that("get array_op from afl and stored it as array", {
   storedArr$remove_self()
 })
 
+# from schema string ----
 
 test_that("get array_op from schema string", {
   verify = function(schema_str, name, attrs, dims){
@@ -61,21 +64,87 @@ test_that("get array_op from schema string", {
   verify("<a:string, b:int32>[z]", "", c("a", "b"), c("z"))
 })
 
+# from uploaded data frame ----
+
 test_that("get array_op from uploaded data frame", {
-  template = CONN$array_op_from_schema_str("new <a:string, b:int32, extra:bool> [z]")
-  df = data.frame(a = letters[1:5], b = 1:5, z = 11:15)
-  name = "testarray_uploaded"
-  arr = CONN$array_op_from_uploaded_df(df, template, name)
-  saved = CONN$array_op_from_name(name)
+  template = CONN$array_op_from_schema_str("<a:string, b:int32, extra:bool> [z]")
+  df = data.frame(a = c(
+    "slashes: http://a-b/c d%20%", # double backslackes \\ cause a bug
+    # 'NA not working',
+    NA, # NA cannot be uploaded
+    "quotes: 'a' \"|\" ", 
+    "special:  [abcd]", # if \t or \n were added to the field, tests would fail
+    "''"
+  ), b = 1:5, z = 11:15, stringsAsFactors = F)
+  
+  arr = CONN$array_op_from_uploaded_df(df, template)
   
   # all matched fields are uploaded as attributes (dimensions vary with upload operators)
   expect_identical(arr$attrs, c('a', 'b', 'z'))
-  expect_identical(arr$to_afl(), name)
-  expect_identical(arr$to_schema_str(), saved$to_schema_str())
-  expect_equal(arr$row_count(), 5)
+  expect_equal(arr$to_df(only_attributes = T), df)
   
-  CONN$execute(afl(name | remove))
+  arr$remove_self()
 })
+
+test_that("get array_op from uploaded data frame by merging columns", {
+  template = CONN$array_op_from_schema_str("<a:string, b:int32, extra:bool> [z]")
+  df = data.frame(
+    a = c(
+    "slashes: http://a-b/c\\d%20%",
+    'notNA', # NA cannot be uploaded in non-merge mode
+    "quotes: 'a' \"|\" ",
+    "special: \t\n[abcd]", #  \t or \n cannot be uploaded in non-merge mode
+    "''"
+    ),
+    # a = letters[1:5],
+  b = 1:5, z = 11:15, stringsAsFactors = F)
+  
+  arr = CONN$array_op_from_uploaded_df(df, template, upload_by_vector = T)
+  
+  # all matched fields are uploaded as attributes (dimensions vary with upload operators)
+  expect_identical(arr$attrs, c('a', 'b', 'z'))
+  
+  expect_equal(arr$to_df(only_attributes = T), df)
+})
+
+
+test_that("get array_op from uploaded data frame with GC", {
+  template = CONN$array_op_from_schema_str("<a:string, b:int32, extra:bool> [z]")
+  df = data.frame(a = letters[1:5], b = 1:5, z = 11:15)
+  
+  gc_on = function() {
+    name = "Rarrayop_test_upload_array_gc_on"
+    arr = CONN$array_op_from_uploaded_df(df, template, name = name, .gc = TRUE)
+    expect_true(!is.null(
+      CONN$array_op_from_name(name) # array with name must exist
+    ))
+    rm(arr)
+    gc()
+    expect_error(CONN$array_op_from_name(name)) # array should be removed during GC
+  }
+  
+  gc_off = function() {
+    name = "Rarrayop_test_upload_array_gc_off"
+    arr = CONN$array_op_from_uploaded_df(df, template, name = name, .gc = F)
+    expect_true(!is.null(
+      CONN$array_op_from_name(name) # array with name must exist
+    ))
+    rm(arr)
+    gc()
+    
+    retried = CONN$array_op_from_name(name)
+    expect_identical(retried$to_afl(), name) # array should still exists
+    
+    retried$remove_self()
+    expect_error(CONN$array_op_from_name(name)) # now the array should be removed 
+  }
+  
+  gc_on()
+  gc_off()
+  
+})
+
+# from build literal ----
 
 test_that("get array_op from build literal", {
   template = CONN$array_op_from_schema_str("new <a:string, b:int32, extra:bool> [z]")
@@ -101,6 +170,6 @@ test_that("get array_op from build literal", {
 })
 
 
-# Tests end
+# Tests end ----
 
 .teardown()

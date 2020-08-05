@@ -1515,6 +1515,31 @@ Only data.frame is supported", class(df))
     #' @param key A string key
     #' @return An metadata object of any type registered with `key`
     .get_meta = function(key) private$get_meta(key)
+    ,
+    finalize = function() {
+      refKey = '.ref'
+      refObj = self$.get_meta(refKey)
+      if(!is.null(refObj)) {
+        
+        removeSciDbRObj = function(obj) {
+          # printf("cleaning up: %s [gc=%s]\n%s", obj@name, obj@meta$remove, obj@meta$schema)
+          if(!is.null(obj@meta$remove) && obj@meta$remove){
+            # printf("remove(%s)", obj@name)
+            try(scidb::iquery(obj@meta$db, sprintf("remove(%s)", obj@name)), silent = T)
+          }
+        }
+        
+        cleanUpObj = function(obj) {
+          if("scidb" %in% class(obj)) removeSciDbRObj(obj)
+        }
+        
+        # printf("finialize arrayop: %s", self$to_afl())
+        if(is.list(refObj)) sapply(refObj, cleanUpObj)
+        else cleanUpObj(refObj)
+        
+        self$.set_meta(refKey, NULL)
+      }
+    }
   )
 )
 

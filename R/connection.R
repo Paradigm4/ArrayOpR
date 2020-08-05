@@ -49,7 +49,31 @@ ScidbConnection <- R6::R6Class(
     repo = NULL,
     .scidb_version = NULL,
     .db = NULL,
-    .conn_args = NULL
+    .conn_args = NULL,
+    # Private methods
+    upload_df_or_vector = function(v, ...) {
+      uploaded = scidb::as.scidb(private$.db, v, ...)
+      res = array_op_from_schema_str(uploaded@meta$schema)$create_new_with_same_schema(uploaded@name)
+      res$.set_meta('.ref', uploaded) # prevent GC
+      res
+    },
+    # generate afl by recursively 'join' two arrays
+    join_arrays_by_two = function(array_names) {
+      
+      .do.join = function(items) {
+        splitByTwo = split(items, ceiling(seq_along(items)/2L))
+        sapply(splitByTwo, function(x){
+          if(length(x) == 1) x else 
+            sprintf("join(%s, %s)", x[[1]], x[[2]])
+        })
+      }
+      
+      joinedItems = .do.join(array_names)
+      while (length(joinedItems) > 1L) {
+        joinedItems = .do.join(joinedItems)
+      }
+      joinedItems
+    }
   ),
   active = list(
     # scidb_version = function() private$.scidb_version,
@@ -67,7 +91,7 @@ ScidbConnection <- R6::R6Class(
     connect = function(connection_args = NULL) {
       if(is.null(connection_args)){
         connection_args = conn_args()
-        stopifnot(!is.null(connection_args), 
+        assert(!is.null(connection_args), 
                   "ERROR: no 'connection_args' found. Please connect with username, token, etc at least once.")
       }
       db = do.call(scidb::scidbconnect, connection_args)
@@ -119,9 +143,15 @@ ScidbConnection <- R6::R6Class(
       schemaArray$create_new_with_same_schema(afl_str)
     }
     ,
-    array_op_from_uploaded_df = function(df, template, 
-                                         name = NULL, 
-                                         .use_aio_input = TRUE, .temp = FALSE) {
+    array_op_from_uploaded_df = function(
+      df, 
+      template, 
+      name = .random_array_name(), 
+      upload_by_vector = FALSE,
+      .use_aio_input = FALSE, 
+      .temp = FALSE,
+      .gc = TRUE
+    ) {
       # array_template = if(is.list(template))
       #   self$ArrayOp('', attrs = names(template), dtypes = template)
       # else get_array(template)
@@ -133,16 +163,33 @@ ScidbConnection <- R6::R6Class(
         dfFieldsNotInArray,
         "ERROR: Data frame has non-matching field(s): %s for array %s", paste(dfFieldsNotInArray, collapse = ','),
         str(array_template))
-      uploaded = scidb::as.scidb(
-        private$.db, df, 
-        name = name,
-        use_aio_input = .use_aio_input, temp = .temp, 
-        types =  array_template$get_field_types(names(df), .raw=TRUE)
-      )
       
-      res = array_op_from_name(uploaded@name)
-      res$.set_meta('.ref', uploaded) # prevent GC
-      res
+      # if(is.null(name)) name = .random_array_name()
+      
+      if(upload_by_vector){
+        vectorArrays = sapply(matchedFields, function(fieldName) {
+          private$upload_df_or_vector(
+            df[[fieldName]], 
+            name = sprintf("%s_%s_", name, fieldName), 
+            attr = fieldName,
+            types = as.character(array_template$get_field_types(fieldName, .raw = TRUE)),
+            use_aio_input = .use_aio_input, temp = .temp, gc = .gc
+          )
+        })
+        vectorArrayNames = sapply(vectorArrays, function(x) x$to_afl())
+        joinAfl = join_arrays_by_two(vectorArrayNames)
+        result = array_op_from_afl(joinAfl)
+        result$.set_meta('.ref', vectorArrays)
+        result
+      } else {
+        private$upload_df_or_vector(
+          df,
+          name = name, 
+          types =  array_template$get_field_types(names(df), .raw=TRUE),
+          use_aio_input = .use_aio_input, temp = .temp, gc = .gc
+        )
+      }
+      
     }
     ,
     array_op_from_build_literal = function(

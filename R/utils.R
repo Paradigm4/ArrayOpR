@@ -40,6 +40,10 @@ assert_no_fields <- function(fields, errorMsgFmt = "Field(s) not empty: %s", ...
 .random_field_name = .random_attr_name
 
 
+.random_array_name <- function(prefix = "Rarrayop", n = 10){
+  sprintf("%s_%s_", prefix, rawToChar(as.raw(sample(c(65:90,97:122), n, replace=TRUE))))
+}
+
 `%u%` = function(lhs, rhs) base::union(lhs, rhs)
 `%-%` = function(lhs, rhs) base::setdiff(lhs, rhs)
 `%n%` = function(lhs, rhs) base::intersect(lhs, rhs)
