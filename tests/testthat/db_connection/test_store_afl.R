@@ -7,16 +7,16 @@ test_that("Store AFL as scidb array", {
     f_bool = c(T,NA,F,NA,F),
     f_int64 = 1:5 * 10.0
   )
-  template = testNS$create_local_arrayop(
-    "template_a", 
-    "<f_str:string COMPRESSION 'zlib', f_int32:int32, f_int64:int64, f_bool: bool, f_double: double, f_datetime: datetime> [da=0:*:0:*]"
+  template = conn$array_op_from_schema_str(
+    " <f_str:string COMPRESSION 'zlib', f_int32:int32, f_int64:int64, f_bool: bool, f_double: double, f_datetime: datetime> [da=0:*:0:*]"
   )
   
   uploaded = conn$array_op_from_uploaded_df(df, template, .temp = F)
   filtered = uploaded$filter(f_double > 0)
   
-  randomName = testNS$full_array_name(sprintf('myStoredArray%s', .random_attr_name()))
-  stored1 = conn$array_op_from_stored_afl(filtered$to_afl(), save_array_name = randomName, .temp = F, .gc = F)
+  stored1 = conn$array_op_from_stored_afl(
+    filtered$to_afl(), 
+    save_array_name = utility$random_array_name(), .temp = F, .gc = F)
   stored2 = conn$array_op_from_stored_afl(filtered$to_afl(), .temp = T)
   filteredDf = dplyr::filter(df, f_double > 0)
   
@@ -25,8 +25,9 @@ test_that("Store AFL as scidb array", {
   
   # Clean up
   stored1$remove_self()
-  gc() # To auto remove stored2
-  testNS$cleanup_after_each_test()
+  gc() 
+  # stored2 should be auto deleted after GC
+  try(stored2$remove_self(), silent = T)
 })
 
 test_that("Store AFL as scidb array and return arrayOp", {
@@ -36,15 +37,15 @@ test_that("Store AFL as scidb array and return arrayOp", {
     f_bool = c(T,NA,F,NA,F),
     f_int64 = 1:5 * 10.0
   )
-  template = testNS$create_local_arrayop(
-    "template_a", 
+  template = conn$array_op_from_schema_str(
     "<f_str:string COMPRESSION 'zlib', f_int32:int32, f_int64:int64, f_bool: bool, f_double: double, f_datetime: datetime> [da=0:*:0:*]"
   )
   
   uploaded = conn$array_op_from_uploaded_df(df, template, .temp = F)
   filtered = uploaded$filter(f_double > 0)
   
-  randomName = testNS$full_array_name(sprintf('myStoredArray%s', .random_attr_name()))
+  randomName = utility$random_array_name()
+  
   stored = conn$array_op_from_stored_afl(
     uploaded$filter(f_double > 0)$to_afl(), 
     save_array_name = randomName, .temp = T, .gc = F
@@ -62,5 +63,5 @@ test_that("Store AFL as scidb array and return arrayOp", {
   
   # Cleanup
   stored$remove_self()
-  testNS$cleanup_after_each_test()
+  uploaded$remove_self()
 })

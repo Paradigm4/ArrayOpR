@@ -10,10 +10,10 @@ test_that("Upload data frame to scidb", {
     f_datetime = c('2020-03-14 01:23:45', '2000-01-01', '01/01/1999 12:34:56', as.character(Sys.time()), "2020-01-01 3:14:15")
   )
   
-  template = testNS$create_local_arrayop(
-    "template_a", 
-    "<f_str:string COMPRESSION 'zlib', f_int32:int32, f_int64:int64, f_bool: bool, f_double: double, f_datetime: datetime> [da=0:*:0:*]"
-  )
+  schema = "<f_str:string COMPRESSION 'zlib', f_int32:int32, f_int64:int64, f_bool: bool, f_double: double, f_datetime: datetime> [da=0:*:0:*]"
+  template = conn$array_op_from_schema_str(sprintf(
+    "%s %s", utility$random_array_name(), schema
+  ))
   
   uploaded = conn$array_op_from_uploaded_df(df, template, .temp = F, .use_aio_input = F)
   # Template can also be a list of data types 
@@ -41,5 +41,6 @@ test_that("Upload data frame to scidb", {
   expect_equal(uploaded$row_count(), nrow(df))
   expect_equal(uploaded2$row_count(), nrow(df))
   
-  testNS$cleanup_after_each_test()
+  uploaded$remove_self()
+  uploaded2$remove_self()
 })
