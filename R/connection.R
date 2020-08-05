@@ -143,6 +143,14 @@ ScidbConnection <- R6::R6Class(
       schemaArray$create_new_with_same_schema(afl_str)
     }
     ,
+    array_op_from_stored_afl = function(afl_str, save_array_name = .random_array_name()) {
+      assert_single_str(afl_str, "ERROR: param 'afl_str' must be a single string")
+      assert_single_str(save_array_name, "ERROR: param 'save_array_name' must be a single string")
+      
+      execute(afl(afl_str | store(save_array_name)))
+      array_op_from_name(save_array_name)
+    }
+    ,
     array_op_from_uploaded_df = function(
       df, 
       template, 

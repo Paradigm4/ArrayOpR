@@ -30,9 +30,27 @@ test_that("get array_op from afl", {
   expect_equal(arr$attrs, c("name", "library", "extra"))
 })
 
-test_that("get array_op from afl and stored it as array", {
+# from afl ----
+test_that("get array_op from afl and stored it as array manually", {
   rawAfl = "apply(list('operators'), extra, 'abc')"
   name = "testarray_stored_afl"
+  
+  storedArr = CONN$array_op_from_stored_afl(rawAfl, name)
+  retrievedArr = CONN$array_op_from_name(name)
+  
+  expect_identical(storedArr$to_afl(), name)
+  expect_equal(
+    storedArr$to_df(only_attributes = T), 
+    retrievedArr$to_df(only_attributes = T)
+  )
+  
+  storedArr$remove_self()
+})
+
+test_that("get array_op from afl and stored it as array manually", {
+  rawAfl = "apply(list('operators'), extra, 'abc')"
+  name = "testarray_stored_afl"
+  
   CONN$execute(afl(rawAfl | store(name)))
   
   transientArr = CONN$array_op_from_afl(rawAfl)
@@ -41,7 +59,10 @@ test_that("get array_op from afl and stored it as array", {
   expect_identical(transientArr$to_afl(), rawAfl)
   expect_identical(storedArr$to_afl(), name)
   expect_identical(storedArr$attrs, transientArr$attrs)
-  expect_equal(storedArr$row_count(), transientArr$row_count())
+  expect_equal(
+    storedArr$to_df(only_attributes = T), 
+    transientArr$to_df(only_attributes = T)
+  )
   
   storedArr$remove_self()
 })
@@ -105,6 +126,17 @@ test_that("get array_op from uploaded data frame by merging columns", {
   expect_identical(arr$attrs, c('a', 'b', 'z'))
   
   expect_equal(arr$to_df(only_attributes = T), df)
+})
+
+test_that("get array_op from uploaded data frame by storing joined df columns", {
+  template = CONN$array_op_from_schema_str("<a:string, b:int32, extra:bool> [z]")
+  df = data.frame(a = letters[1:5], b = 1:5, z = 11:15)
+  
+  joinOp = CONN$array_op_from_uploaded_df(df, template, upload_by_vector = T, .temp = T)
+  stored = CONN$array_op_from_stored_afl(joinOp$to_afl())
+  
+  expect_equal(joinOp$to_df(only_attributes = T), df)
+  expect_equal(stored$to_df(only_attributes = T), df)
 })
 
 
