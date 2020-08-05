@@ -1,5 +1,3 @@
-## Shared code for individual tests in this folder ----
-`%>%` = dplyr::`%>%`
 
 # Wrap up shared functions in a class for easy-access ----
 
@@ -44,7 +42,7 @@ TestNS <- R6::R6Class(
   # Public functions ----
   public = list(
     NS = NULL, # namespace
-    conn = NULL, # arrayop::ArrayOp instance
+    conn = NULL, # a ScidbConnection instance
     
     initialize = function(namespace, conn){
       self$NS = namespace
@@ -102,5 +100,3 @@ TestNS <- R6::R6Class(
   )
 )
 
-# Shared instance for all in-db tests ----
-testNS = TestNS$new(namespace = "arrayop_unittest", conn = conn)

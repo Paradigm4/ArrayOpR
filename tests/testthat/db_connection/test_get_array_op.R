@@ -40,8 +40,8 @@ test_that("get array_op from afl and stored it as array manually", {
   
   expect_identical(storedArr$to_afl(), name)
   expect_equal(
-    storedArr$to_df(only_attributes = T), 
-    retrievedArr$to_df(only_attributes = T)
+    storedArr$to_df_attrs(), 
+    retrievedArr$to_df_attrs()
   )
   
   storedArr$remove_self()
@@ -60,8 +60,8 @@ test_that("get array_op from afl and stored it as array manually", {
   expect_identical(storedArr$to_afl(), name)
   expect_identical(storedArr$attrs, transientArr$attrs)
   expect_equal(
-    storedArr$to_df(only_attributes = T), 
-    transientArr$to_df(only_attributes = T)
+    storedArr$to_df_attrs(), 
+    transientArr$to_df_attrs()
   )
   
   storedArr$remove_self()
@@ -102,7 +102,7 @@ test_that("get array_op from uploaded data frame", {
   
   # all matched fields are uploaded as attributes (dimensions vary with upload operators)
   expect_identical(arr$attrs, c('a', 'b', 'z'))
-  expect_equal(arr$to_df(only_attributes = T), df)
+  expect_equal(arr$to_df_attrs(), df)
   
   arr$remove_self()
 })
@@ -125,7 +125,7 @@ test_that("get array_op from uploaded data frame by merging columns", {
   # all matched fields are uploaded as attributes (dimensions vary with upload operators)
   expect_identical(arr$attrs, c('a', 'b', 'z'))
   
-  expect_equal(arr$to_df(only_attributes = T), df)
+  expect_equal(arr$to_df_attrs(), df)
 })
 
 test_that("get array_op from uploaded data frame by storing joined df columns", {
@@ -135,8 +135,8 @@ test_that("get array_op from uploaded data frame by storing joined df columns", 
   joinOp = CONN$array_op_from_uploaded_df(df, template, upload_by_vector = T, .temp = T)
   stored = CONN$array_op_from_stored_afl(joinOp$to_afl())
   
-  expect_equal(joinOp$to_df(only_attributes = T), df)
-  expect_equal(stored$to_df(only_attributes = T), df)
+  expect_equal(joinOp$to_df_attrs(), df)
+  expect_equal(stored$to_df_attrs(), df)
 })
 
 
@@ -192,7 +192,7 @@ test_that("get array_op from build literal", {
   )
   
   arr = CONN$array_op_from_build_literal(df, template, build_dim_spec = "i=1:*:0:*")
-  result = arr$to_df(only_attributes = T) %>% dplyr::arrange(z)
+  result = arr$to_df_attrs() %>% dplyr::arrange(z)
   
   expect_equal(arr$row_count(), 5)
   expect_equal(result, df)
