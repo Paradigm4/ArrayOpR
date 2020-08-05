@@ -1331,11 +1331,8 @@ Only data.frame is supported", class(df))
     limit = function(n = 5, skip = NULL) {
       assert_single_number(n)
       assert(is.null(skip) || is.numeric(skip))
-      self$create_new_with_same_schema(
-        afl(
-          self | limit(n, skip)
-        )
-      )
+      aflStr = if(is.null(skip)) afl(self | limit(n)) else afl(self | limit(n, skip))
+      self$create_new_with_same_schema(aflStr)
     }
     ,
     row_count = function(conn = get_default_connection()){

@@ -2,26 +2,21 @@ context("Get array_op from scidb")
 
 CONN = get_default_connection()
 
-.name = "testarray_xyz"
-
-.setup = function(){
-  CONN$execute(sprintf("create temp array %s <a:string> [z]", .name))
-}
-
-.teardown = function(){
-  CONN$execute(afl(.name | remove))
-}
-
-.setup()
-
 # Tests begin ---- 
 
 # from array name ---- 
 
 test_that("get array_op from array name", {
+  .name = utility$random_array_name()
+  CONN$execute(sprintf("create temp array %s <a:string> [z]", .name))
+  
   arr = CONN$array_op_from_name(.name)
   expect_identical(arr$to_afl(), .name)
+  
+  try(arr$remove_self(), silent = T)
 })
+
+# from afl ----
 
 test_that("get array_op from afl", {
   rawAfl = "apply(list('operators'), extra, 'abc')"
@@ -30,10 +25,9 @@ test_that("get array_op from afl", {
   expect_equal(arr$attrs, c("name", "library", "extra"))
 })
 
-# from afl ----
 test_that("get array_op from afl and stored it as array manually", {
   rawAfl = "apply(list('operators'), extra, 'abc')"
-  name = "testarray_stored_afl"
+  name = utility$random_array_name(prefix = "Rarrayop_tests_stored_afl")
   
   storedArr = CONN$array_op_from_stored_afl(rawAfl, name)
   retrievedArr = CONN$array_op_from_name(name)
@@ -49,7 +43,7 @@ test_that("get array_op from afl and stored it as array manually", {
 
 test_that("get array_op from afl and stored it as array manually", {
   rawAfl = "apply(list('operators'), extra, 'abc')"
-  name = "testarray_stored_afl"
+  name = utility$random_array_name(prefix = "Rarrayop_tests_stored_afl")
   
   CONN$execute(afl(rawAfl | store(name)))
   
@@ -204,4 +198,3 @@ test_that("get array_op from build literal", {
 
 # Tests end ----
 
-.teardown()

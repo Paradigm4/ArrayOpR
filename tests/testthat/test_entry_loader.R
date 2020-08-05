@@ -1,5 +1,6 @@
 library(testthat)
 library(mockery)
+options(stringsAsFactors = FALSE)
 `%>%` = dplyr::`%>%`
 
 context('test entry')
@@ -11,10 +12,6 @@ assert_afl_equal <- function(actual, expected) {
   expected <- gsub('\\s+', '', expected)
   testthat::expect_identical(actual, expected)
 }
-
-`%>%` = dplyr::`%>%`
-
-options(stringsAsFactors = FALSE)
 
 # When runnning devtools::test(), the working directory is (package root)/tests/testthat/
 

@@ -8,7 +8,7 @@ test_that("run afl query", {
 })
 
 test_that("create an array then remove it", {
-  name = "testarray_xyz"
+  name = utility$random_array_name()
   
   show_array = function(){
     CONN$query(sprintf("show(%s)", name))
