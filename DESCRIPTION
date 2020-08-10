@@ -22,16 +22,17 @@ Imports:
     dplyr,
     R6,
     bit64,
+    glue,
     stringr
 RoxygenNote: 7.1.1
 Roxygen: list(markdown = TRUE)
 Collate: 
+    'utils.R'
     'afl_utils.R'
     'arg_list.R'
     'array_op_base.R'
     'array_op_v18.R'
     'array_op_v19.R'
-    'utils.R'
     'repo_base.R'
     'repo_v18.R'
     'repo_v19.R'

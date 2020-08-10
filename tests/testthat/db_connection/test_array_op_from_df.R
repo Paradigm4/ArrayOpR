@@ -3,6 +3,30 @@ context("persistent array_op from uploaded data frame")
 
 # from uploaded data frame ----
 
+
+test_that("upload data frame with default", {
+  template = CONN$array_op_from_schema_str("<a:string, b:int32, extra:bool> [z]")
+  df = data.frame(a = letters[1:5], b = 1:5, z = 11:15)
+  
+  joinOp = CONN$array_op_from_uploaded_df(df, template, upload_by_vector = T, .temp = T)
+  stored = CONN$array_op_from_stored_afl(joinOp$to_afl())
+  
+  expect_equal(joinOp$to_df_attrs(), df)
+  expect_equal(stored$to_df_attrs(), df)
+})
+
+test_that("uploaded data frame by vectors and store the joined vectors", {
+  template = CONN$array_op_from_schema_str("<a:string, b:int32, extra:bool> [z]")
+  df = data.frame(a = letters[1:5], b = 1:5, z = 11:15)
+  
+  joinOp = CONN$array_op_from_uploaded_df(df, template, upload_by_vector = T, .temp = T)
+  stored = CONN$array_op_from_stored_afl(joinOp$to_afl())
+  
+  expect_equal(joinOp$to_df_attrs(), df)
+  expect_equal(stored$to_df_attrs(), df)
+})
+
+
 test_that("upload data frame with special chars", {
   template = CONN$array_op_from_schema_str("<a:string, b:int32, extra:bool> [z]")
   df = data.frame(a = c(
@@ -42,19 +66,8 @@ test_that("upload data frame by vectors", {
   expect_equal(arr$to_df_attrs(), df)
 })
 
-test_that("uploaded data frame without sepcial chars by vectors and store the joined vectors", {
-  template = CONN$array_op_from_schema_str("<a:string, b:int32, extra:bool> [z]")
-  df = data.frame(a = letters[1:5], b = 1:5, z = 11:15)
-  
-  joinOp = CONN$array_op_from_uploaded_df(df, template, upload_by_vector = T, .temp = T)
-  stored = CONN$array_op_from_stored_afl(joinOp$to_afl())
-  
-  expect_equal(joinOp$to_df_attrs(), df)
-  expect_equal(stored$to_df_attrs(), df)
-})
 
-
-test_that("get array_op from uploaded data frame with GC", {
+test_that("upload data frame with GC setting", {
   template = CONN$array_op_from_schema_str("<a:string, b:int32, extra:bool> [z]")
   df = data.frame(a = letters[1:5], b = 1:5, z = 11:15)
   
@@ -91,7 +104,7 @@ test_that("get array_op from uploaded data frame with GC", {
 })
 
 
-test_that("Upload data frame to scidb", {
+test_that("upload data frame with other scidbR settings", {
   df = data.frame(
     f_str = letters[1:5], 
     f_double = c(3.14, 2.0, NA, 0, -99), 
