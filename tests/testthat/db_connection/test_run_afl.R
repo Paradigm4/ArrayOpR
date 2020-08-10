@@ -1,6 +1,5 @@
-context("Run AFL")
+context("Run AFL from a ScidbConnection")
 
-CONN = arrayop::get_default_connection()
 
 test_that("run afl query", {
   operators = CONN$query("list('operators')")

@@ -1,23 +1,23 @@
-context("Store AFL as scidb array and return arrayOp")
+context("Get array_from from different methods")
 
-test_that("Store AFL as scidb array", {
+test_that("persistent array_op from uploaded data frame", {
   df = data.frame(
     f_str = letters[1:5], 
     f_double = c(3.14, 2.0, NA, 0, -99),
     f_bool = c(T,NA,F,NA,F),
     f_int64 = 1:5 * 10.0
   )
-  template = conn$array_op_from_schema_str(
+  template = CONN$array_op_from_schema_str(
     " <f_str:string COMPRESSION 'zlib', f_int32:int32, f_int64:int64, f_bool: bool, f_double: double, f_datetime: datetime> [da=0:*:0:*]"
   )
   
-  uploaded = conn$array_op_from_uploaded_df(df, template, .temp = F)
+  uploaded = CONN$array_op_from_uploaded_df(df, template, .temp = F)
   filtered = uploaded$filter(f_double > 0)
   
-  stored1 = conn$array_op_from_stored_afl(
+  stored1 = CONN$array_op_from_stored_afl(
     filtered$to_afl(), 
-    save_array_name = utility$random_array_name(), .temp = F, .gc = F)
-  stored2 = conn$array_op_from_stored_afl(filtered$to_afl(), .temp = T)
+    save_array_name = random_array_name(), .temp = F, .gc = F)
+  stored2 = CONN$array_op_from_stored_afl(filtered$to_afl(), .temp = T)
   filteredDf = dplyr::filter(df, f_double > 0)
   
   expect_equal(stored1$to_df_attrs(), filteredDf)
@@ -37,21 +37,21 @@ test_that("Store AFL as scidb array and return arrayOp", {
     f_bool = c(T,NA,F,NA,F),
     f_int64 = 1:5 * 10.0
   )
-  template = conn$array_op_from_schema_str(
+  template = CONN$array_op_from_schema_str(
     "<f_str:string COMPRESSION 'zlib', f_int32:int32, f_int64:int64, f_bool: bool, f_double: double, f_datetime: datetime> [da=0:*:0:*]"
   )
   
-  uploaded = conn$array_op_from_uploaded_df(df, template, .temp = F)
+  uploaded = CONN$array_op_from_uploaded_df(df, template, .temp = F)
   filtered = uploaded$filter(f_double > 0)
   
-  randomName = utility$random_array_name()
+  randomName = random_array_name()
   
-  stored = conn$array_op_from_stored_afl(
+  stored = CONN$array_op_from_stored_afl(
     uploaded$filter(f_double > 0)$to_afl(), 
     save_array_name = randomName, .temp = T, .gc = F
   )
   # 'overwrite' an existing array
-  stored = conn$array_op_from_stored_afl(
+  stored = CONN$array_op_from_stored_afl(
     uploaded$filter(f_double < 0)$to_afl(), 
     save_array_name = randomName
   )
