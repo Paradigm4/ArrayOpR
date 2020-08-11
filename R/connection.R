@@ -80,7 +80,9 @@ ScidbConnection <- R6::R6Class(
         obj@name
       )
     },
-    get_array_template = function(t){
+    # Get an array as template from a 't' or a 'dataFrame' if 't' is null
+    get_array_template = function(t, dataFrame = NULL){
+      if(is.null(t)) t = infer_scidb_types_from_df(dataFrame)
       if(inherits(t, "ArrayOpBase")) return(t)
       if(is.list(t)){
         assert_named_list(t, "ERROR: get_array_template: a list as template must have names")
@@ -96,6 +98,25 @@ ScidbConnection <- R6::R6Class(
       stopf("ERROR: get_array_template: template must be an array_op or named list, but got: [%s]", 
             paste(class(t), collapse = ','))
 
+    }
+    ,
+    # Return a named list of scidb data types in string format
+    infer_scidb_types_from_df = function(dataFrame) {
+      colClasses = lapply(dataFrame, function(vec){
+        if(inherits(vec, "integer")) "int32"
+        else if(inherits(vec, "integer64")) "int64"
+        else if(inherits(vec, "numeric")) "double"
+        else if(inherits(vec, c("factor", "character"))) "string"
+        else if(inherits(vec, "logical")) "bool"
+        else if(inherits(vec, c("Date", "POSIXct", "POSIXt"))) "datetime"
+        else NA
+      })
+      naCols = Filter(is.na, colClasses)
+      assertf(length(naCols) == 0, 
+              "{.symbol} has unknown-typed column(s): [{.na_cols}]",
+              .symbol = deparse(substitute(dataFrame)),
+              .na_cols = paste(names(naCols), collapse = ','))
+      colClasses
     }
   ),
   active = list(
@@ -197,26 +218,26 @@ ScidbConnection <- R6::R6Class(
     ) {
       assert_inherits(df, "data.frame")
       assertf(nrow(df) > 0, "{.symbol} must be a non-empty data frame")
-      array_template = if(!is.null(template)) get_array_template(template) else NULL
+      array_template = get_array_template(template, df)
       # assert all df fields are in the array_template
-      matchedFields = if(!is.null(array_template)) {
+      matchedFields = {
         dfFieldsNotInArray = names(df) %-% array_template$dims_n_attrs
-        assert_not_has_len(
-          dfFieldsNotInArray,
-          "ERROR: Data frame has non-matching field(s): %s for array %s", paste(dfFieldsNotInArray, collapse = ','),
-          str(array_template))
+        assertf(length(dfFieldsNotInArray) == 0,
+                "Data frame {.symbol} has field(s) [{.fields}] that do not match the template '{.template}'",
+                .symbol = deparse(substitute(df)), 
+                .fields = paste(dfFieldsNotInArray, collapse = ','),
+                .template = deparse(substitute(template)), 
+                )
         names(df) %n% array_template$dims_n_attrs
-      } else names(df)
+      }
       
       if(upload_by_vector){
         vectorArrays = sapply(matchedFields, function(fieldName) {
-          vecType = if(is.null(array_template)) NULL else
-            as.character(array_template$get_field_types(fieldName, .raw = TRUE))
           private$upload_df_or_vector(
             df[[fieldName]], 
             name = sprintf("%s_%s_", name, fieldName), 
             attr = fieldName,
-            types = vecType,
+            types = as.character(array_template$get_field_types(fieldName, .raw = TRUE)),
             use_aio_input = .use_aio_input, temp = .temp, gc = .gc
           )
         })
@@ -227,12 +248,10 @@ ScidbConnection <- R6::R6Class(
         result
       }
       else {
-        colTypes = if(is.null(array_template)) NULL else 
-          array_template$get_field_types(names(df), .raw=TRUE)
         private$upload_df_or_vector(
           df,
           name = name, 
-          types = colTypes,
+          types = array_template$get_field_types(names(df), .raw=TRUE),
           use_aio_input = .use_aio_input, temp = .temp, gc = .gc
         )
       }
@@ -240,12 +259,12 @@ ScidbConnection <- R6::R6Class(
     }
     ,
     array_op_from_build_literal = function(
-      df, template, 
+      df, template = NULL, 
       build_dim_spec = .random_field_name(),
       skip_scidb_schema_check = FALSE
     ) {
       assert(nrow(df) >= 1, "ERROR: param 'df' must have at least one row")
-      array_template = get_array_template(template)
+      array_template = get_array_template(template, df)
       buildOp = array_template$build_new(df, build_dim_spec)
       if(skip_scidb_schema_check){
         buildOp
