@@ -8,34 +8,37 @@
 # param .nframe: the number of nested function frames. 0 means the env where this function is called from
 # param .symbol: the R expression of `cond` in string form
 assertf = function(cond, 
-                   error_fmt = "'{.symbol}' is not true", 
+                   error_fmt = "Failed assertion: '{.symbol}'.", 
                    .nframe = 0, 
                    .symbol = deparse(substitute(cond)),
                    ...
                    ) {
   # None of the params is evaluated if `cond` is TRUE
   if(!cond) {
-    template = glue("{error_fmt}\n{{trace_call}\n.")
-    trace_call = deparse(sys.call(-.nframe - 1))
-    var_env = list(error_fmt = error_fmt, trace_call = trace_call, ...)
-    stop(glue(template, .envir = list(error_fmt = error_fmt, )), call. = FALSE)
+    template = sprintf("%s\n{.stack_trace}\n", error_fmt)
+    var_env = list(
+      .symbol = .symbol, 
+      .stack_trace = deparse(sys.call(-.nframe - 1)), 
+      ...
+    )
+    stop(glue(template, .envir = var_env), call. = FALSE)
   }
 }
 
 assert_pos_num = function(num, error_fmt = "'{.symbol}' must be > 0, but got: {.value}", .nframe = 0, .symbol = deparse(substitute(num))) {
-  assertf(num > 0, error_fmt = glue(error_fmt), .nframe = .nframe + 1, .symbol = .symbol, .value = num)
+  assertf(num > 0, error_fmt = error_fmt, .nframe = .nframe + 1, .symbol = .symbol, .value = num)
 }
 
 assert_null = function(value, error_fmt = "'{.symbol}' must be NULL", .nframe = 0, .symbol = deparse(substitute(value))) {
-  assertf(is.null(value), error_fmt = glue(error_fmt), .nframe = .nframe + 1, .symbol = .symbol, .value = value)
+  assertf(is.null(value), error_fmt = error_fmt, .nframe = .nframe + 1, .symbol = .symbol, .value = value)
 }
 
 assert_inherits = function(value, expected_class_names,
-                           error_fmt = "{.symbol} is should inherit from one of the class(es): [{.expected_class_names}], but got class of: {.actual_class_names}",
+                           error_fmt = "{.symbol} is should inherit from one of the class(es): [{.expected_class_names}], but got class of: [{.actual_class_names}]",
                            .nframe = 0, .symbol = deparse(substitute(value))
 ){
-  assertf(inherits(value, class_names), 
-          error_fmt = glue(error_fmt),
+  assertf(inherits(value, expected_class_names), 
+          error_fmt = error_fmt,
           .nframe = .nframe + 1,
           .symbol = .symbol,
           .expected_class_names = paste(expected_class_names, collapse = ','),

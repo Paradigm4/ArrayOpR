@@ -33,7 +33,7 @@ test_that("persistent array_op from stored AFL", {
 
 test_that("store transient array_op from afl as a persistent one", {
   rawAfl = "apply(list('operators'), extra, 'abc')"
-  name = random_array_name(prefix = "Rarrayop_tests_stored_afl")
+  name = random_array_name()
   
   CONN$execute(afl(rawAfl | store(name)))
   

@@ -4,11 +4,34 @@ context("persistent array_op from uploaded data frame")
 # from uploaded data frame ----
 
 
-test_that("upload data frame with default", {
-  template = CONN$array_op_from_schema_str("<a:string, b:int32, extra:bool> [z]")
+test_that("upload data frame: no template", {
+  df = data.frame(a = letters[1:5], b = 1:5, z = 11:15 * 1.2)
+  uploaded = CONN$array_op_from_uploaded_df(df, .gc = F)
+  
+  # uploaded data frame will have an artificial dimension
+  expect_equal(uploaded$to_df_attrs(), df)
+  uploaded$remove_self()
+})
+
+test_that("upload data frame: no template, by vectors", {
+  df = data.frame(a = letters[1:5], b = 1:5, z = 11:15 * 1.2)
+  uploaded = CONN$array_op_from_uploaded_df(df, upload_by_vector = T, .gc = F)
+  
+  # uploaded data frame will have an artificial dimension
+  expect_equal(uploaded$to_df_attrs(), df)
+  columnArrays = uploaded$.get_meta(".ref")
+  for(arr in columnArrays){
+    arr$remove_self()
+  }
+})
+
+test_that("upload data frame with a template", {
   df = data.frame(a = letters[1:5], b = 1:5, z = 11:15)
   
-  joinOp = CONN$array_op_from_uploaded_df(df, template, upload_by_vector = T, .temp = T)
+  joinOp = CONN$array_op_from_uploaded_df(
+    df, 
+    template = "<a:string, b:int32, extra:bool> [z]", 
+  )
   stored = CONN$array_op_from_stored_afl(joinOp$to_afl())
   
   expect_equal(joinOp$to_df_attrs(), df)
@@ -16,10 +39,9 @@ test_that("upload data frame with default", {
 })
 
 test_that("uploaded data frame by vectors and store the joined vectors", {
-  template = CONN$array_op_from_schema_str("<a:string, b:int32, extra:bool> [z]")
   df = data.frame(a = letters[1:5], b = 1:5, z = 11:15)
   
-  joinOp = CONN$array_op_from_uploaded_df(df, template, upload_by_vector = T, .temp = T)
+  joinOp = CONN$array_op_from_uploaded_df(df, "<a:string, b:int32, extra:bool> [z]", upload_by_vector = T, .temp = T)
   stored = CONN$array_op_from_stored_afl(joinOp$to_afl())
   
   expect_equal(joinOp$to_df_attrs(), df)
@@ -28,7 +50,6 @@ test_that("uploaded data frame by vectors and store the joined vectors", {
 
 
 test_that("upload data frame with special chars", {
-  template = CONN$array_op_from_schema_str("<a:string, b:int32, extra:bool> [z]")
   df = data.frame(a = c(
     "slashes: http://a-b/c d%20%", # double backslackes \\ cause a bug
     NA, # NA is ok if we upload df as a whole instead of by vectors
@@ -37,7 +58,7 @@ test_that("upload data frame with special chars", {
     "''"
   ), b = 1:5, z = 11:15, stringsAsFactors = F)
   
-  arr = CONN$array_op_from_uploaded_df(df, template)
+  arr = CONN$array_op_from_uploaded_df(df, template = "<a:string, b:int32, extra:bool> [z]")
   
   # all matched fields are uploaded as attributes (dimensions vary with upload operators)
   expect_identical(arr$attrs, c('a', 'b', 'z'))
@@ -47,7 +68,6 @@ test_that("upload data frame with special chars", {
 })
 
 test_that("upload data frame by vectors", {
-  template = CONN$array_op_from_schema_str("<a:string, b:int32, extra:bool> [z]")
   df = data.frame(
     a = c(
       "slashes: http://a-b/c\\d%20%",
@@ -58,7 +78,7 @@ test_that("upload data frame by vectors", {
     ),
     b = 1:5, z = 11:15)
   
-  arr = CONN$array_op_from_uploaded_df(df, template, upload_by_vector = T)
+  arr = CONN$array_op_from_uploaded_df(df, "<a:string, b:int32, extra:bool> [z]", upload_by_vector = T)
   
   # all matched fields are uploaded as attributes (dimensions vary with upload operators)
   expect_identical(arr$attrs, c('a', 'b', 'z'))
@@ -68,7 +88,7 @@ test_that("upload data frame by vectors", {
 
 
 test_that("upload data frame with GC setting", {
-  template = CONN$array_op_from_schema_str("<a:string, b:int32, extra:bool> [z]")
+  template = "<a:string, b:int32, extra:bool> [z]"
   df = data.frame(a = letters[1:5], b = 1:5, z = 11:15)
   
   gc_on = function() {
@@ -118,7 +138,7 @@ test_that("upload data frame with other scidbR settings", {
     "%s %s", utility$random_array_name(), schema
   ))
   
-  uploaded = conn$array_op_from_uploaded_df(df, template, .temp = F, .use_aio_input = F)
+  uploaded = conn$array_op_from_uploaded_df(df, schema, .temp = F, .use_aio_input = F)
   # Template can also be a list of data types 
   uploaded2 = conn$array_op_from_uploaded_df(df, template$get_field_types(), .temp = T, .use_aio_input = T)
   

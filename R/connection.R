@@ -81,14 +81,21 @@ ScidbConnection <- R6::R6Class(
       )
     },
     get_array_template = function(t){
-      if(inherits(t, "ArrayOpBase")) t
-      else if(is.list(t)){
+      if(inherits(t, "ArrayOpBase")) return(t)
+      if(is.list(t)){
         assert_named_list(t, "ERROR: get_array_template: a list as template must have names")
-        repo$ArrayOp('', attrs = names(t), dtypes = t)
-      } else {
-        stopf("ERROR: get_array_template: template must be an array_op or named list, but got: [%s]", 
-              paste(class(t), collapse = ','))
+        return(repo$ArrayOp('', attrs = names(t), dtypes = t))
       }
+      if(is.character(t) && length(t) == 1) {
+        if(grepl("<", t))
+          return(array_op_from_schema_str(t))
+        else if(grepl("^\\w+\\.\\w+$", t))
+          return(array_op_from_name(t))
+      }
+      
+      stopf("ERROR: get_array_template: template must be an array_op or named list, but got: [%s]", 
+            paste(class(t), collapse = ','))
+
     }
   ),
   active = list(
@@ -181,34 +188,35 @@ ScidbConnection <- R6::R6Class(
     ,
     array_op_from_uploaded_df = function(
       df, 
-      template, 
+      template = NULL, 
       name = .random_array_name(), 
       upload_by_vector = FALSE,
       .use_aio_input = FALSE, 
       .temp = FALSE,
       .gc = TRUE
     ) {
-      # array_template = if(is.list(template))
-      #   self$ArrayOp('', attrs = names(template), dtypes = template)
-      # else get_array(template)
-      array_template = get_array_template(template)
-      # browser()
-      dfFieldsNotInArray = names(df) %-% array_template$dims_n_attrs
-      matchedFields = names(df) %n% array_template$dims_n_attrs
-      assert_not_has_len(
-        dfFieldsNotInArray,
-        "ERROR: Data frame has non-matching field(s): %s for array %s", paste(dfFieldsNotInArray, collapse = ','),
-        str(array_template))
-      
-      # if(is.null(name)) name = .random_array_name()
+      assert_inherits(df, "data.frame")
+      assertf(nrow(df) > 0, "{.symbol} must be a non-empty data frame")
+      array_template = if(!is.null(template)) get_array_template(template) else NULL
+      # assert all df fields are in the array_template
+      matchedFields = if(!is.null(array_template)) {
+        dfFieldsNotInArray = names(df) %-% array_template$dims_n_attrs
+        assert_not_has_len(
+          dfFieldsNotInArray,
+          "ERROR: Data frame has non-matching field(s): %s for array %s", paste(dfFieldsNotInArray, collapse = ','),
+          str(array_template))
+        names(df) %n% array_template$dims_n_attrs
+      } else names(df)
       
       if(upload_by_vector){
         vectorArrays = sapply(matchedFields, function(fieldName) {
+          vecType = if(is.null(array_template)) NULL else
+            as.character(array_template$get_field_types(fieldName, .raw = TRUE))
           private$upload_df_or_vector(
             df[[fieldName]], 
             name = sprintf("%s_%s_", name, fieldName), 
             attr = fieldName,
-            types = as.character(array_template$get_field_types(fieldName, .raw = TRUE)),
+            types = vecType,
             use_aio_input = .use_aio_input, temp = .temp, gc = .gc
           )
         })
@@ -217,12 +225,14 @@ ScidbConnection <- R6::R6Class(
         result = array_op_from_afl(joinAfl)
         result$.set_meta('.ref', vectorArrays)
         result
-      } else {
+      }
+      else {
+        colTypes = if(is.null(array_template)) NULL else 
+          array_template$get_field_types(names(df), .raw=TRUE)
         private$upload_df_or_vector(
           df,
           name = name, 
-          # todo: names(df) -> matchedFields??
-          types =  array_template$get_field_types(names(df), .raw=TRUE),
+          types = colTypes,
           use_aio_input = .use_aio_input, temp = .temp, gc = .gc
         )
       }

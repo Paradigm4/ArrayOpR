@@ -24,7 +24,9 @@ print.ArrayOpBase = function(op) {
 #' One operation consists of an scidb operator and [1..*] operands, of which the result can be used as an operand 
 #' in another operation. Operands and Opreration results can all be denoted by ArrayOp.
 #' @export
-ArrayOpBase <- R6::R6Class("ArrayOpBase",
+ArrayOpBase <- R6::R6Class(
+  "ArrayOpBase",
+  cloneable = FALSE,                         
   private = list(
     raw_afl = NULL
     ,
