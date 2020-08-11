@@ -205,3 +205,21 @@ test_that("Error case: invalid dimension specs in build_literal", {
   # should report error if build_dim is invalid, verified by scidb show
   expect_error(CONN$array_op_from_build_literal(data.frame(a=1:10), build_dim_spec = "i=non-sense"))
 })
+
+# From data frame auto mode ----
+
+test_that("auto determine whether to upload or build", {
+  dataFrame = data.frame(a=1:10, b=1:10*3.14, c=letters[1:10], d=c(T,F), e=as.POSIXct("2020/1/23 3:45"))
+  
+  # ScidbR has a bug for uploading data frames with a datetime column
+  dataFrame2 = data.frame(a=1:10, b=1:10*3.14, c=letters[1:10], d=c(T,F))
+  
+  arrBuild = conn$array_op_from_df(dataFrame, build_or_upload_threshold = 5000)
+  arrUpload = conn$array_op_from_df(dataFrame2, build_or_upload_threshold = 10)
+  
+  expect_true(grepl("build", arrBuild$to_afl()))
+  expect_true(!grepl("build", arrUpload$to_afl()))
+  
+  expect_equal(arrBuild$to_df_attrs(), dataFrame)
+  expect_equal(arrUpload$to_df_attrs(), dataFrame2)
+})

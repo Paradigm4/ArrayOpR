@@ -203,8 +203,27 @@ ScidbConnection <- R6::R6Class(
       res = array_op_from_scidbr_obj(storedArray)
       res$.set_meta('.ref', storedArray)
       res
-      # execute(afl(afl_str | store(save_array_name)))
-      # array_op_from_name(save_array_name)
+    }
+    ,
+    array_op_from_df = function(
+      df, 
+      template = NULL,
+      build_or_upload_threshold = 8000L,
+      build_dim_spec = .random_field_name(),
+      skip_scidb_schema_check = FALSE,
+      ...
+    ){
+      cellCount = dim(df)[[1L]] * dim(df)[[2L]]
+      if(cellCount <= build_or_upload_threshold){
+        array_op_from_build_literal(
+          df, 
+          template = template,
+          build_dim_spec = build_dim_spec,
+          skip_scidb_schema_check = skip_scidb_schema_check
+          )
+      } else {
+        array_op_from_uploaded_df(df, template = template, ...)
+      }
     }
     ,
     array_op_from_uploaded_df = function(

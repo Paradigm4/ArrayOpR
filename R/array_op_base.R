@@ -856,7 +856,7 @@ Only data.frame is supported", class(df))
       assert_not_has_len(dfNonMatchingCols, "ERROR: ArrayOp$build_new: df column(s) '%s' not found in template %s",
         paste(dfNonMatchingCols, collapse = ','), self$to_afl())
       
-      builtDtypes = self$get_field_types(builtAttrs)
+      builtDtypes = self$get_field_types(builtAttrs, .raw = T)
       # Convert a single value to its proper string representation in `build` expressions.
       stringify_in_build = function(single_value) {
         if(is.na(single_value) || is.null(single_value))
@@ -866,6 +866,7 @@ Only data.frame is supported", class(df))
           sprintf("\\'%s\\'", gsub("(['\\])", "\\\\\\\\\\1", single_value))  # String literals
         else if(is.logical(single_value) && single_value) "true"
         else if(is.logical(single_value) && !single_value) "false"
+        else if(inherits(single_value,  c("Date", "POSIXct", "POSIXt"))) sprintf("\\'%s\\'", single_value)
         else sprintf("%s", single_value)  # Other types
       }
      
@@ -874,6 +875,7 @@ Only data.frame is supported", class(df))
       rowStrs = by(df, 1:nrow(df), function(row){
         sprintf("(%s)", paste(lapply(row[1,], stringify_in_build), collapse = ','))
       })
+      
       afl_literal = sprintf("build(<%s>[%s], '[%s]', true)", 
         attrStr, artificial_field, paste(rowStrs, collapse = ','))
       
