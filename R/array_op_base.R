@@ -857,27 +857,34 @@ Only data.frame is supported", class(df))
         paste(dfNonMatchingCols, collapse = ','), self$to_afl())
       
       builtDtypes = self$get_field_types(builtAttrs, .raw = T)
-      # Convert a single value to its proper string representation in `build` expressions.
-      stringify_in_build = function(single_value) {
-        if(is.na(single_value) || is.null(single_value))
-          "" # Return an empty string for NA or NULL
-        else if(is.character(single_value) || is.factor(single_value))
-          # R, gsub, AFL all treat single quotes specially, so we need to escape back slashes at multiple levels
-          sprintf("\\'%s\\'", gsub("(['\\])", "\\\\\\\\\\1", single_value))  # String literals
-        else if(is.logical(single_value) && single_value) "true"
-        else if(is.logical(single_value) && !single_value) "false"
-        else if(inherits(single_value,  c("Date", "POSIXct", "POSIXt"))) sprintf("\\'%s\\'", single_value)
-        else sprintf("%s", single_value)  # Other types
-      }
-     
-      #' Create a build expression from a data.frame and specified scidb data types
+      
       attrStr = paste(builtAttrs, builtDtypes, collapse = ',', sep = ':')
-      rowStrs = by(df, 1:nrow(df), function(row){
-        sprintf("(%s)", paste(lapply(row[1,], stringify_in_build), collapse = ','))
-      })
+      # convert columns to escaped strings
+      colStrs = 
+          lapply(builtAttrs, function(x) {
+            colScidbType = builtDtypes[[x]]
+            vec = df[[x]]
+            switch(
+              colScidbType,
+              # "string" = sprintf("\\'%s\\'", gsub("(['\\])", "\\\\\\\\\\1", vec)),
+              "string" = sapply(
+                gsub("(['\\])", "\\\\\\\\\\1", vec),
+                function(singleStr) if(is.na(singleStr)) "" else sprintf("\\'%s\\'", singleStr)
+              ),
+              "datetime" = sprintf("\\'%s\\'", vec),
+              "bool" = tolower(vec),
+              vec # should be numeric types
+            )
+          })
+      names(colStrs) = builtAttrs
+      glueTemplate = sprintf("(%s)", paste("{", names(df), "}", sep = '', collapse = ","))
+      contentStr = glue::glue_collapse(
+        glue::glue_data(colStrs, glueTemplate, .sep = ',', .na = ''),
+        sep = ','
+      )
       
       afl_literal = sprintf("build(<%s>[%s], '[%s]', true)", 
-        attrStr, artificial_field, paste(rowStrs, collapse = ','))
+        attrStr, artificial_field, contentStr)
       
       builtDtypes[[artificial_field]] = 'int64'
       return(self$create_new(afl_literal, artificial_field, builtAttrs, 
