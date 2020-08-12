@@ -130,12 +130,12 @@ test_that("upload data frame with other scidbR settings", {
     f_double = c(3.14, 2.0, NA, 0, -99), 
     f_bool = c(T,NA,F,NA,F), 
     f_int64 = 1:5 * 10.0, 
-    f_datetime = c('2020-03-14 01:23:45', '2000-01-01', '01/01/1999 12:34:56', as.character(Sys.time()), "2020-01-01 3:14:15")
+    f_datetime = c('2020-03-14 01:23:45', '2000-01-01 0:0:0', '1999-12-3 12:34:56', as.character(Sys.time()), "2020-01-01 3:14:15")
   )
   
   schema = "<f_str:string COMPRESSION 'zlib', f_int32:int32, f_int64:int64, f_bool: bool, f_double: double, f_datetime: datetime> [da=0:*:0:*]"
   template = conn$array_op_from_schema_str(sprintf(
-    "%s %s", utility$random_array_name(), schema
+    "%s %s", random_array_name(), schema
   ))
   
   uploaded = conn$array_op_from_uploaded_df(df, schema, .temp = F, .use_aio_input = F)
@@ -147,18 +147,12 @@ test_that("upload data frame with other scidbR settings", {
   expect_identical(uploaded2$get_field_types(uploaded2$attrs), templateMatchedDTypes)
   
   # R date time conversion is cubersome. We replace it with the scidb parsed values.
-  dfCopy = df
+  df = dplyr::mutate(df, f_datetime = as.POSIXct(f_datetime))
   dbdf1 = uploaded$to_df_attrs()
   dbdf2 = uploaded2$to_df_attrs()
   
-  dfCopy$f_datetime = dbdf1[['f_datetime']] 
-  expect_equal(dbdf1, dfCopy)
-  expect_equal(dbdf2, dfCopy)
-  
-  # Test limit function
-  expect_equal(uploaded$limit(3)$to_df_attrs(), dfCopy[1:3,])
-  expect_equal(uploaded$limit(3, skip=1)$to_df_attrs(), 
-               data.frame(dfCopy[2:4,], row.names = NULL))
+  expect_equal(dbdf1, df)
+  expect_equal(dbdf2, df)
   
   # Validate number of rows
   expect_equal(uploaded$row_count(), nrow(df))
