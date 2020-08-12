@@ -39,8 +39,6 @@ dfArraySource = data.frame(
   f_double = c(3.14, 2.0, NA, 0, -99)
 )
 
-
-
 RefArray = conn$
   array_op_from_df(dfArraySource, schemaTemplate)$
   change_schema(schemaTemplate)$
