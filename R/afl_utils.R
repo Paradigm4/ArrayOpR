@@ -93,6 +93,10 @@ afl_filter_from_expr <- function(e, regex_func = 'rsub', ignore_case = TRUE) {
       if(operator == '('){
         return(sprintf("(%s)", walkThru(node[[2]])))
       }
+      
+      if(operator == '!'){
+        return(sprintf("not %s", walkThru(node[[2]])))
+      }
 
       # Regular operators are treated recursively
       operands <- sapply(node[-1], walkThru)

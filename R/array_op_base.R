@@ -460,7 +460,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
     #' Otherwise, perform case-sensitive regex matches.
     #' @return A new arrayOp 
     filter = function(..., expr, missing_fields_error_template = NULL, 
-                     regex_func = getOption('arrayop.regex_func', default = 'rsub'), 
+                     regex_func = getOption('arrayop.regex_func', default = 'regex'), 
                      ignore_case = getOption('arrayop.ignore_case', default = TRUE)) {
       filterExpr = if(methods::hasArg('expr')) expr else e_merge(e(...))
       status = validate_filter_expr(filterExpr, self$dims_n_attrs)
@@ -847,8 +847,9 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' A customized dimension can be provided e.g. `z=42:*` or `z=0:*:0:1000`.
     #' @return A new ArrayOp instance whose attributes share the same name and data types with the template's fields.
     build_new = function(df,  artificial_field = .random_attr_name()) {
-      assert(inherits(df, c('data.frame')), "ERROR: ArrayOp$build_new: unknown df class '%s'. 
-Only data.frame is supported", class(df))
+#       assert(inherits(df, c('data.frame')), "ERROR: ArrayOp$build_new: unknown df class '%s'. 
+# Only data.frame is supported", class(df))
+      assert_inherits(df, "data.frame")
       
       builtAttrs = names(df)
       
@@ -868,7 +869,7 @@ Only data.frame is supported", class(df))
               colScidbType,
               # "string" = sprintf("\\'%s\\'", gsub("(['\\])", "\\\\\\\\\\1", vec)),
               "string" = sapply(
-                gsub("(['\\])", "\\\\\\\\\\1", vec),
+                gsub("(['\\&])", "\\\\\\\\\\1", vec),
                 function(singleStr) if(is.na(singleStr)) "" else sprintf("\\'%s\\'", singleStr)
               ),
               "datetime" = sprintf("\\'%s\\'", vec),
@@ -1445,6 +1446,19 @@ Only data.frame is supported", class(df))
                        mode = mode,
                        ...
                        )
+    }
+    ,
+    persist = function(
+      save_array_name = .random_array_name(),
+      .temp = FALSE,
+      .gc = TRUE,
+      conn = get_default_connection()
+    ){
+      conn$array_op_from_stored_afl(self$to_df_afl(), 
+                                    save_array_name = save_array_name,
+                                    .temp = .temp,
+                                    .gc = .gc
+                                    )
     }
     
     # Old -------------------------------------------------------------------------------------------------------------

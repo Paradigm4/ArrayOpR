@@ -1,0 +1,25 @@
+---
+title: "Housekeeping"
+---
+
+Check if temporary arrays are auto deleted after R's gc()
+
+```{r}
+conn = arrayop::get_default_connection()
+listArrays = conn$array_op_from_afl("list()")
+```
+
+```{r}
+# Run this before and after `gc()` 
+listArrays$filter((name %starts_with% 'Rarray' ) || (name %contains% 'test'))$to_df()
+```
+```{r}
+gc()
+```
+```{r}
+tempArrayNames = listArrays$filter((name %starts_with% 'Rarray' ) || (name %contains% 'test'))$to_df()$name
+for(name in tempArrayNames){
+  conn$execute(afl(name | remove))
+}
+```
+

@@ -290,7 +290,7 @@ ScidbConnection <- R6::R6Class(
       } else {
         # We need to infer schema from the 'build' afl, but avoid unnecessary data transfer to scidb/shim.
         # So only the first row is sent to 'probe' the correct array schema
-        probeOp = array_template$build_new(df[1,], build_dim_spec)
+        probeOp = array_template$build_new(head(df, 1), build_dim_spec)
         remoteSchema = array_op_from_afl(probeOp$to_afl())
         # Still use the buildOp for actual data
         remoteSchema$create_new_with_same_schema(buildOp$to_afl())
