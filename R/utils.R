@@ -10,6 +10,10 @@ utility = make_env(
       sprintf("%s_%s_", prefix, rawToChar(as.raw(sample(c(65:90,97:122), n, replace=TRUE))))
     }
     ,
+    random_field_name = function(n = 10L) {
+      sprintf("%s_", rawToChar(as.raw(sample(c(65:90,97:122), n, replace=TRUE))))
+    }
+    ,
     set_conn = function(new_conn) {
       .private$conn = new_conn
     }
