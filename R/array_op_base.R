@@ -1449,17 +1449,23 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     }
     ,
     persist = function(
-      save_array_name = .random_array_name(),
+      save_array_name = NULL,
       .temp = FALSE,
       .gc = TRUE,
       conn = get_default_connection()
     ){
+      # No need to store an already persistent arrary
+      if(self$is_persistent()) return(self) 
       conn$array_op_from_stored_afl(self$to_df_afl(), 
                                     save_array_name = save_array_name,
                                     .temp = .temp,
                                     .gc = .gc
                                     )
     }
+    ,
+    is_persistent = function(){
+      !grepl("\\(", self$to_afl())
+    }  
     
     # Old -------------------------------------------------------------------------------------------------------------
     ,
