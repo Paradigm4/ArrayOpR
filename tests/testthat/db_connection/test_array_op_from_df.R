@@ -13,6 +13,29 @@ test_that("upload data frame: no template", {
   uploaded$remove_self()
 })
 
+test_that("upload data frame: no template, temporary", {
+  df = data.frame(a = letters[1:5], b = 1:5, z = 11:15 * 1.2)
+  uploaded = CONN$array_op_from_uploaded_df(df, .gc = F, .temp = T)
+  
+  arrayMeta = utility$list_arrays_in_ns()$filter(name == !!uploaded$to_afl())$to_df_attrs()
+  
+  expect_identical(arrayMeta$temporary, TRUE)
+  # uploaded data frame will have an artificial dimension
+  expect_equal(uploaded$to_df_attrs(), df)
+  
+  uploaded$remove_self()
+})
+
+test_that("upload data frame: by a single vector", {
+  df = data.frame(a = letters[1:5])
+  uploaded = CONN$array_op_from_uploaded_df(df, upload_by_vector = T, .gc = F)
+  
+  # uploaded data frame will have an artificial dimension
+  expect_equal(uploaded$to_df_attrs(), df)
+  
+  uploaded$remove_self()
+})
+
 test_that("upload data frame: no template, by vectors", {
   df = data.frame(a = letters[1:5], b = 1:5, z = 11:15 * 1.2)
   uploaded = CONN$array_op_from_uploaded_df(df, upload_by_vector = T, .gc = F)

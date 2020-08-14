@@ -60,6 +60,7 @@ ScidbConnection <- R6::R6Class(
     },
     # generate afl by recursively 'join' two arrays
     join_arrays_by_two = function(array_names) {
+      assert(length(array_names) > 1)
       
       .do.join = function(items) {
         splitByTwo = split(items, ceiling(seq_along(items)/2L))
@@ -267,10 +268,14 @@ ScidbConnection <- R6::R6Class(
           )
         })
         vectorArrayNames = sapply(vectorArrays, function(x) x$to_afl())
-        joinAfl = join_arrays_by_two(vectorArrayNames)
-        result = array_op_from_afl(joinAfl)
-        result$.set_meta('.ref', vectorArrays)
-        result
+        result = if(length(vectorArrays) == 1){
+          vectorArrays[[1]]
+        } else {
+          joinAfl = join_arrays_by_two(vectorArrayNames)
+          .result = array_op_from_afl(joinAfl)
+          .result$.set_meta('.ref', vectorArrays)
+          .result
+        }
       }
       else {
         private$upload_df_or_vector(

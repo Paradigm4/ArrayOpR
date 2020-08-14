@@ -28,6 +28,19 @@ test_that("persistent array_op from stored AFL", {
   storedArr$remove_self()
 })
 
+test_that("persistent array_op from stored AFL", {
+  rawAfl = "apply(list('operators'), extra, 'abc')"
+  
+  storedArr = CONN$array_op_from_stored_afl(rawAfl, .temp = T, .gc = F)
+  name = storedArr$to_afl()
+  
+  arrayMeta = utility$list_arrays_in_ns()$filter(name == !!name)$to_df_attrs()
+  
+  expect_identical(arrayMeta$temporary, TRUE)
+  
+  storedArr$remove_self()
+})
+
 
 # From transient to persistent ----
 
