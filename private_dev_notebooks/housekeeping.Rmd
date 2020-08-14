@@ -11,7 +11,7 @@ listArrays = conn$array_op_from_afl("list()")
 
 ```{r}
 # Run this before and after `gc()` 
-listArrays$filter((name %starts_with% 'Rarray' ) || (name %contains% 'test'))$to_df()
+listArrays$filter((name %starts_with% 'Rarray' ) || (name %contains% 'test|R_array'))$to_df()
 ```
 ```{r}
 gc()
@@ -21,5 +21,16 @@ tempArrayNames = listArrays$filter((name %starts_with% 'Rarray' ) || (name %cont
 for(name in tempArrayNames){
   conn$execute(afl(name | remove))
 }
+```
+
+## Create tmeporary arrays
+
+```{r}
+buildAfl = conn$array_op_from_build_literal(head(mtcars), skip_scidb_schema_check = T)
+storedRegular = conn$array_op_from_stored_afl(buildAfl$to_afl())
+storedTemp = conn$array_op_from_stored_afl(buildAfl$to_afl(), .temp = T)
+
+storedRegular$to_afl()
+storedTemp$to_afl()
 ```
 

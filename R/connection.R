@@ -187,14 +187,20 @@ ScidbConnection <- R6::R6Class(
       schemaArray$create_new_with_same_schema(afl_str)
     }
     ,
+    #' @description 
+    #' Create a persistent array_op by storing AFL as an array
+    #' @param .temp Whether to create a temporary scidb array.
+    #' Only effective when `save_array_name = NULL`
     array_op_from_stored_afl = function(
       afl_str, 
-      save_array_name = .random_array_name(),
+      # save_array_name = utility$random_array_name(),
+      save_array_name = NULL,
       .temp = FALSE,
       .gc = TRUE
     ) {
       assert_single_str(afl_str, "ERROR: param 'afl_str' must be a single string")
-      assert_single_str(save_array_name, "ERROR: param 'save_array_name' must be a single string")
+      if(!is.null(save_array_name))
+        assert_single_str(save_array_name, "ERROR: param 'save_array_name' must be a single string or NULL")
       
       storedAfl = scidb::scidb(.db, afl_str)
       storedArray = scidb::store(.db, expr = storedAfl, name = save_array_name, 
@@ -229,7 +235,7 @@ ScidbConnection <- R6::R6Class(
     array_op_from_uploaded_df = function(
       df, 
       template = NULL, 
-      name = .random_array_name(), 
+      name = utility$random_array_name(), 
       upload_by_vector = FALSE,
       .use_aio_input = FALSE, 
       .temp = FALSE,
