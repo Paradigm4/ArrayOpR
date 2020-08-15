@@ -948,9 +948,12 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
           afl_join_fields(new_field, newFieldExpr)
         )
       )
-      self$spawn(added = new_field, dtypes = rlang::set_names(reference$get_field_types(ref_field, .strict = FALSE), new_field))$
+      result = self$spawn(added = new_field, dtypes = rlang::set_names(reference$get_field_types(ref_field, .strict = FALSE), new_field))
+      result = result$create_new_with_same_schema(crossJoined)
+      result = result$reshape(result$attrs)
+      result
+        
       # self$spawn(added = new_field, dtypes = as.list(rlang::rep_named(new_field, 'int64')))$
-        create_new_with_same_schema(crossJoined)
     }
     ,
     #' @description 
@@ -1018,14 +1021,20 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       
       # Finally calculate the values of anti_collision_field
       # src's attributes (that are target dimensions) are converted to dimensions according to the target
-      result = redimensionTemplate$
-        spawn(renamed = invert.list(renamedList))$
+      resultTemplate = redimensionTemplate$
+        spawn(renamed = invert.list(renamedList))
+      resultTemplate = resultTemplate$reshape(dim_mode = 'drop')
+      
+      
+      result = resultTemplate$
         create_new_with_same_schema(afl(
           joined | apply(anti_collision_field, sprintf(
             "iif(%s is null, %s, %s + %s + 1)", targetAltIdMax, srcAltId, srcAltId, targetAltIdMax
           )))
-        )
+        )$reshape(resultTemplate$attrs)
       
+      # todo: this should be a shared private method
+      result = get_default_connection()$array_op_from_afl(result$to_afl())
       return(result)
     }
     ,

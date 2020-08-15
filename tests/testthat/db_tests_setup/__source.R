@@ -51,5 +51,5 @@ choose_in_db_tests = function(setting = SETTING) {
 # Main entry for in-db tests ---
 # May not run tests if unable to create a repo instance
 testNS = choose_in_db_tests()
-
+conn = get_default_connection()
 
