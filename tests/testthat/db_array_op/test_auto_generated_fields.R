@@ -12,10 +12,7 @@ SourceArray = conn$array_op_from_df(AutoFieldsContent, schema)$
   change_schema(schema)$
   persist(.temp=T, .gc = F)
 
-sourceEmptyName = utility$random_array_name()
-conn$execute(glue::glue("create array {sourceEmptyName} {schema$to_schema_str()}"))
-
-SourceEmptyArray = conn$array_op_from_name(sourceEmptyName)
+SourceEmptyArray = conn$create_new_scidb_array(random_array_name(), schema, .temp = T)
 
 # Tests
 

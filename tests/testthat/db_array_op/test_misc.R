@@ -19,3 +19,16 @@ test_that("persist arrays so they can be reused", {
   expect_identical(arrayBuildPersisted$is_persistent(), T)  
   expect_identical(arrayBuildPersisted$persist(), arrayBuildPersisted)
 })
+
+test_that("verify persistent array existence", {
+  name = random_array_name()
+  arr = conn$create_new_scidb_array(name, "<a:string> [z]")
+  
+  expect_true(arr$is_persistent())
+  expect_true(arr$exists_persistent_array())
+  expect_identical(arr$array_meta_data()$name, name)
+  
+  arr$remove_self()
+  
+  expect_true(!arr$exists_persistent_array())
+})

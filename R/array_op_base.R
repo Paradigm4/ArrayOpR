@@ -1473,8 +1473,24 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     }
     ,
     is_persistent = function(){
-      !grepl("\\(", self$to_afl())
+      !grepl("\\(", self$to_afl()) && 
+        grepl("^((\\w+)\\.)?(\\w+)$", self$to_afl())
     }  
+    ,
+    exists_persistent_array = function(conn = get_default_connection()) {
+      self$is_persistent() && nrow(self$array_meta_data(conn = conn)) == 1L
+    }
+    ,
+    array_meta_data = function(conn = get_default_connection()){
+      assertf(self$is_persistent(), 
+              "{.symbol} is not a persistent scidb array. Array meta data is only available for persistent scidb arrays.")
+      full_array_name = self$to_afl()
+      ns = gsub("^((\\w+)\\.)?(\\w+)$", "\\2", full_array_name)
+      bare_name = gsub("^((\\w+)\\.)?(\\w+)$", "\\3", full_array_name)
+      query_str = if(ns == "") "list('arrays')" else 
+        sprintf("list('arrays', ns:%s)", ns)
+      conn$query(sprintf("filter(%s, name = '%s')", query_str, bare_name), only_attributes = TRUE)
+    }
     
     # Old -------------------------------------------------------------------------------------------------------------
     ,

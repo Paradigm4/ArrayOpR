@@ -170,6 +170,21 @@ ScidbConnection <- R6::R6Class(
       invisible(self)
     }
     ,
+    create_new_scidb_array = function(name, schema_template, .temp = FALSE) {
+      assert_single_str(name)
+      assert_inherits(schema_template, c("character", "ArrayOpBase"))
+      schema_array = if(is.character(schema_template)) 
+        array_op_from_schema_str(schema_template) else schema_template
+      self$execute(
+        sprintf("CREATE %s ARRAY %s %s", 
+                if(.temp) "TEMP" else "", 
+                name, 
+                schema_array$to_schema_str()
+                )
+      )
+      array_op_from_name(name)
+    }
+    ,
     array_op_from_name = function(array_name) {
       assert_single_str(array_name, "ERROR: param 'array_name' must be a single string")
       repo$load_arrayop_from_scidb(array_name)
