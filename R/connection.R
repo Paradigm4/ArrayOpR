@@ -28,8 +28,9 @@ connect = function(username, token,
 #' 
 #' Call `connect` to establish a connection 
 #' @export
-get_default_connection = function() { 
-  assert(default_conn$is_connected(), "ERROR: please call `arrayop::connect` to create a valid connection first")
+get_default_connection = function(.report_error_if_not_connected = TRUE) { 
+  if(.report_error_if_not_connected)
+    assert(default_conn$is_connected(), "ERROR: please call `arrayop::connect` to create a valid connection first")
   default_conn 
 }
 

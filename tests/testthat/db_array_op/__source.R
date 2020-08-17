@@ -1,8 +1,7 @@
 context('array_op db tests')
 
-conn = testNS$conn
 
-# Run individual tests with a shared 'repo' instance
+# Run all tests in current folder
 for (test_file in list.files(".", "^test_.+\\.R")) {
   source(test_file, local = T, chdir = T)
 }

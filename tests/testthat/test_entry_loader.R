@@ -27,7 +27,7 @@ wet_tests = function() {
   source("run_db_tests.R", local = TRUE, chdir = TRUE)
 }
 
-dry_tests()
+# dry_tests()
 
 wet_tests()
 

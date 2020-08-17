@@ -40,16 +40,8 @@ choose_in_db_tests = function(setting = SETTING) {
   
   expect_true(!is.null(conn), "ScidbConnection conn should not be null!")
   
-  # 'repo' class version is determined by the scidb version, which is not hard-coded.
-  source("shared.R", local = T, chdir = T)
-  
-  # Create the globally shared testNS object for all db-tests
-  TestNS$new(namespace = "arrayop_unittest", conn = conn)
-  
 }
 
 # Main entry for in-db tests ---
-# May not run tests if unable to create a repo instance
-testNS = choose_in_db_tests()
-conn = get_default_connection()
+choose_in_db_tests()
 
