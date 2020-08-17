@@ -13,8 +13,8 @@ test_that("persist arrays so they can be reused", {
   dataFrame = data.frame(a=1:3, b=letters[1:3])
   arrayStored = conn$array_op_from_uploaded_df(dataFrame)
   arrayBuild = conn$array_op_from_build_literal(dataFrame)
-  arrayBuildPersisted = arrayBuild$persist()
-  arrayBuildPersistedTemp = arrayBuild$persist(.temp = T)
+  arrayBuildPersisted = arrayBuild$persist(.gc = F)
+  arrayBuildPersistedTemp = arrayBuild$persist(.temp = T, .gc = F)
   
   expect_identical(arrayStored$persist(), arrayStored)
   expect_identical(arrayBuildPersisted$is_persistent(), T)  
@@ -22,6 +22,9 @@ test_that("persist arrays so they can be reused", {
   
   expect_identical(arrayBuildPersisted$array_meta_data()$temporary, FALSE)
   expect_identical(arrayBuildPersistedTemp$array_meta_data()$temporary, TRUE)
+  
+  arrayBuildPersisted$remove_self()
+  arrayBuildPersistedTemp$remove_self()
 })
 
 test_that("verify persistent array existence", {

@@ -40,6 +40,13 @@ ArrayOpBase <- R6::R6Class(
       private$metaList[[key]]
     }
     ,
+    conn = NULL # The ScidbConnection instance
+    ,
+    # todo: move connection setup to initialize function
+    set_conn = function(connection) {
+      private$conn = connection
+    }
+    ,
     validate_join_operand = function(side, operand, keys){
       assert(inherits(operand, class(self)),
         "JoinOp arg '%s' must be class of [%s], but got '%s' instead.",
@@ -161,7 +168,9 @@ Please select on left operand's fields OR do not select on either operand. Look 
              class(select))
       
       # Plain selected fields without change
-      existingFields = if(.has_len(names(select))) select[names(select) == ''] else {
+      existingFields = if(.has_len(names(select))) {
+        as.character(select[names(select) == '' | names(select) == select])
+      } else {
         as.character(select)
       }
       # Names of the retained fields (existing or new)
@@ -172,7 +181,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
       newFieldNames = fieldNamesWithExprs %-% self$attrs
       newFields = fieldExprs[newFieldNames]
       
-      replacedFieldNames = fieldNamesWithExprs %-% newFieldNames
+      replacedFieldNames = fieldNamesWithExprs %-% newFieldNames %-% existingFields
       replacedFieldNamesAlt = sprintf("_%s", replacedFieldNames)
       replacedFields = sapply(replacedFieldNames, function(x) gsub('@', x, fieldExprs[[x]]))
       
@@ -574,7 +583,9 @@ Please select on left operand's fields OR do not select on either operand. Look 
     #' @return A new arrayOp 
     create_new = function(...){
       classConstructor = get(class(self))$new
-      classConstructor(...)
+      result = classConstructor(...)
+      result$.private$set_conn(private$conn)
+      result
     }
     ,
     #' @description 
@@ -1094,6 +1105,20 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       }
       result = conn$array_op_from_afl(result$to_afl())
       return(result)
+    }
+    ,
+    mutate_fields = function(...){
+      fieldExprs = list(...)
+      selfAttrs = new_named_list(self$attrs, self$attrs)
+      finalFields = utils::modifyList(selfAttrs, fieldExprs)
+      
+      reshaped = private$reshape_attrs(finalFields)
+      private$conn$array_op_from_afl(reshaped$to_afl())
+    }
+    ,
+    transmute = function(...){
+      reshaped = private$reshape_attrs(list(...))
+      private$conn$array_op_from_afl(reshaped$to_afl())
     }
     ,
     #' @description 

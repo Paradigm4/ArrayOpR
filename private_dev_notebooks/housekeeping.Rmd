@@ -17,7 +17,7 @@ listArrays$filter((name %starts_with% 'Rarray' ) || (name %contains% 'test|R_arr
 gc()
 ```
 ```{r}
-tempArrayNames = listArrays$filter((name %starts_with% 'Rarray' ) || (name %contains% 'test'))$to_df()$name
+tempArrayNames = listArrays$filter((name %starts_with% 'Rarray' ) || (name %contains% 'test|R_array'))$to_df()$name
 for(name in tempArrayNames){
   conn$execute(afl(name | remove))
 }
@@ -27,10 +27,28 @@ for(name in tempArrayNames){
 
 ```{r}
 buildAfl = conn$array_op_from_build_literal(head(mtcars), skip_scidb_schema_check = T)
-storedRegular = conn$array_op_from_stored_afl(buildAfl$to_afl())
-storedTemp = conn$array_op_from_stored_afl(buildAfl$to_afl(), .temp = T)
+storedRegular = conn$array_op_from_stored_afl(buildAfl$to_afl(), .gc = F)
+storedTemp = conn$array_op_from_stored_afl(buildAfl$to_afl(), .temp = T, .gc = F)
 
-storedRegular$to_afl()
-storedTemp$to_afl()
+storedRegular$array_meta_data()
+storedTemp$array_meta_data()
+
+# storedRegular$remove_self()
+# storedTemp$remove_self()
+```
+
+```{r}
+storedRegular$select("hp", "vs")$to_df()
+
+derived = storedRegular$reshape(list("hp", "vs", "sum" = "hp + vs"))
+derived$to_afl()
+derived$get_field_types(.strict = F)
+derived$to_schema_str()
+
+storedRegular$to_schema_str()
+storedRegular$.private$reshape_attrs(c("mpg", "carb", extra="mpg + gear"))$to_afl()
+storedRegular$.private$reshape_attrs(c("carb", mpg="mpg + gear"))$to_afl()
+
+storedRegular$reshape(list("hp", "vs", "sum" = "hp + vs"))$to_df()
 ```
 

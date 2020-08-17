@@ -120,6 +120,11 @@ ScidbConnection <- R6::R6Class(
               .na_cols = paste(names(naCols), collapse = ','))
       colClasses
     }
+    ,
+    set_array_op_conn = function(array_op) {
+      array_op$.private$set_conn(self)
+      array_op
+    }
   ),
   active = list(
     # scidb_version = function() private$.scidb_version,
@@ -187,12 +192,16 @@ ScidbConnection <- R6::R6Class(
     ,
     array_op_from_name = function(array_name) {
       assert_single_str(array_name, "ERROR: param 'array_name' must be a single string")
-      repo$load_arrayop_from_scidb(array_name)
+      result = repo$load_arrayop_from_scidb(array_name)
+      set_array_op_conn(result)
+      result
     }
     ,
     array_op_from_schema_str = function(schema_str) {
       assert_single_str(schema_str, "ERROR: param 'schema_str' must be a single string")
-      repo$private$.get_array_from_schema_string(schema_str)
+      result = repo$private$.get_array_from_schema_string(schema_str)
+      set_array_op_conn(result)
+      result
     }
     ,
     array_op_from_afl = function(afl_str) {
@@ -201,7 +210,9 @@ ScidbConnection <- R6::R6Class(
       schema = query(sprintf("project(show('%s', 'afl'), schema)", escapedAfl), only_attributes = T)
       # schemaArray = repo$private$.get_array_from_schema_string(schema[["schema"]])
       schemaArray = array_op_from_schema_str(schema[["schema"]])
-      schemaArray$create_new_with_same_schema(afl_str)
+      result = schemaArray$create_new_with_same_schema(afl_str)
+      set_array_op_conn(result)
+      result
     }
     ,
     #' @description 
@@ -225,6 +236,7 @@ ScidbConnection <- R6::R6Class(
       
       res = array_op_from_scidbr_obj(storedArray)
       res$.set_meta('.ref', storedArray)
+      set_array_op_conn(res)
       res
     }
     ,
@@ -273,6 +285,7 @@ ScidbConnection <- R6::R6Class(
         names(df) %n% array_template$dims_n_attrs
       }
       
+      result = 
       if(upload_by_vector){
         vectorArrays = sapply(matchedFields, function(fieldName) {
           private$upload_df_or_vector(
@@ -301,7 +314,8 @@ ScidbConnection <- R6::R6Class(
           use_aio_input = .use_aio_input, temp = .temp, gc = .gc
         )
       }
-      
+      set_array_op_conn(result)
+      result
     }
     ,
     array_op_from_build_literal = function(
@@ -312,7 +326,7 @@ ScidbConnection <- R6::R6Class(
       assert(nrow(df) >= 1, "ERROR: param 'df' must have at least one row")
       array_template = get_array_template(template, df)
       buildOp = array_template$build_new(df, build_dim_spec)
-      if(skip_scidb_schema_check){
+      result = if(skip_scidb_schema_check){
         buildOp
       } else {
         # We need to infer schema from the 'build' afl, but avoid unnecessary data transfer to scidb/shim.
@@ -322,6 +336,8 @@ ScidbConnection <- R6::R6Class(
         # Still use the buildOp for actual data
         remoteSchema$create_new_with_same_schema(buildOp$to_afl())
       }
+      set_array_op_conn(result)
+      result
     }
   )
 )

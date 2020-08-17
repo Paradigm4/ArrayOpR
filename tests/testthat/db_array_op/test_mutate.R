@@ -21,25 +21,85 @@ RefArray = conn$
   persist(.gc = FALSE)
 
 assert_df_match = function(result_df, expected_df) {
+  sortedDf = if('da' %in% names(result_df)) 
+    dplyr::arrange(result_df, da) else if('upper' %in% names(result_df))
+      dplyr::arrange(result_df, "upper") else 
+        result_df
   expect_equal(
-    dplyr::arrange(result_df, da), # scidb doesn't gurantee result data frame ordering
+    sortedDf, # scidb doesn't gurantee result data frame ordering
     expected_df # locally filtered data frames follow default ordering
   )
+  
+  # tryCatch(expect_equal(
+  #   sortedDf, # scidb doesn't gurantee result data frame ordering
+  #   expected_df # locally filtered data frames follow default ordering
+  # ), error = browser())
+  
 }
 
-# Mutate by expression ----
+# Mutate new ----
 
 test_that("Mutate an array by expression", {
   assert_df_match(
     RefArray$
       filter(is_null(f_bool))$
-      mutate(list('f_bool'='iif(f_double > 1, true, false)', 'upper'="'mutated'", 'f_int32' = "strlen(lower)"))$
+      mutate_fields(f_bool='iif(f_double > 1, true, false)', upper="'mutated'", f_int32 = "strlen(lower)")$
       to_df(),
     ArrayContent %>% 
       dplyr::filter(is.na(f_bool)) %>%
       dplyr::mutate("f_bool" = f_double > 1, "upper" = "mutated", "f_int32" = nchar(lower))
   )
+
+  # New fields generated
+  assert_df_match(
+    RefArray$
+      filter(is_null(f_bool))$
+      mutate_fields(lower_len = "strlen(lower)")$
+      to_df(),
+    ArrayContent %>% 
+      dplyr::filter(is.na(f_bool)) %>%
+      dplyr::mutate("lower_len" = nchar(lower))
+  )
+
+  # New fields generated and existing fields removed by NULL
+  assert_df_match(
+    RefArray$
+      filter(is_null(f_bool))$
+      mutate_fields(lower_len = "strlen(lower)", f_bool = NULL, f_int64 = NULL)$
+      to_df(),
+    ArrayContent %>% 
+      dplyr::filter(is.na(f_bool)) %>%
+      dplyr::mutate(f_bool = NULL, f_int64 = NULL, "lower_len" = nchar(lower))
+  )
 })
+
+# transmute ----
+
+test_that("transmute does not preserve old fields", {
+  # transmute an array will keep the dimensions
+  assert_df_match(
+    RefArray$
+      filter(is_null(f_bool))$
+      transmute(f_bool='iif(f_double > 1, true, false)', upper="'mutated'", f_int32 = "strlen(lower)")$
+      to_df(),
+    ArrayContent %>% 
+      dplyr::filter(is.na(f_bool)) %>%
+      dplyr::transmute(da, db, "f_bool" = f_double > 1, "upper" = "mutated", "f_int32" = nchar(lower))
+  )
+
+  # New fields generated & no old fields preserved
+  assert_df_match(
+    RefArray$
+      filter(is_null(f_bool))$
+      transmute(lower_len = "strlen(lower)")$
+      to_df_attrs(),
+    ArrayContent %>% 
+      dplyr::filter(is.na(f_bool)) %>%
+      dplyr::transmute("lower_len" = nchar(lower))
+  )
+
+})
+
 
 # Mutate by another arrayOp ----
 
