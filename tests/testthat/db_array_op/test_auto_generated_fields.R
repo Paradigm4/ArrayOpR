@@ -3,8 +3,6 @@ context("Set array with auto generated fields")
 
 # Shared array schema and data
 
-conn = get_default_connection()
-
 schema = conn$array_op_from_schema_str("<f_str:string, f_int32:int32, f_int64:int64> [da=0:*:0:1000; db=0:*:0:1000]")
 AutoFieldsContent = data.frame(da=1:10, db=1:10, f_str = letters[1:10], f_int32=1:10, f_int64=11:20)
 
