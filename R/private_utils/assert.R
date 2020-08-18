@@ -25,6 +25,36 @@ assertf = function(cond,
   }
 }
 
+assert_empty = function(list_or_vec, 
+                        error_fmt = "'{.symbol}' should be empty (0-length), but got length-{.length}: [{.value}]", 
+                        .nframe = 0, .symbol = deparse(substitute(list_or_vec))) {
+  assertf(length(list_or_vec) == 0L, error_fmt = error_fmt, 
+          .nframe = .nframe + 1, .symbol = .symbol, 
+          .value = paste(list_or_vec, collapse = ','),
+          .length = length(list_or_vec)
+          )
+}
+
+assert_not_empty = function(list_or_vec, 
+                        error_fmt = "'{.symbol}' should not be empty (0-length)", 
+                        .nframe = 0, .symbol = deparse(substitute(list_or_vec))) {
+  assertf(length(list_or_vec) > 0L,
+          error_fmt = error_fmt, 
+          .nframe = .nframe + 1, .symbol = .symbol
+          )
+}
+
+assert_unique_named_list <- function(obj, 
+                              error_fmt = "'{.symbol}' should not a named list where each element has a unique name",
+                              .nframe = 0,
+                              .symbol = deparse(substitute(obj))) {
+  assertf(is.list(obj) && length(names(obj)) > 0L && 
+            all(names(obj) != '') && length(names(obj)) == length(unique(names(obj))), 
+          error_fmt = error_fmt, 
+          .nframe = .nframe + 1, .symbol = .symbol
+  )
+}
+
 assert_pos_num = function(num, error_fmt = "'{.symbol}' must be > 0, but got: {.value}", .nframe = 0, .symbol = deparse(substitute(num))) {
   assertf(num > 0, error_fmt = error_fmt, .nframe = .nframe + 1, .symbol = .symbol, .value = num)
 }

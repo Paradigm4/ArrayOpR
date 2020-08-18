@@ -1107,10 +1107,14 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       return(result)
     }
     ,
-    mutate_fields = function(...){
+    mutate = function(...){
       fieldExprs = list(...)
       selfAttrs = new_named_list(self$attrs, self$attrs)
       finalFields = utils::modifyList(selfAttrs, fieldExprs)
+      
+      assert_unique_named_list(fieldExprs)
+      assert_empty(names(fieldExprs) %n% self$dims,
+                   "Cannot mutate dimension(s): [{.value}].")
       
       reshaped = private$reshape_attrs(finalFields)
       private$conn$array_op_from_afl(reshaped$to_afl())
@@ -1119,6 +1123,73 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     transmute = function(...){
       reshaped = private$reshape_attrs(list(...))
       private$conn$array_op_from_afl(reshaped$to_afl())
+    }
+    ,
+    # mutate an array by field expressions
+    # return: transient array_op with same schema as self
+    i_mutate = function(..., artificial_field = utility$random_field_name()) {
+      data_source = list(...)
+      
+      mutatedFields = names(data_source)
+      # assert(length(mutatedFields) == length(data_source), 
+      #        "ERROR: ArrayOp$mutate: param 'data_source', if a list, must have names as the mutated fields, and values as mutated values/expressions.")
+      
+      assert_unique_named_list(data_source)
+      assert_empty(mutatedFields %n% self$dims,
+                   "Cannot mutate dimension(s): [{.value}].")
+      
+      assert_empty(mutatedFields %-% self$dims_n_attrs,
+                   "New field(s) [{.value}] are not allowed in i_mutate. Please use ArrayOp$mutate(...) method to add/remove fields.")
+      
+      nullFileds = Filter(is.null, data_source)
+      assert_empty(names(nullFileds), 
+                   "Cannot remove existing field(s): [{.value}]. Please use ArrayOp$mutate(...) method to add/remove fields.",
+                   )
+      
+      if(!.has_len(mutatedFields %n% self$dims)) { # Only attrs muated
+        do.call(self$mutate, data_source)
+      } else {
+        self$reshape(utils::modifyList(as.list(self$dims_n_attrs), data_source), 
+                     dim_mode = 'drop', artificial_field = artificial_field)$
+          change_schema(self, strict = FALSE)
+      }
+    }
+    ,
+    i_mutate_by = function(data_array, 
+                           keys = NULL, 
+                           updated_fields = NULL,
+                           .redimension_setting = NULL, 
+                           .join_setting = NULL) {
+      assert_inherits(data_array, "ArrayOpBase")
+      
+      data_source = data_array
+      
+      # updateFields default to the overlapping attrs between source and self
+      updatedFields = if(.has_len(updated_fields)) updated_fields else data_source$attrs %n% self$attrs
+      reservedFields = self$attrs %-% updatedFields
+      needTransform = !(length(data_source$dims) == length(self$dims) && all(data_source$dims == self$dims))
+      
+      if(needTransform){
+        assert_has_len(keys, "ERROR: ArrayOp$mutate: param 'keys' cannot be empty if data_source is an arrayOp")
+        assert_has_len(updated_fields, "ERROR: ArrayOp$mutate: param 'updated_fields' cannot be empty if data_source is an arrayOp")
+        assert_no_fields(
+          (keys %-% self$dims_n_attrs) %u% (keys %-% data_source$dims_n_attrs),
+          "ERROR: ArrayOp$mutate: param 'keys' has invalid field(s) [%s]")
+        assert_no_fields(
+          (updated_fields %-% self$dims_n_attrs) %u% (updated_fields %-% data_source$dims_n_attrs),
+          "ERROR: ArrayOp$mutate: param 'updated_fields' has invalid field(s) [%s]")
+        data_source = private$key_to_coordinates(data_source, keys = keys, reserved_fields = updatedFields, 
+                                                 .redimension_setting = .redimension_setting, .join_setting = .join_setting)
+      }
+      # mutate_by_arrayop(data_source, updatedFields, reservedFields)
+      assert_has_len(updatedFields, "ERROR: ArrayOp$mutate: param 'data_source' does not have any target attributes to mutate.")
+      self$create_new_with_same_schema(
+        afl(
+          data_source$reshape(updatedFields, .force_project = FALSE) | join( 
+            .ifelse(.has_len(reservedFields), self$reshape(reservedFields), self)
+          )
+        )
+      )$reshape(self$attrs)
     }
     ,
     #' @description 
@@ -1152,7 +1223,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' @param .redimension_setting Only applicable when `data_source` is arrayOp.
     #' @param .join_setting Only applicable when `data_source` is arrayOp and it does not have all `self`'s dimensions.
     #' @return a new arrayOp instance that carries the mutated data and has the exact same schema as the target
-    mutate = function(data_source, keys = NULL, updated_fields = NULL, artificial_field = .random_attr_name(), 
+    mutate_old = function(data_source, keys = NULL, updated_fields = NULL, artificial_field = .random_attr_name(), 
                       .redimension_setting = NULL, .join_setting = NULL) {
       assert(inherits(data_source, c('list', 'ArrayOpBase')), 
              "ERROR: ArrayOpBase$mutate: param 'data_source' must be a named list or ArrayOp instance, but got: [%s]",
@@ -1366,16 +1437,16 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     }
     # db functions ----
     ,
-    to_df = function(only_attributes = FALSE, conn = get_default_connection()) {
-      conn$private$repo$query(self, only_attributes = only_attributes)
+    to_df = function(only_attributes = FALSE) {
+      private$conn$private$repo$query(self, only_attributes = only_attributes)
       # todo: remove repo
       # conn$query(self$to_df_afl(), only_attributes = only_attributes)
     }
     ,
-    to_df_attrs = function(conn = get_default_connection()) {
+    to_df_attrs = function() {
       # todo: remove repo
       # conn$query(self, only_attributes = TRUE)
-      conn$private$repo$query(self, only_attributes = TRUE)
+      private$conn$private$repo$query(self, only_attributes = TRUE)
     }
     ,
     execute = function(conn = get_default_connection()) {
