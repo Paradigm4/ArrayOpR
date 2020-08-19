@@ -368,6 +368,279 @@ Please select on left operand's fields OR do not select on either operand. Look 
       # joinedOp = self$create_new(joinExpr, names(dims), attrs, dtypes = dtypes)
     }
     ,
+    #' @description 
+    #' Create a new ArrayOp by matching a template against a source (self). 
+    #' 
+    #' The result has the same schema with the source.
+    #' All fields in the template are compared to their matching source fields by equality, except for thos in 
+    #' lower_bound/upper_bound which will be used as a range `[lower_bound, upper_bound]`.
+    #' @param template A data.frame or ArrayOp used to reduce the number of source cells without changing its schema
+    #' @param op_mode ['filter', 'cross_between']
+    #' @param lower_bound Field names as lower bounds. 
+    #' @param upper_bound Field names as upper bounds.
+    #' @param field_mapping A named list where name is source field name and value is template field name.
+    #' Default NULL: fields are mapped between template and source by field names only. 
+    #' If there is mapping fields in the template which are intended for lower or upper bound, 
+    #' provide an empty list or a list with matching fields 
+    #' @return A new ArrayOp instance which has the same schema as the source. 
+    match = function(template, op_mode, lower_bound = NULL, upper_bound = NULL, field_mapping = NULL){
+      assert_not_has_len(names(lower_bound) %n% names(field_mapping), 
+                         "ERROR: ArrayOp$match: Field names in param 'lower_bound' and 'field_mapping' cannot overlap: '%s'",
+                         paste(names(lower_bound) %n% names(field_mapping), collapse = ','))
+      assert_not_has_len(names(upper_bound) %n% names(field_mapping), 
+                         "ERROR: ArrayOp$match: Field names in param 'upper_bound' and 'field_mapping' cannot overlap: '%s'",
+                         paste(names(upper_bound) %n% names(field_mapping), collapse = ','))
+      if(.has_len(lower_bound))
+        assert_named_list(lower_bound, "ERROR: ArrayOp$match: lower_bound if provided must be a named list.")
+      if(.has_len(upper_bound))
+        assert_named_list(upper_bound, "ERROR: ArrayOp$match: upper_bound if provided must be a named list.")
+      
+      filter_mode = function(){
+        assert(inherits(template, 'data.frame'), 
+               "ERROR: ArrayOp$match: filter mode: template must be a data.frame, but got: %s", class(template))
+        unmatchedCols = names(template) %-% self$dims_n_attrs %-% lower_bound %-% upper_bound
+        assert_not_has_len(unmatchedCols, 
+                           "ERROR: ArrayOp$match: filter mode: template field(s) not matching the source: '%s'",
+                           paste(unmatchedCols, collapse = ','))
+        
+        colTypes = sapply(template, class)
+        needQuotes = !(colTypes %in% c('numeric', 'integer', 'integer64'))
+        valueStrTemplates = lapply(needQuotes, .ifelse, "'%s'", "%s")
+        # Iterate on the template data frame
+        convertRow = function(eachRow, colNames) {
+          rowValues = mapply(sprintf, valueStrTemplates, eachRow)
+          # Each filter item per row per field
+          rowItems = mapply(function(name, val){
+            operator = as.character(NULL)
+            sourceFieldName = as.character(NULL)
+            if(name %in% lower_bound) {
+              operator = c(operator, '>=')
+              sourceFieldName = c(sourceFieldName, names(lower_bound)[lower_bound == name][[1]])
+            }
+            if(name %in% upper_bound) {
+              operator = c(operator, '<=')
+              sourceFieldName = c(sourceFieldName, names(upper_bound)[upper_bound == name][[1]])
+            }
+            if(!name %in% lower_bound && !name %in% upper_bound){
+              operator = c(operator, '=')
+              sourceFieldName = c(sourceFieldName, name)
+            }
+            sprintf("%s%s%s", sourceFieldName, operator, val)
+          }, colNames, rowValues)
+          if(is.list(rowItems))
+            rowItems = do.call(c, rowItems) # in case of mixed vector and string
+          sprintf(
+            .ifelse(length(rowItems) > 1, "(%s)", "%s"), # String template for a row
+            paste(rowItems, collapse = ' and ')
+          )
+        }
+        
+        filter_afl = paste( apply(template, 1, convertRow, names(template)), collapse = ' or ' )
+        return(afl(self | filter(filter_afl)))
+      }
+      
+      cross_between_mode = function(){
+        assert(inherits(template, 'ArrayOpBase'), 
+               "ERROR: ArrayOp$match: cross_between mode: template must be a ArrayOp instance, but got: %s", class(template))
+        if(is.null(field_mapping)){
+          dimMatchMarks = self$dims %in% template$dims_n_attrs
+          matchedDims = template$dims_n_attrs %n% self$dims
+          field_mapping = as.list(structure(matchedDims, names = matchedDims))
+        }
+        else {
+          matchedDims = names(field_mapping) %n% self$dims
+          dimMatchMarks = self$dims %in% names(field_mapping)
+        }
+        
+        assert_has_len(matchedDims %u% names(lower_bound) %u% names(upper_bound),
+                       "ERROR: ArrayOp$match: cross_between mode: none of the template fields '%s' matches the source's dimensions: '%s'.
+Only dimensions are matched in this mode. Attributes are ignored even if they are provided.",
+                       paste(template$dims_n_attrs, collapse = ','), paste(self$dims, collapse = ','))
+        
+        # get region array's attr values
+        getRegionArrayAttrValue = function(default, low){
+          res = rep(default, length(self$dims))
+          for(i in 1:length(self$dims)){
+            mainDimKeyName = self$dims[[i]]
+            if(low && mainDimKeyName %in% names(lower_bound)){
+              res[[i]] <- lower_bound[[mainDimKeyName]]
+            }
+            else if(!low && mainDimKeyName %in% names(upper_bound)){
+              res[[i]] <- upper_bound[[mainDimKeyName]]
+            }
+            else if(dimMatchMarks[[i]]){
+              res[[i]] <- sprintf("int64(%s)", field_mapping[[mainDimKeyName]])
+            } 
+          }
+          return(res)
+        }
+        
+        regionLowAttrValues = getRegionArrayAttrValue(MIN_DIM, low = TRUE)
+        regionHighAttrValues = getRegionArrayAttrValue(MAX_DIM, low = FALSE)
+        
+        regionLowAttrNames = sprintf('_%s_low', self$dims)
+        regionHighAttrNames = sprintf('_%s_high', self$dims)
+        
+        # apply new attributes as the region array in 'cross_between'
+        applyExpr = afl_join_fields(regionLowAttrNames, regionLowAttrValues, regionHighAttrNames, regionHighAttrValues)
+        afl_literal = afl(
+          self | cross_between(
+            template | apply(applyExpr) | 
+              project(regionLowAttrNames, regionHighAttrNames))
+        )
+        return(afl_literal)
+      }
+      
+      index_lookup_mode = function() {
+        assert(inherits(template, 'ArrayOpBase'), 
+               "ERROR: ArrayOp$match: index_lookup mode: template must be an ArrayOp instance, but got: [%s]", paste(class(template), collapse = ","))
+        assert(length(template$attrs) == 1 && length(template$dims) == 1,
+               "ERROR: ArrayOp$match: index_lookup mode: template must have only one dimension and one attribute")
+        if(is.null(field_mapping)){
+          matchedFields = template$attrs %n% self$dims_n_attrs # find matched fields from template's attrs only (not in dims)
+          assert(length(matchedFields) == 1, 
+                 "ERROR: ArrayOp$match: index_lookup mode: param 'field_mapping' == NULL, but template field '%s' does not match any source fields",
+                 template$attrs)
+          field_mapping = new_named_list(matchedFields, names = matchedFields)
+        }
+        assert(length(field_mapping) == 1, 
+               "ERROR: ArrayOp$match: index_lookup mode: there should be exactly one template attribute that matches source's fields, but %d field(s) found: %s",
+               length(field_mapping), paste(field_mapping, collapse = ","))
+        assert_not_has_len(lower_bound,
+                           "ERROR: ArrayOp$match: index_lookup mode: param 'lower_bound' is not allowed in this mode.")
+        assert_not_has_len(upper_bound,
+                           "ERROR: ArrayOp$match: index_lookup mode: param 'upper_bound' is not allowed in this mode.")
+        
+        
+        if(is.null(names(field_mapping))){ 
+          # e.g. field_mapping = 'field_a' 
+          sourceField = as.character(field_mapping)
+          templateField = template$attrs
+        } else {
+          sourceField = names(field_mapping)
+          templateField = as.character(field_mapping)
+        }
+        assert(sourceField %in% self$dims_n_attrs,
+               "ERROR: ArrayOp$match: index_lookup mode: '%s' is not a valid source field.", sourceField)
+        assert(templateField %in% template$attrs,
+               "ERROR: ArrayOp$match: index_lookup mode: '%s' is not a valid template field.", templateField)
+        
+        isSourceAttrMatched = sourceField %in% self$attrs
+        sourceMatchField = if(isSourceAttrMatched) sourceField else sprintf("attr_%s", sourceField)
+        
+        sourceOp = if(isSourceAttrMatched) self else {
+          afl(self | apply(sourceMatchField, sourceField))
+        }
+        indexName = sprintf("index_%s", sourceField)
+        templateOp = template
+        if(templateField %in% self$dims_n_attrs) { 
+          # if the template field name exist on the source too, there will be field name conflicts when we 'project'
+          templateOp = template$reshape(new_named_list(templateField, names = sprintf("alt_%s_", templateField)))
+        }
+        
+        afl(
+          sourceOp | 
+            index_lookup(templateOp, sourceMatchField, indexName) |
+            filter(sprintf("%s is not null", indexName)) |
+            project(self$attrs)
+        )
+      }
+      
+      # Select the mode function which returns an AFL statement
+      aflExpr = switch(op_mode,
+                       'filter' = filter_mode,
+                       'cross_between' = cross_between_mode,
+                       'index_lookup' = index_lookup_mode,
+                       stopf("ERROR: ArrayOp$match: unknown op_mode '%s'.", op_mode)
+      )()
+      self$create_new_with_same_schema(aflExpr)
+    }
+    ,
+    semi_join_old_from_repo = function(df, 
+                                       field_mapping = NULL,
+                                       lower_bound = NULL,
+                                       upper_bound = NULL,
+                                       mode = "auto",
+                                       filter_threshold = 200L, 
+                                       upload_threshold = 6000L
+                                       ) {
+      assert_no_fields(
+        names(df) %-%
+          self$dims_n_attrs %-%
+          as.character(field_mapping) %-%
+          as.character(lower_bound) %-%
+          as.character(upper_bound)
+        ,
+        "ERROR: Repo$semi_join: param df has unmatched fields to the reference: '%s'"
+      )
+      
+      assert_no_fields((
+        names(field_mapping) %u%
+          names(lower_bound) %u%
+          names(upper_bound)
+      ) %-% self$dims_n_attrs,
+      "ERROR: Repo$semi_join: field(s) '%s' are not valid fields of the reference array:
+'%%s'",
+      self$to_afl()
+      )
+      
+      VALID_MODES = c("auto", "filter", "cross_between", "index_lookup")
+      assert(
+        mode %in% VALID_MODES,
+        "ERROR: Repo$semi_join: invalid param 'mode' %s. Should be one of [%s]",
+        mode,
+        paste(VALID_MODES, collapse = ",")
+      )
+      
+      numCells = base::nrow(df) * length(names(df))
+      numCols = length(names(df))
+      
+      op_mode = if(mode == "auto"){
+        if(numCells <= filter_threshold) { "filter" }
+        else if(numCols == 1) { "index_lookup" }
+        else { "cross_between" }
+      } else { mode }
+      
+      dfOrArray = if(op_mode == "filter"){ df } 
+      else {
+        if(op_mode == "cross_between"){
+          assert_no_fields(names(df) %-% self$dims %-% as.character(lower_bound) %-% as.character(upper_bound),
+                           "ERROR: Repo$semi_join: df column(s) '%s' are not reference dimensions. Only dimensions are allowed in 'cross_between' mode.
+reference array afl: %%s", self$to_afl())
+        }
+        
+        explicitFields = as.list(c(field_mapping, lower_bound, upper_bound))
+        # if(.has_len(as.character(explicitFields) %-% names(explicitFields))) browser()
+        implicitFields = names(df) %-% as.character(explicitFields)
+        implicitFields = new_named_list(implicitFields, implicitFields)
+        
+        dfFields = as.character(explicitFields) %u% names(implicitFields)
+        refFields = c(names(explicitFields), as.character(implicitFields)) # allow duplicates here
+        templateDtypes = new_named_list(
+          private$get_field_types(refFields, .raw = T), 
+          names = dfFields
+        )
+        
+        arrayTemplate = self$create_new(
+          "", dims = "x",
+          attrs = dfFields,
+          dtypes = templateDtypes
+        )
+        # build_or_upload_df(df, arrayTemplate, threshold = upload_threshold)
+        private$conn$array_op_from_df(df, arrayTemplate, build_or_upload_threshold = upload_threshold)
+      }
+      
+      result = private$match(dfOrArray, op_mode = op_mode, 
+                               field_mapping = field_mapping,
+                               lower_bound = lower_bound,
+                               upper_bound = upper_bound)
+      # Add to ref count to avoid R's GC
+      result$.set_meta('.ref', 
+                       if(inherits(dfOrArray, "ArrayOpBase")) dfOrArray 
+                       else NULL)
+      result
+    }
+    ,
     # Reshape an array without modifying its dimensions
     # 
     # This is an enhanced version inspired by scidb 'project' and 'apply' operators which also only work on attributes.
@@ -976,194 +1249,6 @@ Please select on left operand's fields OR do not select on either operand. Look 
     }
     ,
     #' @description 
-    #' Create a new ArrayOp by matching a template against a source (self). 
-    #' 
-    #' The result has the same schema with the source.
-    #' All fields in the template are compared to their matching source fields by equality, except for thos in 
-    #' lower_bound/upper_bound which will be used as a range `[lower_bound, upper_bound]`.
-    #' @param template A data.frame or ArrayOp used to reduce the number of source cells without changing its schema
-    #' @param op_mode ['filter', 'cross_between']
-    #' @param lower_bound Field names as lower bounds. 
-    #' @param upper_bound Field names as upper bounds.
-    #' @param field_mapping A named list where name is source field name and value is template field name.
-    #' Default NULL: fields are mapped between template and source by field names only. 
-    #' If there is mapping fields in the template which are intended for lower or upper bound, 
-    #' provide an empty list or a list with matching fields 
-    #' @return A new ArrayOp instance which has the same schema as the source. 
-    match = function(template, op_mode, lower_bound = NULL, upper_bound = NULL, field_mapping = NULL){
-      assert_not_has_len(names(lower_bound) %n% names(field_mapping), 
-        "ERROR: ArrayOp$match: Field names in param 'lower_bound' and 'field_mapping' cannot overlap: '%s'",
-        paste(names(lower_bound) %n% names(field_mapping), collapse = ','))
-      assert_not_has_len(names(upper_bound) %n% names(field_mapping), 
-        "ERROR: ArrayOp$match: Field names in param 'upper_bound' and 'field_mapping' cannot overlap: '%s'",
-        paste(names(upper_bound) %n% names(field_mapping), collapse = ','))
-      if(.has_len(lower_bound))
-        assert_named_list(lower_bound, "ERROR: ArrayOp$match: lower_bound if provided must be a named list.")
-      if(.has_len(upper_bound))
-        assert_named_list(upper_bound, "ERROR: ArrayOp$match: upper_bound if provided must be a named list.")
-      
-      filter_mode = function(){
-        assert(inherits(template, 'data.frame'), 
-          "ERROR: ArrayOp$match: filter mode: template must be a data.frame, but got: %s", class(template))
-        unmatchedCols = names(template) %-% self$dims_n_attrs %-% lower_bound %-% upper_bound
-        assert_not_has_len(unmatchedCols, 
-          "ERROR: ArrayOp$match: filter mode: template field(s) not matching the source: '%s'",
-          paste(unmatchedCols, collapse = ','))
-        
-        colTypes = sapply(template, class)
-        needQuotes = !(colTypes %in% c('numeric', 'integer', 'integer64'))
-        valueStrTemplates = lapply(needQuotes, .ifelse, "'%s'", "%s")
-        # Iterate on the template data frame
-        convertRow = function(eachRow, colNames) {
-          rowValues = mapply(sprintf, valueStrTemplates, eachRow)
-          # Each filter item per row per field
-          rowItems = mapply(function(name, val){
-            operator = as.character(NULL)
-            sourceFieldName = as.character(NULL)
-            if(name %in% lower_bound) {
-              operator = c(operator, '>=')
-              sourceFieldName = c(sourceFieldName, names(lower_bound)[lower_bound == name][[1]])
-            }
-            if(name %in% upper_bound) {
-              operator = c(operator, '<=')
-              sourceFieldName = c(sourceFieldName, names(upper_bound)[upper_bound == name][[1]])
-            }
-            if(!name %in% lower_bound && !name %in% upper_bound){
-              operator = c(operator, '=')
-              sourceFieldName = c(sourceFieldName, name)
-            }
-            sprintf("%s%s%s", sourceFieldName, operator, val)
-          }, colNames, rowValues)
-          if(is.list(rowItems))
-            rowItems = do.call(c, rowItems) # in case of mixed vector and string
-          sprintf(
-            .ifelse(length(rowItems) > 1, "(%s)", "%s"), # String template for a row
-            paste(rowItems, collapse = ' and ')
-          )
-        }
-        
-        filter_afl = paste( apply(template, 1, convertRow, names(template)), collapse = ' or ' )
-        return(afl(self | filter(filter_afl)))
-      }
-      
-      cross_between_mode = function(){
-        assert(inherits(template, 'ArrayOpBase'), 
-          "ERROR: ArrayOp$match: cross_between mode: template must be a ArrayOp instance, but got: %s", class(template))
-        if(is.null(field_mapping)){
-          dimMatchMarks = self$dims %in% template$dims_n_attrs
-          matchedDims = template$dims_n_attrs %n% self$dims
-          field_mapping = as.list(structure(matchedDims, names = matchedDims))
-        }
-        else {
-          matchedDims = names(field_mapping) %n% self$dims
-          dimMatchMarks = self$dims %in% names(field_mapping)
-        }
-        
-        assert_has_len(matchedDims %u% names(lower_bound) %u% names(upper_bound),
-          "ERROR: ArrayOp$match: cross_between mode: none of the template fields '%s' matches the source's dimensions: '%s'.
-Only dimensions are matched in this mode. Attributes are ignored even if they are provided.",
-          paste(template$dims_n_attrs, collapse = ','), paste(self$dims, collapse = ','))
-        
-        # get region array's attr values
-        getRegionArrayAttrValue = function(default, low){
-          res = rep(default, length(self$dims))
-          for(i in 1:length(self$dims)){
-            mainDimKeyName = self$dims[[i]]
-            if(low && mainDimKeyName %in% names(lower_bound)){
-              res[[i]] <- lower_bound[[mainDimKeyName]]
-            }
-            else if(!low && mainDimKeyName %in% names(upper_bound)){
-              res[[i]] <- upper_bound[[mainDimKeyName]]
-            }
-            else if(dimMatchMarks[[i]]){
-              res[[i]] <- sprintf("int64(%s)", field_mapping[[mainDimKeyName]])
-            } 
-          }
-          return(res)
-        }
-        
-        regionLowAttrValues = getRegionArrayAttrValue(MIN_DIM, low = TRUE)
-        regionHighAttrValues = getRegionArrayAttrValue(MAX_DIM, low = FALSE)
-        
-        regionLowAttrNames = sprintf('_%s_low', self$dims)
-        regionHighAttrNames = sprintf('_%s_high', self$dims)
-        
-        # apply new attributes as the region array in 'cross_between'
-        applyExpr = afl_join_fields(regionLowAttrNames, regionLowAttrValues, regionHighAttrNames, regionHighAttrValues)
-        afl_literal = afl(
-          self | cross_between(
-            template | apply(applyExpr) | 
-              project(regionLowAttrNames, regionHighAttrNames))
-        )
-        return(afl_literal)
-      }
-      
-      index_lookup_mode = function() {
-        assert(inherits(template, 'ArrayOpBase'), 
-               "ERROR: ArrayOp$match: index_lookup mode: template must be an ArrayOp instance, but got: [%s]", paste(class(template), collapse = ","))
-        assert(length(template$attrs) == 1 && length(template$dims) == 1,
-               "ERROR: ArrayOp$match: index_lookup mode: template must have only one dimension and one attribute")
-        if(is.null(field_mapping)){
-          matchedFields = template$attrs %n% self$dims_n_attrs # find matched fields from template's attrs only (not in dims)
-          assert(length(matchedFields) == 1, 
-                 "ERROR: ArrayOp$match: index_lookup mode: param 'field_mapping' == NULL, but template field '%s' does not match any source fields",
-                 template$attrs)
-          field_mapping = new_named_list(matchedFields, names = matchedFields)
-        }
-        assert(length(field_mapping) == 1, 
-               "ERROR: ArrayOp$match: index_lookup mode: there should be exactly one template attribute that matches source's fields, but %d field(s) found: %s",
-               length(field_mapping), paste(field_mapping, collapse = ","))
-        assert_not_has_len(lower_bound,
-                       "ERROR: ArrayOp$match: index_lookup mode: param 'lower_bound' is not allowed in this mode.")
-        assert_not_has_len(upper_bound,
-                       "ERROR: ArrayOp$match: index_lookup mode: param 'upper_bound' is not allowed in this mode.")
-        
-        
-        if(is.null(names(field_mapping))){ 
-          # e.g. field_mapping = 'field_a' 
-          sourceField = as.character(field_mapping)
-          templateField = template$attrs
-        } else {
-          sourceField = names(field_mapping)
-          templateField = as.character(field_mapping)
-        }
-        assert(sourceField %in% self$dims_n_attrs,
-               "ERROR: ArrayOp$match: index_lookup mode: '%s' is not a valid source field.", sourceField)
-        assert(templateField %in% template$attrs,
-               "ERROR: ArrayOp$match: index_lookup mode: '%s' is not a valid template field.", templateField)
-        
-        isSourceAttrMatched = sourceField %in% self$attrs
-        sourceMatchField = if(isSourceAttrMatched) sourceField else sprintf("attr_%s", sourceField)
-        
-        sourceOp = if(isSourceAttrMatched) self else {
-          afl(self | apply(sourceMatchField, sourceField))
-        }
-        indexName = sprintf("index_%s", sourceField)
-        templateOp = template
-        if(templateField %in% self$dims_n_attrs) { 
-          # if the template field name exist on the source too, there will be field name conflicts when we 'project'
-          templateOp = template$reshape(new_named_list(templateField, names = sprintf("alt_%s_", templateField)))
-        }
-          
-        afl(
-          sourceOp | 
-            index_lookup(templateOp, sourceMatchField, indexName) |
-            filter(sprintf("%s is not null", indexName)) |
-            project(self$attrs)
-        )
-      }
-      
-      # Select the mode function which returns an AFL statement
-      aflExpr = switch(op_mode,
-        'filter' = filter_mode,
-        'cross_between' = cross_between_mode,
-        'index_lookup' = index_lookup_mode,
-        stopf("ERROR: ArrayOp$match: unknown op_mode '%s'.", op_mode)
-      )()
-      self$create_new_with_same_schema(aflExpr)
-    }
-    ,
-    #' @description 
     #' Create a new ArrayOp instance from 'build'ing a data.frame
     #' 
     #' All matching fields are built as attributes of the result ArrayOp.
@@ -1658,15 +1743,18 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
                          lower_bound = NULL,
                          upper_bound = NULL,
                          mode = "auto",
-                         ...
+                         filter_threshold = 200L,
+                         upload_threshold = 6000L
                          ){
-        repo = private$conn$private$repo
-        repo$semi_join(df, self, 
+        # repo = private$conn$private$repo
+        # repo$semi_join(df, self, 
+        private$semi_join_old_from_repo(df, 
                        field_mapping = field_mapping,
                        lower_bound = lower_bound,
                        upper_bound = upper_bound,
                        mode = mode,
-                       ...
+                       filter_threshold = filter_threshold,
+                       upload_threshold = upload_threshold
                        )
     }
     ,
