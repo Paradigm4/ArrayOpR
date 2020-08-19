@@ -47,6 +47,13 @@ ArrayOpBase <- R6::R6Class(
       private$conn = connection
     }
     ,
+    # if no fields selected of self, then select all fields
+    # otherwise return unchanged self
+    auto_select = function() {
+      if(length(self$selected) == 0L) self$select(self$dims_n_attrs)
+      else self
+    }
+    ,
     validate_join_operand = function(side, operand, keys){
       assert(inherits(operand, class(self)),
         "JoinOp arg '%s' must be class of [%s], but got '%s' instead.",
@@ -75,10 +82,93 @@ ArrayOpBase <- R6::R6Class(
       }
     }
     ,
-    equi_join = function(right, on_left, on_right, settings = NULL, .auto_select = FALSE, 
-      .dim_mode = 'keep', .left_alias = '_L', .right_alias = '_R', .artificial_field = .random_attr_name()) {
+    #' @description 
+    #' Generate afl for ArrayOp used in a join context (equi_join).
+    #'
+    # Prerequisites include 1. dimensions/attributes/selected field names 2. .to_afl
+    # Joined field(s) (attr or dimension) is converted to an attribute in equi_join result
+    # All attributes and joined dimensions will be kept in equi_join result, which may not be optimal.
+    # All non-joined dimensions will be dropped.
+    # Detailed design and logic flow can be found at:
+    # https://docs.google.com/spreadsheets/d/1kN7QgvQXXxcovW9q25d4TNb6tsf888-xhWdZW-WELWw/edit?usp=sharing
+    #' @param keyFileds Field names as join keys
+    #' @param keep_dimensiosn If `keep_dimensions` is specified in scidb `equi_join` operator
+    #' @return An AFL string
+    to_join_operand_afl = function(keyFields, keep_dimensions = FALSE, artificial_field = utility$random_field_name()) {
+      
+      selectedFields = self$selected
+      if(!.has_len(selectedFields))
+        return(self$to_afl())
+      
+      dimensions = self$dims
+      attributes = self$attrs
+      arrName  = self$to_afl()
+      
+      applyList <- selectedFields %n% (dimensions %-% keyFields)
+      projectList <-  applyList %u% (attributes %n% selectedFields) %u% (keyFields %-% dimensions)
+      specialList <- dimensions %n% keyFields   # for joined-on dimensions which we also we want to keep in result
+      if(keep_dimensions){
+        applyList = applyList %-% self$dims
+        projectList = projectList %-% self$dims
+        # specialList = specialList %-% self$dims
+      } 
+      # case-1: When no attrs projected && selected dimensions, we need to create an artificial attr to project on.
+      if(.has_len(specialList) && !.has_len(projectList) && .has_len(selectedFields)){
+        res = afl(arrName | apply(artificial_field, 'null') | project(artificial_field))
+      }
+      # case-2: Regular mode. Just 'apply'/'project' for dimensions/attributes when needed.
+      else{
+        applyExpr = if(.has_len(applyList))
+          afl(arrName | apply(afl_join_fields(applyList, applyList)))
+        else arrName
+        res =  if(.has_len(projectList))
+          afl(applyExpr | project(projectList))
+        else applyExpr
+      }
+      return(res)
+    }
+    ,
+    #' @description 
+    #' Create a new ArrayOp instance by joining with another ArrayOp 
+    #' 
+    #' Currently implemented with scidb `equi_join` operator.
+    #' @param right The other ArrayOp instance to join with.
+    #' @param on_left R character vector. Join keys from the left (self).
+    #' @param on_right R character vector. Join keys from the `right`. Must be of the same length as `on_left`
+    #' @param on_both Join keys on both operand.
+    #' @param .auto_select default: FALSE. If set to TRUE, the resultant ArrayOp instance will auto `select` the fields
+    #' that are selected in the left and right operands but not in the right join keys (since they are masked by equi_join operator).
+    #' @param settings `equi_join` settings, a named list where both key and values are strings. 
+    #' @param .dim_mode How to reshape the resultant ArrayOp. Same meaning as in `ArrayOp$reshape` function. 
+    #' By default, dim_mode = 'keep', the artificial dimensions, namely `instance_id` and `value_no` from `equi_join`
+    #' are retained. If set to 'drop', the artificial dimensions will be removed. See `ArrayOp$reshape` for more details.
+    #' @param .artificial_field As in `ArrayOp$reshape`, it defaults to a random field name. It can be safely ignored in
+    #' client code. It exists only for test purposes. 
+    #' @return A new arrayOp 
+    join = function(left, right, 
+                    on_left = NULL, on_right = NULL, on_both = NULL, 
+                    .auto_select = FALSE, join_mode = 'equi_join',
+                    settings = NULL, 
+                    .left_alias = '_L', .right_alias = '_R') {
+      if(.has_len(on_both)){
+        on_left = on_both %u% on_left
+        on_right = on_both %u% on_right
+      }
+      switch(join_mode,
+             'equi_join' = private$equi_join,
+             'cross_join' = private$cross_join,
+             stopf("ERROR: ArrayOp$join: Invalid param 'join_mode' %s. Must be one of [equi_join, cross_join, auto]", join_mode)
+      )(
+        left$.private$auto_select(), 
+        right$.private$auto_select(), 
+        on_left, on_right, settings = settings, 
+        .auto_select = .auto_select, 
+        .left_alias = .left_alias, .right_alias = .right_alias)
+    }
+    ,
+    equi_join = function(left, right, on_left, on_right, settings = NULL, .auto_select = FALSE, 
+      .left_alias = '_L', .right_alias = '_R') {
       # Validate join params
-      left = self
       private$validate_join_params(left, right, on_left, on_right, settings)
       
       # Validate selected fields
@@ -104,8 +194,8 @@ Please select on left operand's fields OR do not select on either operand. Look 
       
       # Join two operands
       joinExpr <- sprintf(private$equi_join_template(.left_alias, .right_alias),
-        left$.to_join_operand_afl(on_left, keep_dimensions = keep_dimensions, artificial_field = .artificial_field), 
-        right$.to_join_operand_afl(on_right, keep_dimensions = keep_dimensions, artificial_field = .artificial_field),
+        left$.private$to_join_operand_afl(on_left, keep_dimensions = keep_dimensions), 
+        right$.private$to_join_operand_afl(on_right, keep_dimensions = keep_dimensions),
         paste(settingItems, collapse = ', '))
       
       
@@ -125,18 +215,44 @@ Please select on left operand's fields OR do not select on either operand. Look 
         }
       }) ()
       dtypes = .remove_null_values(c(dims, c(left$dtypes, right$dtypes)[attrs]))
+      
+      if(hasSelected){
+        selectedFields = c(left$selected, right$selected %-% on_right)
+        duplicatedFields = selectedFields[duplicated(selectedFields)]
+        selectedFields = if(length(duplicatedFields) > 0L){
+
+          selectedLeftFields = Map(function(x) if(x %in% duplicatedFields) sprintf("%s.%s", .left_alias, x) else x, 
+                                   left$selected)
+          selectedRightFields = Map(function(x) if(x %in% duplicatedFields) sprintf("%s.%s", .right_alias, x) else x, 
+                                   right$selected %-% on_right)
+          selectedLeftNames= Map(function(x) if(x %in% duplicatedFields) sprintf("%s%s", x, .left_alias) else x, 
+                                   left$selected)
+          selectedRightNames = Map(function(x) if(x %in% duplicatedFields) sprintf("%s%s", x, .right_alias) else x, 
+                                   right$selected %-% on_right)
+          new_named_list(
+            values = selectedLeftFields %u% selectedRightFields,
+            names = selectedLeftNames %u% selectedRightNames
+          )
+        } else new_named_list(selectedFields, selectedFields)
+        joinedOp = self$create_new(joinExpr, names(dims), attrs, dtypes = dtypes)
+        return(
+          joinedOp$.private$reshape_attrs(selectedFields)$select(names(selectedFields))
+        )
+        # return(do.call(joinedOp$transmute, selectedFields)$select(names(selectedFields)))
+      }
+      
       selectedFields = if(hasSelected) attrs else NULL
       joinedOp = self$create_new(joinExpr, names(dims), attrs, dtypes = dtypes)
       if(hasSelected) {
-        joinedOp = joinedOp$reshape(select = selectedFields, dim_mode = .dim_mode, artificial_field = .artificial_field)
+        joinedOp = joinedOp$reshape(select = selectedFields)
         if(.auto_select)
           joinedOp = joinedOp$select(selectedFields)
       }
       joinedOp
     }
     ,
-    cross_join = function(right, on_left, on_right, settings = NULL, .auto_select = FALSE, 
-      .dim_mode = 'keep', .left_alias = '_L', .right_alias = '_R', .artificial_field = .random_attr_name()) {
+    cross_join = function(left, right, on_left, on_right, settings = NULL, .auto_select = FALSE, 
+      .left_alias = '_L', .right_alias = '_R') {
       # Scidb cross_join operator only allows join on operands' dimensions
       assert_keys_are_all_dimensions = function(side, operand, keys){
         nonDimKeys = keys %-% operand$dims
@@ -145,7 +261,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
           side, paste(nonDimKeys, collapse = ','))
       }
       # Validate join params
-      left = self
+      # left = self
       private$validate_join_params(left, right, on_left, on_right, settings)
       assert_keys_are_all_dimensions('left', left, on_left)
       assert_keys_are_all_dimensions('right', right, on_right)
@@ -245,9 +361,12 @@ Please select on left operand's fields OR do not select on either operand. Look 
                  reshape(reserved_fields, .force_project = FALSE))
       }
       
-      joinOp = operand$select(reserved_fields %u% (self$dims %n% operand$dims_n_attrs))$
-        join(self$select(self$dims), 
-             on_left = operandKeyFields, on_right = templateKeyFields, settings = .join_setting)
+      joinOp = private$join(
+        operand$select(reserved_fields %u% (self$dims %n% operand$dims_n_attrs)),
+        self$select(self$dims), 
+        on_left = operandKeyFields, 
+        on_right = templateKeyFields, 
+        settings = .join_setting)
       joinOp$change_schema(self, strict = FALSE, .setting = .redimension_setting)
     }
     ,
@@ -344,7 +463,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
       regularTargetDims = target$dims %-% anti_collision_field 
       
       # Redimension source with a different field name for the anti-collision-field
-      srcAltId = sprintf("_src_%s", anti_collision_field) # this field is to avoid dimension collision within source 
+      srcAltId = sprintf("src_%s_", anti_collision_field) # this field is to avoid dimension collision within source 
       renamedList = as.list(structure(srcAltId, names = anti_collision_field))
       renamedTarget = target$spawn(renamed = renamedList)
       redimensionTemplateDimSpecs =
@@ -363,18 +482,24 @@ Please select on left operand's fields OR do not select on either operand. Look 
       ))
       
       # Get the max anti-collision-field from group aggregating the target on the remainder of target dimensions
-      targetAltIdMax = sprintf("_max_%s", anti_collision_field)
-      groupedTarget = target$create_new_with_same_schema(afl(
+      targetAltIdMax = sprintf("max_%s_", anti_collision_field)
+      groupedTarget = self$create_new('',
+        attrs = c(regularTargetDims, targetAltIdMax), dims = c('instance_id', 'value_no'),
+        dtypes = c(invert.list(list("int64" = c('instance_id', 'value_no', regularTargetDims, targetAltIdMax))))
+      )$create_new_with_same_schema(afl(
         target | apply(anti_collision_field, anti_collision_field) | grouped_aggregate(
           sprintf("max(%s) as %s", anti_collision_field, targetAltIdMax), regularTargetDims)
       ))
-      
+        
       # Left join on the remainder of the target dimensions
-      joinSetting = if(is.null(join_setting)) list(left_outer=1) else {
-        utils::modifyList(as.list(join_setting), list(left_outer=1))
+      joinSetting = if(is.null(join_setting)) list(left_outer=1,keep_dimensions=TRUE) else {
+        utils::modifyList(as.list(join_setting), list(left_outer=1, keep_dimensions=TRUE))
       }
-      joined = redimenedSource$join(groupedTarget, on_left = regularTargetDims, on_right = regularTargetDims,
-                                    settings = joinSetting)
+      joined = private$join(redimenedSource$select(redimenedSource$dims_n_attrs), 
+                            groupedTarget$select(targetAltIdMax), 
+                            on_both = regularTargetDims,
+                            .auto_select = TRUE,
+                            settings = joinSetting)
       
       # Finally calculate the values of anti_collision_field
       # src's attributes (that are target dimensions) are converted to dimensions according to the target
@@ -391,6 +516,53 @@ Please select on left operand's fields OR do not select on either operand. Look 
         )$reshape(resultTemplate$attrs)
       
       return(result)
+    }
+    ,
+    #' @description 
+    #' Return AFL suitable for retrieving data.frame.
+    #'
+    #' scidb::iquery has a param `only_attributes`, which, if set TRUE, will effectively drop all dims.
+    #' @param drop_dims Whether self's dimensions are dropped when generating AFL for data.frame conversion
+    #' @return An AFL string
+    to_df_afl = function(drop_dims = FALSE, artificial_field = .random_attr_name()) {
+      return(private$to_afl_explicit(drop_dims, self$selected, artificial_field = artificial_field))
+    }
+    ,
+    #' @description 
+    #' Returns AFL when self used as an operand in another parent operation.
+    #'
+    #' By default, 1. dimensions are not dropped in parent operation; 2. no intent to select fields
+    #' @param drop_dims Whether self dimensions will be dropped in parent operations
+    #' @param selected_fields which fields are selected no matter what the parent operation is.
+    #' If NULL, self fields will pass on by default depending on the parent operation.
+    #' @return An AFL string
+    to_afl_explicit = function(drop_dims = FALSE, selected_fields = NULL, artificial_field = .random_attr_name()){
+      
+      # No intent to select fields
+      if(!.has_len(selected_fields))
+        return(self$to_afl())
+      
+      # 'selected_fields' is specified in sub-classes.
+      # We need to ensure selected fields are passed on in parent operations.
+      
+      # dims are dropped in parent operations.
+      if(drop_dims){
+        selectedDims = base::intersect(selected_fields, self$dims)
+        inner = if(.has_len(selectedDims))
+          afl(self | apply(afl_join_fields(selectedDims, selectedDims)))
+        else self$to_afl()
+        return(afl(inner | project(afl_join_fields(selected_fields))))
+      }
+      
+      # drop_dims = F. All dims are preserved in parent operations, we can only select/drop attrs.
+      selectedAttrs = base::intersect(selected_fields, self$attrs)
+      if(.has_len(selectedAttrs))  # If some attributes selected
+        return(afl(self | project(selectedAttrs)))
+      
+      # If no attributes selected, we have to create an artificial attribute, then project it.
+      # Because 'apply' doesn't work on array dimensions
+      return(afl(self | apply(artificial_field, 'null') |
+                   project(artificial_field)))
     }
     ### Implement raw AFL function ----
     # Functions prefixed with 'afl_' are implemented according to scidb operators with sanity checks.
@@ -717,38 +889,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
       }
       private$afl_redimension(realTemplate, .setting)
     }
-    ,
-    #' @description 
-    #' Create a new ArrayOp instance by joining with another ArrayOp 
-    #' 
-    #' Currently implemented with scidb `equi_join` operator.
-    #' @param right The other ArrayOp instance to join with.
-    #' @param on_left R character vector. Join keys from the left (self).
-    #' @param on_right R character vector. Join keys from the `right`. Must be of the same length as `on_left`
-    #' @param on_both Join keys on both operand.
-    #' @param .auto_select default: FALSE. If set to TRUE, the resultant ArrayOp instance will auto `select` the fields
-    #' that are selected in the left and right operands but not in the right join keys (since they are masked by equi_join operator).
-    #' @param settings `equi_join` settings, a named list where both key and values are strings. 
-    #' @param .dim_mode How to reshape the resultant ArrayOp. Same meaning as in `ArrayOp$reshape` function. 
-    #' By default, dim_mode = 'keep', the artificial dimensions, namely `instance_id` and `value_no` from `equi_join`
-    #' are retained. If set to 'drop', the artificial dimensions will be removed. See `ArrayOp$reshape` for more details.
-    #' @param .artificial_field As in `ArrayOp$reshape`, it defaults to a random field name. It can be safely ignored in
-    #' client code. It exists only for test purposes. 
-    #' @return A new arrayOp 
-    join = function(right, on_left = NULL, on_right = NULL, settings = NULL, on_both = NULL, .auto_select = FALSE, join_mode = 'equi_join',
-      .dim_mode = 'keep', .left_alias = '_L', .right_alias = '_R', .artificial_field = .random_attr_name()) {
-      if(.has_len(on_both)){
-        on_left = on_both %u% on_left
-        on_right = on_both %u% on_right
-      }
-      switch(join_mode,
-        'equi_join' = private$equi_join,
-        'cross_join' = private$cross_join,
-        stopf("ERROR: ArrayOp$join: Invalid param 'join_mode' %s. Must be one of [equi_join, cross_join, auto]", join_mode)
-      )(right, on_left, on_right, settings = settings, 
-        .auto_select = .auto_select, .dim_mode = .dim_mode,
-        .left_alias = .left_alias, .right_alias = .right_alias, .artificial_field = .artificial_field)
-    }
+
     ,
     #' @description 
     #' Create a new ArrayOp instance by loading a file and checking it against an ArrayOp template (self).
@@ -1103,6 +1244,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
         result = result$.private$set_anti_collision_field(target, anti_collision_field, join_setting = join_setting, 
                                                  source_anti_collision_dim_spec = source_anti_collision_dim_spec)
       }
+      # browser()
       result = conn$array_op_from_afl(result$to_afl())
       return(result)
     }
@@ -1411,16 +1553,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     to_afl = function() {
       return(private$raw_afl)
     }
-    ,
-    #' @description 
-    #' Return AFL suitable for retrieving data.frame.
-    #'
-    #' scidb::iquery has a param `only_attributes`, which, if set TRUE, will effectively drop all dims.
-    #' @param drop_dims Whether self's dimensions are dropped when generating AFL for data.frame conversion
-    #' @return An AFL string
-    to_df_afl = function(drop_dims = FALSE, artificial_field = .random_attr_name()) {
-      return(self$.to_afl_explicit(drop_dims, self$selected, artificial_field = artificial_field))
-    }
+   
     ,
     #' @description 
     #' Return a schema representation of the ArrayOp <attr1 [, attr2 ...]> \[dim1 [;dim2]\]
@@ -1438,7 +1571,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     # db functions ----
     ,
     to_df = function(only_attributes = FALSE) {
-      private$conn$private$repo$query(self, only_attributes = only_attributes)
+      private$conn$private$repo$query(private$to_df_afl(), only_attributes = only_attributes)
       # todo: remove repo
       # conn$query(self$to_df_afl(), only_attributes = only_attributes)
     }
@@ -1446,7 +1579,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     to_df_attrs = function() {
       # todo: remove repo
       # conn$query(self, only_attributes = TRUE)
-      private$conn$private$repo$query(self, only_attributes = TRUE)
+      private$conn$private$repo$query(private$to_df_afl(drop_dims = TRUE), only_attributes = TRUE)
     }
     ,
     execute = function(conn = get_default_connection()) {
@@ -1472,6 +1605,23 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     remove_self = function(conn = get_default_connection()){
       conn$execute(afl(self | remove))
       invisible(NULL)
+    }
+    ,
+    inner_join = function(right, ...) {
+      private$join(self, right,
+        ..., .auto_select = T)  
+    }
+    ,
+    left_join = function(right, ...) {
+      private$join(self, right,
+        settings = list(left_outer=1),
+        ..., .auto_select = T)  
+    }
+    ,
+    right_join = function(right, ...) {
+      private$join(self, right,
+        settings = list(right_outer=1),
+        ..., .auto_select = T)  
     }
     ,
     semi_join = function(df, 
@@ -1500,7 +1650,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     ){
       # No need to store an already persistent arrary
       if(self$is_persistent()) return(self) 
-      conn$array_op_from_stored_afl(self$to_df_afl(), 
+      conn$array_op_from_stored_afl(private$to_df_afl(), 
                                     save_array_name = save_array_name,
                                     .temp = .temp,
                                     .gc = .gc
@@ -1528,91 +1678,6 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     }
     
     # Old -------------------------------------------------------------------------------------------------------------
-    ,
-
-    #' @description 
-    #' Returns AFL when self used as an operand in another parent operation.
-    #'
-    #' By default, 1. dimensions are not dropped in parent operation; 2. no intent to select fields
-    #' @param drop_dims Whether self dimensions will be dropped in parent operations
-    #' @param selected_fields which fields are selected no matter what the parent operation is.
-    #' If NULL, self fields will pass on by default depending on the parent operation.
-    #' @return An AFL string
-    .to_afl_explicit = function(drop_dims = FALSE, selected_fields = NULL, artificial_field = .random_attr_name()){
-
-      # No intent to select fields
-      if(!.has_len(selected_fields))
-        return(self$to_afl())
-
-      # 'selected_fields' is specified in sub-classes.
-      # We need to ensure selected fields are passed on in parent operations.
-
-      # dims are dropped in parent operations.
-      if(drop_dims){
-        selectedDims = base::intersect(selected_fields, self$dims)
-        inner = if(.has_len(selectedDims))
-          afl(self | apply(afl_join_fields(selectedDims, selectedDims)))
-          else self$to_afl()
-        return(afl(inner | project(afl_join_fields(selected_fields))))
-      }
-
-      # drop_dims = F. All dims are preserved in parent operations, we can only select/drop attrs.
-      selectedAttrs = base::intersect(selected_fields, self$attrs)
-      if(.has_len(selectedAttrs))  # If some attributes selected
-        return(afl(self | project(selectedAttrs)))
-
-      # If no attributes selected, we have to create an artificial attribute, then project it.
-      # Because 'apply' doesn't work on array dimensions
-      return(afl(self | apply(artificial_field, 'null') |
-            project(artificial_field)))
-    }
-    ,
-    
-    #' @description 
-    #' Generate afl for ArrayOp used in a join context (equi_join).
-    #'
-    # Prerequisites include 1. dimensions/attributes/selected field names 2. .to_afl
-    # Joined field(s) (attr or dimension) is converted to an attribute in equi_join result
-    # All attributes and joined dimensions will be kept in equi_join result, which may not be optimal.
-    # All non-joined dimensions will be dropped.
-    # Detailed design and logic flow can be found at:
-    # https://docs.google.com/spreadsheets/d/1kN7QgvQXXxcovW9q25d4TNb6tsf888-xhWdZW-WELWw/edit?usp=sharing
-    #' @param keyFileds Field names as join keys
-    #' @param keep_dimensiosn If `keep_dimensions` is specified in scidb `equi_join` operator
-    #' @return An AFL string
-    .to_join_operand_afl = function(keyFields, keep_dimensions = FALSE, artificial_field = .random_attr_name()) {
-      
-      selectedFields = self$selected
-      if(!.has_len(selectedFields))
-        return(self$to_afl())
-      
-      dimensions = self$dims
-      attributes = self$attrs
-      arrName  = self$to_afl()
-      
-      applyList <- selectedFields %n% (dimensions %-% keyFields)
-      projectList <-  applyList %u% (attributes %n% selectedFields) %u% (keyFields %-% dimensions)
-      specialList <- dimensions %n% keyFields   # for joined-on dimensions which we also we want to keep in result
-      if(keep_dimensions){
-        applyList = applyList %-% self$dims
-        projectList = projectList %-% self$dims
-        # specialList = specialList %-% self$dims
-      } 
-      # case-1: When no attrs projected && selected dimensions, we need to create an artificial attr to project on.
-      if(.has_len(specialList) && !.has_len(projectList) && .has_len(selectedFields)){
-        res = afl(arrName | apply(artificial_field, 'null') | project(artificial_field))
-      }
-      # case-2: Regular mode. Just 'apply'/'project' for dimensions/attributes when needed.
-      else{
-        applyExpr = if(.has_len(applyList))
-          afl(arrName | apply(afl_join_fields(applyList, applyList)))
-        else arrName
-        res =  if(.has_len(projectList))
-          afl(applyExpr | project(projectList))
-        else applyExpr
-      }
-      return(res)
-    }
     ,
     #' @description 
     #' Set ArrayOp meta data directly
