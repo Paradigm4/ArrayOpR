@@ -147,9 +147,9 @@ ArrayOpBase <- R6::R6Class(
     #' @return A new arrayOp 
     join = function(left, right, 
                     on_left = NULL, on_right = NULL, on_both = NULL, 
-                    .auto_select = FALSE, join_mode = 'equi_join',
+                    auto_select = FALSE, join_mode = 'equi_join',
                     settings = NULL, 
-                    .left_alias = '_L', .right_alias = '_R') {
+                    left_alias = '_L', right_alias = '_R') {
       if(.has_len(on_both)){
         on_left = on_both %u% on_left
         on_right = on_both %u% on_right
@@ -157,13 +157,13 @@ ArrayOpBase <- R6::R6Class(
       switch(join_mode,
              'equi_join' = private$equi_join,
              'cross_join' = private$cross_join,
-             stopf("ERROR: ArrayOp$join: Invalid param 'join_mode' %s. Must be one of [equi_join, cross_join, auto]", join_mode)
+             stopf("ERROR: ArrayOp$join: Invalid param 'join_mode' %s. Must be one of [equi_join, cross_join]", join_mode)
       )(
         left$.private$auto_select(), 
         right$.private$auto_select(), 
         on_left, on_right, settings = settings, 
-        .auto_select = .auto_select, 
-        .left_alias = .left_alias, .right_alias = .right_alias)
+        .auto_select = auto_select, 
+        .left_alias = left_alias, .right_alias = right_alias)
     }
     ,
     disambiguate_join_fields = function(left_fields, right_fields, .left_alias, .right_alias) {
@@ -1625,21 +1625,48 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       invisible(NULL)
     }
     ,
-    inner_join = function(right, ...) {
+    inner_join = function(right, 
+                          on_left = NULL, on_right = NULL, on_both = NULL, 
+                          left_alias = '_L', right_alias = '_R',
+                          join_mode = 'equi_join',
+                          settings = NULL
+                          ) {
+      
       private$join(self, right,
-        ..., .auto_select = T)  
+                   on_left = on_left, on_right = on_right, on_both = on_both,
+                   left_alias = left_alias, right_alias = right_alias,
+                   join_mode = join_mode,
+                   settings = settings,
+                   auto_select = TRUE
+                   )  
     }
     ,
-    left_join = function(right, ...) {
+    left_join = function(right, 
+                         on_left = NULL, on_right = NULL, on_both = NULL, 
+                         left_alias = '_L', right_alias = '_R',
+                         settings = NULL
+                         ) {
       private$join(self, right,
-        settings = list(left_outer=1),
-        ..., .auto_select = T)  
+                   on_left = on_left, on_right = on_right, on_both = on_both,
+                   left_alias = left_alias, right_alias = right_alias,
+                   settings = list(left_outer=1),
+                   join_mode = 'equi_join', 
+                   auto_select = TRUE
+                   )  
     }
     ,
-    right_join = function(right, ...) {
+    right_join = function(right, 
+                          on_left = NULL, on_right = NULL, on_both = NULL, 
+                          left_alias = '_L', right_alias = '_R',
+                          settings = NULL
+                          ) {
       private$join(self, right,
-        settings = list(right_outer=1),
-        ..., .auto_select = T)  
+                   on_left = on_left, on_right = on_right, on_both = on_both,
+                   left_alias = left_alias, right_alias = right_alias,
+                   settings = list(right_outer=1),
+                   join_mode = 'equi_join', 
+                   auto_select = TRUE
+                   )  
     }
     ,
     semi_join = function(df, 

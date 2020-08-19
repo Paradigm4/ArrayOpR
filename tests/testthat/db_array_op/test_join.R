@@ -173,15 +173,15 @@ test_that("join with conflicting field names", {
       dplyr::inner_join(leftDf, rightDf, by = c('fa', 'db') )
     )
     df_equal(
-      L$inner_join(R, on_both = c('db'), .left_alias = "_LL", .right_alias = "_RR")$to_df_attrs(), 
+      L$inner_join(R, on_both = c('db'), left_alias = "_LL", right_alias = "_RR")$to_df_attrs(), 
       dplyr::inner_join(leftDf, rightDf, by = c('db'), suffix = c('_LL', '_RR'))
     )
     df_equal(
-      L$left_join(R, on_both = c('db'), .left_alias = "_LL", .right_alias = "_RR")$to_df_attrs(), 
+      L$left_join(R, on_both = c('db'), left_alias = "_LL", right_alias = "_RR")$to_df_attrs(), 
       dplyr::left_join(leftDf, rightDf, by = c('db'), suffix = c('_LL', '_RR'))
     )
     df_equal(
-      L$right_join(R, on_both = c('db'), .left_alias = "_LL", .right_alias = "_RR")$to_df_attrs(), 
+      L$right_join(R, on_both = c('db'), left_alias = "_LL", right_alias = "_RR")$to_df_attrs(), 
       dplyr::right_join(leftDf, rightDf, by = c('db'), suffix = c('_LL', '_RR'))
     )
     
@@ -200,11 +200,11 @@ test_that("join with conflicting field names", {
   
   test_cross_join_mode = function() {
     df_equal(
-      L$inner_join(R, on_both = c('db'), join_mode = 'cross_join', .left_alias = "_LL", .right_alias = "_RR")$to_df_attrs(), 
+      L$inner_join(R, on_both = c('db'), join_mode = 'cross_join', left_alias = "_LL", right_alias = "_RR")$to_df_attrs(), 
       dplyr::inner_join(leftDf, rightDf, by = c('db'), suffix = c('_LL', '_RR'))
     )
     df_equal(
-      L$inner_join(R, on_left = c('db', 'lda'), on_right = c('db', 'rda'), join_mode = 'cross_join', .left_alias = "_LL", .right_alias = "_RR")$to_df_attrs(), 
+      L$inner_join(R, on_left = c('db', 'lda'), on_right = c('db', 'rda'), join_mode = 'cross_join', left_alias = "_LL", right_alias = "_RR")$to_df_attrs(), 
       dplyr::inner_join(leftDf, rightDf, by = c('db'='db', 'lda'='rda'), suffix = c('_LL', '_RR'))
     )
     
@@ -218,6 +218,13 @@ test_that("join with conflicting field names", {
         by = c('db'='db', 'lda'='rda')) %>%
         dplyr::select(fa)
     )
+    
+    # cross_join only takes dimensions as join keys
+    expect_error(L$inner_join(R, join_mode = 'cross_join', on_both = c('db', 'fa')), 'fa') 
+    
+    # cross_join only performs inner_join
+    expect_error(L$left_join(R, join_mode = 'cross_join', on_both = c('db')), 'join_mode') 
+    expect_error(L$right_join(R, join_mode = 'cross_join', on_both = c('db')), 'join_mode') 
     
   }
   
