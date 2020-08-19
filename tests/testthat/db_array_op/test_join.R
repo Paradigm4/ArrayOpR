@@ -14,8 +14,8 @@ test_that("join with no conflicting field names", {
   leftTemplate = conn$array_op_from_schema_str("<lfa:string, lfb:double> [lda;ldb] ")
   rightTemplate = conn$array_op_from_schema_str("<rfa:string, rfb:double> [rda;rdb] ")
   
-  L = conn$array_op_from_df(leftDf, leftTemplate)$change_schema(leftTemplate)$persist(.gc = F)
-  R = conn$array_op_from_df(rightDf, rightTemplate)$change_schema(rightTemplate)$persist(.gc = F)
+  L = conn$array_op_from_df(leftDf, leftTemplate)$change_schema(leftTemplate)
+  R = conn$array_op_from_df(rightDf, rightTemplate)$change_schema(rightTemplate)
   
   test_inner_join = function() {
     df_equal(
@@ -154,8 +154,8 @@ test_that("join with no conflicting field names", {
   test_left_join()
   test_right_join()
   
-  L$remove_self()
-  R$remove_self()
+  # L$remove_self()
+  # R$remove_self()
 })
 
 test_that("join with conflicting field names", {
@@ -163,7 +163,8 @@ test_that("join with conflicting field names", {
   rightDf = data.frame(rda = 3:10, db = 13:20, fa = LETTERS[3:10], rfb = 3.14 * 3:10)
   leftTemplate = conn$array_op_from_schema_str("<fa:string, lfb:double> [lda;db] ")
   rightTemplate = conn$array_op_from_schema_str("<fa:string, rfb:double> [rda;db] ")
-  
+  # At least one input to 'cross_join' must have a specified chunk size.
+  # So we need to persist the arrays
   L = conn$array_op_from_df(leftDf, leftTemplate)$change_schema(leftTemplate)$persist(.gc = F)
   R = conn$array_op_from_df(rightDf, rightTemplate)$change_schema(rightTemplate)$persist(.gc = F)
   
@@ -233,4 +234,36 @@ test_that("join with conflicting field names", {
   
   L$remove_self()
   R$remove_self()
+})
+
+test_that("join with three operands", {
+  df1 = data.frame(da = 1:10, db = 11:20, fa = LETTERS[1:10],  fb = 3.14 * 1:10)
+  df2 = data.frame(da = 3:10, dc = 13:20, fa = LETTERS[3:10], fc = 3.14 * 3:10)
+  df3 = data.frame(dd = 5:15, db = 12:22, fd = LETTERS[5:15], fe = 1.23 * 0:10)
+  
+  template1 = conn$array_op_from_schema_str("<fa:string, fb:double> [da;db] ")
+  template2 = conn$array_op_from_schema_str("<fa:string, fc:double> [da;dc] ")
+  template3 = conn$array_op_from_schema_str("<fd:string, fe:double> [dd;db] ")
+  
+  a1 = conn$array_op_from_df(df1, template1)$change_schema(template1)
+  a2 = conn$array_op_from_df(df2, template2)$change_schema(template2)
+  a3 = conn$array_op_from_df(df3, template3)$change_schema(template3)
+  
+  inner_join = dplyr::inner_join
+  select = dplyr::select
+  
+  df_equal(
+    a1$inner_join(a2, on_both = 'da')$inner_join(a3, on_both = 'db')$to_df_attrs(),
+    df1 %>% inner_join(df2, by = 'da', suffix = c('_L', '_R')) %>% inner_join(df3, by = 'db')
+  )
+  df_equal(
+    a1$select('da', 'fa', 'db')$
+      inner_join(a2$select('da'), on_both = 'da')$
+      inner_join(a3$select('fe'), on_both = 'db')$
+      to_df_attrs(),
+    df1 %>% 
+      inner_join(df2 %>% select(-fa), by = 'da') %>% # remove fa from df2 other it will be suffixed with .y
+      inner_join(df3, by = 'db') %>% select(da, fa, db, fe)
+  )
+  
 })

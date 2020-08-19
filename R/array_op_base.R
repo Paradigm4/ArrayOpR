@@ -521,7 +521,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
       joined = private$join(redimenedSource$select(redimenedSource$dims_n_attrs), 
                             groupedTarget$select(targetAltIdMax), 
                             on_both = regularTargetDims,
-                            .auto_select = TRUE,
+                            auto_select = TRUE,
                             settings = joinSetting)
       
       # Finally calculate the values of anti_collision_field
