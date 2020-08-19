@@ -30,11 +30,6 @@ assert_df_match = function(result_df, expected_df) {
     expected_df # locally filtered data frames follow default ordering
   )
   
-  # tryCatch(expect_equal(
-  #   sortedDf, # scidb doesn't gurantee result data frame ordering
-  #   expected_df # locally filtered data frames follow default ordering
-  # ), error = browser())
-  
 }
 
 # Mutate new ----
@@ -66,6 +61,16 @@ test_that("Mutate an array by expression", {
     RefArray$
       filter(is_null(f_bool))$
       mutate(lower_len = "strlen(lower)", f_bool = NULL, f_int64 = NULL)$
+      to_df(),
+    ArrayContent %>% 
+      dplyr::filter(is.na(f_bool)) %>%
+      dplyr::mutate(f_bool = NULL, f_int64 = NULL, "lower_len" = nchar(lower))
+  )
+  # Pass field expression by list
+  assert_df_match(
+    RefArray$
+      filter(is_null(f_bool))$
+      mutate(.dots = list(lower_len = "strlen(lower)", f_bool = NULL, f_int64 = NULL))$
       to_df(),
     ArrayContent %>% 
       dplyr::filter(is.na(f_bool)) %>%
@@ -124,7 +129,7 @@ test_that("transmute does not preserve old fields", {
   assert_df_match(
     RefArray$
       filter(is_null(f_bool))$
-      transmute(lower_len = "strlen(lower)")$
+      transmute(.dots = list(lower_len = "strlen(lower)"))$
       to_df_attrs(),
     ArrayContent %>% 
       dplyr::filter(is.na(f_bool)) %>%
@@ -134,49 +139,7 @@ test_that("transmute does not preserve old fields", {
 })
 
 
-# i_mutate ----
-
-test_that("i_mutate returns arrays with same schemas", {
-  
-  # `i_mutate` Behave as `mutate` if no extra fields provided
-  assert_df_match(
-    RefArray$
-      filter(is_null(f_bool))$
-      i_mutate('f_bool'='iif(f_double > 1, true, false)', 'upper'="'mutated'", 'f_int32' = "strlen(lower)")$
-      to_df(),
-    ArrayContent %>% 
-      dplyr::filter(is.na(f_bool)) %>%
-      dplyr::mutate("f_bool" = f_double > 1, "upper" = "mutated", "f_int32" = nchar(lower))
-  )
-  
-  # Error cases
-  
-  expect_error(RefArray$
-    filter(is_null(f_bool))$
-    i_mutate('da', 'upper'="'mutated'"),
-    "named list"
-  )
-  
-  expect_error(RefArray$
-    filter(is_null(f_bool))$
-    i_mutate('da'='3', 'upper'="'mutated'"),
-    "da"
-  )
-  
-  expect_error(RefArray$
-    filter(is_null(f_bool))$
-    i_mutate('new_field'='iif(f_double > 1, true, false)', 'upper'="'mutated'"),
-    "new_field"
-  )
-  expect_error(RefArray$
-    filter(is_null(f_bool))$
-    i_mutate("f_int32" = NULL, 'upper'="'mutated'"),
-    "f_int32"
-  )
-    
-})
-
-# i_mutate_by another arrayOp ----
+# mutate_by another arrayOp ----
 
 test_that("mutate: key:1-attr, update_fields: 2 attrs", {
   mutateDataSource = ArrayContent %>% 
@@ -184,7 +147,7 @@ test_that("mutate: key:1-attr, update_fields: 2 attrs", {
     dplyr::mutate(f_int32 = 1:3, upper = 'changed')
   
   assert_df_match(
-    RefArray$i_mutate_by(
+    RefArray$mutate_by(
       conn$array_op_from_df(mutateDataSource %>% dplyr::select(lower, upper, f_int32)), 
       keys = c('lower'), updated_fields = c('f_int32', 'upper')
     )$to_df(),
@@ -200,7 +163,7 @@ test_that("mutate: key:2-attrs, update_fields: 1 attr", {
   dataArray = conn$array_op_from_df(mutateDataSource %>% dplyr::select(lower, upper, f_int32), schemaTemplate)
   
   assert_df_match(
-    RefArray$i_mutate_by(
+    RefArray$mutate_by(
       dataArray, keys = c('lower', 'upper'), updated_fields = c('f_int32')
     )$to_df(),
     mutateDataSource
@@ -214,7 +177,7 @@ test_that("mutate: key:1 dim, update_fields: 1 attr", {
   dataArray = conn$array_op_from_df(mutateDataSource %>% dplyr::select(da, f_int32), schemaTemplate)
   
   assert_df_match(
-    RefArray$i_mutate_by(
+    RefArray$mutate_by(
       dataArray, keys = c('da'), updated_fields = c('f_int32')
     )$to_df(),
     mutateDataSource
@@ -228,7 +191,7 @@ test_that("mutate: key:2 dims, update_fields: 1 attr", {
   dataArray = conn$array_op_from_df(mutateDataSource %>% dplyr::select(da, db, f_int32), schemaTemplate)
   
   assert_df_match(
-    RefArray$i_mutate_by(
+    RefArray$mutate_by(
       dataArray, keys = c('da', 'db'), updated_fields = c('f_int32')
     )$to_df(),
     mutateDataSource
@@ -242,7 +205,7 @@ test_that("mutate: key: 1 dim + 1 attr, update_fields: 2 attrs", {
   dataArray = conn$array_op_from_df(mutateDataSource %>% dplyr::select(db, lower, f_int32, upper), schemaTemplate)
   
   assert_df_match(
-    RefArray$i_mutate_by(
+    RefArray$mutate_by(
       dataArray, keys = c('lower', 'db'), updated_fields = c('f_int32', 'upper')
     )$to_df(),
     mutateDataSource

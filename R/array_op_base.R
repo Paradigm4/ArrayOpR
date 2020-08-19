@@ -60,7 +60,7 @@ ArrayOpBase <- R6::R6Class(
       
       field_names = field_names %?% self$dims_n_attrs
       assert_empty(field_names %-% self$dims_n_attrs, "param 'field_names' has invalid fields: [{.value}]")
-      result = self$dtypes[field_names]
+      result = new_named_list(self$dtypes[field_names], field_names)
       if(.raw){
         result = as.list(structure(regmatches(result, regexpr("^\\w+", result)), names = field_names))
       }
@@ -1281,8 +1281,8 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       return(result)
     }
     ,
-    mutate = function(...){
-      fieldExprs = list(...)
+    mutate = function(..., .dots = NULL){
+      fieldExprs = .dots %?% list(...)
       selfAttrs = new_named_list(self$attrs, self$attrs)
       finalFields = utils::modifyList(selfAttrs, fieldExprs)
       
@@ -1294,46 +1294,17 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       private$conn$array_op_from_afl(reshaped$to_afl())
     }
     ,
-    transmute = function(...){
-      reshaped = private$reshape_attrs(list(...))
+    transmute = function(..., .dots = NULL){
+      fieldExprs = .dots %?% list(...)
+      reshaped = private$reshape_attrs(fieldExprs)
       private$conn$array_op_from_afl(reshaped$to_afl())
     }
     ,
-    # mutate an array by field expressions
-    # return: transient array_op with same schema as self
-    i_mutate = function(..., artificial_field = utility$random_field_name()) {
-      data_source = list(...)
-      
-      mutatedFields = names(data_source)
-      # assert(length(mutatedFields) == length(data_source), 
-      #        "ERROR: ArrayOp$mutate: param 'data_source', if a list, must have names as the mutated fields, and values as mutated values/expressions.")
-      
-      assert_unique_named_list(data_source)
-      assert_empty(mutatedFields %n% self$dims,
-                   "Cannot mutate dimension(s): [{.value}].")
-      
-      assert_empty(mutatedFields %-% self$dims_n_attrs,
-                   "New field(s) [{.value}] are not allowed in i_mutate. Please use ArrayOp$mutate(...) method to add/remove fields.")
-      
-      nullFileds = Filter(is.null, data_source)
-      assert_empty(names(nullFileds), 
-                   "Cannot remove existing field(s): [{.value}]. Please use ArrayOp$mutate(...) method to add/remove fields.",
-                   )
-      
-      if(!.has_len(mutatedFields %n% self$dims)) { # Only attrs muated
-        do.call(self$mutate, data_source)
-      } else {
-        self$reshape(utils::modifyList(as.list(self$dims_n_attrs), data_source), 
-                     dim_mode = 'drop', artificial_field = artificial_field)$
-          change_schema(self, strict = FALSE)
-      }
-    }
-    ,
-    i_mutate_by = function(data_array, 
-                           keys = NULL, 
-                           updated_fields = NULL,
-                           .redimension_setting = NULL, 
-                           .join_setting = NULL) {
+    mutate_by = function(data_array, 
+                         keys = NULL, 
+                         updated_fields = NULL,
+                         .redimension_setting = NULL, 
+                         .join_setting = NULL) {
       assert_inherits(data_array, "ArrayOpBase")
       
       data_source = data_array
@@ -1544,8 +1515,11 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
         dims = dims %-% excluded
       }
       
-      dtypes = .ifelse(.has_len(dtypes), c(dtypes, oldDtypes), oldDtypes)
-      dtypes = dtypes[c(dims, attrs)]
+      # dtypes = .ifelse(.has_len(dtypes), c(dtypes, oldDtypes), oldDtypes)
+      # dtypes = dtypes[c(dims, attrs)]
+      dtypes = .remove_null_values(
+        c(dtypes, oldDtypes)[c(dims, attrs)]
+      )
       
       dim_specs = .ifelse(.has_len(dim_specs), c(dim_specs, oldDimSpecs), oldDimSpecs)
       
@@ -1721,7 +1695,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     ,
     array_meta_data = function(){
       assertf(self$is_persistent(), 
-              "{.symbol} is not a persistent scidb array. Array meta data is only available for persistent scidb arrays.")
+              "Array meta data is only available for persistent scidb arrays.")
       full_array_name = self$to_afl()
       ns = gsub("^((\\w+)\\.)?(\\w+)$", "\\2", full_array_name)
       bare_name = gsub("^((\\w+)\\.)?(\\w+)$", "\\3", full_array_name)
