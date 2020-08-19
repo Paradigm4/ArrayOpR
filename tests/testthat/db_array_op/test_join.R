@@ -184,9 +184,45 @@ test_that("join with conflicting field names", {
       L$right_join(R, on_both = c('db'), .left_alias = "_LL", .right_alias = "_RR")$to_df_attrs(), 
       dplyr::right_join(leftDf, rightDf, by = c('db'), suffix = c('_LL', '_RR'))
     )
+    
+    # No need to disambiguate fields if only one side is selected
+    # here `fa` is only selected in left
+    df_equal(
+      L$select('fa')$inner_join(R$select('db'), on_left = c('db', 'lda'), on_right = c('db', 'rda'))$to_df_attrs(), 
+      dplyr::inner_join(
+        leftDf %>% dplyr::select(fa, db, lda), 
+        rightDf %>% dplyr::select(db, rda), 
+        by = c('db'='db', 'lda'='rda')) %>%
+        dplyr::select(fa)
+    )
+    
+  }
+  
+  test_cross_join_mode = function() {
+    df_equal(
+      L$inner_join(R, on_both = c('db'), join_mode = 'cross_join', .left_alias = "_LL", .right_alias = "_RR")$to_df_attrs(), 
+      dplyr::inner_join(leftDf, rightDf, by = c('db'), suffix = c('_LL', '_RR'))
+    )
+    df_equal(
+      L$inner_join(R, on_left = c('db', 'lda'), on_right = c('db', 'rda'), join_mode = 'cross_join', .left_alias = "_LL", .right_alias = "_RR")$to_df_attrs(), 
+      dplyr::inner_join(leftDf, rightDf, by = c('db'='db', 'lda'='rda'), suffix = c('_LL', '_RR'))
+    )
+    
+    # No need to disambiguate fields if only one side is selected
+    # here `fa` is only selected in left
+    df_equal(
+      L$select('fa')$inner_join(R$select('db'), join_mode = 'cross_join', on_left = c('db', 'lda'), on_right = c('db', 'rda'))$to_df_attrs(), 
+      dplyr::inner_join(
+        leftDf %>% dplyr::select(fa, db, lda), 
+        rightDf %>% dplyr::select(db, rda), 
+        by = c('db'='db', 'lda'='rda')) %>%
+        dplyr::select(fa)
+    )
+    
   }
   
   test_joins_with_conflicted_fields()
+  test_cross_join_mode()
   
   L$remove_self()
   R$remove_self()

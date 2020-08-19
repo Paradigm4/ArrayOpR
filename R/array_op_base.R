@@ -166,6 +166,28 @@ ArrayOpBase <- R6::R6Class(
         .left_alias = .left_alias, .right_alias = .right_alias)
     }
     ,
+    disambiguate_join_fields = function(left_fields, right_fields, .left_alias, .right_alias) {
+      rawFields = c(left_fields, right_fields)
+      duplicatedFields = rawFields[duplicated(rawFields)]
+      if(length(duplicatedFields) > 0L){
+        
+        selectedLeftFields = Map(function(x) if(x %in% duplicatedFields) sprintf("%s.%s", .left_alias, x) else x, 
+                                 left_fields)
+        selectedRightFields = Map(function(x) if(x %in% duplicatedFields) sprintf("%s.%s", .right_alias, x) else x, 
+                                  right_fields)
+        selectedLeftNames= Map(function(x) if(x %in% duplicatedFields) sprintf("%s%s", x, .left_alias) else x, 
+                               left_fields)
+        selectedRightNames = Map(function(x) if(x %in% duplicatedFields) sprintf("%s%s", x, .right_alias) else x, 
+                                 right_fields)
+        new_named_list(
+          values = selectedLeftFields %u% selectedRightFields,
+          names = selectedLeftNames %u% selectedRightNames
+        )
+      } else { 
+        new_named_list(rawFields, rawFields)
+      }
+    }
+    ,
     equi_join = function(left, right, on_left, on_right, settings = NULL, .auto_select = FALSE, 
       .left_alias = '_L', .right_alias = '_R') {
       # Validate join params
@@ -217,23 +239,10 @@ Please select on left operand's fields OR do not select on either operand. Look 
       dtypes = .remove_null_values(c(dims, c(left$dtypes, right$dtypes)[attrs]))
       
       if(hasSelected){
-        selectedFields = c(left$selected, right$selected %-% on_right)
-        duplicatedFields = selectedFields[duplicated(selectedFields)]
-        selectedFields = if(length(duplicatedFields) > 0L){
-
-          selectedLeftFields = Map(function(x) if(x %in% duplicatedFields) sprintf("%s.%s", .left_alias, x) else x, 
-                                   left$selected)
-          selectedRightFields = Map(function(x) if(x %in% duplicatedFields) sprintf("%s.%s", .right_alias, x) else x, 
-                                   right$selected %-% on_right)
-          selectedLeftNames= Map(function(x) if(x %in% duplicatedFields) sprintf("%s%s", x, .left_alias) else x, 
-                                   left$selected)
-          selectedRightNames = Map(function(x) if(x %in% duplicatedFields) sprintf("%s%s", x, .right_alias) else x, 
-                                   right$selected %-% on_right)
-          new_named_list(
-            values = selectedLeftFields %u% selectedRightFields,
-            names = selectedLeftNames %u% selectedRightNames
-          )
-        } else new_named_list(selectedFields, selectedFields)
+        selectedFields = private$disambiguate_join_fields(
+          left$selected, right$selected %-% on_right,
+          .left_alias, .right_alias
+        )
         joinedOp = self$create_new(joinExpr, names(dims), attrs, dtypes = dtypes)
         return(
           joinedOp$.private$reshape_attrs(selectedFields)$select(names(selectedFields))
@@ -267,12 +276,26 @@ Please select on left operand's fields OR do not select on either operand. Look 
       assert_keys_are_all_dimensions('right', right, on_right)
       # Construct the AFL
       joinDims = paste(sprintf(", %s.%s, %s.%s", .left_alias, on_left, .right_alias, on_right), collapse = '')
-      aflStr = sprintf("cross_join(%s as %s, %s as %s %s)", left$to_afl(), .left_alias, right$to_afl(), .right_alias, joinDims)
+      aflStr = sprintf("cross_join(%s as %s, %s as %s %s)", 
+                       # left$to_afl(), 
+                       left$.private$to_join_operand_afl(on_left, keep_dimensions = TRUE), 
+                       .left_alias,
+                       # right$to_afl(),
+                       right$.private$to_join_operand_afl(on_right, keep_dimensions = TRUE),
+                       .right_alias, 
+                       joinDims)
       attrs = c(left$attrs, right$attrs)
       dims = c(left$dims, right$dims %-% on_right)
       dtypes = c(left$get_field_types(.strict = F), right$get_field_types(right$dims_n_attrs %-% on_right, .strict = F))
       dim_specs = c(left$get_dim_specs(), right$get_dim_specs(right$dims %-% on_right))
-      self$create_new(aflStr, dims = dims, attrs = attrs, dtypes = dtypes, dim_specs = dim_specs)
+      joinedOp = self$create_new(aflStr, dims = dims, attrs = attrs, dtypes = dtypes, dim_specs = dim_specs)
+      
+      selectedFields = private$disambiguate_join_fields(
+        left$selected, right$selected %-% on_right,
+        .left_alias, .right_alias
+      )
+      joinedOp$.private$reshape_attrs(selectedFields)$select(names(selectedFields))
+      # joinedOp = self$create_new(joinExpr, names(dims), attrs, dtypes = dtypes)
     }
     ,
     # Reshape an array without modifying its dimensions
