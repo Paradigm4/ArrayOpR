@@ -297,7 +297,7 @@ ScidbConnection <- R6::R6Class(
             df[[fieldName]], 
             name = sprintf("%s_%s_", name, fieldName), 
             attr = fieldName,
-            types = as.character(array_template$get_field_types(fieldName, .raw = TRUE)),
+            types = as.character(array_template$.private$get_field_types(fieldName, .raw = TRUE)),
             use_aio_input = .use_aio_input, temp = .temp, gc = .gc
           )
         })
@@ -315,7 +315,7 @@ ScidbConnection <- R6::R6Class(
         private$upload_df_or_vector(
           df,
           name = name, 
-          types = array_template$get_field_types(names(df), .raw=TRUE),
+          types = array_template$.private$get_field_types(names(df), .raw=TRUE),
           use_aio_input = .use_aio_input, temp = .temp, gc = .gc
         )
       }

@@ -7,7 +7,7 @@
 `%-%` = function(lhs, rhs) base::setdiff(lhs, rhs)
 `%n%` = function(lhs, rhs) base::intersect(lhs, rhs)
 # `%||%` = function(lhs, rhs) if(is.null(lhs)) rhs else lhs
-`%||%` = function(lhs, rhs) if(length(lhs) == 0L) rhs else lhs
+`%?%` = function(lhs, rhs) if(length(lhs) == 0L) rhs else lhs
 
 
 # Here we use R's naming convention.

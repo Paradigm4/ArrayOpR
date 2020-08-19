@@ -163,11 +163,11 @@ test_that("upload data frame with other scidbR settings", {
   
   uploaded = conn$array_op_from_uploaded_df(df, schema, .temp = F, .use_aio_input = F)
   # Template can also be a list of data types 
-  uploaded2 = conn$array_op_from_uploaded_df(df, template$get_field_types(), .temp = T, .use_aio_input = T)
+  uploaded2 = conn$array_op_from_uploaded_df(df, template$.private$get_field_types(), .temp = T, .use_aio_input = T)
   
-  templateMatchedDTypes = template$get_field_types(names(df), .raw = T)
-  expect_identical(uploaded$get_field_types(uploaded$attrs), templateMatchedDTypes)
-  expect_identical(uploaded2$get_field_types(uploaded2$attrs), templateMatchedDTypes)
+  templateMatchedDTypes = template$.private$get_field_types(names(df), .raw = T)
+  expect_identical(uploaded$.private$get_field_types(uploaded$attrs), templateMatchedDTypes)
+  expect_identical(uploaded2$.private$get_field_types(uploaded2$attrs), templateMatchedDTypes)
   
   # R date time conversion is cubersome. We replace it with the scidb parsed values.
   df = dplyr::mutate(df, f_datetime = as.POSIXct(f_datetime))

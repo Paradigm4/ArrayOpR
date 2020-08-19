@@ -1,5 +1,8 @@
 context("ArrayOp misc")
 
+
+# Persistent vs. Transient array_op ----
+
 test_that("if an array is persisted or transient", {
   dataFrame = data.frame(a=1:3, b=letters[1:3])
   arrayStored = conn$array_op_from_uploaded_df(dataFrame)
@@ -38,4 +41,16 @@ test_that("verify persistent array existence", {
   arr$remove_self()
   
   expect_true(!arr$exists_persistent_array())
+})
+
+
+# spawn ----
+
+test_that("no field data type requirement for locally created arrays", {
+  template = conn$array_op_from_schema_str("<fa:string, fb:int32, fc:bool> [da;db]")
+  a = template$spawn(excluded = c('da', 'fa'), added = 'extra', renamed = list(fc='fc_re'))
+  
+  expect_identical(a$dims, c('db'))
+  expect_identical(a$attrs, c('fb','fc_re', 'extra'))
+  
 })

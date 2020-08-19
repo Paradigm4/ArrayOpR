@@ -448,7 +448,7 @@ Repo <- R6::R6Class(
         "ERROR: Data frame has non-matching field(s): %s for array %s", paste(dfFieldsNotInArray, collapse = ','),
         str(array_template))
       uploaded = scidb::as.scidb(dep$.db, df, use_aio_input = use_aio_input, temp = temp, 
-                                 types =  array_template$get_field_types(names(df), .raw=TRUE), ...)
+                                 types =  array_template$.private$get_field_types(names(df), .raw=TRUE), ...)
       
       res = get_array(uploaded@meta$schema)$
         create_new_with_same_schema(uploaded@name)
@@ -571,7 +571,7 @@ reference array afl: %%s", reference$to_afl())
         dfFields = as.character(explicitFields) %u% names(implicitFields)
         refFields = c(names(explicitFields), as.character(implicitFields)) # allow duplicates here
         templateDtypes = new_named_list(
-          reference$get_field_types(refFields, .raw = T), 
+          reference$.private$get_field_types(refFields, .raw = T), 
           names = dfFields
         )
         

@@ -47,6 +47,74 @@ ArrayOpBase <- R6::R6Class(
       private$conn = connection
     }
     ,
+    #' @description 
+    #' Return ArrayOp field types
+    #'
+    #' NOTE: private$info has to be defined, otherwise returns NULL
+    #' @param field_names R character. If NULL, defaults to `self$dims_n_attrs`, ie. dimensions and attributes.
+    #' @param .raw Default FALSE, full data types are returned; if set TRUE, only the raw data types are returned 
+    #' (raw data types are string, int32, int64, bool, etc, without scidb attribute specs such as: string compression 'zlib')
+    #' @return a named list as `field_names`, where absent fields or fields without data types will cause error; 
+    #' unless `.strict=F`, absent fields are ignored
+    get_field_types = function(field_names = NULL, .raw = FALSE){
+      
+      field_names = field_names %?% self$dims_n_attrs
+      assert_empty(field_names %-% self$dims_n_attrs, "param 'field_names' has invalid fields: [{.value}]")
+      result = self$dtypes[field_names]
+      if(.raw){
+        result = as.list(structure(regmatches(result, regexpr("^\\w+", result)), names = field_names))
+      }
+      return(result)
+      # old code
+      
+      # if(is.null(field_names))
+      #   field_names = self$dims_n_attrs
+      # 
+      # missingFields = base::setdiff(field_names, self$dims_n_attrs)
+      # assert_not_has_len(missingFields, 
+      #                    "ERROR: ArrayOp$get_field_types: field_names: Field(s) '%s' not found in ArrayOp: %s", 
+      #                    paste(missingFields, collapse = ','),
+      #                    private$raw_afl
+      # )
+      # if(.strict){
+      #   missingFields = field_names %-% names(self$dtypes)
+      #   assert_not_has_len(missingFields, 
+      #                      "ERROR: ArrayOp$get_field_types: Field(s) '%s' not annotated with dtype in ArrayOp: %s", 
+      #                      paste(missingFields, collapse = ','),
+      #                      private$raw_afl
+      #   )
+      # }
+      # result = self$dtypes[field_names]
+      # if(.raw){
+      #   result = as.list(structure(regmatches(result, regexpr("^\\w+", result)), names = field_names))
+      # }
+      # result
+    }
+    ,
+    #' @description 
+    #' Get dimension specifications
+    #' 
+    #' A dimension spec str is formatted as "lower bound : upper bound : overlap : chunk_length", 
+    #' as seen in scidb `show(array_name)` operator.
+    #' All dimensions' data types are int64. 
+    #' @param dim_names Default NULL equals all dimensions.
+    #' @return A named list where the name is dimension name and value is a dimension spec string
+    get_dim_specs = function(dim_names = NULL) {
+      if(!.has_len(dim_names)) dim_names = self$dims
+      private$get_meta('dim_specs')[dim_names]
+    }
+    ,
+    #' @description 
+    #' Validate fields existence according the 'type' which defaults to 'owned' fields
+    #' 
+    #' This function is useful for validating fields in use cases:
+    #    1. whether fields are valid for 'select' or 'filter';
+    #    2. whether fields can be used as keys in JoinOp
+    #' @return A list of absent field names
+    get_absent_fields = function(fieldNames) {
+      fieldNames %-% self$dims_n_attrs
+    }
+    ,
     # if no fields selected of self, then select all fields
     # otherwise return unchanged self
     auto_select = function() {
@@ -60,7 +128,7 @@ ArrayOpBase <- R6::R6Class(
         side, 'ArrayOpBase', class(operand))
       assert(is.character(keys) && .has_len(keys),
         "Join arg 'on_%s' must be a non-empty R character, but got '%s' instead", side, class(keys))
-      absentKeys = operand$get_absent_fields(keys)
+      absentKeys = operand$.private$get_absent_fields(keys)
       assert_not_has_len(absentKeys, "JoinOp arg 'on_%s' has invalid fields: %s", side, paste(absentKeys, collapse = ', '))
     }
     ,
@@ -286,8 +354,10 @@ Please select on left operand's fields OR do not select on either operand. Look 
                        joinDims)
       attrs = c(left$attrs, right$attrs)
       dims = c(left$dims, right$dims %-% on_right)
-      dtypes = c(left$get_field_types(.strict = F), right$get_field_types(right$dims_n_attrs %-% on_right, .strict = F))
-      dim_specs = c(left$get_dim_specs(), right$get_dim_specs(right$dims %-% on_right))
+      dtypes = c(left$.private$get_field_types(),
+                 right$.private$get_field_types(right$dims_n_attrs %-% on_right))
+      dim_specs = c(left$.private$get_dim_specs(), 
+                    right$.private$get_dim_specs(right$dims %-% on_right))
       joinedOp = self$create_new(aflStr, dims = dims, attrs = attrs, dtypes = dtypes, dim_specs = dim_specs)
       
       selectedFields = private$disambiguate_join_fields(
@@ -349,7 +419,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
         mergedDtypes[[artificial_field]] = 'void'
         afl(self | apply(c(artificial_field, 'null')) | project(artificial_field))
       }
-      self$create_new(newAfl, self$dims, attrs, mergedDtypes, dim_specs = self$get_dim_specs(),
+      self$create_new(newAfl, self$dims, attrs, mergedDtypes, dim_specs = private$get_dim_specs(),
                       validate_fields = private$get_meta('validate_fields'))
       
     }
@@ -449,7 +519,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
             afl_join_fields(new_field, newFieldExpr)
           )
       )
-      result = self$spawn(added = new_field, dtypes = rlang::set_names(reference$get_field_types(ref_field, .strict = FALSE), new_field))
+      result = self$spawn(added = new_field, dtypes = new_named_list(reference$.private$get_field_types(ref_field), new_field))
       result = result$create_new_with_same_schema(crossJoined)
       result = result$reshape(result$attrs)
       result
@@ -491,14 +561,14 @@ Please select on left operand's fields OR do not select on either operand. Look 
       renamedTarget = target$spawn(renamed = renamedList)
       redimensionTemplateDimSpecs =
         if (is.null(source_anti_collision_dim_spec))
-          renamedTarget$get_dim_specs()
+          renamedTarget$.private$get_dim_specs()
       else
-        utils::modifyList(renamedTarget$get_dim_specs(),
+        utils::modifyList(renamedTarget$.private$get_dim_specs(),
                           as.list(structure(source_anti_collision_dim_spec, names = srcAltId)))
       redimensionTemplate = self$create_new("TEMPLATE", 
                                             dims = renamedTarget$dims, 
                                             attrs = self$attrs %-% renamedTarget$dims,
-                                            dtypes = utils::modifyList(self$get_field_types(), renamedTarget$get_field_types(renamedTarget$dims)),
+                                            dtypes = utils::modifyList(private$get_field_types(), renamedTarget$.private$get_field_types(renamedTarget$dims)),
                                             dim_specs = redimensionTemplateDimSpecs)
       redimenedSource = redimensionTemplate$create_new_with_same_schema(afl(
         self | redimension(redimensionTemplate$to_schema_str()) | apply(srcAltId, srcAltId)
@@ -599,7 +669,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
       assert_not_has_len(nonAttrs, "ERROR: afl_project: %d non-attribute field(s) found: %s", length(nonAttrs), paste(nonAttrs, collapse = ', '))
       if(!.has_len(fields)) return(self)
       self$create_new(afl(self | project(fields)), dims = self$dims, attrs = fields, 
-                      dtypes = self$get_field_types(c(self$dims, fields)), dim_specs = self$get_dim_specs())
+                      dtypes = private$get_field_types(c(self$dims, fields)), dim_specs = private$get_dim_specs())
     }
     ,
     # Apply new attributes to an existing array. 
@@ -612,9 +682,9 @@ Please select on left operand's fields OR do not select on either operand. Look 
       conflictFields = fields %n% self$attrs
       assert_not_has_len(conflictFields, "ERROR: afl_apply: cannot apply existing attribute(s): %s", paste(conflictFields, collapse = ', '))
       
-      newDTypes = utils::modifyList(self$get_field_types(), as.list(dtypes))
+      newDTypes = utils::modifyList(private$get_field_types(), as.list(dtypes))
       self$create_new(afl(self | apply(afl_join_fields(fieldNames, fieldExprs))), dims = self$dims, 
-                      attrs = self$attrs %u% fields, dtypes = newDTypes, dim_specs = self$get_dim_specs())
+                      attrs = self$attrs %u% fields, dtypes = newDTypes, dim_specs = private$get_dim_specs())
     }
     ,
     # Redimension `self` according to a template.
@@ -641,7 +711,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
              length(self$dims), paste(self$dims, collapse=','), length(target$dims), paste(target$dims, collapse = ','))
       assert(length(self$attrs) == length(target$attrs), "ERROR: ArrayOp$afl_insert: attribute number mismatch: %d[%s] != %d[%s]",
              length(self$attrs), paste(self$attrs, collapse = ','), length(target$attrs), paste(target$attrs, collapse = ','))
-      assert(all(as.character(self$get_field_types(.raw = TRUE)) == as.character(target$get_field_types(.raw = TRUE))),
+      assert(all(as.character(private$get_field_types(.raw = TRUE)) == as.character(target$get_field_types(.raw = TRUE))),
              "ERROR: ArrayOp$afl_insert: attribute data type mismatch. \nSource: %s\nTarget: %s", 
              self$to_schema_str(), target$to_schema_str())
       target$create_new_with_same_schema(afl(self | insert(target)))
@@ -658,7 +728,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
              length(self$dims), paste(self$dims, collapse=','), length(target$dims), paste(target$dims, collapse = ','))
       assert(length(self$attrs) == length(target$attrs), "ERROR: ArrayOp$afl_store: attribute number mismatch: %d[%s] != %d[%s]",
              length(self$attrs), paste(self$attrs, collapse = ','), length(target$attrs), paste(target$attrs, collapse = ','))
-      assert(all(as.character(self$get_field_types(.raw = TRUE)) == as.character(target$get_field_types(.raw = TRUE))),
+      assert(all(as.character(private$get_field_types(.raw = TRUE)) == as.character(target$.private$get_field_types(.raw = TRUE))),
              "ERROR: ArrayOp$afl_store: attribute data type mismatch. \nSource: %s\nTarget: %s", 
              self$to_schema_str(), target$to_schema_str())
       target$create_new_with_same_schema(afl(self | store(target)))
@@ -707,66 +777,6 @@ Please select on left operand's fields OR do not select on either operand. Look 
       private$raw_afl = raw_afl
       private$metaList = if(methods::hasArg('metaList')) metaList else
         list(dims = dims, attrs = attrs, dtypes = dtypes, validate_fields = validate_fields, dim_specs = dim_specs, ...)
-    }
-    ,
-    #' @description 
-    #' Return ArrayOp field types
-    #'
-    #' NOTE: private$info has to be defined, otherwise returns NULL
-    #' @param field_names R character. If NULL, defaults to `self$dims_n_attrs`, ie. dimensions and attributes.
-    #' @param .raw Default FALSE, full data types are returned; if set TRUE, only the raw data types are returned 
-    #' (raw data types are string, int32, int64, bool, etc, without scidb attribute specs such as: string compression 'zlib')
-    #' @return a named list as `field_names`, where absent fields or fields without data types will cause error; 
-    #' unless `.strict=F`, absent fields are ignored
-    get_field_types = function(field_names = NULL, .strict = TRUE, .raw = FALSE){
-      if(is.null(field_names))
-        field_names = self$dims_n_attrs
-      missingFields = base::setdiff(field_names, self$dims_n_attrs)
-      assert_not_has_len(missingFields, 
-        "ERROR: ArrayOp$get_field_types: field_names: Field(s) '%s' not found in ArrayOp: %s", 
-        paste(missingFields, collapse = ','),
-        private$raw_afl
-      )
-      if(.strict){
-        missingFields = field_names %-% names(self$dtypes)
-        assert_not_has_len(missingFields, 
-          "ERROR: ArrayOp$get_field_types: Field(s) '%s' not annotated with dtype in ArrayOp: %s", 
-          paste(missingFields, collapse = ','),
-          private$raw_afl
-        )
-      }
-      result = self$dtypes[field_names]
-      if(.raw){
-        result = as.list(structure(regmatches(result, regexpr("^\\w+", result)), names = field_names))
-      }
-      result
-    }
-    ,
-    #' @description 
-    #' Get dimension specifications
-    #' 
-    #' A dimension spec str is formatted as "lower bound : upper bound : overlap : chunk_length", 
-    #' as seen in scidb `show(array_name)` operator.
-    #' All dimensions' data types are int64. 
-    #' @param dim_names Default NULL equals all dimensions.
-    #' @return A named list where the name is dimension name and value is a dimension spec string
-    get_dim_specs = function(dim_names = NULL) {
-      if(!.has_len(dim_names)) dim_names = self$dims
-      private$get_meta('dim_specs')[dim_names]
-    }
-    ,
-    #' @description 
-    #' Validate fields existence according the 'type' which defaults to 'owned' fields
-    #' 
-    #' This function is useful for validating fields in use cases:
-    #    1. whether fields are valid for 'select' or 'filter';
-    #    2. whether fields can be used as keys in JoinOp
-    #' @return A list of absent field names
-    get_absent_fields = function(fieldNames) {
-      if(!private$get_meta('validate_fields'))
-        return(NULL)
-      absentMarks = !(fieldNames %in% self$dims_n_attrs)
-      return(fieldNames[absentMarks])
     }
     # Functions that creat new ArrayOps -------------------------------------------------------------------------------
     ,
@@ -873,7 +883,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
         unpacked = self$create_new(
           afl(self | unpack(artificial_field)), 
           attrs = self$dims_n_attrs, dims = artificial_field,
-          dtypes = utils::modifyList(self$get_field_types(), as.list(rlang::set_names('int64', artificial_field)))
+          dtypes = utils::modifyList(private$get_field_types(), as.list(rlang::set_names('int64', artificial_field)))
         )
         if(!.has_len(select))
           unpacked
@@ -939,7 +949,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
       colIndexes = vapply(self$dims_n_attrs, function(x) lookup[x], integer(1))
       colIndexes = colIndexes[!is.na(colIndexes)]
 
-      fieldTypes = self$get_field_types(names(colIndexes), .raw = TRUE)
+      fieldTypes = private$get_field_types(names(colIndexes), .raw = TRUE)
       
       # Populate aio settings
       aio_settings = c(list(path = filepath, num_attributes = max(colIndexes) + 1), aio_settings)
@@ -1174,7 +1184,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       assert_not_has_len(dfNonMatchingCols, "ERROR: ArrayOp$build_new: df column(s) '%s' not found in template %s",
         paste(dfNonMatchingCols, collapse = ','), self$to_afl())
       
-      builtDtypes = self$get_field_types(builtAttrs, .raw = T)
+      builtDtypes = private$get_field_types(builtAttrs, .raw = T)
       
       attrStr = paste(builtAttrs, builtDtypes, collapse = ',', sep = ':')
       # convert columns to escaped strings
@@ -1218,7 +1228,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' @return A new arrayOp 
     set_null_fields = function(reference) {
       
-      refDtypes = if(is.list(reference)) reference else reference$get_field_types(reference$attrs, .raw = T)
+      refDtypes = if(is.list(reference)) reference else reference$.private$get_field_types(reference$attrs, .raw = T)
       # Fields missing in source but present in reference
       missingFields = names(refDtypes) %-% self$dims_n_attrs
       missingDtypes = refDtypes[missingFields]
@@ -1226,8 +1236,8 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       nullStrings = sprintf("%s(null)", missingDtypes)
       self$create_new(afl(self | apply(afl_join_fields(missingFields, nullStrings))),
                       dims = self$dims, attrs = self$attrs %u% missingFields, 
-                      dtypes = utils::modifyList(self$get_field_types(), missingDtypes),
-                      dim_specs = self$get_dim_specs())
+                      dtypes = utils::modifyList(private$get_field_types(), missingDtypes),
+                      dim_specs = private$get_dim_specs())
     }
     ,
     #' @description 
@@ -1507,7 +1517,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       attrs = self$attrs
       dims = self$dims
       oldDtypes = self$dtypes
-      oldDimSpecs = self$get_dim_specs()
+      oldDimSpecs = private$get_dim_specs()
       
       # Rename the existing
       if(.has_len(renamed)){
@@ -1582,11 +1592,11 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' 
     #' @return An AFL string
     to_schema_str = function() {
-      attrStr = paste(self$attrs, self$get_field_types(self$attrs), sep = ':', collapse = ',')
+      attrStr = paste(self$attrs, private$get_field_types(self$attrs), sep = ':', collapse = ',')
       dimStrItems = mapply(function(dimName, dimSpec){
         if(.has_len(dimSpec) && nchar(dimSpec) > 0) sprintf("%s=%s", dimName, dimSpec)
         else dimName
-      }, self$dims, self$get_dim_specs())
+      }, self$dims, private$get_dim_specs())
       dimStr = paste(dimStrItems, collapse = ';')
       sprintf("<%s> [%s]", attrStr, dimStr)
     }
