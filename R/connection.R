@@ -164,14 +164,19 @@ ScidbConnection <- R6::R6Class(
               )
     }
     ,
-    query = function(afl_str, only_attributes = FALSE){
+    query = function(afl_str){
       assert_single_str(afl_str)
-      repo$query(afl_str, only_attributes = only_attributes)
+      repo$query(afl_str)
+    }
+    ,
+    query_attrs = function(afl_str){
+      assert_single_str(afl_str)
+      repo$query(afl_str, only_attributes = TRUE)
     }
     ,
     execute = function(afl_str) {
       assert_single_str(afl_str)
-      repo$execute(afl_str, only_attributes = only_attributes)
+      repo$execute(afl_str)
       invisible(self)
     }
     ,
@@ -207,7 +212,7 @@ ScidbConnection <- R6::R6Class(
     array_op_from_afl = function(afl_str) {
       assert_single_str(afl_str, "ERROR: param 'afl_str' must be a single string")
       escapedAfl = gsub("'", "\\\\'", afl_str)
-      schema = query(sprintf("project(show('%s', 'afl'), schema)", escapedAfl), only_attributes = T)
+      schema = query_attrs(sprintf("project(show('%s', 'afl'), schema)", escapedAfl))
       # schemaArray = repo$private$.get_array_from_schema_string(schema[["schema"]])
       schemaArray = array_op_from_schema_str(schema[["schema"]])
       result = schemaArray$create_new_with_same_schema(afl_str)

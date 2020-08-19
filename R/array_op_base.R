@@ -1224,8 +1224,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' (ie. cells with the same dimension coordinate).
     #' @return A new arrayOp 
     set_auto_fields = function(target, source_auto_increment = NULL, target_auto_increment = NULL, anti_collision_field = NULL
-                               ,join_setting = NULL, source_anti_collision_dim_spec = NULL,
-                               conn = get_default_connection()) {
+                               ,join_setting = NULL, source_anti_collision_dim_spec = NULL) {
       assert_inherits(target, "ArrayOpBase")
       
       result = self
@@ -1245,7 +1244,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
                                                  source_anti_collision_dim_spec = source_anti_collision_dim_spec)
       }
       # browser()
-      result = conn$array_op_from_afl(result$to_afl())
+      result = private$conn$array_op_from_afl(result$to_afl())
       return(result)
     }
     ,
@@ -1533,12 +1532,12 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       self$create_new_with_same_schema(aflStr)
     }
     ,
-    row_count = function(conn = get_default_connection()){
-      conn$query(afl(self | op_count), only_attributes = TRUE)[["count"]]
+    row_count = function(){
+      private$conn$query_attrs(afl(self | op_count))[["count"]]
     }
     ,
-    summarize = function(conn = get_default_connection()){
-      conn$query(afl(self | summarize), only_attributes = TRUE)
+    summarize = function(){
+      private$conn$query_attrs(afl(self | summarize))
     }
     # AFL -------------------------------------------------------------------------------------------------------------
     ,
@@ -1570,40 +1569,36 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     }
     # db functions ----
     ,
-    to_df = function(only_attributes = FALSE) {
-      private$conn$private$repo$query(private$to_df_afl(), only_attributes = only_attributes)
-      # todo: remove repo
-      # conn$query(self$to_df_afl(), only_attributes = only_attributes)
+    to_df = function() {
+      private$conn$query(private$to_df_afl())
     }
     ,
     to_df_attrs = function() {
-      # todo: remove repo
-      # conn$query(self, only_attributes = TRUE)
-      private$conn$private$repo$query(private$to_df_afl(drop_dims = TRUE), only_attributes = TRUE)
+      private$conn$query_attrs(private$to_df_afl(drop_dims = TRUE))
     }
     ,
-    execute = function(conn = get_default_connection()) {
-      conn$private$repo$execute(self)
+    execute = function() {
+      private$conn$execute(self$to_afl())
       invisible(NULL)
     }
     ,
-    versions = function(conn = get_default_connection()){
-      conn$query(afl(self | versions))
+    versions = function(){
+      private$conn$query_attrs(afl(self | versions))
     }
     ,
-    remove_versions = function(version_id = NULL, conn = get_default_connection()){
+    remove_versions = function(version_id = NULL){
       if(is.null(version_id)) {
-        conn$execute(afl(self | remove_versions))
+        private$conn$execute(afl(self | remove_versions))
       } else {
         version_id = as.character(version_id)
         assert_single_str(version_id, "ERROR: param 'version_id' cannot be converted to a single str: %s", deparse(version_id))
-        conn$execute(afl(self | remove_versions(version_id)))
+        private$conn$execute(afl(self | remove_versions(version_id)))
       }
       invisible(NULL)
     }
     ,
-    remove_self = function(conn = get_default_connection()){
-      conn$execute(afl(self | remove))
+    remove_self = function(){
+      private$conn$execute(afl(self | remove))
       invisible(NULL)
     }
     ,
@@ -1629,10 +1624,9 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
                          lower_bound = NULL,
                          upper_bound = NULL,
                          mode = "auto",
-                         ...,
-                         conn = get_default_connection()
+                         ...
                          ){
-        repo = conn$private$repo
+        repo = private$conn$private$repo
         repo$semi_join(df, self, 
                        field_mapping = field_mapping,
                        lower_bound = lower_bound,
@@ -1645,12 +1639,11 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     persist = function(
       save_array_name = NULL,
       .temp = FALSE,
-      .gc = TRUE,
-      conn = get_default_connection()
+      .gc = TRUE
     ){
       # No need to store an already persistent arrary
       if(self$is_persistent()) return(self) 
-      conn$array_op_from_stored_afl(private$to_df_afl(), 
+      private$conn$array_op_from_stored_afl(private$to_df_afl(), 
                                     save_array_name = save_array_name,
                                     .temp = .temp,
                                     .gc = .gc
@@ -1662,11 +1655,11 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
         grepl("^((\\w+)\\.)?(\\w+)$", self$to_afl())
     }  
     ,
-    exists_persistent_array = function(conn = get_default_connection()) {
-      self$is_persistent() && nrow(self$array_meta_data(conn = conn)) == 1L
+    exists_persistent_array = function() {
+      self$is_persistent() && nrow(self$array_meta_data()) == 1L
     }
     ,
-    array_meta_data = function(conn = get_default_connection()){
+    array_meta_data = function(){
       assertf(self$is_persistent(), 
               "{.symbol} is not a persistent scidb array. Array meta data is only available for persistent scidb arrays.")
       full_array_name = self$to_afl()
@@ -1674,7 +1667,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       bare_name = gsub("^((\\w+)\\.)?(\\w+)$", "\\3", full_array_name)
       query_str = if(ns == "") "list('arrays')" else 
         sprintf("list('arrays', ns:%s)", ns)
-      conn$query(sprintf("filter(%s, name = '%s')", query_str, bare_name), only_attributes = TRUE)
+      private$conn$query_attrs(sprintf("filter(%s, name = '%s')", query_str, bare_name))
     }
     
     # Old -------------------------------------------------------------------------------------------------------------
