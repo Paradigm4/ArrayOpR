@@ -168,6 +168,21 @@ test_that("join with conflicting field names", {
   L = conn$array_op_from_df(leftDf, leftTemplate)$change_schema(leftTemplate)$persist(.gc = F)
   R = conn$array_op_from_df(rightDf, rightTemplate)$change_schema(rightTemplate)$persist(.gc = F)
   
+  test_auto_join_keys = function() {
+    df_equal(
+      L$inner_join(R)$to_df_attrs(), # auto infer overlapping fields as join keys
+      dplyr::inner_join(leftDf, rightDf)
+    )
+    df_equal(
+      L$left_join(R)$to_df_attrs(), 
+      dplyr::left_join(leftDf, rightDf)
+    )
+    df_equal(
+      L$right_join(R)$to_df_attrs(), 
+      dplyr::right_join(leftDf, rightDf)
+    )
+  }
+  
   test_joins_with_conflicted_fields = function() {
     df_equal(
       L$inner_join(R, on_both = c('db', 'fa'))$to_df_attrs(), 
@@ -229,6 +244,7 @@ test_that("join with conflicting field names", {
     
   }
   
+  test_auto_join_keys()
   test_joins_with_conflicted_fields()
   test_cross_join_mode()
   

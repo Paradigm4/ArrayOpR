@@ -218,6 +218,9 @@ ArrayOpBase <- R6::R6Class(
                     auto_select = FALSE, join_mode = 'equi_join',
                     settings = NULL, 
                     left_alias = '_L', right_alias = '_R') {
+      if(!.has_len(on_left) && !.has_len(on_right) && !.has_len(on_both)){
+        on_both = left$dims_n_attrs %n% right$dims_n_attrs
+      }
       if(.has_len(on_both)){
         on_left = on_both %u% on_left
         on_right = on_both %u% on_right
