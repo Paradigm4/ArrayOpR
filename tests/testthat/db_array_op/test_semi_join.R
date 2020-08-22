@@ -85,8 +85,8 @@ test_that("filter, lower/upper bounds on same dimension", {
   
   assert_df_match(
     RefArray$semi_join(df, 
-                   lower_bound = list(da = 'da_low'), 
-                   upper_bound = list(da = 'da_hi'),
+                   lower_bound = list('da' = 'da_low'), 
+                   upper_bound = list('da' = 'da_hi'),
                    filter_threshold=10, upload_threshold=20),
     dplyr::filter(ArrayContent, (da >= 1 & da <= 5) | (da >=3 & da <=8)),
     "filter"

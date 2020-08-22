@@ -344,5 +344,21 @@ ScidbConnection <- R6::R6Class(
       set_array_op_conn(result)
       result
     }
+    ,
+    fread = function(file_path, array_op_template = NULL, header = TRUE, sep = '\t', col.names = NULL, nrow = 10L) {
+      assertf(file.exists(file_path))
+      assert_inherits(header, "logical")
+      dtParams = list(file = file_path, header = header, sep = sep, nrow = nrow) %>% 
+        modifyList(list(col.names = col.names), keep.null = FALSE)
+      
+      peekedDf = do.call(data.table::fread, dtParams)
+      template = get_array_template(array_op_template, peekedDf)
+      template$load_file(
+        file_path,
+        file_headers = names(peekedDf),
+        aio_settings = list(header = if (header) 1L else 0L,
+                            attribute_delimiter = sep)
+      ) %>% set_array_op_conn
+    }
   )
 )
