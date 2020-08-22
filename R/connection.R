@@ -345,17 +345,26 @@ ScidbConnection <- R6::R6Class(
       result
     }
     ,
-    fread = function(file_path, array_op_template = NULL, header = TRUE, sep = '\t', col.names = NULL, nrow = 10L) {
+    fread = function(file_path, template = NULL, header = TRUE, sep = '\t', col.names = NULL, nrow = 10L) {
       assertf(file.exists(file_path))
       assert_inherits(header, "logical")
-      dtParams = list(file = file_path, header = header, sep = sep, nrow = nrow) %>% 
-        modifyList(list(col.names = col.names), keep.null = FALSE)
       
-      peekedDf = do.call(data.table::fread, dtParams)
-      template = get_array_template(array_op_template, peekedDf)
-      template$load_file(
+      if(is.null(template) || header){
+        # if col.names not provided, then it's inferred from the result data frame by peeking into the input file
+        dtParams = list(file = file_path, header = header, sep = sep, nrow = nrow) %>% 
+          modifyList(list(col.names = col.names), keep.null = FALSE)
+        peekedDf = do.call(data.table::fread, dtParams)
+        file_headers = names(peekedDf)
+        array_op_template = get_array_template(template, peekedDf)
+      } else {
+        array_op_template = get_array_template(template, NULL)
+        file_headers = col.names %?% array_op_template$dims_n_attrs
+      } 
+      # NULL  # the assumed column headers (strings) in the input file
+      
+      array_op_template$load_file(
         file_path,
-        file_headers = names(peekedDf),
+        file_headers = file_headers,
         aio_settings = list(header = if (header) 1L else 0L,
                             attribute_delimiter = sep)
       ) %>% set_array_op_conn
