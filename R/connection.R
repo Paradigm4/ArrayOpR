@@ -370,24 +370,24 @@ ScidbConnection <- R6::R6Class(
           modifyList(list(col.names = col.names), keep.null = FALSE)
         peekedDf = do.call(data.table::fread, dtParams)
         file_headers = names(peekedDf)
-        array_op_template = get_array_template(template, peekedDf)
+        arrayTemplate = get_array_template(template, peekedDf)
       } else { # If template provided, we first convert it to an array_op
-        array_op_template = get_array_template(template, NULL)
+        arrayTemplate = get_array_template(template, NULL)
         # use col.names if provided, or assume file columns to be the same as 
         # template's fields (dims + attrs)
-        file_headers = col.names %?% array_op_template$dims_n_attrs
+        file_headers = col.names %?% arrayTemplate$dims_n_attrs
       } 
       
       if(auto_dcast){
-        mappingFields = file_headers %n% array_op_template$dims_n_attrs
-        nonStrFields = array_op_template$
+        mappingFields = file_headers %n% arrayTemplate$dims_n_attrs
+        nonStrFields = arrayTemplate$
           .private$get_field_types(mappingFields, .raw = TRUE) %>% 
           Filter(function(x) x != 'string', .)
         autoDcastList = lapply(nonStrFields, function(x) sprintf("dcast(@, %s(null))", x))
         mutate_fields = modifyList(autoDcastList, as.list(mutate_fields))
       }
       
-      array_op_template$load_file(
+      arrayTemplate$.private$load_file(
         file_path,
         file_headers = file_headers,
         aio_settings = list(header = if (header) 1L else 0L,

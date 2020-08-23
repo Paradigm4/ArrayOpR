@@ -564,6 +564,57 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       self$create_new_with_same_schema(aflExpr)
     }
     ,
+    #' @description 
+    #' Create a new ArrayOp instance by loading a file and checking it against an ArrayOp template (self).
+    #'
+    #' The ArrayOp instance where this function is called from serves as a template. By defulat, it assumes file 
+    #' column headers match the template's dims and attrs; otherwise an explicit file_headers can be provided and will 
+    #' be used to match the template's schema. 
+    #' @param filepath A single file path
+    #' @param aio_settings Customized settings of aio_input
+    #' @param field_conversion If NULL (default), use template's field type to convert aio_input attributes; Or provide
+    #' a list for customized field conversion
+    #' @param file_headers Column headers of the input file regardless of whether there is a header line in the file.
+    #' Default NULL assumes file headers match self$dims_n_attrs. If the headers order are different or there are 
+    #' columns to skip, please provide a string vector, in which case only columns with matching template field are 
+    #' loaded. Names of the unmatching column headers are irrelevant. 
+    #'
+    #' @return A new ArrayOp instance with matching fields
+    load_file = function(filepath, aio_settings = list(), field_conversion = NULL, file_headers = NULL){
+      
+      if(!.has_len(file_headers))
+        file_headers = self$dims_n_attrs
+
+      lookup = structure(0:(length(file_headers) - 1), names = file_headers)
+      colIndexes = vapply(self$dims_n_attrs, function(x) lookup[x], integer(1))
+      colIndexes = colIndexes[!is.na(colIndexes)]
+
+      fieldTypes = private$get_field_types(names(colIndexes), .raw = TRUE)
+      
+      # Populate aio settings
+      aio_settings = c(list(path = filepath, num_attributes = max(colIndexes) + 1), aio_settings)
+      settingItems = mapply(private$to_aio_setting_item_str, names(aio_settings), aio_settings)
+      
+      # cast raw attributes
+
+      castedItems = mapply(function(ft, index, name){
+        fmt = if(ft == 'string') "%s" else paste0(ft, "(%s)")
+        # If there is customized field conversion, use it
+        attrName = sprintf("a%s", index)
+        if(!is.null(field_conversion) && !is.null(field_conversion[[name]]))
+          # If customized field conversion defined for 'name', then use it
+          gsub('@', attrName, field_conversion[[name]])  # Replace all @ occurences in template
+        else # Otherwise just directly 'cast' it to the right data type if needed.
+          sprintf(fmt, attrName)
+      }, fieldTypes, colIndexes, names(fieldTypes))
+      
+      aioExpr = afl(afl_join_fields(settingItems) | aio_input)
+      applyExpr = afl(aioExpr | apply(afl_join_fields(names(fieldTypes), castedItems)))
+      projectedExpr = afl(applyExpr | project(names(fieldTypes)))
+      # return(self$create_new(projectedExpr, metaList = list()))
+      return(self$create_new(projectedExpr, c(), names(fieldTypes), dtypes = fieldTypes))
+    }
+    ,
     # Reshape an array without modifying its dimensions
     # 
     # This is an enhanced version inspired by scidb 'project' and 'apply' operators which also only work on attributes.
@@ -1117,58 +1168,6 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
         template$spawn(excluded = template$dims_n_attrs %-% matchedFileds)
       }
       private$afl_redimension(realTemplate, .setting)
-    }
-
-    ,
-    #' @description 
-    #' Create a new ArrayOp instance by loading a file and checking it against an ArrayOp template (self).
-    #'
-    #' The ArrayOp instance where this function is called from serves as a template. By defulat, it assumes file 
-    #' column headers match the template's dims and attrs; otherwise an explicit file_headers can be provided and will 
-    #' be used to match the template's schema. 
-    #' @param filepath A single file path
-    #' @param aio_settings Customized settings of aio_input
-    #' @param field_conversion If NULL (default), use template's field type to convert aio_input attributes; Or provide
-    #' a list for customized field conversion
-    #' @param file_headers Column headers of the input file regardless of whether there is a header line in the file.
-    #' Default NULL assumes file headers match self$dims_n_attrs. If the headers order are different or there are 
-    #' columns to skip, please provide a string vector, in which case only columns with matching template field are 
-    #' loaded. Names of the unmatching column headers are irrelevant. 
-    #'
-    #' @return A new ArrayOp instance with matching fields
-    load_file = function(filepath, aio_settings = list(), field_conversion = NULL, file_headers = NULL){
-      
-      if(!.has_len(file_headers))
-        file_headers = self$dims_n_attrs
-
-      lookup = structure(0:(length(file_headers) - 1), names = file_headers)
-      colIndexes = vapply(self$dims_n_attrs, function(x) lookup[x], integer(1))
-      colIndexes = colIndexes[!is.na(colIndexes)]
-
-      fieldTypes = private$get_field_types(names(colIndexes), .raw = TRUE)
-      
-      # Populate aio settings
-      aio_settings = c(list(path = filepath, num_attributes = max(colIndexes) + 1), aio_settings)
-      settingItems = mapply(private$to_aio_setting_item_str, names(aio_settings), aio_settings)
-      
-      # cast raw attributes
-
-      castedItems = mapply(function(ft, index, name){
-        fmt = if(ft == 'string') "%s" else paste0(ft, "(%s)")
-        # If there is customized field conversion, use it
-        attrName = sprintf("a%s", index)
-        if(!is.null(field_conversion) && !is.null(field_conversion[[name]]))
-          # If customized field conversion defined for 'name', then use it
-          gsub('@', attrName, field_conversion[[name]])  # Replace all @ occurences in template
-        else # Otherwise just directly 'cast' it to the right data type if needed.
-          sprintf(fmt, attrName)
-      }, fieldTypes, colIndexes, names(fieldTypes))
-      
-      aioExpr = afl(afl_join_fields(settingItems) | aio_input)
-      applyExpr = afl(aioExpr | apply(afl_join_fields(names(fieldTypes), castedItems)))
-      projectedExpr = afl(applyExpr | project(names(fieldTypes)))
-      # return(self$create_new(projectedExpr, metaList = list()))
-      return(self$create_new(projectedExpr, c(), names(fieldTypes), dtypes = fieldTypes))
     }
     ,
     #' @description 
