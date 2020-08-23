@@ -345,28 +345,54 @@ ScidbConnection <- R6::R6Class(
       result
     }
     ,
-    fread = function(file_path, template = NULL, header = TRUE, sep = '\t', col.names = NULL, nrow = 10L) {
+    #' @description 
+    #' Get a transient array_op by loading a file with aio_input
+    #' 
+    #' Mimic data.table::fread 
+    #' @param auto_dcast logical, default F. If TRUE, all non-string fields are 
+    #' dcast'ed with `dcast(ax, int64(null)), where ax is the 0-indexed mapping 
+    #' attribute name (e.g. a0, a1, etc), and int64 is the template field type
+    fread = function(file_path, template = NULL, header = TRUE, sep = '\t',
+                     col.names = NULL, mutate_fields = NULL, auto_dcast = FALSE, 
+                     nrow = 10L) {
       assertf(file.exists(file_path))
       assert_inherits(header, "logical")
+      assert_inherits(auto_dcast, c("logical"))
       
+      # If there is no template provided, we peek into the file for column names/types
       if(is.null(template) || header){
-        # if col.names not provided, then it's inferred from the result data frame by peeking into the input file
+        # Following data.table::fread semantics, if col.names not provided, 
+        # they are either 1. inferred by first data row if header=T; 
+        # or 2. assigned wtih V1, V2, etc..
+        # If col.names is provided, it must be the same number as the actual columns 
+        # and will overwite the column names from file
         dtParams = list(file = file_path, header = header, sep = sep, nrow = nrow) %>% 
           modifyList(list(col.names = col.names), keep.null = FALSE)
         peekedDf = do.call(data.table::fread, dtParams)
         file_headers = names(peekedDf)
         array_op_template = get_array_template(template, peekedDf)
-      } else {
+      } else { # If template provided, we first convert it to an array_op
         array_op_template = get_array_template(template, NULL)
+        # use col.names if provided, or assume file columns to be the same as 
+        # template's fields (dims + attrs)
         file_headers = col.names %?% array_op_template$dims_n_attrs
       } 
-      # NULL  # the assumed column headers (strings) in the input file
+      
+      if(auto_dcast){
+        mappingFields = file_headers %n% array_op_template$dims_n_attrs
+        nonStrFields = array_op_template$
+          .private$get_field_types(mappingFields, .raw = TRUE) %>% 
+          Filter(function(x) x != 'string', .)
+        autoDcastList = lapply(nonStrFields, function(x) sprintf("dcast(@, %s(null))", x))
+        mutate_fields = modifyList(autoDcastList, as.list(mutate_fields))
+      }
       
       array_op_template$load_file(
         file_path,
         file_headers = file_headers,
         aio_settings = list(header = if (header) 1L else 0L,
-                            attribute_delimiter = sep)
+                            attribute_delimiter = sep),
+        field_conversion = mutate_fields
       ) %>% set_array_op_conn
     }
   )

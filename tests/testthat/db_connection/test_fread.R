@@ -118,10 +118,70 @@ test_that("explicit template; without file header; column mapping", {
     df %>% dplyr::select(da, fa, fb)
   )
   expect_equal(
-    #todo: if array schema string doesn't have a dimension, an error will occur.
+    #todo: if array schema string doesn't have a dimension (ie. [i]), an error will occur.
     conn$fread(f, template = "<extra:bool, da:int32, fa:string, fb:double> [i]", header = F, col.names = names(df))$to_df_attrs(), 
     df
   )
+  expect_equal(
+    # when file has more columns than template's fields, the extra columns are not loaded
+    conn$fread(f, template = "<extra:bool, fa:string, fb:double> [i]", header = F, col.names = names(df))$to_df_attrs(), 
+    df %>% dplyr::select(fa, fb)
+  )
+})
+
+test_that("field types and conversion", {
+  .splitstr = function(x, sep="\\s+") strsplit(x, split = sep)[[1]]
+  f = new_temp_file()
+  df = data.frame(da = 1:5, f_str = letters[1:5], 
+                  f_double = .splitstr("1.1 nonsense 3.4 4.5 5.6"),
+                  f_i32 = .splitstr("11 12 nonsense 14 non"), 
+                  f_i64 = .splitstr("21 non 23 non 25"),
+                  f_bool = .splitstr("T F true false unknown")
+                  )
+  convertedDf = df %>% dplyr::mutate(
+      f_double = as.numeric(f_double), 
+      f_i32 = as.integer(f_i32), 
+      f_i64 = as.integer(f_i64),
+      f_bool = as.logical(f_bool)
+    )
+  data.table::fwrite(df, file = f, sep = '\t')
+  
+  # When header =F && col.names = NULL, col.names is assumed to be the template's dims_n_attrs
+  
+  expect_equal(
+    conn$fread(f, 
+               template = "<f_str:string, f_double:double, f_i32:int32, f_i64:int64, f_bool:bool> [da]", 
+               header = T,
+               mutate_fields = list(
+                 'f_double' = 'dcast(@, double(null))',
+                 'f_i32' = 'dcast(@, int32(null))',
+                 'f_i64' = 'dcast(@, int64(null))',
+                 'f_bool' = 'dcast(@, bool(null))'
+                 ),
+               )$to_df_attrs(), 
+    convertedDf
+  )
+  expect_equal(
+    conn$fread(f, 
+               template = "<f_str:string, f_double:double, f_i32:int32, f_i64:int64, f_bool:bool> [da]", 
+               header = T,
+               auto_dcast = T,
+               )$to_df_attrs(), 
+    convertedDf
+  )
+  expect_equal(
+    conn$fread(f, 
+               template = "<f_str:string, f_double:double, f_i32:int32, f_i64:int64, f_bool:bool> [da]", 
+               header = T,
+               auto_dcast = T,
+               mutate_fields = list('f_i32'="dcast(@, int32(null)) + 123",
+                                       'f_str'="iif(@ = 'a', 'A', iif(@ = 'd', 'D', @))")
+               )$to_df_attrs(), 
+    convertedDf %>% dplyr::mutate(
+      f_i32 = f_i32 + 123,
+      f_str = .splitstr("A b c D e"))
+  )
+  
 })
 
 # cleanup ----
