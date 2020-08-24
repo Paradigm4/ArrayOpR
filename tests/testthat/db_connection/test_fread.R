@@ -119,7 +119,8 @@ test_that("explicit template; without file header; column mapping", {
   )
   expect_equal(
     #todo: if array schema string doesn't have a dimension (ie. [i]), an error will occur.
-    conn$fread(f, template = "<extra:bool, da:int32, fa:string, fb:double> [i]", header = F, col.names = names(df))$to_df_attrs(), 
+    # conn$fread(f, template = "<extra:bool, da:int32, fa:string, fb:double>", header = F, col.names = names(df))$to_df_attrs(), 
+    conn$fread(f, template = "<extra:bool, da:int32, fa:string, fb:double> [i]", header = F, col.names = names(df))$to_df_attrs(),
     df
   )
   expect_equal(
@@ -139,10 +140,10 @@ test_that("field types and conversion", {
                   f_bool = .splitstr("T F true false unknown")
                   )
   convertedDf = df %>% dplyr::mutate(
-      f_double = as.numeric(f_double), 
-      f_i32 = as.integer(f_i32), 
-      f_i64 = as.integer(f_i64),
-      f_bool = as.logical(f_bool)
+      f_double = suppressWarnings(as.numeric(f_double)), 
+      f_i32 = suppressWarnings(as.integer(f_i32)), 
+      f_i64 = suppressWarnings(as.integer(f_i64)),
+      f_bool = suppressWarnings(as.logical(f_bool))
     )
   data.table::fwrite(df, file = f, sep = '\t')
   

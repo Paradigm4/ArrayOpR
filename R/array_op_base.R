@@ -580,10 +580,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' loaded. Names of the unmatching column headers are irrelevant. 
     #'
     #' @return A new ArrayOp instance with matching fields
-    load_file = function(filepath, aio_settings = list(), field_conversion = NULL, file_headers = NULL){
-      
-      if(!.has_len(file_headers))
-        file_headers = self$dims_n_attrs
+    load_file = function(filepath, aio_settings = NULL, field_conversion = NULL, file_headers){
 
       lookup = structure(0:(length(file_headers) - 1), names = file_headers)
       colIndexes = vapply(self$dims_n_attrs, function(x) lookup[x], integer(1))
