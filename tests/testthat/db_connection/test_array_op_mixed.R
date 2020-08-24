@@ -1,5 +1,6 @@
 context("Get array_from from different methods")
 
+
 test_that("persistent array_op from uploaded data frame", {
   df = data.frame(
     f_str = letters[1:5], 

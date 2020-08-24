@@ -16,20 +16,69 @@ test_that("array_op from scidb array name", {
 
 # from schema string ----
 
-test_that("get array_op from schema string", {
-  verify = function(schema_str, name, attrs, dims){
-    arr = conn$array_op_from_schema_str(schema_str)
-    expect_identical(arr$to_afl(), name)
-    expect_identical(arr$attrs, attrs)
-    expect_identical(arr$dims, dims)
-  }
+verify_array = function(input_schema_str, expected_afl, expected_schema_str, expected_attrs, expected_dims){
+  arr = conn$array_op_from_schema_str(input_schema_str)
+  expect_identical(arr$to_afl(), expected_afl)
+  expect_identical(arr$to_schema_str(), expected_schema_str)
+  expect_identical(arr$attrs, expected_attrs)
+  expect_identical(arr$dims, expected_dims)
+}
+
+verify_parsing_error = function(input_schema_str, error_pattern){
+  if(missing(error_pattern))
+    expect_error(conn$array_op_from_schema_str(input_schema_str))
+  else 
+    expect_error(conn$array_op_from_schema_str(input_schema_str), error_pattern)
+}
+
+
+test_that("array_op from schema str", {
+ 
+  # space around the schema str are trimmed
   
-  verify("temp<a:string, b:int32>[z]", "temp", c("a", "b"), c("z"))
-  verify("temp<a:string, b:int32>[z; x=0:*:0:*]", "temp", c("a", "b"), c("z", "x"))
-  # space around array name, attribute/dim does not affect schema parsing
-  verify("temp <a:string, b:int32> [z]", "temp", c("a", "b"), c("z"))
-  # schema without array name
-  verify("<a:string, b:int32>[z]", "", c("a", "b"), c("z"))
+  verify_array(
+    "temp<a:string, b:int32>[z]", 
+    "temp", "<a:string,b:int32> [z]", .strsplit("a b"), .strsplit("z")
+  )
+  verify_array(
+    " non empty operators < a : string, b:int32 not null > [ x; y; z ]", 
+    "operators", "<a:string,b:int32 not null> [x;y;z]", .strsplit("a b"), .strsplit("x y z")
+  )
+  
+  verify_array(
+    " array_name <a:string COMPRESSION 'zlib', b:int32, c:double> [i;j=0:*:0:*] ",
+    "array_name",
+    "<a:string COMPRESSION 'zlib',b:int32,c:double> [i;j=0:*:0:*]",
+    .strsplit("a b c"), .strsplit("i j")
+  )
+  verify_array(
+    "  <a:string, b:int32, c:double> [i;j=0:*:0:*] ",
+    "",
+    "<a:string,b:int32,c:double> [i;j=0:*:0:*]",
+    .strsplit("a b c"), .strsplit("i j")
+  )
+  verify_array(
+    "  <a:string, b:int32, c:double> [i] ",
+    "",
+    "<a:string,b:int32,c:double> [i]",
+    .strsplit("a b c"), .strsplit("i")
+  )
+  verify_array(
+    "  <a:string, b:int32, c:double> ",
+    "",
+    "<a:string,b:int32,c:double>",
+    .strsplit("a b c"), NULL
+  )
+  
+  # verify_parsing_error("", 'invalid schema')
+  # verify_parsing_error("<>", 'invalid schema')
+})
+
+test_that("Error cases of schema parsing", {
+  verify_parsing_error("", "Invalid")
+  verify_parsing_error("<a:int32>>", "Invalid")
+  verify_parsing_error("<a:int32> [", "Invalid")
+  verify_parsing_error("<a:int32> []", "Invalid")
 })
 
 

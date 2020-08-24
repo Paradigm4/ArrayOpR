@@ -81,7 +81,66 @@ ScidbConnection <- R6::R6Class(
       array_op_from_schema_str(obj@meta$schema)$create_new_with_same_schema(
         obj@name
       )
-    },
+    }
+    ,
+    #' Create an array_op from a schema string with an optional array name
+    new_arrayop_from_schema_string = function(schema_str, .symbol) {
+      # Return all matched substrings in 'x'
+      # groups in pattern are ignored. The full pattern is looked up
+      get_sub_recursive = function(pattern, x) {
+        x = x[[1]]
+        m = gregexpr(pattern, x)
+        regmatches(x, m)[[1]]
+      }
+      
+      # Return all matched groups explicit defined by parentheses.
+      # If there are multiple matches, only the first is returned
+      get_sub_groups = function(pattern, x) {
+        x = x[[1]]
+        m = regexec(pattern, x)
+        regmatches(x, m)[[1]][-1]
+      }
+      
+      parse_schema = function(schema_str) {
+        parts = get_sub_groups(array_schema_pattern, schema_str)
+        assertf(length(parts) > 1L, "Invalid array schema string `{.symbol}`: {.value}",
+                .symbol = .symbol,
+                .value = schema_str,
+                .nframe = 2)
+        arrayName = parts[[1]]
+        attrStr = parts[[2]]
+        dimStr = parts[[3]]
+      
+        attrVec = get_sub_recursive(single_attr_pattern, attrStr)
+        dimVec = get_sub_recursive(single_dim_pattern, dimStr)
+      
+      
+        list(array_name = arrayName,
+          attrs = new_named_list(
+            trimws(gsub(single_attr_pattern, "\\2", attrVec)),
+            names = trimws(gsub(single_attr_pattern, "\\1", attrVec))),
+          dims = new_named_list(
+            trimws(gsub(single_dim_pattern, "\\3", dimVec)),
+            names = trimws(gsub(single_dim_pattern, "\\1", dimVec)))
+        )
+      }
+      
+      # the first non-empty word next to `<` is parsed as the array name
+      # because some afl operators return schema strings where array name is consisted of multiple words
+      # E.g. show(list('operators'), 'afl') => "non empty operators <attrs...> [dims..]
+      # 'operators' would be the array name in above example 
+      array_schema_pattern = "([^< ]+)?\\s*(<[^<>]+>)\\s*(\\[[^]]+\\])?\\s*$"
+      single_attr_pattern = "(\\w+)\\s*:\\s*([^;,:<>]+)"
+      single_dim_pattern = "(\\w+)(\\s*\\=\\s*([^];, \t]+))?"
+      
+      parsed = parse_schema(schema_str)
+      repo$ArrayOp(parsed$array_name,
+                   dims = names(parsed$dims),
+                   attrs = names(parsed$attrs),
+                   dtypes = c(parsed$attrs, invert.list(list("int64" = names(parsed$dims)))),
+                   dim_specs = parsed$dims)
+    }
+    ,
     # Get an array as template from a 't' or a 'dataFrame' if 't' is null
     get_array_template = function(t, dataFrame = NULL){
       if(is.null(t)) t = infer_scidb_types_from_df(dataFrame)
@@ -204,7 +263,7 @@ ScidbConnection <- R6::R6Class(
     ,
     array_op_from_schema_str = function(schema_str) {
       assert_single_str(schema_str, "ERROR: param 'schema_str' must be a single string")
-      result = repo$private$.get_array_from_schema_string(schema_str)
+      result = private$new_arrayop_from_schema_string(schema_str, .symbol = deparse(substitute(schema_str)))
       set_array_op_conn(result)
       result
     }

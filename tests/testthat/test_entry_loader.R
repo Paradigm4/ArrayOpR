@@ -13,6 +13,11 @@ assert_afl_equal <- function(actual, expected) {
   testthat::expect_identical(actual, expected)
 }
 
+# Get a str vector from one str split by white spaces
+.strsplit = function(x, sep="\\s+") {
+  strsplit(x, split = sep)[[1]]
+}
+
 # When runnning devtools::test(), the working directory is (package root)/tests/testthat/
 
 dry_tests = function() {

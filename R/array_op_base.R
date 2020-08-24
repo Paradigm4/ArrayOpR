@@ -1571,6 +1571,9 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' @return An AFL string
     to_schema_str = function() {
       attrStr = paste(self$attrs, private$get_field_types(self$attrs), sep = ':', collapse = ',')
+      # SciDB data frame format
+      if(length(self$dims) == 0) return(sprintf("<%s>", attrStr))
+      
       dimStrItems = mapply(function(dimName, dimSpec){
         if(.has_len(dimSpec) && nchar(dimSpec) > 0) sprintf("%s=%s", dimName, dimSpec)
         else dimName

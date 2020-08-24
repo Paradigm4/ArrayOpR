@@ -119,8 +119,8 @@ test_that("explicit template; without file header; column mapping", {
   )
   expect_equal(
     #todo: if array schema string doesn't have a dimension (ie. [i]), an error will occur.
-    # conn$fread(f, template = "<extra:bool, da:int32, fa:string, fb:double>", header = F, col.names = names(df))$to_df_attrs(), 
-    conn$fread(f, template = "<extra:bool, da:int32, fa:string, fb:double> [i]", header = F, col.names = names(df))$to_df_attrs(),
+    conn$fread(f, template = "<extra:bool, da:int32, fa:string, fb:double>", header = F, col.names = names(df))$to_df_attrs(),
+    # conn$fread(f, template = "<extra:bool, da:int32, fa:string, fb:double> [i]", header = F, col.names = names(df))$to_df_attrs(),
     df
   )
   expect_equal(
@@ -131,13 +131,12 @@ test_that("explicit template; without file header; column mapping", {
 })
 
 test_that("field types and conversion", {
-  .splitstr = function(x, sep="\\s+") strsplit(x, split = sep)[[1]]
   f = new_temp_file()
   df = data.frame(da = 1:5, f_str = letters[1:5], 
-                  f_double = .splitstr("1.1 nonsense 3.4 4.5 5.6"),
-                  f_i32 = .splitstr("11 12 nonsense 14 non"), 
-                  f_i64 = .splitstr("21 non 23 non 25"),
-                  f_bool = .splitstr("T F true false unknown")
+                  f_double = .strsplit("1.1 nonsense 3.4 4.5 5.6"),
+                  f_i32 = .strsplit("11 12 nonsense 14 non"), 
+                  f_i64 = .strsplit("21 non 23 non 25"),
+                  f_bool = .strsplit("T F true false unknown")
                   )
   convertedDf = df %>% dplyr::mutate(
       f_double = suppressWarnings(as.numeric(f_double)), 
@@ -180,7 +179,7 @@ test_that("field types and conversion", {
                )$to_df_attrs(), 
     convertedDf %>% dplyr::mutate(
       f_i32 = f_i32 + 123,
-      f_str = .splitstr("A b c D e"))
+      f_str = .strsplit("A b c D e"))
   )
   
 })
