@@ -22,9 +22,6 @@ assert_afl_equal <- function(actual, expected) {
 
 dry_tests = function() {
   source("base/__source.R", local = TRUE, chdir = TRUE)
-  source("v18/__source.R", local = TRUE, chdir = TRUE)
-  source("v19/__source.R", local = TRUE, chdir = TRUE)
-  source("repo/__source.R", local = TRUE, chdir = TRUE)
 }
 
 
@@ -32,7 +29,7 @@ wet_tests = function() {
   source("run_db_tests.R", local = TRUE, chdir = TRUE)
 }
 
-# dry_tests()
+dry_tests()
 
 wet_tests()
 

@@ -953,7 +953,9 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
              self$to_schema_str(), target$to_schema_str())
       target$create_new_with_same_schema(afl(self | store(target)))
     }
-  ),
+  )
+  ,
+  # Active bindings ----
   active = list(
     #' @field dims Dimension names
     dims = function() private$get_meta('dims'),

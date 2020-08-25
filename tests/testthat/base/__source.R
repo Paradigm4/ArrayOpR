@@ -1,6 +1,4 @@
-source('test_ArgList.R', local = TRUE)
-source('test_afl_util.R', local = TRUE)
-source('test_expr_utility.R', local = TRUE)
-source('test_array_op_base.R', local = TRUE)
-source('test_array_op_base_match.R', local = TRUE)
-source('test_array_op_base_load_data.R', local = TRUE)
+# Run all tests in current folder
+for (test_file in list.files(".", "^test_.+\\.R")) {
+  source(test_file, local = T, chdir = T)
+}
