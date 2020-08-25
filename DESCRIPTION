@@ -22,8 +22,7 @@ Imports:
     dplyr,
     R6,
     bit64,
-    glue,
-    stringr
+    glue
 RoxygenNote: 7.1.1
 Roxygen: list(markdown = TRUE)
 Collate: 
@@ -33,10 +32,6 @@ Collate:
     'array_op_base.R'
     'array_op_v18.R'
     'array_op_v19.R'
-    'repo_base.R'
-    'repo_v18.R'
-    'repo_v19.R'
     'connection.R'
     'package.R'
-    'statement_parser.R'
 VignetteBuilder: knitr

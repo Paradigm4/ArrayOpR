@@ -172,29 +172,6 @@ Repo <- R6::R6Class(
       else
         what
     }
-    ,
-    .get_array_from_schema_string = function(schemaStr) {
-      
-      matched = stringr::str_match(schemaStr, "(\\S*)\\s*\\<(.+)\\>\\s*\\[(.+)\\]")
-      assert(dim(matched)[[1]] == 1,
-             "ERROR: RepoDAO$get_array_from_schema_string: Invalid schema string: %s", schemaStr)
-      
-      arrayName = matched[1,2]
-      attrStr = matched[1,3]
-      dimStr = matched[1,4]
-      attrMatrix = stringr::str_match_all(attrStr, "(\\w+):\\s*([^;,:]+)")[[1]]
-      dimMatrix = stringr::str_match_all(dimStr, "(\\w+)[=\\s]*([^;]*)")[[1]]
-      
-      dims = dimMatrix[,2]
-      attrs = attrMatrix[,2]
-      
-      attrDtypes = as.list(rlang::set_names(attrMatrix[,3], attrs))
-      dimDtypes = as.list(rlang::set_names(rep('int64', dim(dimMatrix)[[1]]), dims))
-      
-      self$ArrayOp(arrayName, dims, attrs,
-                   dtypes = c(attrDtypes, dimDtypes),
-                   dim_specs=as.list(rlang::set_names(dimMatrix[,3], dims)))
-    }
   )
   ,
   # Active bindings ----

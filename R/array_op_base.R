@@ -62,33 +62,9 @@ ArrayOpBase <- R6::R6Class(
       assert_empty(field_names %-% self$dims_n_attrs, "param 'field_names' has invalid fields: [{.value}]")
       result = new_named_list(self$dtypes[field_names], field_names)
       if(.raw){
-        result = as.list(structure(regmatches(result, regexpr("^\\w+", result)), names = field_names))
+        result = new_named_list(regmatches(result, regexpr("^\\w+", result)), names = field_names)
       }
       return(result)
-      # old code
-      
-      # if(is.null(field_names))
-      #   field_names = self$dims_n_attrs
-      # 
-      # missingFields = base::setdiff(field_names, self$dims_n_attrs)
-      # assert_not_has_len(missingFields, 
-      #                    "ERROR: ArrayOp$get_field_types: field_names: Field(s) '%s' not found in ArrayOp: %s", 
-      #                    paste(missingFields, collapse = ','),
-      #                    private$raw_afl
-      # )
-      # if(.strict){
-      #   missingFields = field_names %-% names(self$dtypes)
-      #   assert_not_has_len(missingFields, 
-      #                      "ERROR: ArrayOp$get_field_types: Field(s) '%s' not annotated with dtype in ArrayOp: %s", 
-      #                      paste(missingFields, collapse = ','),
-      #                      private$raw_afl
-      #   )
-      # }
-      # result = self$dtypes[field_names]
-      # if(.raw){
-      #   result = as.list(structure(regmatches(result, regexpr("^\\w+", result)), names = field_names))
-      # }
-      # result
     }
     ,
     #' @description 

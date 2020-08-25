@@ -47,14 +47,25 @@ ScidbConnection <- R6::R6Class(
   "ScidbConnection",
   portable = FALSE,
   private = list(
-    repo = NULL,
     .scidb_version = NULL,
     .db = NULL,
     .conn_args = NULL,
+    .arrayop_class = NULL,
     # Private methods
+    .iquery = function(afl_str, return, only_attributes) {
+      if(return){
+        scidb::iquery(private$.db, afl_str, return = TRUE, only_attributes = only_attributes)
+      } else {
+        scidb::iquery(private$.db, afl_str, return = FALSE)
+      }
+    }
+    ,
+    new_ArrayOp = function(...) {
+      .arrayop_class(...)
+    }
+    ,
     upload_df_or_vector = function(v, ...) {
       uploaded = scidb::as.scidb(private$.db, v, ...)
-      # res = array_op_from_schema_str(uploaded@meta$schema)$create_new_with_same_schema(uploaded@name)
       res = array_op_from_scidbr_obj(uploaded)
       res$.set_meta('.ref', uploaded) # prevent GC
       res
@@ -134,7 +145,7 @@ ScidbConnection <- R6::R6Class(
       single_dim_pattern = "(\\w+)(\\s*\\=\\s*([^];, \t]+))?"
       
       parsed = parse_schema(schema_str)
-      repo$ArrayOp(parsed$array_name,
+      private$new_ArrayOp(parsed$array_name,
                    dims = names(parsed$dims),
                    attrs = names(parsed$attrs),
                    dtypes = c(parsed$attrs, invert.list(list("int64" = names(parsed$dims)))),
@@ -147,7 +158,7 @@ ScidbConnection <- R6::R6Class(
       if(inherits(t, "ArrayOpBase")) return(t)
       if(is.list(t)){
         assert_named_list(t, "ERROR: get_array_template: a list as template must have names")
-        return(repo$ArrayOp('', attrs = names(t), dtypes = t))
+        return(private$new_ArrayOp('', attrs = names(t), dtypes = t))
       }
       if(is.character(t) && length(t) == 1) {
         if(grepl("<", t))
@@ -205,37 +216,39 @@ ScidbConnection <- R6::R6Class(
                   "ERROR: no 'connection_args' found. Please connect with username, token, etc at least once.")
       }
       db = do.call(scidb::scidbconnect, connection_args)
-      repo = newRepo(db = db)
-      scidb_version = repo$.private$dep$get_scidb_version()
-      
-      private$repo = repo
-      private$.scidb_version = scidb_version
       private$.conn_args = connection_args
       private$.db = db
+      private$.scidb_version = query_attrs("op_scidbversion()")
+      # choose the right ArrayOp class version
+      private$.arrayop_class = if(.scidb_version$major == 18){
+        ArrayOpV18$new
+      } else if(.scidb_version$major >= 19) {
+        ArrayOpV19$new
+      } else {
+        stop(glue("Unsupported SciDB version: [{.scidb_version$major}.{.scidb_version$minor}.{.scidb_version$patch}]"))
+      }
+      invisible(self)
     },
     scidb_version = function() .scidb_version,
     conn_args = function() .conn_args,
     print = function() {
-      sprintf("ScidbConnection: %s@%s [%s]", 
-              .conn_args[["username"]], 
-              .conn_args[["host"]], 
-              scidb_version()
-              )
+      glue("ScidbConnection: {.conn_args$username}@{.conn_args$host} ",
+          "[{.scidb_version$major}.{.scidb_version$minor}.{.scidb_version$patch}]")
     }
     ,
     query = function(afl_str){
       assert_single_str(afl_str)
-      repo$query(afl_str)
+      private$.iquery(afl_str, return = TRUE, only_attributes = FALSE)
     }
     ,
     query_attrs = function(afl_str){
       assert_single_str(afl_str)
-      repo$query(afl_str, only_attributes = TRUE)
+      private$.iquery(afl_str, return = TRUE, only_attributes = TRUE)
     }
     ,
     execute = function(afl_str) {
       assert_single_str(afl_str)
-      repo$execute(afl_str)
+      private$.iquery(afl_str, return = FALSE)
       invisible(self)
     }
     ,
@@ -256,23 +269,23 @@ ScidbConnection <- R6::R6Class(
     ,
     array_op_from_name = function(array_name) {
       assert_single_str(array_name, "ERROR: param 'array_name' must be a single string")
-      result = repo$load_arrayop_from_scidb(array_name)
+      schema = query_attrs(sprintf("project(show(%s), schema)", array_name))
+      result = array_op_from_schema_str(schema[["schema"]])
       set_array_op_conn(result)
-      result
     }
     ,
     array_op_from_schema_str = function(schema_str) {
       assert_single_str(schema_str, "ERROR: param 'schema_str' must be a single string")
-      result = private$new_arrayop_from_schema_string(schema_str, .symbol = deparse(substitute(schema_str)))
+      result = private$new_arrayop_from_schema_string(
+        schema_str, 
+        .symbol = deparse(substitute(schema_str)))
       set_array_op_conn(result)
-      result
     }
     ,
     array_op_from_afl = function(afl_str) {
       assert_single_str(afl_str, "ERROR: param 'afl_str' must be a single string")
       escapedAfl = gsub("'", "\\\\'", afl_str)
       schema = query_attrs(sprintf("project(show('%s', 'afl'), schema)", escapedAfl))
-      # schemaArray = repo$private$.get_array_from_schema_string(schema[["schema"]])
       schemaArray = array_op_from_schema_str(schema[["schema"]])
       result = schemaArray$create_new_with_same_schema(afl_str)
       set_array_op_conn(result)
