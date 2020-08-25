@@ -209,7 +209,7 @@ ScidbConnection <- R6::R6Class(
       
     },
     is_connected = function() {
-      .has_len(.conn_args)
+      .not_empty(.conn_args)
     }
     ,
     connect = function(connection_args = NULL) {

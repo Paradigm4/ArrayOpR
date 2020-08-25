@@ -21,8 +21,11 @@ test_that("manually create new instances", {
   expect_array_schema(a$spawn(), attrs, dims)
   expect_array_schema(a$spawn(afl_str = "new_array_name"), attrs, dims)
   expect_array_schema(a$spawn(added = "extra_attr"), c(attrs, "extra_attr"), dims)
+  expect_array_schema(a$spawn(renamed = list(aa = "aa1")), .strsplit('aa1 ab ac'), dims)
   
   # cannot operate on non-existent fields
   expect_error(a$filter(non_existent > 0), "non_existent")
   expect_error(a$select('non_existent'), "non_existent")
+  
+  expect_error(a$spawn(renamed = list(aa1 = 'aa')), "aa1")
 })

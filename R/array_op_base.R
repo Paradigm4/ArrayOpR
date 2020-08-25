@@ -76,7 +76,7 @@ ArrayOpBase <- R6::R6Class(
     #' @param dim_names Default NULL equals all dimensions.
     #' @return A named list where the name is dimension name and value is a dimension spec string
     get_dim_specs = function(dim_names = NULL) {
-      if(!.has_len(dim_names)) dim_names = self$dims
+      if(.is_empty(dim_names)) dim_names = self$dims
       private$get_meta('dim_specs')[dim_names]
     }
     ,
@@ -102,7 +102,7 @@ ArrayOpBase <- R6::R6Class(
       assert(inherits(operand, class(self)),
         "JoinOp arg '%s' must be class of [%s], but got '%s' instead.",
         side, 'ArrayOpBase', class(operand))
-      assert(is.character(keys) && .has_len(keys),
+      assert(is.character(keys) && .not_empty(keys),
         "Join arg 'on_%s' must be a non-empty R character, but got '%s' instead", side, class(keys))
       absentKeys = operand$.private$get_absent_fields(keys)
       assert_not_has_len(absentKeys, "JoinOp arg 'on_%s' has invalid fields: %s", side, paste(absentKeys, collapse = ', '))
@@ -118,9 +118,9 @@ ArrayOpBase <- R6::R6Class(
         length(on_left), length(on_right))
       
       # Validate settings
-      if(.has_len(settings)){
+      if(.not_empty(settings)){
         settingKeys <- names(settings)
-        if(!.has_len(settingKeys) || any(settingKeys == '')){
+        if(.is_empty(settingKeys) || any(settingKeys == '')){
           stop("ERROR: ArrayOp$join: Settings must be a named list and each setting item must have a non-empty name when creating a JoinOp")
         }
       }
@@ -141,7 +141,7 @@ ArrayOpBase <- R6::R6Class(
     to_join_operand_afl = function(keyFields, keep_dimensions = FALSE, artificial_field = utility$random_field_name()) {
       
       selectedFields = self$selected
-      if(!.has_len(selectedFields))
+      if(.is_empty(selectedFields))
         return(self$to_afl())
       
       dimensions = self$dims
@@ -157,15 +157,15 @@ ArrayOpBase <- R6::R6Class(
         # specialList = specialList %-% self$dims
       } 
       # case-1: When no attrs projected && selected dimensions, we need to create an artificial attr to project on.
-      if(.has_len(specialList) && !.has_len(projectList) && .has_len(selectedFields)){
+      if(.not_empty(specialList) && .is_empty(projectList) && .not_empty(selectedFields)){
         res = afl(arrName | apply(artificial_field, 'null') | project(artificial_field))
       }
       # case-2: Regular mode. Just 'apply'/'project' for dimensions/attributes when needed.
       else{
-        applyExpr = if(.has_len(applyList))
+        applyExpr = if(.not_empty(applyList))
           afl(arrName | apply(afl_join_fields(applyList, applyList)))
         else arrName
-        res =  if(.has_len(projectList))
+        res =  if(.not_empty(projectList))
           afl(applyExpr | project(projectList))
         else applyExpr
       }
@@ -194,10 +194,10 @@ ArrayOpBase <- R6::R6Class(
                     auto_select = FALSE, join_mode = 'equi_join',
                     settings = NULL, 
                     left_alias = '_L', right_alias = '_R') {
-      if(!.has_len(on_left) && !.has_len(on_right) && !.has_len(on_both)){
+      if(.is_empty(on_left) && .is_empty(on_right) && .is_empty(on_both)){
         on_both = left$dims_n_attrs %n% right$dims_n_attrs
       }
-      if(.has_len(on_both)){
+      if(.not_empty(on_both)){
         on_left = on_both %u% on_left
         on_right = on_both %u% on_right
       }
@@ -241,8 +241,8 @@ ArrayOpBase <- R6::R6Class(
       private$validate_join_params(left, right, on_left, on_right, settings)
       
       # Validate selected fields
-      hasSelected = .has_len(left$selected) || .has_len(right$selected)
-      if(hasSelected && !.has_len(left$selected))
+      hasSelected = .not_empty(left$selected) || .not_empty(right$selected)
+      if(hasSelected && .is_empty(left$selected))
         assert(right$selected != on_right, 
           "ERROR: ArrayOp$join: Right operand's selected field(s) '%s' cannot be its join key(s) '%s' when there is no left operand fields selected.
 Please select on left operand's fields OR do not select on either operand. Look into 'equi_join' documentation for more details.",
@@ -258,7 +258,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
 
       keep_dimensions = (function(){
         val = settings[['keep_dimensions']]
-        .has_len(val) && val == 1
+        .not_empty(val) && val == 1
       })()
       
       # Join two operands
@@ -374,9 +374,9 @@ Please select on left operand's fields OR do not select on either operand. Look 
       assert_not_has_len(names(upper_bound) %n% names(field_mapping), 
                          "ERROR: ArrayOp$semi_join: Field names in param 'upper_bound' and 'field_mapping' cannot overlap: '%s'",
                          paste(names(upper_bound) %n% names(field_mapping), collapse = ','))
-      if(.has_len(lower_bound))
+      if(.not_empty(lower_bound))
         assert_named_list(lower_bound, "ERROR: ArrayOp$semi_join: lower_bound if provided must be a named list.")
-      if(.has_len(upper_bound))
+      if(.not_empty(upper_bound))
         assert_named_list(upper_bound, "ERROR: ArrayOp$semi_join: upper_bound if provided must be a named list.")
       
       filter_mode = function(){
@@ -592,12 +592,12 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     # 
     # This is an enhanced version inspired by scidb 'project' and 'apply' operators which also only work on attributes.
     reshape_attrs = function(select=NULL, dtypes = NULL, artificial_field = .random_attr_name(), .force_project = TRUE) {
-      assert(.has_len(select),
+      assert(.not_empty(select),
              "ERROR: ArrayOp$reshape_attrs: param 'select' must be a non-empty character list, but got: %s", 
              class(select))
       
       # Plain selected fields without change
-      existingFields = if(.has_len(names(select))) {
+      existingFields = if(.not_empty(names(select))) {
         as.character(select[names(select) == '' | names(select) == select])
       } else {
         as.character(select)
@@ -618,16 +618,16 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       
       attrs = selectFieldNames %-% self$dims
       
-      newAfl = if(.has_len(replacedFieldNames)){
+      newAfl = if(.not_empty(replacedFieldNames)){
         afl(self | apply(afl_join_fields(replacedFieldNamesAlt, replacedFields))
             | project(attrs %-% newFieldNames %-% replacedFieldNames %u% replacedFieldNamesAlt) 
             | apply(afl_join_fields(replacedFieldNames %u% newFieldNames, replacedFieldNamesAlt %u% newFields))
             | project(attrs)
             )
       }
-      else if(.has_len(attrs)) {
+      else if(.not_empty(attrs)) {
         inner = self
-        if(.has_len(newFieldNames))
+        if(.not_empty(newFieldNames))
           inner = afl(self | apply(afl_join_fields(newFieldNames, newFields)))
         if(!.force_project && length(attrs) == length(self$attrs) && all(attrs == self$attrs))
           afl(inner)
@@ -668,7 +668,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       extraFields = operand$attrs %-% keys %-% reserved_fields
       
       if(all(self$dims %in% operandKeyFields)){
-        if(.has_len(extraFields))
+        if(.not_empty(extraFields))
           operand = operand$reshape(c(keys, reserved_fields))
         return(operand$change_schema(self, strict = FALSE, .setting = .redimension_setting)$
                  reshape(reserved_fields, .force_project = FALSE))
@@ -725,12 +725,12 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       defaultOffset = ref_start - source_start
       nonDefaultOffset = 1 - source_start
       
-      if(!.has_len(new_field)) new_field = ref_field
+      if(.is_empty(new_field)) new_field = ref_field
       newFieldExpr = sprintf("iif(%s is null, %s%s, %s+%s%s)", maxRefFields, 
                              source_field, .to_signed_integer_str(defaultOffset), 
                              maxRefFields, source_field, .to_signed_integer_str(nonDefaultOffset))
       
-      forAggregate = if(.has_len(refDims)) afl(reference | apply(afl_join_fields(refDims, refDims))) else reference
+      forAggregate = if(.not_empty(refDims)) afl(reference | apply(afl_join_fields(refDims, refDims))) else reference
       aggregated = afl(forAggregate | aggregate(aggFields))
       crossJoined = afl(
         self |
@@ -852,7 +852,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     to_afl_explicit = function(drop_dims = FALSE, selected_fields = NULL, artificial_field = .random_attr_name()){
       
       # No intent to select fields
-      if(!.has_len(selected_fields))
+      if(.is_empty(selected_fields))
         return(self$to_afl())
       
       # 'selected_fields' is specified in sub-classes.
@@ -861,7 +861,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       # dims are dropped in parent operations.
       if(drop_dims){
         selectedDims = base::intersect(selected_fields, self$dims)
-        inner = if(.has_len(selectedDims))
+        inner = if(.not_empty(selectedDims))
           afl(self | apply(afl_join_fields(selectedDims, selectedDims)))
         else self$to_afl()
         return(afl(inner | project(afl_join_fields(selected_fields))))
@@ -869,7 +869,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       
       # drop_dims = F. All dims are preserved in parent operations, we can only select/drop attrs.
       selectedAttrs = base::intersect(selected_fields, self$attrs)
-      if(.has_len(selectedAttrs))  # If some attributes selected
+      if(.not_empty(selectedAttrs))  # If some attributes selected
         return(afl(self | project(selectedAttrs)))
       
       # If no attributes selected, we have to create an artificial attribute, then project it.
@@ -887,7 +887,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       fields = c(....)
       nonAttrs = fields %-% self$attrs
       assert_not_has_len(nonAttrs, "ERROR: afl_project: %d non-attribute field(s) found: %s", length(nonAttrs), paste(nonAttrs, collapse = ', '))
-      if(!.has_len(fields)) return(self)
+      if(.is_empty(fields)) return(self)
       self$create_new(afl(self | project(fields)), dims = self$dims, attrs = fields, 
                       dtypes = private$get_field_types(c(self$dims, fields)), dim_specs = private$get_dim_specs())
     }
@@ -1033,7 +1033,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       filterExpr = if(methods::hasArg('expr')) expr else e_merge(e(...))
       status = validate_filter_expr(filterExpr, self$dims_n_attrs)
       if(!status$success){
-        if(.has_len(status$absent_fields)){
+        if(.not_empty(status$absent_fields)){
           if(is.null(missing_fields_error_template))
             missing_fields_error_template = 
               sprintf("ERROR: ArrayOp$where: Field(s) '%%s' not found in ArrayOp: %s", private$raw_afl)
@@ -1041,7 +1041,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
         }
         stop(paste(status$error_msgs, collapse = '\n'))
       }
-      newRawAfl = if(.has_len(filterExpr)) 
+      newRawAfl = if(.not_empty(filterExpr)) 
         afl(self | filter(afl_filter_from_expr(filterExpr, regex_func = regex_func, ignore_case = ignore_case)))
       else self$to_afl()
       self$spawn(newRawAfl)
@@ -1095,7 +1095,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
           attrs = self$dims_n_attrs, dims = artificial_field,
           dtypes = utils::modifyList(private$get_field_types(), as.list(rlang::set_names('int64', artificial_field)))
         )
-        if(!.has_len(select))
+        if(.is_empty(select))
           unpacked
         else 
           unpacked$.private$reshape_attrs(select, dtypes, artificial_field)
@@ -1234,7 +1234,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
         
       # If there is an auto-incremnt field, it needs to be inferred from the params
       # After this step, 'src' is an updated ArrayOp with auto-incremented id calculated (during AFL execution only due to lazy evaluation)
-      if(.has_len(target_auto_increment)){
+      if(.not_empty(target_auto_increment)){
         result = result$.private$set_auto_increment_field(target, 
           source_field = names(source_auto_increment), ref_field = names(target_auto_increment), 
           source_start = source_auto_increment, ref_start = target_auto_increment)
@@ -1242,7 +1242,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       
       # If there is anti_collision_field, more actions are required to avoid cell collision
       # After this step, 'src' is an updated ArrayOp with auto_collision_field set properly
-      if(.has_len(anti_collision_field)){
+      if(.not_empty(anti_collision_field)){
         result = result$.private$set_anti_collision_field(target, anti_collision_field, join_setting = join_setting, 
                                                  source_anti_collision_dim_spec = source_anti_collision_dim_spec)
       }
@@ -1280,7 +1280,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       data_source = data_array
       
       # updateFields default to the overlapping attrs between source and self
-      updatedFields = if(.has_len(updated_fields)) updated_fields else data_source$attrs %n% self$attrs
+      updatedFields = if(.not_empty(updated_fields)) updated_fields else data_source$attrs %n% self$attrs
       reservedFields = self$attrs %-% updatedFields
       needTransform = !(length(data_source$dims) == length(self$dims) && all(data_source$dims == self$dims))
       
@@ -1301,7 +1301,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       self$spawn(
         afl(
           data_source$reshape(updatedFields, .force_project = FALSE) | join( 
-            .ifelse(.has_len(reservedFields), self$reshape(reservedFields), self)
+            .ifelse(.not_empty(reservedFields), self$reshape(reservedFields), self)
           )
         )
       )$reshape(self$attrs)
@@ -1351,7 +1351,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
         absentFields = mutatedFields %-% self$dims_n_attrs
         assert_not_has_len(absentFields, "ERROR: ArrayOp$mutate: %d unrecognized mutated field(s): %s", 
                            length(absentFields), paste(absentFields, collapse = ', '))
-        if(!.has_len(mutatedFields %n% self$dims)) { # Only attrs muated
+        if(.is_empty(mutatedFields %n% self$dims)) { # Only attrs muated
           self$reshape(utils::modifyList(as.list(self$attrs), data_source))
         } else {
           self$reshape(utils::modifyList(as.list(self$dims_n_attrs), data_source), 
@@ -1369,7 +1369,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
         self$spawn(
           afl(
             source$reshape(updatedFields, .force_project = FALSE) | join( 
-              .ifelse(.has_len(reservedFields), self$reshape(reservedFields), self)
+              .ifelse(.not_empty(reservedFields), self$reshape(reservedFields), self)
             )
           )
         )$reshape(self$attrs)
@@ -1382,7 +1382,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
         # assume data_soruce has the same dimension with the target
         
         # updateFields default to the overlapping attrs between source and self
-        updatedFields = if(.has_len(updated_fields)) updated_fields else data_source$attrs %n% self$attrs
+        updatedFields = if(.not_empty(updated_fields)) updated_fields else data_source$attrs %n% self$attrs
         reservedFields = self$attrs %-% updatedFields
         needTransform = !(length(data_source$dims) == length(self$dims) && all(data_source$dims == self$dims))
         
@@ -1453,13 +1453,15 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
                  dtypes = NULL,
                  dim_specs = NULL) {
   
-      if(.has_len(renamed)){
+      if(.not_empty(renamed)){
         assert_named_list(renamed, "ERROR: ArrayOp$spawn: 'renamed' param must be a named list, but got: %s", renamed)
       }
-      assert(!.has_len(added) || is.character(added), 
-        "ERROR: ArrayOp$spawn: 'added' param must be an R character, but got: %s", class(added))
-      assert(!.has_len(excluded) || is.character(excluded), 
-        "ERROR: ArrayOp$spawn: 'excluded' param must be an R character, but got: %s", class(excluded))
+      assert_inherits(added,  c("NULL", "character"))
+      assert_inherits(excluded,  c("NULL", "character"))
+      # assert(.is_empty(added) || is.character(added), 
+      #   "ERROR: ArrayOp$spawn: 'added' param must be an R character, but got: %s", class(added))
+      # assert(.is_empty(excluded) || is.character(excluded), 
+      #   "ERROR: ArrayOp$spawn: 'excluded' param must be an R character, but got: %s", class(excluded))
       
       attrs = self$attrs
       dims = self$dims
@@ -1467,8 +1469,10 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       oldDimSpecs = private$get_dim_specs()
       
       # Rename the existing
-      if(.has_len(renamed)){
+      if(.not_empty(renamed)){
         renamedOldFields = names(renamed)
+        assert_empty(renamedOldFields %-% self$dims_n_attrs, 
+                     "Unknown field(s) in param `renamed`: [{.value}]")
         attrs = as.character(replace(attrs, attrs %in% renamedOldFields, .remove_null_values(renamed[attrs])))
         dims = as.character(replace(dims, dims %in% renamedOldFields, .remove_null_values(renamed[dims])))
         namesOldDtypes = names(oldDtypes)
@@ -1478,7 +1482,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       }
       
       # Add new fields
-      if(.has_len(added)){
+      if(.not_empty(added)){
         addedDims = added %n% names(dim_specs)
         addedAttrs = added %-% names(dim_specs)
         attrs = attrs %u% addedAttrs
@@ -1486,18 +1490,18 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       }
       
       # Exclude the excluded
-      if(.has_len(excluded)){
+      if(.not_empty(excluded)){
         attrs = attrs %-% excluded
         dims = dims %-% excluded
       }
       
-      # dtypes = .ifelse(.has_len(dtypes), c(dtypes, oldDtypes), oldDtypes)
+      # dtypes = .ifelse(.not_empty(dtypes), c(dtypes, oldDtypes), oldDtypes)
       # dtypes = dtypes[c(dims, attrs)]
       dtypes = .remove_null_values(
         c(dtypes, oldDtypes)[c(dims, attrs)]
       )
       
-      dim_specs = .ifelse(.has_len(dim_specs), c(dim_specs, oldDimSpecs), oldDimSpecs)
+      dim_specs = .ifelse(.not_empty(dim_specs), c(dim_specs, oldDimSpecs), oldDimSpecs)
       
       self$create_new(afl_str, dims, attrs, dtypes, dim_specs = dim_specs)
     }
@@ -1547,7 +1551,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       if(length(self$dims) == 0) return(sprintf("<%s>", attrStr))
       
       dimStrItems = mapply(function(dimName, dimSpec){
-        if(.has_len(dimSpec) && nchar(dimSpec) > 0) sprintf("%s=%s", dimName, dimSpec)
+        if(.not_empty(dimSpec) && nchar(dimSpec) > 0) sprintf("%s=%s", dimName, dimSpec)
         else dimName
       }, self$dims, private$get_dim_specs())
       dimStr = paste(dimStrItems, collapse = ';')
@@ -1702,7 +1706,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
           )
         }
         explicitFields = as.list(c(field_mapping, lower_bound, upper_bound))
-        # if(.has_len(as.character(explicitFields) %-% names(explicitFields))) browser()
+        # if(.not_empty(as.character(explicitFields) %-% names(explicitFields))) browser()
         implicitFields = names(df) %-% as.character(explicitFields)
         implicitFields = new_named_list(implicitFields, implicitFields)
         

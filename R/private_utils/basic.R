@@ -23,7 +23,7 @@ assert <- function(cond, errorMsgFmt = '', ...) { if(!cond) stop(sprintf(errorMs
 assert_has_len <- function(obj, ...) { assert(rlang::has_length(obj), ...) }
 assert_not_has_len <- function(obj, ...) { assert(!rlang::has_length(obj), ...) }
 assert_named_list <- function(obj, ...) {
-  assert(.has_len(names(obj)) && all(names(obj) != ''), ...)
+  assert(.not_empty(names(obj)) && all(names(obj) != ''), ...)
 }
 
 assert_single_str <- function(obj, ...) {
@@ -41,7 +41,8 @@ assert_no_fields <- function(fields, errorMsgFmt = "Field(s) not empty: %s", ...
 }
 
 .ifelse <- function(condition, yes, no) if(condition) yes else no
-.has_len <- function(...) rlang::has_length(...)
+.not_empty <- function(x) length(x) > 0L
+.is_empty <- function(x) length(x) == 0L
 
 .random_attr_name <- function(n = 4){
   sprintf("%s_", rawToChar(as.raw(sample(c(65:90,97:122), n, replace=TRUE))))
@@ -62,7 +63,7 @@ assert_no_fields <- function(fields, errorMsgFmt = "Field(s) not empty: %s", ...
 #' @param .as.list Return a list if set TRUE; otherwise a named vector
 #' @return A list or named vector whose key/values are inverted from the original `obj`
 invert.list = function(obj, .as.list = T) {
-  if(!.has_len(obj)) return(list())
+  if(.is_empty(obj)) return(list())
   res = structure(
     unlist(mapply(rep, names(obj), sapply(obj, length)), use.names=F),
     names = unlist(obj)
@@ -109,7 +110,7 @@ log_job_duration = function(job, msg = '', done_msg = 'done') {
 # param named_values: A named list or named vector
 # return The names of the elements. If an element has no name, then its string representation will be used as name.
 .get_element_names = function(named_values) {
-  if (!.has_len(names(named_values)))
+  if (.is_empty(names(named_values)))
     as.character(named_values)
   else {
     mapply(function(name, value) {
@@ -125,7 +126,7 @@ log_job_duration = function(job, msg = '', done_msg = 'done') {
 }
 
 new_named_list = function(values, names){
-  if(!.has_len(values)) return(list())
+  if(.is_empty(values)) return(list())
   as.list(structure(values, names = as.character(names)))
 }
 
