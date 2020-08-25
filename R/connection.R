@@ -413,7 +413,7 @@ ScidbConnection <- R6::R6Class(
     #' attribute name (e.g. a0, a1, etc), and int64 is the template field type
     fread = function(file_path, template = NULL, header = TRUE, sep = '\t',
                      col.names = NULL, mutate_fields = NULL, auto_dcast = FALSE, 
-                     nrow = 10L, instances = NULL) {
+                     nrow = 10L, instances = NULL, .aio_settings=NULL) {
       assert_inherits(file_path, "character")
       assertf(all(file.exists(file_path)))
       if(length(file_path) > 1){
@@ -456,7 +456,7 @@ ScidbConnection <- R6::R6Class(
       
       aio_settings = list(header = if (header) 1L else 0L,
                           attribute_delimiter = sep) %>%
-        modifyList(list(instances = instances)) # if instance is NULL, then it's not included
+        modifyList(c(list(instances = instances), .aio_settings)) # if instance is NULL, then it's not included
       
       arrayTemplate$.private$load_file(
         file_path,

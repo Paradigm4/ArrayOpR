@@ -205,5 +205,17 @@ test_that("multiple file paths", {
   }
 })
 
+test_that("extra aio settings", {
+  f1 = new_temp_file()
+  df1 = data.frame(da = 1:5, fa = letters[1:5], fb = 1:5 * 3.14)
+  data.table::fwrite(df1, file = f1, sep = '\t', col.names = F)
+  
+  arr = conn$fread(file_path = f1, header = F, col.names = names(df1), 
+                   .aio_settings = list(chunk_size = 123456))
+  expect_match(arr$to_afl(), "123456")
+  expect_match(arr$to_afl(), "chunk_size")
+  expect_equal(arr$to_df_attrs(),df1)
+})
+
 # cleanup ----
 clean_up_temp_files()
