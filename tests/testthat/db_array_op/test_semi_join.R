@@ -17,8 +17,7 @@ ArrayContent = data.frame(
 )
 
 RefArray = conn$
-  array_op_from_df(ArrayContent, schemaTemplate)$
-  change_schema(schemaTemplate)$
+  array_op_from_df(ArrayContent, schemaTemplate, force_template_schema = T)$
   persist(.gc = FALSE)
 
 

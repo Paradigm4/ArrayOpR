@@ -40,8 +40,7 @@ dfArraySource = data.frame(
 )
 
 RefArray = conn$
-  array_op_from_df(dfArraySource, schemaTemplate)$
-  change_schema(schemaTemplate)$
+  array_op_from_df(dfArraySource, schemaTemplate, force_template_schema = TRUE)$
   persist(.gc = FALSE)
 
 assert_df_match = function(result_df, expected_df) {

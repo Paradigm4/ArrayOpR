@@ -153,22 +153,25 @@ ScidbConnection <- R6::R6Class(
     }
     ,
     # Get an array as template from a 't' or a 'dataFrame' if 't' is null
-    get_array_template = function(t, dataFrame = NULL){
-      if(is.null(t)) t = infer_scidb_types_from_df(dataFrame)
-      if(inherits(t, "ArrayOpBase")) return(t)
-      if(is.list(t)){
-        assert_named_list(t, "ERROR: get_array_template: a list as template must have names")
-        return(private$new_ArrayOp('', attrs = names(t), dtypes = t))
+    #' @param array_like An array_op, schema string or existing scidb array name
+    get_array_template = function(array_like, df = NULL){
+      assertf(length(array_like) > 0 || length(df) > 0,
+              "Error in get_array_template: no template found.")
+      if(is.null(array_like)) array_like = infer_scidb_types_from_df(df)
+      if(inherits(array_like, "ArrayOpBase")) return(array_like)
+      if(is.list(array_like)){
+        assert_named_list(array_like, "ERROR: get_array_template: a list as template must have names")
+        return(private$new_ArrayOp('', attrs = names(array_like), dtypes = array_like))
       }
-      if(is.character(t) && length(t) == 1) {
-        if(grepl("<", t))
-          return(array_op_from_schema_str(t))
-        else if(grepl("^\\w+\\.\\w+$", t))
-          return(array_op_from_name(t))
+      if(is.character(array_like) && length(array_like) == 1) {
+        if(grepl("<", array_like))
+          return(array_op_from_schema_str(array_like))
+        else if(grepl("^\\w+(\\.\\w+)?$", array_like))
+          return(array_op_from_name(array_like))
       }
       
       stopf("ERROR: get_array_template: template must be an array_op or named list, but got: [%s]", 
-            paste(class(t), collapse = ','))
+            paste(class(array_like), collapse = ','))
 
     }
     ,
@@ -323,6 +326,7 @@ ScidbConnection <- R6::R6Class(
       build_or_upload_threshold = 8000L,
       build_dim_spec = .random_field_name(),
       skip_scidb_schema_check = FALSE,
+      force_template_schema = FALSE,
       ...
     ){
       cellCount = dim(df)[[1L]] * dim(df)[[2L]]
@@ -331,10 +335,15 @@ ScidbConnection <- R6::R6Class(
           df, 
           template = template,
           build_dim_spec = build_dim_spec,
+          force_template_schema = force_template_schema,
           skip_scidb_schema_check = skip_scidb_schema_check
           )
       } else {
-        array_op_from_uploaded_df(df, template = template, ...)
+        array_op_from_uploaded_df(
+          df, 
+          template = template, 
+          force_template_schema = force_template_schema, 
+          ...)
       }
     }
     ,
@@ -342,6 +351,7 @@ ScidbConnection <- R6::R6Class(
       df, 
       template = NULL, 
       name = utility$random_array_name(), 
+      force_template_schema = FALSE,
       upload_by_vector = FALSE,
       .use_aio_input = FALSE, 
       .temp = FALSE,
@@ -349,6 +359,9 @@ ScidbConnection <- R6::R6Class(
     ) {
       assert_inherits(df, "data.frame")
       assertf(nrow(df) > 0, "{.symbol} must be a non-empty data frame")
+      if(force_template_schema)
+        assert_not_empty(template, "param template cannot be NULL when `force_template_schema=T`")
+      
       array_template = get_array_template(template, df)
       # assert all df fields are in the array_template
       matchedFields = {
@@ -391,16 +404,21 @@ ScidbConnection <- R6::R6Class(
           use_aio_input = .use_aio_input, temp = .temp, gc = .gc
         )
       }
+      if(force_template_schema)
+        result = result$change_schema(array_template)
       set_array_op_conn(result)
-      result
     }
     ,
     array_op_from_build_literal = function(
       df, template = NULL, 
-      build_dim_spec = .random_field_name(),
+      build_dim_spec = utility$random_field_name(),
+      force_template_schema = FALSE,
       skip_scidb_schema_check = FALSE
     ) {
-      assert(nrow(df) >= 1, "ERROR: param 'df' must have at least one row")
+      assert(nrow(df) >= 1 && length(df) >= 1, "ERROR: param 'df' must not be empty")
+      if(force_template_schema)
+        assert_not_empty(template, "param template cannot be NULL when `force_template_schema=T`")
+      
       array_template = get_array_template(template, df)
       buildOp = array_template$build_new(df, build_dim_spec)
       result = if(skip_scidb_schema_check){
@@ -413,8 +431,9 @@ ScidbConnection <- R6::R6Class(
         # Still use the buildOp for actual data
         remoteSchema$create_new_with_same_schema(buildOp$to_afl())
       }
+      if(force_template_schema)
+        result = result$change_schema(array_template)
       set_array_op_conn(result)
-      result
     }
     ,
     #' @description 

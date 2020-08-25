@@ -13,13 +13,36 @@ test_that("upload data frame: no template", {
   uploaded$remove_self()
 })
 
+test_that("various types of template", {
+  templateStr = "<a:int32, b:string, c:bool> [x;y]"
+  templateArray = conn$create_new_scidb_array(utility$random_array_name(), templateStr)
+  df = data.frame(x=1:2, y=3:4, a=1:2, b=letters[1:2], c=c(T,F))
+  
+  verify_template = function(template) {
+    a1 = conn$array_op_from_uploaded_df(df, template, .gc = F)
+    expect_identical(a1$attrs, templateArray$dims_n_attrs)
+    a1$remove_self()
+  }
+  
+  verify_template(templateStr)
+  verify_template(templateArray)
+  verify_template(templateArray$to_afl()) # array name as template
+  
+  # force the array to conform with the template's schema
+  a2 = conn$array_op_from_df(df, templateArray, force_template_schema = T)$persist(.gc = F)
+  
+  expect_identical(a2$attrs, templateArray$attrs)
+  expect_identical(a2$dims, templateArray$dims)
+  
+  a2$remove_self()
+  
+})
+
 test_that("upload data frame: no template, temporary", {
   df = data.frame(a = letters[1:5], b = 1:5, z = 11:15 * 1.2)
   uploaded = conn$array_op_from_uploaded_df(df, .gc = F, .temp = T)
   
-  arrayMeta = utility$list_arrays_in_ns()$filter(name == !!uploaded$to_afl())$to_df_attrs()
-  
-  expect_identical(arrayMeta$temporary, TRUE)
+  expect_identical(uploaded$array_meta_data()$temporary, TRUE)
   # uploaded data frame will have an artificial dimension
   expect_equal(uploaded$to_df_attrs(), df)
   
