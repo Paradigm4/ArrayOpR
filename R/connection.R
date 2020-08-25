@@ -413,8 +413,16 @@ ScidbConnection <- R6::R6Class(
     #' attribute name (e.g. a0, a1, etc), and int64 is the template field type
     fread = function(file_path, template = NULL, header = TRUE, sep = '\t',
                      col.names = NULL, mutate_fields = NULL, auto_dcast = FALSE, 
-                     nrow = 10L) {
-      assertf(file.exists(file_path))
+                     nrow = 10L, instances = NULL) {
+      assert_inherits(file_path, "character")
+      assertf(all(file.exists(file_path)))
+      if(length(file_path) > 1){
+        assertf(is.numeric(instances) && length(instances) == length(file_path), 
+          glue("Please provide {length(file_path)} instance ids (integers) ",
+               "because length(file_path)={length(file_path)}, length(instances)={length(instances)}",
+               "\nOnly when single file_path provided, can param `instances` be ommitted."),
+          .symbol = deparse(substitute(instances)))
+      }
       assert_inherits(header, "logical")
       assert_inherits(auto_dcast, c("logical"))
       
@@ -425,7 +433,7 @@ ScidbConnection <- R6::R6Class(
         # or 2. assigned wtih V1, V2, etc..
         # If col.names is provided, it must be the same number as the actual columns 
         # and will overwite the column names from file
-        dtParams = list(file = file_path, header = header, sep = sep, nrow = nrow) %>% 
+        dtParams = list(file = file_path[[1]], header = header, sep = sep, nrow = nrow) %>% 
           modifyList(list(col.names = col.names), keep.null = FALSE)
         peekedDf = do.call(data.table::fread, dtParams)
         file_headers = names(peekedDf)
@@ -446,11 +454,14 @@ ScidbConnection <- R6::R6Class(
         mutate_fields = modifyList(autoDcastList, as.list(mutate_fields))
       }
       
+      aio_settings = list(header = if (header) 1L else 0L,
+                          attribute_delimiter = sep) %>%
+        modifyList(list(instances = instances)) # if instance is NULL, then it's not included
+      
       arrayTemplate$.private$load_file(
         file_path,
         file_headers = file_headers,
-        aio_settings = list(header = if (header) 1L else 0L,
-                            attribute_delimiter = sep),
+        aio_settings = aio_settings,
         field_conversion = mutate_fields
       ) %>% set_array_op_conn
     }

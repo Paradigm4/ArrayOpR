@@ -184,5 +184,26 @@ test_that("field types and conversion", {
   
 })
 
+test_that("multiple file paths", {
+  numInstances = nrow(conn$query_attrs("list('instances')"))
+  if(numInstances > 1){
+    f1 = new_temp_file()
+    f2 = new_temp_file()
+    
+    df1 = data.frame(da = 1:5, fa = letters[1:5], fb = 1:5 * 3.14)
+    df2 = data.frame(da = 6:10, fa = letters[6:10], fb = 6:10 * 3.14)
+    
+    data.table::fwrite(df1, file = f1, sep = '\t', col.names = F)
+    data.table::fwrite(df2, file = f2, sep = '\t', col.names = F)
+    
+    arr = conn$fread(file_path = c(f1, f2), header = F, col.names = names(df1), instances = 0:1)
+    
+    expect_equal(
+      arr$to_df_attrs() %>% dplyr::arrange(da),
+      dplyr::bind_rows(df1, df2)
+    )
+  }
+})
+
 # cleanup ----
 clean_up_temp_files()

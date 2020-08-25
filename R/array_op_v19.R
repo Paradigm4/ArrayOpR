@@ -33,8 +33,12 @@ ArrayOpV19 <- R6::R6Class("ArrayOpV19",
       if(is.character(value))
         value = sprintf("'%s'", value)  # Quote string value(s)
       valueStr = if(length(value) > 1) sprintf("(%s)", paste(value, collapse = ',')) else value
-      if(key == 'path') 
-        valueStr
+      if(key == 'path') { 
+        # key 'path' is retained for compatibility with Scidb v18
+        # Scidb v19 uses 'paths' no matter a single or multiple files are provided
+        if(length(value)==1) valueStr else
+          sprintf("%s:%s", 'paths', valueStr)
+      }
       else 
         sprintf("%s:%s", key, valueStr)
     }

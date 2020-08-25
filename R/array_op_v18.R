@@ -26,7 +26,8 @@ ArrayOpV18 <- R6::R6Class("ArrayOpV18",
     }
     ,
     to_aio_setting_item_str = function(key, value) {
-      valueStr = if(length(value) > 1) paste(value, collapse = ',') else value
+      valueStr = if(length(value) > 1) paste(value, collapse = ';') else value
+      if(key == 'path' && length(value) > 1) key = 'paths'
       sprintf("'%s=%s'", key, valueStr)
     }
   )
