@@ -89,7 +89,7 @@ ScidbConnection <- R6::R6Class(
       joinedItems
     },
     array_op_from_scidbr_obj = function(obj) {
-      array_op_from_schema_str(obj@meta$schema)$create_new_with_same_schema(
+      array_op_from_schema_str(obj@meta$schema)$spawn(
         obj@name
       )
     }
@@ -290,7 +290,7 @@ ScidbConnection <- R6::R6Class(
       escapedAfl = gsub("'", "\\\\'", afl_str)
       schema = query_attrs(sprintf("project(show('%s', 'afl'), schema)", escapedAfl))
       schemaArray = array_op_from_schema_str(schema[["schema"]])
-      result = schemaArray$create_new_with_same_schema(afl_str)
+      result = schemaArray$spawn(afl_str)
       set_array_op_conn(result)
       result
     }
@@ -429,7 +429,7 @@ ScidbConnection <- R6::R6Class(
         probeOp = array_template$build_new(head(df, 1), build_dim_spec)
         remoteSchema = array_op_from_afl(probeOp$to_afl())
         # Still use the buildOp for actual data
-        remoteSchema$create_new_with_same_schema(buildOp$to_afl())
+        remoteSchema$spawn(buildOp$to_afl())
       }
       if(force_template_schema)
         result = result$change_schema(array_template)

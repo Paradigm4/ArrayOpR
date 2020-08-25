@@ -537,7 +537,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
                        'index_lookup' = index_lookup_mode,
                        stopf("ERROR: ArrayOp$semi_join: unknown op_mode '%s'.", op_mode)
       )()
-      self$create_new_with_same_schema(aflExpr)
+      self$spawn(aflExpr)
     }
     ,
     #' @description 
@@ -740,7 +740,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
           )
       )
       result = self$spawn(added = new_field, dtypes = new_named_list(reference$.private$get_field_types(ref_field), new_field))
-      result = result$create_new_with_same_schema(crossJoined)
+      result = result$spawn(crossJoined)
       result = result$reshape(result$attrs)
       result
     }
@@ -790,7 +790,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
                                             attrs = self$attrs %-% renamedTarget$dims,
                                             dtypes = utils::modifyList(private$get_field_types(), renamedTarget$.private$get_field_types(renamedTarget$dims)),
                                             dim_specs = redimensionTemplateDimSpecs)
-      redimenedSource = redimensionTemplate$create_new_with_same_schema(afl(
+      redimenedSource = redimensionTemplate$spawn(afl(
         self | redimension(redimensionTemplate$to_schema_str()) | apply(srcAltId, srcAltId)
       ))
       
@@ -799,7 +799,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       groupedTarget = self$create_new('',
         attrs = c(regularTargetDims, targetAltIdMax), dims = c('instance_id', 'value_no'),
         dtypes = c(invert.list(list("int64" = c('instance_id', 'value_no', regularTargetDims, targetAltIdMax))))
-      )$create_new_with_same_schema(afl(
+      )$spawn(afl(
         target | apply(anti_collision_field, anti_collision_field) | grouped_aggregate(
           sprintf("max(%s) as %s", anti_collision_field, targetAltIdMax), regularTargetDims)
       ))
@@ -822,7 +822,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       
       
       result = resultTemplate$
-        create_new_with_same_schema(afl(
+        spawn(afl(
           joined | apply(anti_collision_field, sprintf(
             "iif(%s is null, %s, %s + %s + 1)", targetAltIdMax, srcAltId, srcAltId, targetAltIdMax
           )))
@@ -915,7 +915,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     afl_redimension = function(template, .setting = NULL) {
       assert_no_fields(template$dims_n_attrs %-% self$dims_n_attrs, 
                        "ERROR:ArrayOp$afl_redimension:Field(s) '%s' of the template not found in the source.")
-      return(template$create_new_with_same_schema(afl(
+      return(template$spawn(afl(
         self | redimension(c(template$to_schema_str(), as.character(.setting)))
       )))
     }
@@ -934,7 +934,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       assert(all(as.character(private$get_field_types(.raw = TRUE)) == as.character(target$get_field_types(.raw = TRUE))),
              "ERROR: ArrayOp$afl_insert: attribute data type mismatch. \nSource: %s\nTarget: %s", 
              self$to_schema_str(), target$to_schema_str())
-      target$create_new_with_same_schema(afl(self | insert(target)))
+      target$spawn(afl(self | insert(target)))
     }
     ,
     # Overwrite a target array (scidb `store` operator)
@@ -951,7 +951,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       assert(all(as.character(private$get_field_types(.raw = TRUE)) == as.character(target$.private$get_field_types(.raw = TRUE))),
              "ERROR: ArrayOp$afl_store: attribute data type mismatch. \nSource: %s\nTarget: %s", 
              self$to_schema_str(), target$to_schema_str())
-      target$create_new_with_same_schema(afl(self | store(target)))
+      target$spawn(afl(self | store(target)))
     }
   )
   ,
@@ -1016,18 +1016,6 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     }
     ,
     #' @description 
-    #' Create a new ArrayOp instance of the same class
-    #' 
-    #' The new instance shares all meta data with the template
-    #' @param new_afl AFL for the new ArrayOp
-    #' @param ... Named params in `...` will replace the items in the template's metaList
-    #' @return A new arrayOp 
-    create_new_with_same_schema = function(new_afl, ...) {
-      metaList = utils::modifyList(private$metaList, list(...))
-      self$create_new(new_afl, metaList = metaList)
-    }
-    ,
-    #' @description 
     #' Create a new ArrayOp instance by using a filter expression on the parent ArrayOp
     #' 
     #' Similar to SQL where clause and dplyr::filter.
@@ -1056,7 +1044,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       newRawAfl = if(.has_len(filterExpr)) 
         afl(self | filter(afl_filter_from_expr(filterExpr, regex_func = regex_func, ignore_case = ignore_case)))
       else self$to_afl()
-      self$create_new_with_same_schema(newRawAfl)
+      self$spawn(newRawAfl)
     }
     ,
     #' @description 
@@ -1310,7 +1298,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       }
       # mutate_by_arrayop(data_source, updatedFields, reservedFields)
       assert_has_len(updatedFields, "ERROR: ArrayOp$mutate: param 'data_source' does not have any target attributes to mutate.")
-      self$create_new_with_same_schema(
+      self$spawn(
         afl(
           data_source$reshape(updatedFields, .force_project = FALSE) | join( 
             .ifelse(.has_len(reservedFields), self$reshape(reservedFields), self)
@@ -1378,7 +1366,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
         # reservedFields = self$attrs %-% updatedFields
         
         assert_has_len(updatedFields, "ERROR: ArrayOp$mutate: param 'data_source' does not have any target attributes to mutate.")
-        self$create_new_with_same_schema(
+        self$spawn(
           afl(
             source$reshape(updatedFields, .force_project = FALSE) | join( 
               .ifelse(.has_len(reservedFields), self$reshape(reservedFields), self)
@@ -1458,7 +1446,13 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' @param dtypes Data types for any existing or new fields, which default to `self`'s data types if available.
     #' @param dim_specs A list of array dimension specs if dimensions are changed.
     #' @return A new arrayOp instance
-    spawn = function(renamed = NULL, added = NULL, excluded = NULL, dtypes = NULL, dim_specs = NULL) {
+    spawn = function(afl_str = "spawned array_op (as template only)",
+                 renamed = NULL,
+                 added = NULL,
+                 excluded = NULL,
+                 dtypes = NULL,
+                 dim_specs = NULL) {
+  
       if(.has_len(renamed)){
         assert_named_list(renamed, "ERROR: ArrayOp$spawn: 'renamed' param must be a named list, but got: %s", renamed)
       }
@@ -1505,7 +1499,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       
       dim_specs = .ifelse(.has_len(dim_specs), c(dim_specs, oldDimSpecs), oldDimSpecs)
       
-      self$create_new("Spawned ArrayOp", dims, attrs, dtypes, dim_specs = dim_specs)
+      self$create_new(afl_str, dims, attrs, dtypes, dim_specs = dim_specs)
     }
 
     # Common array operators ------------------------------------------------------------------------------------------
@@ -1518,7 +1512,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       assert_single_number(n)
       assert(is.null(skip) || is.numeric(skip))
       aflStr = if(is.null(skip)) afl(self | limit(n)) else afl(self | limit(n, skip))
-      self$create_new_with_same_schema(aflStr)
+      self$spawn(aflStr)
     }
     ,
     row_count = function(){
