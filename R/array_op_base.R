@@ -41,6 +41,12 @@ ArrayOpBase <- R6::R6Class(
     ,
     conn = NULL # The ScidbConnection instance
     ,
+    clone_self = function(raw_afl = private$raw_afl) {
+      result = self$create_new(raw_afl, metaList = private$metaList)
+      result$.private$set_conn(private$conn)
+      result
+    }
+    ,
     # todo: move connection setup to initialize function
     set_conn = function(connection) {
       private$conn = connection
@@ -1522,8 +1528,45 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       private$conn$query_attrs(afl(self | op_count))[["count"]]
     }
     ,
-    summarize = function(){
+    summarize_array = function(){
       private$conn$query_attrs(afl(self | summarize))
+    }
+    ,
+    group_by = function(...) {
+      fields = c(...)
+      assert_inherits(fields, "character", .symbol = "group_by_fields")
+      assert_empty(fields %-% self$dims_n_attrs, 
+                   "invalid group_by field(s): [{.value}]")
+      result = private$clone_self()
+      result$.private$set_meta('group_by_fields', unique(fields))
+      result
+    }
+    ,
+    summarize = function(..., .dots = NULL){
+      group_by_fields = private$get_meta("group_by_fields")
+      assert_not_empty(group_by_fields,
+                       paste0("'{.symbol}' should not be empty (0-length) ",
+                              "Consider call `anArrayOp$group_by(...)` first")
+      )
+      rawFieldsList = .dots %?% list(...)
+      
+      # get aggregation expressions
+      aliases = names(rawFieldsList)
+      agg_exprs = as.character(rawFieldsList)
+      
+      agg_exprs_pairs = if(!is.null(aliases)) {
+        ifelse(aliases == "", agg_exprs,
+               paste0(agg_exprs, ' as ', aliases))
+      } else agg_exprs
+      
+      result = private$conn$array_op_from_afl(afl(
+        self | grouped_aggregate(
+          paste(agg_exprs_pairs, collapse = ','),
+          group_by_fields
+        )
+      ))
+      result$.private$set_conn(private$conn)
+      result
     }
     # AFL -------------------------------------------------------------------------------------------------------------
     ,

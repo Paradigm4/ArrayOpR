@@ -45,7 +45,7 @@ assert_not_empty = function(list_or_vec,
 }
 
 assert_unique_named_list <- function(obj, 
-                              error_fmt = "'{.symbol}' should not a named list where each element has a unique name",
+                              error_fmt = "'{.symbol}' should be a named list where each element has a unique name",
                               .nframe = 0,
                               .symbol = deparse(substitute(obj))) {
   assertf(is.list(obj) && length(names(obj)) > 0L && 
@@ -64,7 +64,7 @@ assert_null = function(value, error_fmt = "'{.symbol}' must be NULL", .nframe = 
 }
 
 assert_inherits = function(value, expected_class_names,
-                           error_fmt = "{.symbol} is should inherit from one of the class(es): [{.expected_class_names}], but got class of: [{.actual_class_names}]",
+                           error_fmt = "{.symbol} should inherit from one of the class(es): [{.expected_class_names}], but got class of: [{.actual_class_names}]",
                            .nframe = 0, .symbol = deparse(substitute(value))
 ){
   assertf(inherits(value, expected_class_names), 

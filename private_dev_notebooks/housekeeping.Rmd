@@ -52,3 +52,26 @@ storedRegular$.private$reshape_attrs(c("carb", mpg="mpg + gear"))$to_afl()
 storedRegular$reshape(list("hp", "vs", "sum" = "hp + vs"))$to_df()
 ```
 
+## Debug group_by and summarize
+
+```{r}
+devtools::load_all(export_all = F)
+auth = yaml::yaml.load_file("~/.scidb_auth")
+conn = arrayop::connect(host = "localhost", username = auth[["user-name"]], token = auth[["user-password"]])
+
+arrayCO2 = conn$array_op_from_name("CO2")
+arrayCO2$to_df()
+```
+
+```{r}
+grouped = arrayCO2$group_by("Plant_id", "Type")
+arrayCO2$.private$metaList$group_by_fields
+grouped$.private$metaList$group_by_fields
+
+summarized = grouped$summarize("max(conc)", "alias_min_uptake" = "min(uptake)", "max(Treatment)")
+# summarized = grouped$summarize("max(conc)", "min(uptake)", "max(Treatment)")
+str(summarized)
+summarized$to_df()
+summarized$filter(alias_min_uptake > 12)$to_df_attrs()
+```
+
