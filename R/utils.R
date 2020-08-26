@@ -31,7 +31,12 @@ utility = make_env(
     # start scidb utility functions
     ,
     list_arrays_in_ns = function(ns = "public"){
+      assert_single_str(ns)
       from_formatted_afl("list(ns:%s)", ns) 
+    }
+    ,
+    list_namespaces= function(){
+      from_formatted_afl("list('namespaces')") 
     }
     ,
     list_users = function(){
@@ -44,6 +49,15 @@ utility = make_env(
     ,
     list_operators = function(){
       from_formatted_afl("list('operators')")
+    }
+    ,
+    load_array_ops_from_namespace = function(ns = 'public'){
+      arrayRecordsDf = list_arrays_in_ns(ns)$transmute('name', 'schema')$to_df_attrs()
+      .conn = get_conn()
+      new_named_list(
+        sapply(arrayRecordsDf$schema, .conn$array_op_from_schema_str),
+        names = arrayRecordsDf$name
+      )
     }
   ),
   private = list(
