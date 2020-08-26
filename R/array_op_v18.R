@@ -15,6 +15,7 @@
 #' @noRd
 ArrayOpV18 <- R6::R6Class("ArrayOpV18",
   inherit = ArrayOpBase,
+  cloneable = FALSE,
   private = list(
     equi_join_template = function(left_alias, right_alias) {
       "equi_join(%s, %s, %s)"
