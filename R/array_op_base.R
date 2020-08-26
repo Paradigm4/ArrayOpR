@@ -1312,101 +1312,27 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       )$reshape(self$attrs)
     }
     ,
-    #' @description 
-    #' Generate a mutated arrayOp of the source `self` by the `data_source`.
-    #' 
-    #' Neither `self` or `data_source` is mutated. The resultant arrayOp is a 'mutated' version of `self` in the sense 
-    #' that `result` has the exact same schema as `self` and a subset of cells that match to `self`. 
-    #' 
-    #' This function works in two modes: 1. `data_source` is a named list that specifies the expression for mutation.
-    #' 2. `data_source` is an arrayOp that contains the mutated data and 'key' data for cell identification.
-    #'
-    #' Mode-1: `data_source` is a named list.
-    #' The `data_source` list should only contain names as the mutated fields and string values as the mutate expression.
-    #' All other fields not present in the list would remain the same. 
-    #' Normally, the list should only have `self`'s attributes as the mutated fields. 
-    #' But if `data_source` contains target's dimensions, then the number of matching cells should be no more than 1, 
-    #' otherwise mutiple matching cells would cause dimension collision error thrown by scidb. 
-    #' 
-    #' Mode-2: `data_source` is an arrayOp instance.
-    #' The `data_source` arrayOp must have two types of data. One type is the 'key' data that are used to identify which
-    #' cells to mutate. The other is the 'mutated' data of the matching cells. 
-    #' If the `keys` have all `self`'s dimensions, then no join is needed to match cell coordinates.
-    #' Otherwise we need to map `keys` to cell coordinates using join and redimension. 
-    #' 
-    #' @param data_source A named list of mutated field expressions or an arrayOp instance.
-    #' @param keys Which fields of `data_source` to identify the matching cells. Only applicable when `data_source` is arrayOp.
-    #' @param updated_fields Which fields of `data_source` to mutate for the matching cells. 
-    #' Only applicable when `data_source` is arrayOp.
-    #' @param artificial_field The attribute name in unpack if we need to drop `self`'s dimensions. 
-    #' Only applicable when `data_source` is a list and contains `self`'s dimensions, which is rare.
-    #' @param .redimension_setting Only applicable when `data_source` is arrayOp.
-    #' @param .join_setting Only applicable when `data_source` is arrayOp and it does not have all `self`'s dimensions.
-    #' @return a new arrayOp instance that carries the mutated data and has the exact same schema as the target
-    mutate_old = function(data_source, keys = NULL, updated_fields = NULL, artificial_field = .random_attr_name(), 
-                      .redimension_setting = NULL, .join_setting = NULL) {
-      assert(inherits(data_source, c('list', 'ArrayOpBase')), 
-             "ERROR: ArrayOpBase$mutate: param 'data_source' must be a named list or ArrayOp instance, but got: [%s]",
-             paste(class(data_source), collapse = ', '))
-      
-      mutate_by_field_exprs = function(){
-        mutatedFields = names(data_source)
-        assert(length(mutatedFields) == length(data_source), 
-               "ERROR: ArrayOp$mutate: param 'data_source', if a list, must have names as the mutated fields, and values as mutated values/expressions.")
-        absentFields = mutatedFields %-% self$dims_n_attrs
-        assert_not_has_len(absentFields, "ERROR: ArrayOp$mutate: %d unrecognized mutated field(s): %s", 
-                           length(absentFields), paste(absentFields, collapse = ', '))
-        if(.is_empty(mutatedFields %n% self$dims)) { # Only attrs muated
-          self$reshape(utils::modifyList(as.list(self$attrs), data_source))
-        } else {
-          self$reshape(utils::modifyList(as.list(self$dims_n_attrs), data_source), 
-                       dim_mode = 'drop', artificial_field = artificial_field)$
-              change_schema(self, strict = FALSE)
-        }
-      }
-      
-      ## source should have the same dimensions as the target(self)
-      mutate_by_arrayop = function(source, updatedFields, reservedFields) {
-        # updatedFields = data_source$attrs %n% self$attrs
-        # reservedFields = self$attrs %-% updatedFields
-        
-        assert_has_len(updatedFields, "ERROR: ArrayOp$mutate: param 'data_source' does not have any target attributes to mutate.")
-        self$spawn(
-          afl(
-            source$reshape(updatedFields, .force_project = FALSE) | join( 
-              .ifelse(.not_empty(reservedFields), self$reshape(reservedFields), self)
-            )
-          )
-        )$reshape(self$attrs)
-      }
-      
-      if(is.list(data_source)){
-        mutate_by_field_exprs()
+    # @param .chunk_size aka. cells_per_chunk in 'flatten' mode.
+    drop_dims = function(mode = 'unpack', .chunk_size = NULL, .unpack_dim = utility$random_field_name()){
+      assert_single_str(mode)
+      if(!is.null(.chunk_size)) assert_single_num(.chunk_size)
+      VALID_MODES = c('unpack', 'flatten')
+      assertf(mode %in% VALID_MODES, 
+              glue("unknown mode '{mode}'. Should be one of [{paste(VALID_MODES, collapse = ',')}]"))
+      if(mode == 'unpack'){
+        .ifelse(
+          is.null(.chunk_size),
+          conn$array_op_from_afl(afl(self | unpack(.unpack_dim))),
+          conn$array_op_from_afl(afl(self | unpack(.unpack_dim, .chunk_size)))
+        )
       } else {
-        ## data_source is an arrayOp instance
-        # assume data_soruce has the same dimension with the target
-        
-        # updateFields default to the overlapping attrs between source and self
-        updatedFields = if(.not_empty(updated_fields)) updated_fields else data_source$attrs %n% self$attrs
-        reservedFields = self$attrs %-% updatedFields
-        needTransform = !(length(data_source$dims) == length(self$dims) && all(data_source$dims == self$dims))
-        
-        if(needTransform){
-          assert_has_len(keys, "ERROR: ArrayOp$mutate: param 'keys' cannot be empty if data_source is an arrayOp")
-          assert_has_len(updated_fields, "ERROR: ArrayOp$mutate: param 'updated_fields' cannot be empty if data_source is an arrayOp")
-          assert_no_fields(
-            (keys %-% self$dims_n_attrs) %u% (keys %-% data_source$dims_n_attrs),
-            "ERROR: ArrayOp$mutate: param 'keys' has invalid field(s) [%s]")
-          assert_no_fields(
-            (updated_fields %-% self$dims_n_attrs) %u% (updated_fields %-% data_source$dims_n_attrs),
-            "ERROR: ArrayOp$mutate: param 'updated_fields' has invalid field(s) [%s]")
-          data_source = private$key_to_coordinates(data_source, keys = keys, reserved_fields = updatedFields, 
-                                                   .redimension_setting = .redimension_setting, .join_setting = .join_setting)
-        }
-        mutate_by_arrayop(data_source, updatedFields, reservedFields)
+        .ifelse(
+          is.null(.chunk_size),
+          conn$array_op_from_afl(afl(self | flatten)),
+          conn$array_op_from_afl(afl(self | flatten(glue("cells_per_chunk: {.chunk_size}"))))
+        )
       }
-    }
-    ,
+    },
     #' @description 
     #' Update Target array with self's content
     #' 

@@ -43,6 +43,35 @@ test_that("verify persistent array existence", {
   expect_true(!arr$exists_persistent_array())
 })
 
+# drop_dims ---- 
+
+# both 'unpack' and 'flatten' modes will place old dimensions in front of existing attributes
+test_that("Drop dims", {
+  DataContent = data.frame(da = 1:3, db = 11:13, fa = letters[1:3], fb = 3.14 * 1:3)
+  RefArray = conn$
+    array_op_from_df(DataContent, template = "<fa:string, fb:double> [da; db]", force_template_schema = T)$
+    persist(.gc = F)
+  
+  expect_identical(RefArray$dims, c('da', 'db'))
+  
+  verify = function(dropped, patterns = NULL) {
+    expect_identical(dropped$attrs, RefArray$dims_n_attrs)
+    expect_equal(dropped$to_df_attrs() %>% dplyr::arrange(da), DataContent)
+    if(!is.null(patterns)) {
+      sapply(patterns, function(x) expect_match(dropped$to_afl(), x))
+    }
+  }
+  
+  verify(RefArray$drop_dims())
+  verify(RefArray$drop_dims(mode = 'unpack'))
+  verify(RefArray$drop_dims(mode = 'unpack', .unpack_dim = 'zz'), 'zz')
+  verify(RefArray$drop_dims(mode = 'unpack', .unpack_dim = 'zz', .chunk_size = 123), c('zz', '123'))
+  
+  verify(RefArray$drop_dims(mode = 'flatten'))
+  verify(RefArray$drop_dims(mode = 'flatten', .chunk_size = 123), '123')
+  
+  RefArray$remove_self()
+})
 
 # spawn ----
 
