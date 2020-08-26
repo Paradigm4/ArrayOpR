@@ -34,7 +34,6 @@ in another operation. Operands and Opreration results can all be denoted by Arra
 \itemize{
 \item \href{#method-new}{\code{ArrayOpBase$new()}}
 \item \href{#method-create_new}{\code{ArrayOpBase$create_new()}}
-\item \href{#method-create_new_with_same_schema}{\code{ArrayOpBase$create_new_with_same_schema()}}
 \item \href{#method-filter}{\code{ArrayOpBase$filter()}}
 \item \href{#method-select}{\code{ArrayOpBase$select()}}
 \item \href{#method-reshape}{\code{ArrayOpBase$reshape()}}
@@ -256,30 +255,6 @@ Work in sub-class without requiring class names or constructor function.
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{...}}{The samme params with Repo$ArrayOp(...)}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A new arrayOp
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-create_new_with_same_schema"></a>}}
-\if{latex}{\out{\hypertarget{method-create_new_with_same_schema}{}}}
-\subsection{Method \code{create_new_with_same_schema()}}{
-Create a new ArrayOp instance of the same class
-
-The new instance shares all meta data with the template
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$create_new_with_same_schema(new_afl, ...)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{new_afl}}{AFL for the new ArrayOp}
-
-\item{\code{...}}{Named params in \code{...} will replace the items in the template's metaList}
 }
 \if{html}{\out{</div>}}
 }
@@ -657,6 +632,7 @@ Note: except for scidb build or aio_input operators, the spawned ArrayOp is not 
 use this function for operations other than 'build'/ArrayOp$build_new and 'aio_input'/ArrayOp$load_file
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$spawn(
+  afl_str = "spawned array_op (as template only)",
   renamed = NULL,
   added = NULL,
   excluded = NULL,

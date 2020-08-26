@@ -12,7 +12,7 @@
 #' @details 
 #' One operation consists of an scidb operator and [1..*] operands, of which the result can be used as an operand 
 #' in another operation. Operands and Opreration results can all be denoted by ArrayOp.
-#' @export
+#' @noRd
 ArrayOpV18 <- R6::R6Class("ArrayOpV18",
   inherit = ArrayOpBase,
   private = list(

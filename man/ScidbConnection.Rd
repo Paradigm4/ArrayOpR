@@ -40,6 +40,13 @@ Create an array_op from a schema string with an optional array name
 \if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$new()}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{array_like}}{An array_op, schema string or existing scidb array name}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-is_connected"></a>}}
@@ -183,6 +190,7 @@ Only effective when \code{save_array_name = NULL}}
   build_or_upload_threshold = 8000L,
   build_dim_spec = .random_field_name(),
   skip_scidb_schema_check = FALSE,
+  force_template_schema = FALSE,
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -197,6 +205,7 @@ Only effective when \code{save_array_name = NULL}}
   df,
   template = NULL,
   name = utility$random_array_name(),
+  force_template_schema = FALSE,
   upload_by_vector = FALSE,
   .use_aio_input = FALSE,
   .temp = FALSE,
@@ -213,7 +222,8 @@ Only effective when \code{save_array_name = NULL}}
 \if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$array_op_from_build_literal(
   df,
   template = NULL,
-  build_dim_spec = .random_field_name(),
+  build_dim_spec = utility$random_field_name(),
+  force_template_schema = FALSE,
   skip_scidb_schema_check = FALSE
 )}\if{html}{\out{</div>}}
 }

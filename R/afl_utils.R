@@ -388,7 +388,6 @@ afl <- function(..., envir = parent.frame()) {
 #' This function is useful in concatenating multiple vectors in parallel, 
 #' e.g. joining a new field vector and expression vector for the `apply` operator.
 #' @param ... Multiple string vectors
-#' @export
 afl_join_fields <- function(..., sep = ',') {
   paste(..., sep = sep, collapse = sep)
 }
