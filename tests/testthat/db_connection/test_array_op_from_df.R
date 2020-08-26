@@ -35,6 +35,7 @@ test_that("various types of template", {
   expect_identical(a2$dims, templateArray$dims)
   
   a2$remove_self()
+  templateArray$remove_self()
   
 })
 
