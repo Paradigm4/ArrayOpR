@@ -1319,6 +1319,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       VALID_MODES = c('unpack', 'flatten')
       assertf(mode %in% VALID_MODES, 
               glue("unknown mode '{mode}'. Should be one of [{paste(VALID_MODES, collapse = ',')}]"))
+      conn = private$conn
       if(mode == 'unpack'){
         .ifelse(
           is.null(.chunk_size),
