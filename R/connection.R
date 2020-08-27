@@ -274,6 +274,7 @@ ScidbConnection <- R6::R6Class(
       assert_single_str(array_name, "ERROR: param 'array_name' must be a single string")
       schema = query_attrs(sprintf("project(show(%s), schema)", array_name))
       result = array_op_from_schema_str(schema[["schema"]])
+      result$.private$confirm_schema_synced()
       set_array_op_conn(result)
     }
     ,
@@ -291,6 +292,7 @@ ScidbConnection <- R6::R6Class(
       schema = query_attrs(sprintf("project(show('%s', 'afl'), schema)", escapedAfl))
       schemaArray = array_op_from_schema_str(schema[["schema"]])
       result = schemaArray$spawn(afl_str)
+      result$.private$confirm_schema_synced()
       set_array_op_conn(result)
       result
     }
@@ -314,10 +316,10 @@ ScidbConnection <- R6::R6Class(
       storedArray = scidb::store(.db, expr = storedAfl, name = save_array_name, 
                                  temp = .temp, gc = .gc)
       
-      res = array_op_from_scidbr_obj(storedArray)
-      res$.set_meta('.ref', storedArray)
-      set_array_op_conn(res)
-      res
+      result = array_op_from_scidbr_obj(storedArray)
+      result$.private$confirm_schema_synced()
+      result$.set_meta('.ref', storedArray)
+      set_array_op_conn(result)
     }
     ,
     array_op_from_df = function(
@@ -429,7 +431,9 @@ ScidbConnection <- R6::R6Class(
         probeOp = array_template$build_new(head(df, 1), build_dim_spec)
         remoteSchema = array_op_from_afl(probeOp$to_afl())
         # Still use the buildOp for actual data
-        remoteSchema$spawn(buildOp$to_afl())
+        remoteSchema$
+          spawn(buildOp$to_afl())$
+          .private$confirm_schema_synced()
       }
       if(force_template_schema)
         result = result$change_schema(array_template)

@@ -52,6 +52,11 @@ ArrayOpBase <- R6::R6Class(
       private$conn = connection
     }
     ,
+    confirm_schema_synced = function(){
+      private$set_meta('is_schema_from_scidb', TRUE)
+      invisible(self)
+    }
+    ,
     #' @description 
     #' Return ArrayOp field types
     #'
@@ -974,6 +979,8 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     dims_n_attrs = function() c(self$dims, self$attrs),
     #' @field attrs_n_dims Attribute and dimension names
     attrs_n_dims = function() c(self$attrs, self$dims),
+    #' @field is_schema_from_scidb If the array schema is retrieved from SciDB or inferred locally in R
+    is_schema_from_scidb = function() private$get_meta('is_schema_from_scidb') %?% FALSE,
     #' @field .private For internal testing only. Do not access this field to avoid unintended consequences!!!
     .private = function() private
   ),
@@ -1457,6 +1464,16 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     ,
     summarize_array = function(){
       private$conn$query_attrs(afl(self | summarize))
+    }
+    ,
+    #' @description 
+    #' Create a new array_op with actual schema from SciDB
+    #' 
+    #' Useful in confirmming the schema of transient arrays with complex operations 
+    #' If we are sure the array schema is already from SciDB, then just return self.
+    sync_schema = function() {
+      if(self$is_schema_from_scidb) self else 
+        private$conn$array_op_from_afl(self$to_afl()) 
     }
     ,
     group_by = function(...) {
