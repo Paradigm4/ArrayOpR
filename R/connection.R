@@ -91,7 +91,7 @@ ScidbConnection <- R6::R6Class(
     array_op_from_scidbr_obj = function(obj) {
       array_op_from_schema_str(obj@meta$schema)$spawn(
         obj@name
-      )
+      )$.private$confirm_schema_synced()
     }
     ,
     #' Create an array_op from a schema string with an optional array name
@@ -142,7 +142,8 @@ ScidbConnection <- R6::R6Class(
       # 'operators' would be the array name in above example 
       array_schema_pattern = "([^< ]+)?\\s*(<[^<>]+>)\\s*(\\[[^]]+\\])?\\s*$"
       single_attr_pattern = "(\\w+)\\s*:\\s*([^;,:<>]+)"
-      single_dim_pattern = "(\\w+)(\\s*\\=\\s*([^];, \t]+))?"
+      # add $ for Scidb data frames which have a leading $ in dimension name
+      single_dim_pattern = "([[:alnum:]_$]+)(\\s*\\=\\s*([^];, \t]+))?"
       
       parsed = parse_schema(schema_str)
       private$new_ArrayOp(parsed$array_name,

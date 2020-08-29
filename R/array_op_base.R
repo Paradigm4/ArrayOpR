@@ -1238,11 +1238,50 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' @param anti_collision_field a target dimension name which exsits only to resolve cell collision 
     #' (ie. cells with the same dimension coordinate).
     #' @return A new arrayOp 
-    set_auto_fields = function(target, source_auto_increment = NULL, target_auto_increment = NULL, anti_collision_field = NULL
-                               ,join_setting = NULL, source_anti_collision_dim_spec = NULL) {
+    set_auto_fields = function(target,
+                               source_auto_increment = NULL,
+                               target_auto_increment = NULL,
+                               anti_collision_field = NULL,
+                               join_setting = NULL,
+                               source_anti_collision_dim_spec = NULL)
+    {
       assert_inherits(target, "ArrayOpBase")
       
       result = self
+      
+      if(.is_empty(anti_collision_field)){
+        if(.is_empty(source_auto_increment)){
+          # if the param is not provided, we assume the source array has only 
+          # one 0-based dimension which is used as the source_auto_increment
+          assertf(length(self$dims) == 1L, 
+                  paste0("Cannot infer param source_auto_increment.", 
+                  "Please provide `c(z=1)` if `z` is a field in the source array starting from 1;",
+                  "or `'z'` if z starts from 0."))
+          source_auto_increment = structure(0L, names = self$dims)
+        } 
+        
+        if(.is_empty(target_auto_increment)){
+          missingTargetFields = target$dims_n_attrs %-% self$dims_n_attrs
+          assert_not_empty(missingTargetFields,
+                           "Cannot not infer param target_auto_increment because there are no fields in target array for the source array to add.")
+          target_auto_increment = structure(rep(0L, length(missingTargetFields)),
+                                            names = missingTargetFields)
+        }
+      }
+      
+      # if auto increment fields are strings, assume they are 0-based
+      if(is.character(source_auto_increment) &&
+         is.null(names(source_auto_increment))) {
+        # change field name 'z' to c('z' = 0)
+        source_auto_increment = structure(rep(0L, length(source_auto_increment)),
+                                          names = source_auto_increment)
+      }
+      if(is.character(target_auto_increment) &&
+         is.null(names(target_auto_increment))) {
+        target_auto_increment = structure(rep(0L, length(target_auto_increment)),
+                                          names = target_auto_increment)
+      }
+      
         
       # If there is an auto-incremnt field, it needs to be inferred from the params
       # After this step, 'src' is an updated ArrayOp with auto-incremented id calculated (during AFL execution only due to lazy evaluation)
@@ -1473,7 +1512,9 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' If we are sure the array schema is already from SciDB, then just return self.
     sync_schema = function() {
       if(self$is_schema_from_scidb) self else 
-        private$conn$array_op_from_afl(self$to_afl()) 
+        if(!self$is_persistent())
+          private$conn$array_op_from_afl(self$to_afl()) else
+            private$conn$array_op_from_name(self$to_afl())
     }
     ,
     group_by = function(...) {
@@ -1574,6 +1615,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     }
     ,
     remove_self = function(){
+      assertf(self$is_persistent(), glue::glue("Cannot remove a transient array: \n\n{self$to_afl()}"))
       private$conn$execute(afl(self | remove))
       invisible(NULL)
     }
