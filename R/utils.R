@@ -35,6 +35,16 @@ utility = make_env(
       from_formatted_afl("list(ns:%s)", ns) 
     }
     ,
+    load_array_ops_from_namespace = function(ns = 'public'){
+      arrayRecordsDf = list_arrays_in_ns(ns)$transmute('name', 'schema')$to_df()
+      .conn = get_conn()
+      new_named_list(
+        sapply(arrayRecordsDf$schema, .conn$array_op_from_schema_str),
+        names = arrayRecordsDf$name
+      )
+    }
+  ),
+  active = list(
     list_namespaces= function(){
       from_formatted_afl("list('namespaces')") 
     }
@@ -49,17 +59,9 @@ utility = make_env(
     ,
     list_operators = function(){
       from_formatted_afl("list('operators')")
-    }
-    ,
-    load_array_ops_from_namespace = function(ns = 'public'){
-      arrayRecordsDf = list_arrays_in_ns(ns)$transmute('name', 'schema')$to_df()
-      .conn = get_conn()
-      new_named_list(
-        sapply(arrayRecordsDf$schema, .conn$array_op_from_schema_str),
-        names = arrayRecordsDf$name
-      )
-    }
-  ),
+    }  
+  )
+  ,
   private = list(
     conn = NULL,
     cached = list(),
