@@ -8,6 +8,7 @@ context('array_op db tests')
 # source("test_summarize.R", local = T)
 # source("test_change_schema.R", local = T)
 # source("test_scidb_dataframe.R", local = T)
+# source("test_modify_array.R", local = T)
 
 
 # Run all tests in current folder

@@ -5,7 +5,7 @@
 \alias{utility}
 \title{An R env that hosts arrayop package utility functions}
 \format{
-An object of class \code{environment} of length 11.
+An object of class \code{environment} of length 13.
 }
 \usage{
 utility

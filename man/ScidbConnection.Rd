@@ -17,8 +17,8 @@ Create an array_op from a schema string with an optional array name
 \item \href{#method-scidb_version}{\code{ScidbConnection$scidb_version()}}
 \item \href{#method-conn_args}{\code{ScidbConnection$conn_args()}}
 \item \href{#method-print}{\code{ScidbConnection$print()}}
+\item \href{#method-query_all}{\code{ScidbConnection$query_all()}}
 \item \href{#method-query}{\code{ScidbConnection$query()}}
-\item \href{#method-query_attrs}{\code{ScidbConnection$query_attrs()}}
 \item \href{#method-execute}{\code{ScidbConnection$execute()}}
 \item \href{#method-create_new_scidb_array}{\code{ScidbConnection$create_new_scidb_array()}}
 \item \href{#method-array_op_from_name}{\code{ScidbConnection$array_op_from_name()}}
@@ -94,20 +94,20 @@ Create an array_op from a schema string with an optional array name
 
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-query_all"></a>}}
+\if{latex}{\out{\hypertarget{method-query_all}{}}}
+\subsection{Method \code{query_all()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$query_all(afl_str)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-query"></a>}}
 \if{latex}{\out{\hypertarget{method-query}{}}}
 \subsection{Method \code{query()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$query(afl_str)}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-query_attrs"></a>}}
-\if{latex}{\out{\hypertarget{method-query_attrs}{}}}
-\subsection{Method \code{query_attrs()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$query_attrs(afl_str)}\if{html}{\out{</div>}}
 }
 
 }

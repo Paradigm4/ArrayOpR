@@ -28,7 +28,6 @@ Roxygen: list(markdown = TRUE)
 Collate: 
     'utils.R'
     'afl_utils.R'
-    'arg_list.R'
     'array_op_base.R'
     'array_op_v18.R'
     'array_op_v19.R'
