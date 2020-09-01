@@ -48,8 +48,9 @@ assert_unique_named_list <- function(obj,
                               error_fmt = "'{.symbol}' should be a named list where each element has a unique name",
                               .nframe = 0,
                               .symbol = deparse(substitute(obj))) {
-  assertf(is.list(obj) && length(names(obj)) > 0L && 
-            all(names(obj) != '') && length(names(obj)) == length(unique(names(obj))), 
+  assertf(is.list(obj) && 
+          length(names(obj)) > 0L && 
+          all(names(obj) != '') && !anyDuplicated(names(obj)), 
           error_fmt = error_fmt, 
           .nframe = .nframe + 1, .symbol = .symbol
   )

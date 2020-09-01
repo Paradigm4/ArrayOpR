@@ -19,25 +19,29 @@ RefArray = conn$
   array_op_from_df(ArrayContent, schemaTemplate, force_template_schema = T)$
   persist(.gc = FALSE)
 
-assert_df_match = function(result_df, expected_df) {
-  sortedDf = if('da' %in% names(result_df)) 
-    dplyr::arrange(result_df, da) else if('upper' %in% names(result_df))
-      dplyr::arrange(result_df, "upper") else 
-        result_df
-  expect_equal(
-    sortedDf, # scidb doesn't gurantee result data frame ordering
-    expected_df # locally filtered data frames follow default ordering
+assert_df_match = function(actual_df, expected_df) {
+   expect_equal(
+    actual_df %>% dplyr::arrange(!!! sapply(names(actual_df), as.name)), 
+    expected_df
   )
-  
 }
 
 # Mutate new ----
 
 test_that("Mutate an array by expression", {
+  # Mutate existing field
+  assert_df_match(
+    RefArray$
+      mutate(f_bool='iif(f_double > 1, true, false)', upper="'mutated'", f_int32 = "strlen(lower)")$
+      to_df(),
+    ArrayContent %>% 
+      dplyr::mutate("f_bool" = !is.na(f_double) & f_double > 1, "upper" = "mutated", "f_int32" = nchar(lower))
+  )
   assert_df_match(
     RefArray$
       filter(is_null(f_bool))$
-      mutate(f_bool='iif(f_double > 1, true, false)', upper="'mutated'", f_int32 = "strlen(lower)")$
+      mutate(f_bool='iif(f_double > 1, true, false)', upper="'mutated'", f_int32 = "strlen(lower)", 
+             .sync_schema = F)$ # do not check schema
       to_df(),
     ArrayContent %>% 
       dplyr::filter(is.na(f_bool)) %>%
@@ -55,6 +59,17 @@ test_that("Mutate an array by expression", {
       dplyr::mutate("lower_len" = nchar(lower))
   )
 
+  # New fields generated and existing fields are ignored if they are not changed
+  assert_df_match(
+    RefArray$
+      filter(is_null(f_bool))$
+      mutate(lower_len = "strlen(lower)", f_int32 = "f_int32")$ # f_int32 ignored
+      to_df(),
+    ArrayContent %>% 
+      dplyr::filter(is.na(f_bool)) %>%
+      dplyr::mutate("lower_len" = nchar(lower))
+  )
+
   # New fields generated and existing fields removed by NULL
   assert_df_match(
     RefArray$
@@ -64,6 +79,14 @@ test_that("Mutate an array by expression", {
     ArrayContent %>% 
       dplyr::filter(is.na(f_bool)) %>%
       dplyr::mutate(f_bool = NULL, f_int64 = NULL, "lower_len" = nchar(lower))
+  )
+  # Remove existing fields
+  assert_df_match(
+    RefArray$
+      mutate(f_bool = NULL, f_int64 = NULL)$
+      to_df(),
+    ArrayContent %>% 
+      dplyr::mutate(f_bool = NULL, f_int64 = NULL)
   )
   # Pass field expression by list
   assert_df_match(
@@ -77,12 +100,41 @@ test_that("Mutate an array by expression", {
   )
 })
 
+test_that("Add attributes from dimensions", {
+  assert_df_match(
+    RefArray$
+      mutate(lower_len = "strlen(lower)", da = "da")$
+      to_df_attrs() %>% 
+      dplyr::select(da, dplyr::everything()),
+    ArrayContent %>% 
+      dplyr::mutate(db = NULL, "lower_len" = nchar(lower))
+  )
+})
+
+test_that("At least one field in result", {
+  assert_df_match(
+    RefArray$
+      mutate(f_bool = NULL, f_double = NULL, f_int32 = NULL, f_int64 = NULL, lower = NULL, upper = NULL, extra = "bool(null)")$
+      select("da", "db")$
+      to_df_attrs(),
+    ArrayContent %>% 
+      dplyr::select(da, db)
+  )
+  # all array attrs are removed
+  expect_error(
+    RefArray$
+      mutate(f_bool = NULL, f_double = NULL, f_int32 = NULL, f_int64 = NULL, lower = NULL, upper = NULL),
+    "no valid field"
+  )
+  
+})
+
 test_that("mutate error cases", {
   expect_error(
     RefArray$
       filter(is_null(f_bool))$
-      mutate("da" = "1", upper="'mutated'", f_int32 = "strlen(lower)"),
-    "da"
+      mutate(upper="'mutated'", f_int32 = "strlen(lower)", "nonexistent" = NULL),
+    "nonexistent"
   )
   expect_error(
     RefArray$
@@ -134,7 +186,34 @@ test_that("transmute does not preserve old fields", {
       dplyr::filter(is.na(f_bool)) %>%
       dplyr::transmute("lower_len" = nchar(lower))
   )
+})
 
+test_that("Transmute array dimensions to attributes", {
+  assert_df_match(
+    RefArray$
+      transmute("da")$
+      to_df_attrs(),
+    ArrayContent %>% 
+      dplyr::transmute(da)
+  )
+  assert_df_match(
+    RefArray$
+      transmute("da", "lower")$
+      to_df_attrs(),
+    ArrayContent %>% 
+      dplyr::transmute(da, lower)
+  )
+  assert_df_match(
+    RefArray$
+      transmute("da" = "da + 1", "lower")$
+      to_df_attrs(),
+    ArrayContent %>% 
+      dplyr::transmute(da = da + 1, lower)
+  )
+})
+
+test_that("Transmute error cases", {
+  expect_error(RefArray$transmute(f_int32 = NULL), "transmute fields")
 })
 
 

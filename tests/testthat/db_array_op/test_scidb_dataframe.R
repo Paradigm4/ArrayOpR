@@ -7,7 +7,7 @@ test_that("scidb data frame", {
   dataContent = data.frame(a = letters[1:2], b = 1:2)
   uploaded = conn$array_op_from_uploaded_df(dataContent, dfArray, .temp = T, .gc = F)
   conn$execute(afl(
-    uploaded$drop_dims("flatten")$transmute(.dots = uploaded$attrs) | append(dfArray)
+    uploaded$drop_dims("flatten")$transmute(.dots = as.list(uploaded$attrs)) | append(dfArray)
   ))
   
   expect_equal(dfArray$to_df_attrs(), dataContent)

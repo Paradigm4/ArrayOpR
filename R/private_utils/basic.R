@@ -125,7 +125,7 @@ log_job_duration = function(job, msg = '', done_msg = 'done') {
   Filter(Negate(is.null), list_values)
 }
 
-new_named_list = function(values, names){
+new_named_list = function(values, names = as.character(values)){
   if(.is_empty(values)) return(list())
   as.list(structure(values, names = as.character(names)))
 }

@@ -302,7 +302,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
         )
         joinedOp = self$create_new(joinExpr, names(dims), attrs, dtypes = dtypes)
         return(
-          joinedOp$.private$reshape_attrs(selectedFields)$select(names(selectedFields))
+          joinedOp$.private$reshape_attrs_with_dtypes(selectedFields)$select(names(selectedFields))
         )
         # return(do.call(joinedOp$transmute, selectedFields)$select(names(selectedFields)))
       }
@@ -353,7 +353,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
         left$selected, right$selected %-% on_right,
         .left_alias, .right_alias
       )
-      joinedOp$.private$reshape_attrs(selectedFields)$select(names(selectedFields))
+      joinedOp$.private$reshape_attrs_with_dtypes(selectedFields)$select(names(selectedFields))
       # joinedOp = self$create_new(joinExpr, names(dims), attrs, dtypes = dtypes)
     }
     ,
@@ -598,12 +598,52 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       return(self$create_new(projectedExpr, c(), names(fieldTypes), dtypes = fieldTypes))
     }
     ,
+    #' reshape array attributes
+    #' 
+    #' @param field_vec A named string vector
+    #' @return A new transient array_op
+    reshape_fields = function(field_vec) {
+      assert_inherits(field_vec, 'character')
+      assert_not_empty(names(field_vec))
+      assertf(!any(is.na(field_vec)) && !any(is.na(names(field_vec))),
+              glue("No NA allowed in either field names or expressions: {field_vec}"))
+      
+      # existing dims are also regarded as new fields
+      newFileds = field_vec[names(field_vec) %-% self$attrs] 
+      
+      existingFields = field_vec[names(field_vec) %n% self$attrs]
+      replacedFields = existingFields[existingFields != names(existingFields)]
+      passedOnFields = existingFields[existingFields == names(existingFields)]
+      
+      newAfl = if(.not_empty(replacedFields)){
+        replaceFieldsNamesAlt = sprintf("_%s", names(replacedFields))
+        afl(self | 
+              apply(afl_join_fields(replaceFieldsNamesAlt, replacedFields)) |
+              project(c(replaceFieldsNamesAlt, names(passedOnFields))) |
+              apply(afl_join_fields(
+                c(names(replacedFields), names(newFileds)),
+                c(replaceFieldsNamesAlt, newFileds))) |
+              project(names(field_vec))
+        )
+      } else if(.not_empty(newFileds)){
+        afl(self |
+              apply(afl_join_fields(names(newFileds), newFileds)) |
+              project(names(field_vec))
+        )
+      } else {
+        afl(self | project(names(field_vec)))
+      }
+      self$create_new(newAfl, dims = self$dims, attrs = names(field_vec), 
+                      dim_specs = private$get_dim_specs())
+      
+    }
+    ,
     # Reshape an array without modifying its dimensions
     # 
     # This is an enhanced version inspired by scidb 'project' and 'apply' operators which also only work on attributes.
-    reshape_attrs = function(select=NULL, dtypes = NULL, artificial_field = .random_attr_name(), .force_project = TRUE) {
+    reshape_attrs_with_dtypes = function(select=NULL, dtypes = NULL, artificial_field = .random_attr_name(), .force_project = TRUE) {
       assert(.not_empty(select),
-             "ERROR: ArrayOp$reshape_attrs: param 'select' must be a non-empty character list, but got: %s", 
+             "ERROR: ArrayOp$reshape_attrs_with_dtypes: param 'select' must be a non-empty character list, but got: %s", 
              class(select))
       
       # Plain selected fields without change
@@ -1098,7 +1138,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
                        .force_project = TRUE) {
       
       keep = function(){
-        private$reshape_attrs(select, dtypes, artificial_field, .force_project = .force_project)
+        private$reshape_attrs_with_dtypes(select, dtypes, artificial_field, .force_project = .force_project)
       }
       
       drop = function() {
@@ -1110,7 +1150,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
         if(.is_empty(select))
           unpacked
         else 
-          unpacked$.private$reshape_attrs(select, dtypes, artificial_field)
+          unpacked$.private$reshape_attrs_with_dtypes(select, dtypes, artificial_field)
       }
       
       switch (dim_mode,
@@ -1200,27 +1240,6 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       return(self$create_new(afl_literal, artificial_field, builtAttrs, 
         dtypes = builtDtypes))
     }
-    
-    ,
-    #' @description 
-    #' Create a new ArrayOp instance that added null values to the missing fields compared to a reference ArrayOp
-    #' 
-    #' @param reference An ArrayOp instance that has fields absent in the source; or a named list.
-    #' If reference is ArrayOp, a named list is generated by calling `reference$get_field_types(reference$attrs, .raw = T)`
-    #' @return A new arrayOp 
-    set_null_fields = function(reference) {
-      
-      refDtypes = if(is.list(reference)) reference else reference$.private$get_field_types(reference$attrs, .raw = T)
-      # Fields missing in source but present in reference
-      missingFields = names(refDtypes) %-% self$dims_n_attrs
-      missingDtypes = refDtypes[missingFields]
-      
-      nullStrings = sprintf("%s(null)", missingDtypes)
-      self$create_new(afl(self | apply(afl_join_fields(missingFields, nullStrings))),
-                      dims = self$dims, attrs = self$attrs %u% missingFields, 
-                      dtypes = utils::modifyList(private$get_field_types(), missingDtypes),
-                      dim_specs = private$get_dim_specs())
-    }
     ,
     #' @description 
     #' Create a new ArrayOp instance that has auto incremented fields and/or anti-collision fields according to a template arrayOp
@@ -1302,23 +1321,56 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       return(result)
     }
     ,
-    mutate = function(..., .dots = NULL){
-      fieldExprs = .dots %?% list(...)
-      selfAttrs = new_named_list(self$attrs, self$attrs)
-      finalFields = utils::modifyList(selfAttrs, fieldExprs)
+    mutate = function(..., .dots = NULL, .sync_schema = TRUE){
       
-      assert_unique_named_list(fieldExprs)
-      assert_empty(names(fieldExprs) %n% self$dims,
-                   "Cannot mutate dimension(s): [{.value}].")
+      paramFieldExprs = .dots %?% list(...)
+      assert_unique_named_list(
+        paramFieldExprs,
+        "'mutate fields' should be a named list where each element has a unique name. E.g. mutate(field_name = 'field_expression') "
+      )
+      assertf(all(sapply(paramFieldExprs, function(x) is.null(x) || is.character(x))),
+              "Each element should be a string or NULL")
+      assert_empty(
+        names(Filter(is.null, paramFieldExprs)) %-% self$attrs,
+        "mutate: Can only remove array attributes, but got invalid field(s) for removal: [{.value}]"
+      )
       
-      reshaped = private$reshape_attrs(finalFields)
-      private$conn$array_op_from_afl(reshaped$to_afl())
+      fieldList = utils::modifyList(new_named_list(self$attrs), paramFieldExprs)
+      assert_not_empty(fieldList, 
+                       paste0("mutate: no valid fields found.", 
+                              "Please set at least one field, e.g. array_op$mutate(existing_field = NULL, placeholder=bool(null))"))
+      fields_vec = structure(as.character(fieldList), names = names(fieldList))
+      
+      result = private$reshape_fields(fields_vec)
+      if(.sync_schema) result$sync_schema() else result
     }
     ,
-    transmute = function(..., .dots = NULL){
-      fieldExprs = .dots %?% list(...)
-      reshaped = private$reshape_attrs(fieldExprs)
-      private$conn$array_op_from_afl(reshaped$to_afl())
+    transmute = function(..., .dots = NULL, .sync_schema = TRUE){
+      paramFieldExprs = .dots %?% list(...)
+      assertf(all(sapply(paramFieldExprs, is.character)),
+              glue(
+              "'transmute fields' should be a list of non-nullable strings with optional names. E.g. transmute('a', b='a + 2').",
+              " But got: {deparse(paramFieldExprs)}"
+              ))
+      
+      paramFieldNames = names(paramFieldExprs) %?% paramFieldExprs
+      names(paramFieldExprs) = ifelse(paramFieldNames == "", paramFieldExprs, paramFieldNames)
+      
+      assert_unique_named_list(
+        paramFieldExprs,
+        glue(
+          "'transmute fields' should be a named list where each element has a unique name. E.g. mutate(field_name = 'field_expression') ",
+          " But got: {deparse(paramFieldExprs)}"
+        )
+      )
+      fields_vec = structure(as.character(paramFieldExprs), names = names(paramFieldExprs))
+      result = private$reshape_fields(fields_vec)
+      if(.sync_schema) result$sync_schema() else result
+      
+      # old
+      # fieldExprs = .dots %?% list(...)
+      # reshaped = private$reshape_attrs_with_dtypes(fieldExprs)
+      # private$conn$array_op_from_afl(reshaped$to_afl())
     }
     ,
     mutate_by = function(data_array, 
