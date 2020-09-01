@@ -975,13 +975,16 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     # @param target: Target array
     # @return An scidb insert operation
     afl_insert = function(target) {
-      assert(length(self$dims) == length(target$dims), "ERROR: ArrayOp$afl_insert: dimension number mismatch: %d[%s] != %d[%s]",
-             length(self$dims), paste(self$dims, collapse=','), length(target$dims), paste(target$dims, collapse = ','))
-      assert(length(self$attrs) == length(target$attrs), "ERROR: ArrayOp$afl_insert: attribute number mismatch: %d[%s] != %d[%s]",
-             length(self$attrs), paste(self$attrs, collapse = ','), length(target$attrs), paste(target$attrs, collapse = ','))
-      assert(all(as.character(private$get_field_types(.raw = TRUE)) == as.character(target$get_field_types(.raw = TRUE))),
-             "ERROR: ArrayOp$afl_insert: attribute data type mismatch. \nSource: %s\nTarget: %s", 
-             self$to_schema_str(), target$to_schema_str())
+      assertf(length(self$dims) == length(target$dims), 
+              glue("Number of dimensions mismatch between ",
+              "source array {length(self$dims)} [{paste(self$dims, collapse=',')}] and ",
+              "target array {length(target$dims)} [{paste(target$dims, collapse=',')}]"),
+              .nframe = 1)
+      assertf(length(self$attrs) == length(target$attrs), 
+              glue("Number of attributes mismatch between ",
+              "source array {length(self$attrs)} [{paste(self$attrs, collapse=',')}] and ",
+              "target array {length(target$attrs)} [{paste(target$attrs, collapse=',')}]"),
+              .nframe = 1)
       target$spawn(afl(self | insert(target)))
     }
     ,
@@ -992,13 +995,16 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     # @param target: Target array
     # @return An scidb insert operation
     afl_store = function(target, new_target = FALSE) {
-      assert(length(self$dims) == length(target$dims), "ERROR: ArrayOp$afl_store: dimension number mismatch: %d[%s] != %d[%s]",
-             length(self$dims), paste(self$dims, collapse=','), length(target$dims), paste(target$dims, collapse = ','))
-      assert(length(self$attrs) == length(target$attrs), "ERROR: ArrayOp$afl_store: attribute number mismatch: %d[%s] != %d[%s]",
-             length(self$attrs), paste(self$attrs, collapse = ','), length(target$attrs), paste(target$attrs, collapse = ','))
-      assert(all(as.character(private$get_field_types(.raw = TRUE)) == as.character(target$.private$get_field_types(.raw = TRUE))),
-             "ERROR: ArrayOp$afl_store: attribute data type mismatch. \nSource: %s\nTarget: %s", 
-             self$to_schema_str(), target$to_schema_str())
+      assertf(length(self$dims) == length(target$dims), 
+              glue("Number of dimensions mismatch between ",
+              "source array {length(self$dims)} [{paste(self$dims, collapse=',')}] and ",
+              "target array {length(target$dims)} [{paste(target$dims, collapse=',')}]"),
+              .nframe = 1)
+      assertf(length(self$attrs) == length(target$attrs), 
+              glue("Number of attributes mismatch between ",
+              "source array {length(self$attrs)} [{paste(self$attrs, collapse=',')}] and ",
+              "target array {length(target$attrs)} [{paste(target$attrs, collapse=',')}]"),
+              .nframe = 1)
       target$spawn(afl(self | store(target)))
     }
   )
@@ -1437,8 +1443,8 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' @param target An arrayOp instance where self's content is written to.
     #' @return A new arrayOp that encapsulates the insert operation
     update = function(target) {
-      assert(inherits(target, 'ArrayOpBase'), "ERROR: ArrayOp$update: param 'target' must be an arrayOp, but got [%s]",
-             paste(class(target), collapse = ', '))
+      assert_inherits(target, "ArrayOpBase")
+      assertf(target$is_persistent(), "update: param 'target' must be a persistent array")
       private$afl_insert(target)
     }
     ,
@@ -1453,8 +1459,8 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' @param target An arrayOp instance where self's content is written to.
     #' @return A new arrayOp that encapsulates the insert operation
     overwrite = function(target) {
-      assert(inherits(target, 'ArrayOpBase'), "ERROR: ArrayOp$target: param 'target' must be an arrayOp, but got [%s]",
-             paste(class(target), collapse = ', '))
+     assert_inherits(target, "ArrayOpBase")
+      assertf(target$is_persistent(), "update: param 'target' must be a persistent array")
       private$afl_store(target)
     }
     ,
