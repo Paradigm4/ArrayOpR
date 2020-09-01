@@ -689,9 +689,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
         mergedDtypes[[artificial_field]] = 'void'
         afl(self | apply(c(artificial_field, 'null')) | project(artificial_field))
       }
-      self$create_new(newAfl, self$dims, attrs, mergedDtypes, dim_specs = private$get_dim_specs(),
-                      validate_fields = private$get_meta('validate_fields'))
-      
+      self$create_new(newAfl, self$dims, attrs, mergedDtypes, dim_specs = private$get_dim_specs())
     }
     ,
     # Reshape an arrayOp on a compound key (consisted of one or multiple fields) according to the template (self)
@@ -1037,20 +1035,18 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       dims = as.character(c()), 
       attrs = as.character(c()),
       dtypes = list(),
-      validate_fields = TRUE,
       dim_specs = list(),
       ...,
       metaList
     ) {
       assert(
         xor(methods::hasArg('metaList'), 
-              methods::hasArg('dims') || methods::hasArg('attrs') || 
-              methods::hasArg('validate_fields') || methods::hasArg('dtypes')
+              methods::hasArg('dims') || methods::hasArg('attrs') || methods::hasArg('dtypes')
         ),
-      "ERROR: ArrayOp:initialze: metaList cannot be provided with any of the args: dims, attrs, validate_fields, dtypes")
+      "ERROR: ArrayOp:initialze: metaList cannot be provided with any of the args: dims, attrs, dtypes")
       private$raw_afl = raw_afl
       private$metaList = if(methods::hasArg('metaList')) metaList else
-        list(dims = dims, attrs = attrs, dtypes = dtypes, validate_fields = validate_fields, dim_specs = dim_specs, ...)
+        list(dims = dims, attrs = attrs, dtypes = dtypes, dim_specs = dim_specs, ...)
     }
     # Functions that creat new ArrayOps -------------------------------------------------------------------------------
     ,
