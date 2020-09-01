@@ -12,22 +12,22 @@ df_equal = function(actual_df, expected_df) {
 }
 
 test_that("select and return data frame with dimensions", {
-  df_equal(RefArray$select('fa', 'fb')$to_df(), DataContent %>% dplyr::select('da', 'db', 'fa', 'fb'))
-  df_equal(RefArray$select('fa', 'fb', 'da')$to_df(), DataContent %>% dplyr::select('da', 'db', 'fa', 'fb'))
+  df_equal(RefArray$select('fa', 'fb')$to_df_all(), DataContent %>% dplyr::select('da', 'db', 'fa', 'fb'))
+  df_equal(RefArray$select('fa', 'fb', 'da')$to_df_all(), DataContent %>% dplyr::select('da', 'db', 'fa', 'fb'))
 })
 
 test_that("select and return data frame of attrs", {
-  df_equal(RefArray$select('fa', 'fb')$to_df_attrs(), DataContent %>% dplyr::select('fa', 'fb'))
-  df_equal(RefArray$select('fa', 'fb', 'da')$to_df_attrs(), DataContent %>% dplyr::select('fa', 'fb', 'da'))
+  df_equal(RefArray$select('fa', 'fb')$to_df(), DataContent %>% dplyr::select('fa', 'fb'))
+  df_equal(RefArray$select('fa', 'fb', 'da')$to_df(), DataContent %>% dplyr::select('fa', 'fb', 'da'))
   
   cols = c('fa', 'fb')
-  df_equal(RefArray$select(cols, 'da')$to_df_attrs(), DataContent %>% dplyr::select('fa', 'fb', 'da'))
+  df_equal(RefArray$select(cols, 'da')$to_df(), DataContent %>% dplyr::select('fa', 'fb', 'da'))
 })
 
 test_that("select nothing", {
   # dimensions precede attributs
-  df_equal(RefArray$select()$to_df(), DataContent %>% dplyr::select('da', 'db', dplyr::everything()))
-  df_equal(RefArray$select()$to_df_attrs(), DataContent %>% dplyr::select('fa', 'fb', 'fc'))
+  df_equal(RefArray$select()$to_df_all(), DataContent %>% dplyr::select('da', 'db', dplyr::everything()))
+  df_equal(RefArray$select()$to_df(), DataContent %>% dplyr::select('fa', 'fb', 'fc'))
 })
 
 test_that("error cases: select", {

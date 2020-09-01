@@ -222,7 +222,7 @@ ScidbConnection <- R6::R6Class(
       db = do.call(scidb::scidbconnect, connection_args)
       private$.conn_args = connection_args
       private$.db = db
-      private$.scidb_version = query_attrs("op_scidbversion()")
+      private$.scidb_version = query("op_scidbversion()")
       # choose the right ArrayOp class version
       private$.arrayop_class = if(.scidb_version$major == 18){
         ArrayOpV18$new
@@ -240,12 +240,12 @@ ScidbConnection <- R6::R6Class(
           "[{.scidb_version$major}.{.scidb_version$minor}.{.scidb_version$patch}]")
     }
     ,
-    query = function(afl_str){
+    query_all = function(afl_str){
       assert_single_str(afl_str)
       private$.iquery(afl_str, return = TRUE, only_attributes = FALSE)
     }
     ,
-    query_attrs = function(afl_str){
+    query = function(afl_str){
       assert_single_str(afl_str)
       private$.iquery(afl_str, return = TRUE, only_attributes = TRUE)
     }
@@ -273,7 +273,7 @@ ScidbConnection <- R6::R6Class(
     ,
     array_op_from_name = function(array_name) {
       assert_single_str(array_name, "ERROR: param 'array_name' must be a single string")
-      schema = query_attrs(sprintf("project(show(%s), schema)", array_name))
+      schema = query(sprintf("project(show(%s), schema)", array_name))
       result = array_op_from_schema_str(schema[["schema"]])
       result$.private$confirm_schema_synced()
       set_array_op_conn(result)
@@ -290,7 +290,7 @@ ScidbConnection <- R6::R6Class(
     array_op_from_afl = function(afl_str) {
       assert_single_str(afl_str, "ERROR: param 'afl_str' must be a single string")
       escapedAfl = gsub("'", "\\\\'", afl_str)
-      schema = query_attrs(sprintf("project(show('%s', 'afl'), schema)", escapedAfl))
+      schema = query(sprintf("project(show('%s', 'afl'), schema)", escapedAfl))
       schemaArray = array_op_from_schema_str(schema[["schema"]])
       result = schemaArray$spawn(afl_str)
       result$.private$confirm_schema_synced()

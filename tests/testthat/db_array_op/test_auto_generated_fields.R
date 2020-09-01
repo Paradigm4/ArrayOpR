@@ -29,7 +29,7 @@ test_that("set auto increment fields", {
   df_equal(
     build_arr_literal$set_auto_fields(
       SourceArray, source_auto_increment=c(z=0), target_auto_increment=c(da=1, db=2, f_int32=3))$
-      to_df_attrs(),
+      to_df(),
     data.frame(f_str = LETTERS[1:3], da = 11:13, db = 11:13, f_int32=11:13)
   )
   
@@ -39,7 +39,7 @@ test_that("set auto increment fields", {
       set_auto_fields(SourceEmptyArray,
                       source_auto_increment=c(z=0),
                       target_auto_increment=c(da=1, db=2, f_int32=3))$
-      to_df_attrs(),
+      to_df(),
     data.frame(f_str = LETTERS[1:3], da = 1:3, db = 2:4, f_int32=3:5)
   )
   
@@ -50,17 +50,17 @@ test_that("set auto increment fields", {
   # if no params provided, currently no fields are added
   
   df_equal(
-    build_arr_literal$set_auto_fields(SourceArray)$to_df_attrs(),
+    build_arr_literal$set_auto_fields(SourceArray)$to_df(),
     data.frame(f_str = LETTERS[1:3], da = 11:13, db = 11:13, f_int32=11:13, f_int64 = 21:23)
   )
   
   df_equal(
-    build_arr_literal$set_auto_fields(SourceArray, "z", "da")$to_df_attrs(),
+    build_arr_literal$set_auto_fields(SourceArray, "z", "da")$to_df(),
     data.frame(f_str = LETTERS[1:3], da = 11:13)
   )
   
   df_equal(
-    build_arr_literal$set_auto_fields(SourceEmptyArray, "z", "da")$to_df_attrs(),
+    build_arr_literal$set_auto_fields(SourceEmptyArray, "z", "da")$to_df(),
     data.frame(f_str = LETTERS[1:3], da = 0:2)
   )
   
@@ -71,7 +71,7 @@ test_that("set auto increment fields", {
       mutate("xx" = "z+10")$
       set_auto_fields(SourceArray, c("xx"=10), "da")$
       mutate("xx" = NULL)$ # remove the xx field
-      to_df_attrs(),
+      to_df(),
     data.frame(f_str = LETTERS[1:3], da = 11:13)
   )
   
@@ -80,7 +80,7 @@ test_that("set auto increment fields", {
       mutate("xx" = "z+10")$
       set_auto_fields(SourceArray, c("xx"=10, "z"=0), c("da", "f_int64"))$
       mutate("xx" = NULL)$ # remove the xx field
-      to_df_attrs(),
+      to_df(),
     data.frame(f_str = LETTERS[1:3], da = 11:13, f_int64 = 21:23)
   )
   
@@ -89,7 +89,7 @@ test_that("set auto increment fields", {
       mutate("xx" = "z")$
       set_auto_fields(SourceArray, "xx", "da")$
       mutate("xx" = NULL)$ # remove the xx field
-      to_df_attrs(),
+      to_df(),
     data.frame(f_str = LETTERS[1:3], da = 11:13)
   )
   
@@ -98,7 +98,7 @@ test_that("set auto increment fields", {
       mutate("xx" = "z")$
       set_auto_fields(SourceEmptyArray, "xx", "da")$
       mutate("xx" = NULL)$ # remove the xx field
-      to_df_attrs(),
+      to_df(),
     data.frame(f_str = LETTERS[1:3], da = 0:2)
   )
   
@@ -113,7 +113,7 @@ test_that("set anti-collision fields", {
       build_new(data.frame(f_str = LETTERS[4:10], f_int32 = 4:10, da = 1:7))$
       set_auto_fields(SourceArray,
                       anti_collision_field = 'db')$
-      to_df_attrs(),
+      to_df(),
     data.frame(da = 1:7, db = 2:8, f_str = LETTERS[4:10], f_int32 = 4:10)
   )
   
@@ -123,7 +123,7 @@ test_that("set anti-collision fields", {
       build_new(data.frame(f_str = LETTERS[4:10], f_int32 = 4:10, da = c(1:3,1:3,1L)))$
       set_auto_fields(SourceArray,
                       anti_collision_field = 'db')$
-      to_df_attrs(),
+      to_df(),
     data.frame(da = c(1:3,1:3,1L), db = c(2:4, 3:5, 4), f_str = LETTERS[4:10], f_int32 = 4:10)
   )
   
@@ -133,7 +133,7 @@ test_that("set anti-collision fields", {
       build_new(data.frame(f_str = LETTERS[4:10], f_int32 = 4:10, da = 1:7))$
       set_auto_fields(SourceEmptyArray,
                       anti_collision_field = 'db')$
-      to_df_attrs(),
+      to_df(),
     data.frame(da = 1:7, db = 0L, f_str = LETTERS[4:10], f_int32 = 4:10)
   )
   
@@ -143,7 +143,7 @@ test_that("set anti-collision fields", {
       build_new(data.frame(f_str = LETTERS[4:10], f_int32 = 4:10, da = c(1:3,1:3,1L)))$
       set_auto_fields(SourceEmptyArray,
                       anti_collision_field = 'db')$
-      to_df_attrs() ,
+      to_df() ,
     data.frame(da = c(1:3,1:3,1L), db = c(0,0,0,1,1,1,2), f_str = LETTERS[4:10], f_int32 = 4:10)
   )
 })
@@ -159,7 +159,7 @@ test_that("set both auto-incremented fields and anti-collision fields", {
                       source_auto_increment = c(z=0),
                       target_auto_increment = c(f_int64=121),
                       anti_collision_field = 'db')$
-      to_df_attrs(),
+      to_df(),
     data.frame(da = 1:7, db = 2:8, f_str = LETTERS[4:10], f_int32 = 4:10, f_int64 = 21:27)
   )
   
@@ -171,7 +171,7 @@ test_that("set both auto-incremented fields and anti-collision fields", {
                       source_auto_increment = c(z=0),
                       target_auto_increment = c(f_int64=121),
                       anti_collision_field = 'db')$
-      to_df_attrs() ,
+      to_df() ,
     data.frame(da = c(1:3,1:3,1L), db = c(2:4, 3:5, 4), f_str = LETTERS[4:10], f_int32 = 4:10, f_int64 = 21:27)
   )
   
@@ -183,7 +183,7 @@ test_that("set both auto-incremented fields and anti-collision fields", {
                       source_auto_increment = "z",
                       target_auto_increment = c(f_int64=121),
                       anti_collision_field = 'db')$
-      to_df_attrs() ,
+      to_df() ,
     data.frame(da = 1:7, db = 0L, f_str = LETTERS[4:10], f_int32 = 4:10, f_int64 = 121:127)
   )
   
@@ -195,7 +195,7 @@ test_that("set both auto-incremented fields and anti-collision fields", {
                       source_auto_increment = "z",
                       target_auto_increment = c(f_int64=121),
                       anti_collision_field = 'db')$
-      to_df_attrs() ,
+      to_df() ,
     data.frame(da = c(1:3,1:3,1L), db = c(0,0,0,1,1,1,2), f_str = LETTERS[4:10], f_int32 = 4:10, f_int64 = 121:127)
   )
 })

@@ -56,7 +56,7 @@ test_that("Drop dims", {
   
   verify = function(dropped, patterns = NULL) {
     expect_identical(dropped$attrs, RefArray$dims_n_attrs)
-    expect_equal(dropped$to_df_attrs() %>% dplyr::arrange(da), DataContent)
+    expect_equal(dropped$to_df() %>% dplyr::arrange(da), DataContent)
     if(!is.null(patterns)) {
       sapply(patterns, function(x) expect_match(dropped$to_afl(), x))
     }

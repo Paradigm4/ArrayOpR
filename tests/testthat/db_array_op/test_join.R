@@ -19,27 +19,27 @@ test_that("join with no conflicting field names", {
   
   test_inner_join = function() {
     df_equal(
-      L$inner_join(R, on_left = 'lfa', on_right = 'rfa')$to_df_attrs(), 
+      L$inner_join(R, on_left = 'lfa', on_right = 'rfa')$to_df(), 
       dplyr::inner_join(leftDf, rightDf, by = c('lfa'='rfa'))
     )
     
     df_equal(
-      L$inner_join(R, on_left = 'lda', on_right = 'rda')$to_df_attrs(), 
+      L$inner_join(R, on_left = 'lda', on_right = 'rda')$to_df(), 
       dplyr::inner_join(leftDf, rightDf, by = c('lda'='rda'))
     )
     
     df_equal(
-      L$inner_join(R, on_left = c('lda', 'ldb'), on_right = c('rda', 'rdb'))$to_df_attrs(), 
+      L$inner_join(R, on_left = c('lda', 'ldb'), on_right = c('rda', 'rdb'))$to_df(), 
       dplyr::inner_join(leftDf, rightDf, by = c('lda'='rda', 'ldb'='rdb'))
     )
     
     df_equal(
-      L$inner_join(R, on_left = c('lfa', 'lfb'), on_right = c('rfa', 'rfb'))$to_df_attrs(), 
+      L$inner_join(R, on_left = c('lfa', 'lfb'), on_right = c('rfa', 'rfb'))$to_df(), 
       dplyr::inner_join(leftDf, rightDf, by = c('lfa'='rfa', 'lfb'='rfb'))
     )
     
     df_equal(
-      L$inner_join(R, on_left = c('lda', 'lfa'), on_right = c('rda', 'rfa'))$to_df_attrs(), 
+      L$inner_join(R, on_left = c('lda', 'lfa'), on_right = c('rda', 'rfa'))$to_df(), 
       dplyr::inner_join(leftDf, rightDf, by = c('lda'='rda', 'lfa'='rfa'))
     )
   }
@@ -48,12 +48,12 @@ test_that("join with no conflicting field names", {
   test_select_fields = function() {
     
     df_equal(
-      L$select('lfa', 'lfb')$inner_join(R, on_left = 'lfa', on_right = 'rfa')$to_df_attrs(), 
+      L$select('lfa', 'lfb')$inner_join(R, on_left = 'lfa', on_right = 'rfa')$to_df(), 
       leftDf %>% dplyr::select(lfa, lfb) %>% dplyr::inner_join(rightDf, by = c('lfa'='rfa'))
     )
     
     df_equal(
-      L$select('lfb')$inner_join(R$select('rfb'), on_left = 'lfa', on_right = 'rfa')$to_df_attrs(), 
+      L$select('lfb')$inner_join(R$select('rfb'), on_left = 'lfa', on_right = 'rfa')$to_df(), 
       leftDf %>% 
         dplyr::select(lfa, lfb) %>% 
         dplyr::inner_join(rightDf %>% dplyr::select(rfa, rfb), 
@@ -62,14 +62,14 @@ test_that("join with no conflicting field names", {
     )
     
     df_equal(
-      L$select('ldb')$inner_join(R, on_left = 'lfa', on_right = 'rfa')$to_df_attrs(), 
+      L$select('ldb')$inner_join(R, on_left = 'lfa', on_right = 'rfa')$to_df(), 
       leftDf %>% dplyr::select(lfa, ldb) %>% 
         dplyr::inner_join(rightDf, by = c('lfa'='rfa')) %>%
         dplyr::select(-lfa)
     )
     
     df_equal(
-      L$select('lfb')$inner_join(R, on_left = 'lfa', on_right = 'rfa')$to_df_attrs(), 
+      L$select('lfb')$inner_join(R, on_left = 'lfa', on_right = 'rfa')$to_df(), 
       leftDf %>% dplyr::select(lfa, lfb) %>% 
         dplyr::inner_join(rightDf, by = c('lfa'='rfa')) %>%
         dplyr::select(-lfa)
@@ -77,12 +77,12 @@ test_that("join with no conflicting field names", {
     
     # Special cases where only dimensions are selcted and joined on
     df_equal(
-      L$select('lda')$inner_join(R, on_left = 'lda', on_right = 'rda')$to_df_attrs(), 
+      L$select('lda')$inner_join(R, on_left = 'lda', on_right = 'rda')$to_df(), 
       leftDf %>% dplyr::select(lda) %>% 
         dplyr::inner_join(rightDf, by = c('lda'='rda'))
     )
     df_equal(
-      L$select('lda')$inner_join(R$select('rda'), on_left = 'lda', on_right = 'rda')$to_df_attrs(), 
+      L$select('lda')$inner_join(R$select('rda'), on_left = 'lda', on_right = 'rda')$to_df(), 
       leftDf %>% dplyr::select(lda) %>% 
         dplyr::inner_join(
           rightDf %>% dplyr::select(rda), # rda will not be in the result
@@ -134,7 +134,7 @@ test_that("join with no conflicting field names", {
   # left join
   test_left_join = function() {
     df_equal(
-      L$left_join(R, on_left = 'lfa', on_right = 'rfa')$to_df_attrs(), 
+      L$left_join(R, on_left = 'lfa', on_right = 'rfa')$to_df(), 
       dplyr::left_join(leftDf, rightDf, by = c('lfa'='rfa'))
     )
   }
@@ -142,7 +142,7 @@ test_that("join with no conflicting field names", {
   # right join
   test_right_join = function(){
     df_equal(
-      L$right_join(R, on_left = 'lfa', on_right = 'rfa')$to_df_attrs(), 
+      L$right_join(R, on_left = 'lfa', on_right = 'rfa')$to_df(), 
       dplyr::right_join(leftDf, rightDf, by = c('lfa'='rfa'))
     )
   }
@@ -170,41 +170,41 @@ test_that("join with conflicting field names", {
   
   test_auto_join_keys = function() {
     df_equal(
-      L$inner_join(R)$to_df_attrs(), # auto infer overlapping fields as join keys
+      L$inner_join(R)$to_df(), # auto infer overlapping fields as join keys
       dplyr::inner_join(leftDf, rightDf)
     )
     df_equal(
-      L$left_join(R)$to_df_attrs(), 
+      L$left_join(R)$to_df(), 
       dplyr::left_join(leftDf, rightDf)
     )
     df_equal(
-      L$right_join(R)$to_df_attrs(), 
+      L$right_join(R)$to_df(), 
       dplyr::right_join(leftDf, rightDf)
     )
   }
   
   test_joins_with_conflicted_fields = function() {
     df_equal(
-      L$inner_join(R, on_both = c('db', 'fa'))$to_df_attrs(), 
+      L$inner_join(R, on_both = c('db', 'fa'))$to_df(), 
       dplyr::inner_join(leftDf, rightDf, by = c('fa', 'db') )
     )
     df_equal(
-      L$inner_join(R, on_both = c('db'), left_alias = "_LL", right_alias = "_RR")$to_df_attrs(), 
+      L$inner_join(R, on_both = c('db'), left_alias = "_LL", right_alias = "_RR")$to_df(), 
       dplyr::inner_join(leftDf, rightDf, by = c('db'), suffix = c('_LL', '_RR'))
     )
     df_equal(
-      L$left_join(R, on_both = c('db'), left_alias = "_LL", right_alias = "_RR")$to_df_attrs(), 
+      L$left_join(R, on_both = c('db'), left_alias = "_LL", right_alias = "_RR")$to_df(), 
       dplyr::left_join(leftDf, rightDf, by = c('db'), suffix = c('_LL', '_RR'))
     )
     df_equal(
-      L$right_join(R, on_both = c('db'), left_alias = "_LL", right_alias = "_RR")$to_df_attrs(), 
+      L$right_join(R, on_both = c('db'), left_alias = "_LL", right_alias = "_RR")$to_df(), 
       dplyr::right_join(leftDf, rightDf, by = c('db'), suffix = c('_LL', '_RR'))
     )
     
     # No need to disambiguate fields if only one side is selected
     # here `fa` is only selected in left
     df_equal(
-      L$select('fa')$inner_join(R$select('db'), on_left = c('db', 'lda'), on_right = c('db', 'rda'))$to_df_attrs(), 
+      L$select('fa')$inner_join(R$select('db'), on_left = c('db', 'lda'), on_right = c('db', 'rda'))$to_df(), 
       dplyr::inner_join(
         leftDf %>% dplyr::select(fa, db, lda), 
         rightDf %>% dplyr::select(db, rda), 
@@ -216,18 +216,18 @@ test_that("join with conflicting field names", {
   
   test_cross_join_mode = function() {
     df_equal(
-      L$inner_join(R, on_both = c('db'), join_mode = 'cross_join', left_alias = "_LL", right_alias = "_RR")$to_df_attrs(), 
+      L$inner_join(R, on_both = c('db'), join_mode = 'cross_join', left_alias = "_LL", right_alias = "_RR")$to_df(), 
       dplyr::inner_join(leftDf, rightDf, by = c('db'), suffix = c('_LL', '_RR'))
     )
     df_equal(
-      L$inner_join(R, on_left = c('db', 'lda'), on_right = c('db', 'rda'), join_mode = 'cross_join', left_alias = "_LL", right_alias = "_RR")$to_df_attrs(), 
+      L$inner_join(R, on_left = c('db', 'lda'), on_right = c('db', 'rda'), join_mode = 'cross_join', left_alias = "_LL", right_alias = "_RR")$to_df(), 
       dplyr::inner_join(leftDf, rightDf, by = c('db'='db', 'lda'='rda'), suffix = c('_LL', '_RR'))
     )
     
     # No need to disambiguate fields if only one side is selected
     # here `fa` is only selected in left
     df_equal(
-      L$select('fa')$inner_join(R$select('db'), join_mode = 'cross_join', on_left = c('db', 'lda'), on_right = c('db', 'rda'))$to_df_attrs(), 
+      L$select('fa')$inner_join(R$select('db'), join_mode = 'cross_join', on_left = c('db', 'lda'), on_right = c('db', 'rda'))$to_df(), 
       dplyr::inner_join(
         leftDf %>% dplyr::select(fa, db, lda), 
         rightDf %>% dplyr::select(db, rda), 
@@ -269,14 +269,14 @@ test_that("join with three operands", {
   select = dplyr::select
   
   df_equal(
-    a1$inner_join(a2, on_both = 'da')$inner_join(a3, on_both = 'db')$to_df_attrs(),
+    a1$inner_join(a2, on_both = 'da')$inner_join(a3, on_both = 'db')$to_df(),
     df1 %>% inner_join(df2, by = 'da', suffix = c('_L', '_R')) %>% inner_join(df3, by = 'db')
   )
   df_equal(
     a1$select('da', 'fa', 'db')$
       inner_join(a2$select('da'), on_both = 'da')$
       inner_join(a3$select('fe'), on_both = 'db')$
-      to_df_attrs(),
+      to_df(),
     df1 %>% 
       inner_join(df2 %>% select(-fa), by = 'da') %>% # remove fa from df2 other it will be suffixed with .y
       inner_join(df3, by = 'db') %>% select(da, fa, db, fe)

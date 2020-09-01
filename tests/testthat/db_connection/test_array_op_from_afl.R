@@ -21,8 +21,8 @@ test_that("persistent array_op from stored AFL", {
   
   expect_identical(storedArr$to_afl(), name)
   expect_equal(
-    storedArr$to_df_attrs(), 
-    retrievedArr$to_df_attrs()
+    storedArr$to_df(), 
+    retrievedArr$to_df()
   )
   
   storedArr$remove_self()
@@ -54,8 +54,8 @@ test_that("store transient array_op from afl as a persistent one", {
   expect_identical(storedArr$to_afl(), name)
   expect_identical(storedArr$attrs, transientArr$attrs)
   expect_equal(
-    storedArr$to_df_attrs(), 
-    transientArr$to_df_attrs()
+    storedArr$to_df(), 
+    transientArr$to_df()
   )
   
   storedArr$remove_self()

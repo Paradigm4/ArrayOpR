@@ -1546,11 +1546,11 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     }
     ,
     row_count = function(){
-      private$conn$query_attrs(afl(self | op_count))[["count"]]
+      private$conn$query(afl(self | op_count))[["count"]]
     }
     ,
     summarize_array = function(){
-      private$conn$query_attrs(afl(self | summarize))
+      private$conn$query(afl(self | summarize))
     }
     ,
     #' @description 
@@ -1634,12 +1634,18 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     }
     # db functions ----
     ,
-    to_df = function() {
-      private$conn$query(private$to_df_afl())
+    #' @description 
+    #' Run query encapsulated by current array_op and return a R data.frame with
+    #' all dimensions and attributes as columns.
+    to_df_all = function() {
+      private$conn$query_all(private$to_df_afl())
     }
     ,
-    to_df_attrs = function() {
-      private$conn$query_attrs(private$to_df_afl(drop_dims = TRUE))
+    #' @description 
+    #' Run query encapsulated by current array_op and return a R data.frame with
+    #' all attributes as columns.
+    to_df = function() {
+      private$conn$query(private$to_df_afl(drop_dims = TRUE))
     }
     ,
     execute = function() {
@@ -1648,7 +1654,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     }
     ,
     versions = function(){
-      private$conn$query_attrs(afl(self | versions))
+      private$conn$query(afl(self | versions))
     }
     ,
     remove_versions = function(version_id = NULL){
@@ -1844,7 +1850,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       bare_name = gsub("^((\\w+)\\.)?(\\w+)$", "\\3", full_array_name)
       query_str = if(ns == "") "list('arrays')" else 
         sprintf("list('arrays', ns:%s)", ns)
-      private$conn$query_attrs(sprintf("filter(%s, name = '%s')", query_str, bare_name))
+      private$conn$query(sprintf("filter(%s, name = '%s')", query_str, bare_name))
     }
     
     # Old -------------------------------------------------------------------------------------------------------------

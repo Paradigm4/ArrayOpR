@@ -10,7 +10,7 @@ test_that("scidb data frame", {
     uploaded$drop_dims("flatten")$transmute(.dots = as.list(uploaded$attrs)) | append(dfArray)
   ))
   
-  expect_equal(dfArray$to_df_attrs(), dataContent)
+  expect_equal(dfArray$to_df(), dataContent)
   
   # Scidb does not seem to support insert data from build'ed array
   # buildDf = conn$array_op_from_df(dataContent, template = "<a:string, b:int32>")

@@ -31,7 +31,7 @@ test_that("group by dimensions", {
   expect_df_equal(
     arrayCO2$group_by("Plant_id")$
       summarize("max_c" = "max(conc)", "min_u" = "min(uptake)")$
-      to_df_attrs() 
+      to_df() 
     ,
     dfCO2 %>% 
       dplyr::group_by(Plant_id) %>% 
@@ -41,7 +41,7 @@ test_that("group by dimensions", {
   expect_df_equal(
     arrayCO2$group_by("Plant_id", "Type_id")$
       summarize("max_c" = "max(conc)", "min_u" = "min(uptake)")$
-      to_df_attrs() 
+      to_df() 
     ,
     dfCO2 %>% 
       dplyr::group_by(Plant_id, Type_id) %>% 
@@ -54,7 +54,7 @@ test_that("group by attributes", {
   expect_df_equal(
     arrayCO2$group_by("Plant")$
       summarize("max_c" = "max(conc)", "min_u" = "min(uptake)")$
-      to_df_attrs() 
+      to_df() 
     ,
     dfCO2 %>% 
       dplyr::group_by(Plant) %>% 
@@ -64,7 +64,7 @@ test_that("group by attributes", {
   expect_df_equal(
     arrayCO2$group_by("Plant", "Type")$
       summarize("max_c" = "max(conc)", "min_u" = "min(uptake)")$
-      to_df_attrs() 
+      to_df() 
     ,
     dfCO2 %>% 
       dplyr::group_by(Plant, Type) %>% 
@@ -77,7 +77,7 @@ test_that("group by both dims and attributes", {
   expect_df_equal(
     arrayCO2$group_by("Plant", "Type_id")$
       summarize("max_c" = "max(conc)", "cnt" = "count(*)")$
-      to_df_attrs() 
+      to_df() 
     ,
     dfCO2 %>% 
       dplyr::group_by(Plant, Type_id) %>% 
@@ -88,7 +88,7 @@ test_that("group by both dims and attributes", {
   expect_df_equal(
     arrayCO2$group_by("Plant", "Type_id")$
       summarize("max_t" = "max(Treatment)", "min_t" = "min(Treatment)")$
-      to_df_attrs() 
+      to_df() 
     ,
     dfCO2 %>% 
       dplyr::group_by(Plant, Type_id) %>% 

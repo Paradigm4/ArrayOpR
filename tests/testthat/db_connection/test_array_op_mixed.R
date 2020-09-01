@@ -21,8 +21,8 @@ test_that("persistent array_op from uploaded data frame", {
   stored2 = conn$array_op_from_stored_afl(filtered$to_afl(), .temp = T)
   filteredDf = dplyr::filter(df, f_double > 0)
   
-  expect_equal(stored1$to_df_attrs(), filteredDf)
-  expect_equal(stored2$to_df_attrs(), filteredDf)
+  expect_equal(stored1$to_df(), filteredDf)
+  expect_equal(stored2$to_df(), filteredDf)
   
   # Clean up
   stored1$remove_self()
@@ -58,7 +58,7 @@ test_that("Store AFL as scidb array and return arrayOp", {
   )
   
   expect_equal(
-    stored$to_df_attrs(),
+    stored$to_df(),
     dplyr::filter(df, f_double < 0)
   )
   

@@ -9,7 +9,7 @@ test_that("upload data frame: no template", {
   uploaded = conn$array_op_from_uploaded_df(df, .gc = F)
   
   # uploaded data frame will have an artificial dimension
-  expect_equal(uploaded$to_df_attrs(), df)
+  expect_equal(uploaded$to_df(), df)
   uploaded$remove_self()
 })
 
@@ -45,7 +45,7 @@ test_that("upload data frame: no template, temporary", {
   
   expect_identical(uploaded$array_meta_data()$temporary, TRUE)
   # uploaded data frame will have an artificial dimension
-  expect_equal(uploaded$to_df_attrs(), df)
+  expect_equal(uploaded$to_df(), df)
   
   uploaded$remove_self()
 })
@@ -55,7 +55,7 @@ test_that("upload data frame: by a single vector", {
   uploaded = conn$array_op_from_uploaded_df(df, upload_by_vector = T, .gc = F)
   
   # uploaded data frame will have an artificial dimension
-  expect_equal(uploaded$to_df_attrs(), df)
+  expect_equal(uploaded$to_df(), df)
   
   uploaded$remove_self()
 })
@@ -65,7 +65,7 @@ test_that("upload data frame: no template, by vectors", {
   uploaded = conn$array_op_from_uploaded_df(df, upload_by_vector = T, .gc = F)
   
   # uploaded data frame will have an artificial dimension
-  expect_equal(uploaded$to_df_attrs(), df)
+  expect_equal(uploaded$to_df(), df)
   columnArrays = uploaded$.get_meta(".ref")
   for(arr in columnArrays){
     arr$remove_self()
@@ -81,8 +81,8 @@ test_that("upload data frame with a template", {
   )
   stored = conn$array_op_from_stored_afl(joinOp$to_afl())
   
-  expect_equal(joinOp$to_df_attrs(), df)
-  expect_equal(stored$to_df_attrs(), df)
+  expect_equal(joinOp$to_df(), df)
+  expect_equal(stored$to_df(), df)
 })
 
 test_that("uploaded data frame by vectors and store the joined vectors", {
@@ -91,8 +91,8 @@ test_that("uploaded data frame by vectors and store the joined vectors", {
   joinOp = conn$array_op_from_uploaded_df(df, "<a:string, b:int32, extra:bool> [z]", upload_by_vector = T, .temp = T)
   stored = conn$array_op_from_stored_afl(joinOp$to_afl())
   
-  expect_equal(joinOp$to_df_attrs(), df)
-  expect_equal(stored$to_df_attrs(), df)
+  expect_equal(joinOp$to_df(), df)
+  expect_equal(stored$to_df(), df)
 })
 
 
@@ -109,7 +109,7 @@ test_that("upload data frame with special chars", {
   
   # all matched fields are uploaded as attributes (dimensions vary with upload operators)
   expect_identical(arr$attrs, c('a', 'b', 'z'))
-  expect_equal(arr$to_df_attrs(), df)
+  expect_equal(arr$to_df(), df)
   
   arr$remove_self()
 })
@@ -130,7 +130,7 @@ test_that("upload data frame by vectors", {
   # all matched fields are uploaded as attributes (dimensions vary with upload operators)
   expect_identical(arr$attrs, c('a', 'b', 'z'))
   
-  expect_equal(arr$to_df_attrs(), df)
+  expect_equal(arr$to_df(), df)
 })
 
 
@@ -195,8 +195,8 @@ test_that("upload data frame with other scidbR settings", {
   
   # R date time conversion is cubersome. We replace it with the scidb parsed values.
   df = dplyr::mutate(df, f_datetime = as.POSIXct(f_datetime))
-  dbdf1 = uploaded$to_df_attrs()
-  dbdf2 = uploaded2$to_df_attrs()
+  dbdf1 = uploaded$to_df()
+  dbdf2 = uploaded2$to_df()
   
   expect_equal(dbdf1, df)
   expect_equal(dbdf2, df)
@@ -237,8 +237,8 @@ test_that("transient array_op from build literal", {
   arr = conn$array_op_from_build_literal(df, template, build_dim_spec = "i=1:*:0:*")
   arr2 = conn$array_op_from_build_literal(df, build_dim_spec = "i=1:*:0:*")
   
-  expect_equal(arr$to_df_attrs() %>% dplyr::arrange(z), df)
-  expect_equal(arr2$to_df_attrs() %>% dplyr::arrange(z), df)
+  expect_equal(arr$to_df() %>% dplyr::arrange(z), df)
+  expect_equal(arr2$to_df() %>% dplyr::arrange(z), df)
   
 })
 
@@ -261,6 +261,6 @@ test_that("auto determine whether to upload or build", {
   expect_true(grepl("build", arrBuild$to_afl()))
   expect_true(!grepl("build", arrUpload$to_afl()))
   
-  expect_equal(arrBuild$to_df_attrs(), dataFrame)
-  expect_equal(arrUpload$to_df_attrs(), dataFrame2)
+  expect_equal(arrBuild$to_df(), dataFrame)
+  expect_equal(arrUpload$to_df(), dataFrame2)
 })

@@ -33,7 +33,7 @@ test_that("Mutate an array by expression", {
   assert_df_match(
     RefArray$
       mutate(f_bool='iif(f_double > 1, true, false)', upper="'mutated'", f_int32 = "strlen(lower)")$
-      to_df(),
+      to_df_all(),
     ArrayContent %>% 
       dplyr::mutate("f_bool" = !is.na(f_double) & f_double > 1, "upper" = "mutated", "f_int32" = nchar(lower))
   )
@@ -42,7 +42,7 @@ test_that("Mutate an array by expression", {
       filter(is_null(f_bool))$
       mutate(f_bool='iif(f_double > 1, true, false)', upper="'mutated'", f_int32 = "strlen(lower)", 
              .sync_schema = F)$ # do not check schema
-      to_df(),
+      to_df_all(),
     ArrayContent %>% 
       dplyr::filter(is.na(f_bool)) %>%
       dplyr::mutate("f_bool" = f_double > 1, "upper" = "mutated", "f_int32" = nchar(lower))
@@ -53,7 +53,7 @@ test_that("Mutate an array by expression", {
     RefArray$
       filter(is_null(f_bool))$
       mutate(lower_len = "strlen(lower)")$
-      to_df(),
+      to_df_all(),
     ArrayContent %>% 
       dplyr::filter(is.na(f_bool)) %>%
       dplyr::mutate("lower_len" = nchar(lower))
@@ -64,7 +64,7 @@ test_that("Mutate an array by expression", {
     RefArray$
       filter(is_null(f_bool))$
       mutate(lower_len = "strlen(lower)", f_int32 = "f_int32")$ # f_int32 ignored
-      to_df(),
+      to_df_all(),
     ArrayContent %>% 
       dplyr::filter(is.na(f_bool)) %>%
       dplyr::mutate("lower_len" = nchar(lower))
@@ -75,7 +75,7 @@ test_that("Mutate an array by expression", {
     RefArray$
       filter(is_null(f_bool))$
       mutate(lower_len = "strlen(lower)", f_bool = NULL, f_int64 = NULL)$
-      to_df(),
+      to_df_all(),
     ArrayContent %>% 
       dplyr::filter(is.na(f_bool)) %>%
       dplyr::mutate(f_bool = NULL, f_int64 = NULL, "lower_len" = nchar(lower))
@@ -84,7 +84,7 @@ test_that("Mutate an array by expression", {
   assert_df_match(
     RefArray$
       mutate(f_bool = NULL, f_int64 = NULL)$
-      to_df(),
+      to_df_all(),
     ArrayContent %>% 
       dplyr::mutate(f_bool = NULL, f_int64 = NULL)
   )
@@ -93,7 +93,7 @@ test_that("Mutate an array by expression", {
     RefArray$
       filter(is_null(f_bool))$
       mutate(.dots = list(lower_len = "strlen(lower)", f_bool = NULL, f_int64 = NULL))$
-      to_df(),
+      to_df_all(),
     ArrayContent %>% 
       dplyr::filter(is.na(f_bool)) %>%
       dplyr::mutate(f_bool = NULL, f_int64 = NULL, "lower_len" = nchar(lower))
@@ -104,7 +104,7 @@ test_that("Add attributes from dimensions", {
   assert_df_match(
     RefArray$
       mutate(lower_len = "strlen(lower)", da = "da")$
-      to_df_attrs() %>% 
+      to_df() %>% 
       dplyr::select(da, dplyr::everything()),
     ArrayContent %>% 
       dplyr::mutate(db = NULL, "lower_len" = nchar(lower))
@@ -116,7 +116,7 @@ test_that("At least one field in result", {
     RefArray$
       mutate(f_bool = NULL, f_double = NULL, f_int32 = NULL, f_int64 = NULL, lower = NULL, upper = NULL, extra = "bool(null)")$
       select("da", "db")$
-      to_df_attrs(),
+      to_df(),
     ArrayContent %>% 
       dplyr::select(da, db)
   )
@@ -152,7 +152,7 @@ test_that("transmute does not preserve old fields", {
     RefArray$
       filter(is_null(f_bool))$
       transmute("f_double", upper="'mutated'", f_int32 = "strlen(lower)")$
-      to_df(),
+      to_df_all(),
     ArrayContent %>% 
       dplyr::filter(is.na(f_bool)) %>%
       dplyr::transmute(da, db, f_double, "upper" = "mutated", "f_int32" = nchar(lower))
@@ -161,7 +161,7 @@ test_that("transmute does not preserve old fields", {
     RefArray$
       filter(is_null(f_bool))$
       transmute("f_double"="f_double", upper="'mutated'", f_int32 = "strlen(lower)")$
-      to_df(),
+      to_df_all(),
     ArrayContent %>% 
       dplyr::filter(is.na(f_bool)) %>%
       dplyr::transmute(da, db, f_double, "upper" = "mutated", "f_int32" = nchar(lower))
@@ -170,7 +170,7 @@ test_that("transmute does not preserve old fields", {
     RefArray$
       filter(is_null(f_bool))$
       transmute(f_bool='iif(f_double > 1, true, false)', upper="'mutated'", f_int32 = "strlen(lower)")$
-      to_df(),
+      to_df_all(),
     ArrayContent %>% 
       dplyr::filter(is.na(f_bool)) %>%
       dplyr::transmute(da, db, "f_bool" = f_double > 1, "upper" = "mutated", "f_int32" = nchar(lower))
@@ -181,7 +181,7 @@ test_that("transmute does not preserve old fields", {
     RefArray$
       filter(is_null(f_bool))$
       transmute(.dots = list(lower_len = "strlen(lower)"))$
-      to_df_attrs(),
+      to_df(),
     ArrayContent %>% 
       dplyr::filter(is.na(f_bool)) %>%
       dplyr::transmute("lower_len" = nchar(lower))
@@ -192,21 +192,21 @@ test_that("Transmute array dimensions to attributes", {
   assert_df_match(
     RefArray$
       transmute("da")$
-      to_df_attrs(),
+      to_df(),
     ArrayContent %>% 
       dplyr::transmute(da)
   )
   assert_df_match(
     RefArray$
       transmute("da", "lower")$
-      to_df_attrs(),
+      to_df(),
     ArrayContent %>% 
       dplyr::transmute(da, lower)
   )
   assert_df_match(
     RefArray$
       transmute("da" = "da + 1", "lower")$
-      to_df_attrs(),
+      to_df(),
     ArrayContent %>% 
       dplyr::transmute(da = da + 1, lower)
   )
@@ -228,7 +228,7 @@ test_that("mutate: key:1-attr, update_fields: 2 attrs", {
     RefArray$mutate_by(
       conn$array_op_from_df(mutateDataSource %>% dplyr::select(lower, upper, f_int32)), 
       keys = c('lower'), updated_fields = c('f_int32', 'upper')
-    )$to_df(),
+    )$to_df_all(),
     mutateDataSource
   )
 })
@@ -243,7 +243,7 @@ test_that("mutate: key:2-attrs, update_fields: 1 attr", {
   assert_df_match(
     RefArray$mutate_by(
       dataArray, keys = c('lower', 'upper'), updated_fields = c('f_int32')
-    )$to_df(),
+    )$to_df_all(),
     mutateDataSource
   )
 })
@@ -257,7 +257,7 @@ test_that("mutate: key:1 dim, update_fields: 1 attr", {
   assert_df_match(
     RefArray$mutate_by(
       dataArray, keys = c('da'), updated_fields = c('f_int32')
-    )$to_df(),
+    )$to_df_all(),
     mutateDataSource
   )
 })
@@ -271,7 +271,7 @@ test_that("mutate: key:2 dims, update_fields: 1 attr", {
   assert_df_match(
     RefArray$mutate_by(
       dataArray, keys = c('da', 'db'), updated_fields = c('f_int32')
-    )$to_df(),
+    )$to_df_all(),
     mutateDataSource
   )
 })
@@ -285,7 +285,7 @@ test_that("mutate: key: 1 dim + 1 attr, update_fields: 2 attrs", {
   assert_df_match(
     RefArray$mutate_by(
       dataArray, keys = c('lower', 'db'), updated_fields = c('f_int32', 'upper')
-    )$to_df(),
+    )$to_df_all(),
     mutateDataSource
   )
 })

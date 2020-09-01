@@ -52,7 +52,7 @@ utility = make_env(
     }
     ,
     load_array_ops_from_namespace = function(ns = 'public'){
-      arrayRecordsDf = list_arrays_in_ns(ns)$transmute('name', 'schema')$to_df_attrs()
+      arrayRecordsDf = list_arrays_in_ns(ns)$transmute('name', 'schema')$to_df()
       .conn = get_conn()
       new_named_list(
         sapply(arrayRecordsDf$schema, .conn$array_op_from_schema_str),

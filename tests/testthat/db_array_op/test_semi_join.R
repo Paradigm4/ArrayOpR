@@ -27,7 +27,7 @@ assert_df_match = function(result_op, expected_df, afl_patterns) {
   expect_identical(result_op$to_schema_str(), RefArray$to_schema_str())
   # Scidb doesn't have a deterministic ordering rule, so we need to sort the result data frame and then compare
   expect_equal(
-    dplyr::arrange(data.frame(result_op$to_df()), da),
+    dplyr::arrange(data.frame(result_op$to_df_all()), da),
     dplyr::arrange(expected_df, da)
   )
 }
