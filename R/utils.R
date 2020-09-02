@@ -43,6 +43,24 @@ dbutils = make_env(
         names = arrayRecordsDf$name
       )
     }
+    ,
+    #' Sanitize (data frame or scidb array) names
+    #'
+    #' First replace any non-alphanumerical letter to _
+    #' Then trim off any leading or trailing underscores.
+    #' @param original_names A character vector
+    #' @return A character vector of sanitized names
+    sanitize_names = function(original_names) {
+      gsub("^[_]+|[_]+$", '',
+           gsub('_+', '_',
+                gsub('[^a-zA-Z0-9_]+', '_', original_names)))
+    }
+    ,
+    sanitize_names_for = function(obj) {
+      assert_not_empty(names(obj), "No names found for `{.symbol}`", .symbol = deparse(substitute(obj)))
+      names(obj) <- sanitize_names(names(obj))
+      obj
+    }
   ),
   active = list(
     list_namespaces= function(){

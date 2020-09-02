@@ -1,5 +1,6 @@
 context('Test expression utility functions')
-library(rlang)
+
+expr = rlang::expr
 
 # Terms definition ------------------------------------------------------------------------------------------------
 
