@@ -256,7 +256,7 @@ ScidbConnection <- R6::R6Class(
       invisible(self)
     }
     ,
-    create_new_scidb_array = function(name, schema_template, .temp = FALSE) {
+    create_array = function(name, schema_template, .temp = FALSE) {
       assert_single_str(name)
       assert_inherits(schema_template, c("character", "ArrayOpBase"))
       schema_array = if(is.character(schema_template)) 
@@ -323,7 +323,7 @@ ScidbConnection <- R6::R6Class(
       set_array_op_conn(result)
     }
     ,
-    array_op_from_df = function(
+    array_from_df = function(
       df, 
       template = NULL,
       build_or_upload_threshold = 8000L,
@@ -334,7 +334,7 @@ ScidbConnection <- R6::R6Class(
     ){
       cellCount = dim(df)[[1L]] * dim(df)[[2L]]
       if(cellCount <= build_or_upload_threshold){
-        array_op_from_build_literal(
+        compile_df(
           df, 
           template = template,
           build_dim_spec = build_dim_spec,
@@ -342,7 +342,7 @@ ScidbConnection <- R6::R6Class(
           skip_scidb_schema_check = skip_scidb_schema_check
           )
       } else {
-        array_op_from_uploaded_df(
+        upload_df(
           df, 
           template = template, 
           force_template_schema = force_template_schema, 
@@ -350,7 +350,7 @@ ScidbConnection <- R6::R6Class(
       }
     }
     ,
-    array_op_from_uploaded_df = function(
+    upload_df = function(
       df, 
       template = NULL, 
       name = utility$random_array_name(), 
@@ -412,7 +412,7 @@ ScidbConnection <- R6::R6Class(
       set_array_op_conn(result)
     }
     ,
-    array_op_from_build_literal = function(
+    compile_df = function(
       df, template = NULL, 
       build_dim_spec = utility$random_field_name(),
       force_template_schema = FALSE,

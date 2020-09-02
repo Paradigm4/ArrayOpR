@@ -6,7 +6,7 @@ context("Get array_op from scidb array names and schemas")
 
 test_that("array_op from scidb array name", {
   name = random_array_name()
-  arr = conn$create_new_scidb_array(name, "<a:string> [z]", .temp = T)
+  arr = conn$create_array(name, "<a:string> [z]", .temp = T)
   expect_identical(arr$to_afl(), name)
   expect_identical(conn$array(name)$to_afl(), name)
   

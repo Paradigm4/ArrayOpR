@@ -1811,7 +1811,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
           dtypes = templateDtypes
         )
         # build_or_upload_df(df, arrayTemplate, threshold = upload_threshold)
-        dataArray = private$conn$array_op_from_df(df, arrayTemplate, build_or_upload_threshold = upload_threshold)
+        dataArray = private$conn$array_from_df(df, arrayTemplate, build_or_upload_threshold = upload_threshold)
       } else {
         dataArray = df_or_arrayop
       }

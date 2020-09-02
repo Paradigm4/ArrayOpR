@@ -13,7 +13,7 @@ dfCO2 = datasets::CO2 %>%
     uid = 1:dplyr::n()
 )
 
-arrayCO2 = conn$array_op_from_uploaded_df(
+arrayCO2 = conn$upload_df(
   dfCO2,
   "<Plant:string, Type:string, Treatment:string, conc:double, uptake:double> [Plant_id; Type_id; uid]",
   force_template_schema = T

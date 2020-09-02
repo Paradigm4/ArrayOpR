@@ -6,7 +6,7 @@ context("persistent array_op from uploaded data frame")
 
 test_that("upload data frame: no template", {
   df = data.frame(a = letters[1:5], b = 1:5, z = 11:15 * 1.2)
-  uploaded = conn$array_op_from_uploaded_df(df, .gc = F)
+  uploaded = conn$upload_df(df, .gc = F)
   
   # uploaded data frame will have an artificial dimension
   expect_equal(uploaded$to_df(), df)
@@ -15,11 +15,11 @@ test_that("upload data frame: no template", {
 
 test_that("various types of template", {
   templateStr = "<a:int32, b:string, c:bool> [x;y]"
-  templateArray = conn$create_new_scidb_array(utility$random_array_name(), templateStr)
+  templateArray = conn$create_array(utility$random_array_name(), templateStr)
   df = data.frame(x=1:2, y=3:4, a=1:2, b=letters[1:2], c=c(T,F))
   
   verify_template = function(template) {
-    a1 = conn$array_op_from_uploaded_df(df, template, .gc = F)
+    a1 = conn$upload_df(df, template, .gc = F)
     expect_identical(a1$attrs, templateArray$dims_n_attrs)
     a1$remove_self()
   }
@@ -29,7 +29,7 @@ test_that("various types of template", {
   verify_template(templateArray$to_afl()) # array name as template
   
   # force the array to conform with the template's schema
-  a2 = conn$array_op_from_df(df, templateArray, force_template_schema = T)$persist(.gc = F)
+  a2 = conn$array_from_df(df, templateArray, force_template_schema = T)$persist(.gc = F)
   
   expect_identical(a2$attrs, templateArray$attrs)
   expect_identical(a2$dims, templateArray$dims)
@@ -41,7 +41,7 @@ test_that("various types of template", {
 
 test_that("upload data frame: no template, temporary", {
   df = data.frame(a = letters[1:5], b = 1:5, z = 11:15 * 1.2)
-  uploaded = conn$array_op_from_uploaded_df(df, .gc = F, .temp = T)
+  uploaded = conn$upload_df(df, .gc = F, .temp = T)
   
   expect_identical(uploaded$array_meta_data()$temporary, TRUE)
   # uploaded data frame will have an artificial dimension
@@ -52,7 +52,7 @@ test_that("upload data frame: no template, temporary", {
 
 test_that("upload data frame: by a single vector", {
   df = data.frame(a = letters[1:5])
-  uploaded = conn$array_op_from_uploaded_df(df, upload_by_vector = T, .gc = F)
+  uploaded = conn$upload_df(df, upload_by_vector = T, .gc = F)
   
   # uploaded data frame will have an artificial dimension
   expect_equal(uploaded$to_df(), df)
@@ -62,7 +62,7 @@ test_that("upload data frame: by a single vector", {
 
 test_that("upload data frame: no template, by vectors", {
   df = data.frame(a = letters[1:5], b = 1:5, z = 11:15 * 1.2)
-  uploaded = conn$array_op_from_uploaded_df(df, upload_by_vector = T, .gc = F)
+  uploaded = conn$upload_df(df, upload_by_vector = T, .gc = F)
   
   # uploaded data frame will have an artificial dimension
   expect_equal(uploaded$to_df(), df)
@@ -75,7 +75,7 @@ test_that("upload data frame: no template, by vectors", {
 test_that("upload data frame with a template", {
   df = data.frame(a = letters[1:5], b = 1:5, z = 11:15)
   
-  joinOp = conn$array_op_from_uploaded_df(
+  joinOp = conn$upload_df(
     df, 
     template = "<a:string, b:int32, extra:bool> [z]", 
   )
@@ -88,7 +88,7 @@ test_that("upload data frame with a template", {
 test_that("uploaded data frame by vectors and store the joined vectors", {
   df = data.frame(a = letters[1:5], b = 1:5, z = 11:15)
   
-  joinOp = conn$array_op_from_uploaded_df(df, "<a:string, b:int32, extra:bool> [z]", upload_by_vector = T, .temp = T)
+  joinOp = conn$upload_df(df, "<a:string, b:int32, extra:bool> [z]", upload_by_vector = T, .temp = T)
   stored = conn$array_from_stored_afl(joinOp$to_afl())
   
   expect_equal(joinOp$to_df(), df)
@@ -105,7 +105,7 @@ test_that("upload data frame with special chars", {
     "''"
   ), b = 1:5, z = 11:15, stringsAsFactors = F)
   
-  arr = conn$array_op_from_uploaded_df(df, template = "<a:string, b:int32, extra:bool> [z]")
+  arr = conn$upload_df(df, template = "<a:string, b:int32, extra:bool> [z]")
   
   # all matched fields are uploaded as attributes (dimensions vary with upload operators)
   expect_identical(arr$attrs, c('a', 'b', 'z'))
@@ -125,7 +125,7 @@ test_that("upload data frame by vectors", {
     ),
     b = 1:5, z = 11:15)
   
-  arr = conn$array_op_from_uploaded_df(df, "<a:string, b:int32, extra:bool> [z]", upload_by_vector = T)
+  arr = conn$upload_df(df, "<a:string, b:int32, extra:bool> [z]", upload_by_vector = T)
   
   # all matched fields are uploaded as attributes (dimensions vary with upload operators)
   expect_identical(arr$attrs, c('a', 'b', 'z'))
@@ -140,7 +140,7 @@ test_that("upload data frame with GC setting", {
   
   gc_on = function() {
     name = "Rarrayop_test_upload_array_gc_on"
-    arr = conn$array_op_from_uploaded_df(df, template, name = name, .gc = TRUE)
+    arr = conn$upload_df(df, template, name = name, .gc = TRUE)
     expect_true(!is.null(
       conn$array(name) # array with name must exist
     ))
@@ -151,7 +151,7 @@ test_that("upload data frame with GC setting", {
   
   gc_off = function() {
     name = "Rarrayop_test_upload_array_gc_off"
-    arr = conn$array_op_from_uploaded_df(df, template, name = name, .gc = F)
+    arr = conn$upload_df(df, template, name = name, .gc = F)
     expect_true(!is.null(
       conn$array(name) # array with name must exist
     ))
@@ -185,9 +185,9 @@ test_that("upload data frame with other scidbR settings", {
     "%s %s", random_array_name(), schema
   ))
   
-  uploaded = conn$array_op_from_uploaded_df(df, schema, .temp = F, .use_aio_input = F)
+  uploaded = conn$upload_df(df, schema, .temp = F, .use_aio_input = F)
   # Template can also be a list of data types 
-  uploaded2 = conn$array_op_from_uploaded_df(df, template$.private$get_field_types(), .temp = T, .use_aio_input = T)
+  uploaded2 = conn$upload_df(df, template$.private$get_field_types(), .temp = T, .use_aio_input = T)
   
   templateMatchedDTypes = template$.private$get_field_types(names(df), .raw = T)
   expect_identical(uploaded$.private$get_field_types(uploaded$attrs), templateMatchedDTypes)
@@ -210,9 +210,9 @@ test_that("upload data frame with other scidbR settings", {
 })
 
 test_that("Error cases: upload data frames", {
-  expect_error(conn$array_op_from_uploaded_df(list()))
-  expect_error(conn$array_op_from_uploaded_df(data.frame()))
-  expect_error(conn$array_op_from_uploaded_df(data.frame(a=1:2), template = "<m:string> [z]"))
+  expect_error(conn$upload_df(list()))
+  expect_error(conn$upload_df(data.frame()))
+  expect_error(conn$upload_df(data.frame(a=1:2), template = "<m:string> [z]"))
 })
 
 # from build literal ----
@@ -234,8 +234,8 @@ test_that("transient array_op from build literal", {
     )
   )
   
-  arr = conn$array_op_from_build_literal(df, template, build_dim_spec = "i=1:*:0:*")
-  arr2 = conn$array_op_from_build_literal(df, build_dim_spec = "i=1:*:0:*")
+  arr = conn$compile_df(df, template, build_dim_spec = "i=1:*:0:*")
+  arr2 = conn$compile_df(df, build_dim_spec = "i=1:*:0:*")
   
   expect_equal(arr$to_df() %>% dplyr::arrange(z), df)
   expect_equal(arr2$to_df() %>% dplyr::arrange(z), df)
@@ -244,7 +244,7 @@ test_that("transient array_op from build literal", {
 
 test_that("Error case: invalid dimension specs in build_literal", {
   # should report error if build_dim is invalid, verified by scidb show
-  expect_error(conn$array_op_from_build_literal(data.frame(a=1:10), build_dim_spec = "i=non-sense"))
+  expect_error(conn$compile_df(data.frame(a=1:10), build_dim_spec = "i=non-sense"))
 })
 
 # From data frame auto mode ----
@@ -255,8 +255,8 @@ test_that("auto determine whether to upload or build", {
   # ScidbR has a bug for uploading data frames with a datetime column
   dataFrame2 = data.frame(a=1:10, b=1:10*3.14, c=letters[1:10], d=c(T,F))
   
-  arrBuild = conn$array_op_from_df(dataFrame, build_or_upload_threshold = 5000)
-  arrUpload = conn$array_op_from_df(dataFrame2, build_or_upload_threshold = 10)
+  arrBuild = conn$array_from_df(dataFrame, build_or_upload_threshold = 5000)
+  arrUpload = conn$array_from_df(dataFrame2, build_or_upload_threshold = 10)
   
   expect_true(grepl("build", arrBuild$to_afl()))
   expect_true(!grepl("build", arrUpload$to_afl()))

@@ -14,8 +14,8 @@ test_that("join with no conflicting field names", {
   leftTemplate = conn$array_from_schema("<lfa:string, lfb:double> [lda;ldb] ")
   rightTemplate = conn$array_from_schema("<rfa:string, rfb:double> [rda;rdb] ")
   
-  L = conn$array_op_from_df(leftDf, leftTemplate)$change_schema(leftTemplate)
-  R = conn$array_op_from_df(rightDf, rightTemplate)$change_schema(rightTemplate)
+  L = conn$array_from_df(leftDf, leftTemplate)$change_schema(leftTemplate)
+  R = conn$array_from_df(rightDf, rightTemplate)$change_schema(rightTemplate)
   
   test_inner_join = function() {
     df_equal(
@@ -165,8 +165,8 @@ test_that("join with conflicting field names", {
   rightTemplate = conn$array_from_schema("<fa:string, rfb:double> [rda;db] ")
   # At least one input to 'cross_join' must have a specified chunk size.
   # So we need to persist the arrays
-  L = conn$array_op_from_df(leftDf, leftTemplate)$change_schema(leftTemplate)$persist(.gc = F)
-  R = conn$array_op_from_df(rightDf, rightTemplate)$change_schema(rightTemplate)$persist(.gc = F)
+  L = conn$array_from_df(leftDf, leftTemplate)$change_schema(leftTemplate)$persist(.gc = F)
+  R = conn$array_from_df(rightDf, rightTemplate)$change_schema(rightTemplate)$persist(.gc = F)
   
   test_auto_join_keys = function() {
     df_equal(
@@ -261,9 +261,9 @@ test_that("join with three operands", {
   template2 = conn$array_from_schema("<fa:string, fc:double> [da;dc] ")
   template3 = conn$array_from_schema("<fd:string, fe:double> [dd;db] ")
   
-  a1 = conn$array_op_from_df(df1, template1)$change_schema(template1)
-  a2 = conn$array_op_from_df(df2, template2)$change_schema(template2)
-  a3 = conn$array_op_from_df(df3, template3)$change_schema(template3)
+  a1 = conn$array_from_df(df1, template1)$change_schema(template1)
+  a2 = conn$array_from_df(df2, template2)$change_schema(template2)
+  a3 = conn$array_from_df(df3, template3)$change_schema(template3)
   
   inner_join = dplyr::inner_join
   select = dplyr::select

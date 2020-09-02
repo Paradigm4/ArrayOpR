@@ -12,7 +12,7 @@ test_that("persistent array_op from uploaded data frame", {
     " <f_str:string COMPRESSION 'zlib', f_int32:int32, f_int64:int64, f_bool: bool, f_double: double, f_datetime: datetime> [da=0:*:0:*]"
   )
   
-  uploaded = conn$array_op_from_uploaded_df(df, template, .temp = F)
+  uploaded = conn$upload_df(df, template, .temp = F)
   filtered = uploaded$filter(f_double > 0)
   
   stored1 = conn$array_from_stored_afl(
@@ -42,7 +42,7 @@ test_that("Store AFL as scidb array and return arrayOp", {
     "<f_str:string COMPRESSION 'zlib', f_int32:int32, f_int64:int64, f_bool: bool, f_double: double, f_datetime: datetime> [da=0:*:0:*]"
   )
   
-  uploaded = conn$array_op_from_uploaded_df(df, template, .temp = F)
+  uploaded = conn$upload_df(df, template, .temp = F)
   filtered = uploaded$filter(f_double > 0)
   
   randomName = random_array_name()

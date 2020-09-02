@@ -16,7 +16,7 @@ ArrayContent = data.frame(
 )
 
 RefArray = conn$
-  array_op_from_df(ArrayContent, schemaTemplate, force_template_schema = T)$
+  array_from_df(ArrayContent, schemaTemplate, force_template_schema = T)$
   persist(.gc = FALSE)
 
 assert_df_match = function(actual_df, expected_df) {
@@ -226,7 +226,7 @@ test_that("mutate: key:1-attr, update_fields: 2 attrs", {
   
   assert_df_match(
     RefArray$mutate_by(
-      conn$array_op_from_df(mutateDataSource %>% dplyr::select(lower, upper, f_int32)), 
+      conn$array_from_df(mutateDataSource %>% dplyr::select(lower, upper, f_int32)), 
       keys = c('lower'), updated_fields = c('f_int32', 'upper')
     )$to_df_all(),
     mutateDataSource
@@ -238,7 +238,7 @@ test_that("mutate: key:2-attrs, update_fields: 1 attr", {
     dplyr::filter(da %% 2 == 0) %>% 
     dplyr::mutate(f_int32 = 1:3)
   
-  dataArray = conn$array_op_from_df(mutateDataSource %>% dplyr::select(lower, upper, f_int32), schemaTemplate)
+  dataArray = conn$array_from_df(mutateDataSource %>% dplyr::select(lower, upper, f_int32), schemaTemplate)
   
   assert_df_match(
     RefArray$mutate_by(
@@ -252,7 +252,7 @@ test_that("mutate: key:1 dim, update_fields: 1 attr", {
   mutateDataSource = ArrayContent %>% 
     dplyr::filter(da %% 2 == 0) %>% 
     dplyr::mutate(f_int32 = 1:3)
-  dataArray = conn$array_op_from_df(mutateDataSource %>% dplyr::select(da, f_int32), schemaTemplate)
+  dataArray = conn$array_from_df(mutateDataSource %>% dplyr::select(da, f_int32), schemaTemplate)
   
   assert_df_match(
     RefArray$mutate_by(
@@ -266,7 +266,7 @@ test_that("mutate: key:2 dims, update_fields: 1 attr", {
   mutateDataSource = ArrayContent %>% 
     dplyr::filter(da %% 2 == 0) %>% 
     dplyr::mutate(f_int32 = 1:3)
-  dataArray = conn$array_op_from_df(mutateDataSource %>% dplyr::select(da, db, f_int32), schemaTemplate)
+  dataArray = conn$array_from_df(mutateDataSource %>% dplyr::select(da, db, f_int32), schemaTemplate)
   
   assert_df_match(
     RefArray$mutate_by(
@@ -280,7 +280,7 @@ test_that("mutate: key: 1 dim + 1 attr, update_fields: 2 attrs", {
   mutateDataSource = ArrayContent %>% 
     dplyr::filter(da %% 2 == 0) %>% 
     dplyr::mutate(f_int32 = 1:3, upper = "changed")
-  dataArray = conn$array_op_from_df(mutateDataSource %>% dplyr::select(db, lower, f_int32, upper), schemaTemplate)
+  dataArray = conn$array_from_df(mutateDataSource %>% dplyr::select(db, lower, f_int32, upper), schemaTemplate)
   
   assert_df_match(
     RefArray$mutate_by(

@@ -1,6 +1,6 @@
 context("ArrayOp: change schema according to template")
 
-Template = conn$create_new_scidb_array(utility$random_array_name(), "<aa:string, ab:double, ac:int64, ad:int32> [da; db]")
+Template = conn$create_array(utility$random_array_name(), "<aa:string, ab:double, ac:int64, ad:int32> [da; db]")
 
 test_that("strict mode requires all fields match", {
   # Template = conn$array_from_schema("Template <aa:string, ab:double, ac:int64, ad:int32> [da; db]")
@@ -10,12 +10,12 @@ test_that("strict mode requires all fields match", {
     expect_identical(changed$attrs, Template$attrs)
   }
   
-  arr1 = conn$array_op_from_df(
+  arr1 = conn$array_from_df(
     data.frame(aa='aa', ab=3.14, ac=64, ad=32, da=1, db=2, extra = 'extra'),
     template = "<aa:string, ab:double, ac:int64, ad:int32, da:int64, db:int64, extra:string> "
   )
   # Notice field ac is int32, different than the template
-  arr2 = conn$array_op_from_df(
+  arr2 = conn$array_from_df(
     data.frame(aa='aa', ab=3.14, ac=64, ad=32, da=1, db=2, extra = 'extra'),
     template = "<aa:string, ab:double, ac:int32, ad:int32, da:int64, db:int64, extra:string> "
   )
@@ -52,9 +52,9 @@ test_that("sync_schema will update array schema from scidb only if the schema is
   
   verify_already_synced(conn$array_from_afl("list()"))
   
-  verify_already_synced(conn$array_op_from_df(data.frame(a=1,b='B')))
-  verify_already_synced(conn$array_op_from_df(data.frame(a=1,b='B'), skip_scidb_schema_check = T)$sync_schema())
-  verify_not_synced(conn$array_op_from_df(data.frame(a=1,b='B'), skip_scidb_schema_check = T))
+  verify_already_synced(conn$array_from_df(data.frame(a=1,b='B')))
+  verify_already_synced(conn$array_from_df(data.frame(a=1,b='B'), skip_scidb_schema_check = T)$sync_schema())
+  verify_not_synced(conn$array_from_df(data.frame(a=1,b='B'), skip_scidb_schema_check = T))
   
 })
 

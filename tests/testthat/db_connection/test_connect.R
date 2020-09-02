@@ -21,9 +21,9 @@ test_that("create scidb array", {
     expect_identical(arr$array_meta_data()$temporary, temporary)
   }
   
-  a1 = conn$create_new_scidb_array(random_array_name(), "<fa:string, fb:int32, fc:bool, fd:double> [i]")
-  a2 = conn$create_new_scidb_array(random_array_name(), "existing_name_does_not_matter <fa:string, fb:int32, fc:bool, fd:double> [i;j]")
-  a3 = conn$create_new_scidb_array(random_array_name(), "<fa:string, fb:int32, fc:bool, fd:double> [i]", .temp = T)
+  a1 = conn$create_array(random_array_name(), "<fa:string, fb:int32, fc:bool, fd:double> [i]")
+  a2 = conn$create_array(random_array_name(), "existing_name_does_not_matter <fa:string, fb:int32, fc:bool, fd:double> [i;j]")
+  a3 = conn$create_array(random_array_name(), "<fa:string, fb:int32, fc:bool, fd:double> [i]", .temp = T)
   
   validate_array_exists(a1, F)
   validate_array_exists(a2, F)

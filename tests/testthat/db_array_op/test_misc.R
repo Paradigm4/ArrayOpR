@@ -5,8 +5,8 @@ context("ArrayOp misc")
 
 test_that("if an array is persisted or transient", {
   dataFrame = data.frame(a=1:3, b=letters[1:3])
-  arrayStored = conn$array_op_from_uploaded_df(dataFrame)
-  arrayBuild = conn$array_op_from_build_literal(dataFrame)
+  arrayStored = conn$upload_df(dataFrame)
+  arrayBuild = conn$compile_df(dataFrame)
   
   expect_identical(arrayStored$is_persistent(), T)  
   expect_identical(arrayBuild$is_persistent(), F)  
@@ -14,8 +14,8 @@ test_that("if an array is persisted or transient", {
 
 test_that("persist arrays so they can be reused", {
   dataFrame = data.frame(a=1:3, b=letters[1:3])
-  arrayStored = conn$array_op_from_uploaded_df(dataFrame)
-  arrayBuild = conn$array_op_from_build_literal(dataFrame)
+  arrayStored = conn$upload_df(dataFrame)
+  arrayBuild = conn$compile_df(dataFrame)
   arrayBuildPersisted = arrayBuild$persist(.gc = F)
   arrayBuildPersistedTemp = arrayBuild$persist(.temp = T, .gc = F)
   
@@ -32,7 +32,7 @@ test_that("persist arrays so they can be reused", {
 
 test_that("verify persistent array existence", {
   name = random_array_name()
-  arr = conn$create_new_scidb_array(name, "<a:string> [z]")
+  arr = conn$create_array(name, "<a:string> [z]")
   
   expect_true(arr$is_persistent())
   expect_true(arr$exists_persistent_array())
@@ -49,7 +49,7 @@ test_that("verify persistent array existence", {
 test_that("Drop dims", {
   DataContent = data.frame(da = 1:3, db = 11:13, fa = letters[1:3], fb = 3.14 * 1:3)
   RefArray = conn$
-    array_op_from_df(DataContent, template = "<fa:string, fb:double> [da; db]", force_template_schema = T)$
+    array_from_df(DataContent, template = "<fa:string, fb:double> [da; db]", force_template_schema = T)$
     persist(.gc = F)
   
   expect_identical(RefArray$dims, c('da', 'db'))

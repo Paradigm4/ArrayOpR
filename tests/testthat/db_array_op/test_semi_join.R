@@ -17,7 +17,7 @@ ArrayContent = data.frame(
 )
 
 RefArray = conn$
-  array_op_from_df(ArrayContent, schemaTemplate, force_template_schema = T)$
+  array_from_df(ArrayContent, schemaTemplate, force_template_schema = T)$
   persist(.gc = FALSE)
 
 
@@ -107,7 +107,7 @@ test_that("filter, lower/upper bounds on different dimensions", {
 
 test_that("filter mode cannot take array_op as data source", {
   df = data.frame(da = c(1,3), db = c(105, 108))
-  dataArr = conn$array_op_from_df(df, RefArray)
+  dataArr = conn$array_from_df(df, RefArray)
   
   expect_error(RefArray$semi_join(dataArr, mode = 'filter'), "data.frame")
 })
@@ -124,7 +124,7 @@ test_that("cross_between, 2 dimension, build", {
   )
   
   assert_df_match(
-    RefArray$semi_join(conn$array_op_from_df(df, RefArray)),
+    RefArray$semi_join(conn$array_from_df(df, RefArray)),
     dplyr::semi_join(ArrayContent, df),
     c("cross_between", "build")
   )
@@ -151,7 +151,7 @@ test_that("cross_between, lower/upper bounds on same dimension", {
     "cross_between"
   )
   assert_df_match(
-    RefArray$semi_join(conn$array_op_from_df(df, "<da_low:int64, da_hi:int64>[anything]"), 
+    RefArray$semi_join(conn$array_from_df(df, "<da_low:int64, da_hi:int64>[anything]"), 
                    lower_bound = list(da = 'da_low'), 
                    upper_bound = list(da = 'da_hi'),
                    ),
@@ -174,7 +174,7 @@ test_that("cross_between, lower/upper bounds on different dimensions", {
   )
   
   assert_df_match(
-    RefArray$semi_join(conn$array_op_from_df(df, RefArray), 
+    RefArray$semi_join(conn$array_from_df(df, RefArray), 
                    lower_bound = list(da = 'da'), 
                    upper_bound = list(db = 'db'),
                    field_mapping = list(),
@@ -196,7 +196,7 @@ test_that("index_lookup, 1 dimension, build", {
   )
   
   assert_df_match(
-    RefArray$semi_join(conn$array_op_from_df(df, RefArray), upload_threshold=0),
+    RefArray$semi_join(conn$array_from_df(df, RefArray), upload_threshold=0),
     dplyr::semi_join(ArrayContent, df),
     c("index_lookup", "build")
   )
@@ -213,7 +213,7 @@ test_that("index_lookup, 1 attribute, build", {
   )
   
   assert_df_match(
-    RefArray$semi_join(conn$array_op_from_df(df, RefArray), upload_threshold=0),
+    RefArray$semi_join(conn$array_from_df(df, RefArray), upload_threshold=0),
     dplyr::semi_join(ArrayContent, df),
     c("index_lookup", "build")
   )
@@ -228,7 +228,7 @@ test_that("index_lookup, 1 dimension, upload", {
     c("index_lookup", "Rarrayop|R_array")
   )
   assert_df_match(
-    RefArray$semi_join(conn$array_op_from_df(df, RefArray), upload_threshold=0),
+    RefArray$semi_join(conn$array_from_df(df, RefArray), upload_threshold=0),
     dplyr::semi_join(ArrayContent, df),
     c("index_lookup", "build")
   )
@@ -244,7 +244,7 @@ test_that("index_lookup, 1 attribute, upload", {
     c("index_lookup", "Rarryop|R_array")
   )
   assert_df_match(
-    RefArray$semi_join(conn$array_op_from_df(df, RefArray), upload_threshold=0),
+    RefArray$semi_join(conn$array_from_df(df, RefArray), upload_threshold=0),
     dplyr::semi_join(ArrayContent, df),
     c("index_lookup", "build")
   )
@@ -252,8 +252,8 @@ test_that("index_lookup, 1 attribute, upload", {
 
 test_that("index_lookup, error cases", {
   df = data.frame(da = c(1:5, -1), db = c(101:105, -1))
-  dataArray1 = conn$array_op_from_build_literal(df, RefArray)
-  dataArray2 = conn$array_op_from_build_literal(df %>% dplyr::select(da), RefArray)
+  dataArray1 = conn$compile_df(df, RefArray)
+  dataArray2 = conn$compile_df(df %>% dplyr::select(da), RefArray)
   
   # only 1-dim and 1-attr array is allowed
   expect_error(
@@ -269,7 +269,7 @@ test_that("index_lookup, error cases", {
 
 test_that("param format error checking", {
   df = data.frame(da = c(1:5, -1), db = c(101:105, -1))
-  dataArray = conn$array_op_from_build_literal(df, RefArray)
+  dataArray = conn$compile_df(df, RefArray)
   
   expect_error(
     RefArray$semi_join(df, mode = "non-existent"),
