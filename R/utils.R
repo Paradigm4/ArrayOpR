@@ -1,11 +1,13 @@
 source("R/private_utils/__source.R", local = TRUE, chdir = TRUE)
 
-# Export utility functions ----
+# DBUtils class ----
 
-#' An R env that hosts arrayop package utility functions
-#' @export
-dbutils = make_env(
+#' Database utility class
+DBUtils = R6::R6Class(
+  "DBUtils", portable = F, cloneable = F,
   public = list(
+    #' @description 
+    #' Generate a random array name so it does not collides with existing array names
     random_array_name = function(prefix = "Rarrayop_", n = 10L) {
       sprintf("%s_%s_", prefix, rawToChar(as.raw(sample(c(65:90,97:122), n, replace=TRUE))))
     }
@@ -15,18 +17,18 @@ dbutils = make_env(
     }
     ,
     set_conn = function(new_conn) {
-      .private$conn = new_conn
+      private$conn = new_conn
     }
     ,
     get_conn = function(){
-      if(is.null(.private$conn)){
-        .private$conn = get_default_connection()
+      if(is.null(private$conn)){
+        private$conn = get_default_connection()
       }
-      .private$conn
+      private$conn
     }
     ,
     clear_cache = function() {
-      .private$cached = list()
+      private$cached = list()
     }
     # start scidb utility functions
     ,
@@ -44,6 +46,7 @@ dbutils = make_env(
       )
     }
     ,
+    #' @description 
     #' Sanitize (data frame or scidb array) names
     #'
     #' First replace any non-alphanumerical letter to _
@@ -63,21 +66,46 @@ dbutils = make_env(
     }
   ),
   active = list(
-    list_namespaces= function(){
+    db_namespaces= function(){
       from_formatted_afl("list('namespaces')") 
     }
     ,
-    list_users = function(){
+    db_users = function(){
       from_formatted_afl("list('users')")
     }
     ,
-    list_roles = function(){
+    db_roles = function(){
       from_formatted_afl("list('roles')")
     }
     ,
-    list_operators = function(){
+    db_operators = function(){
       from_formatted_afl("list('operators')")
     }  
+    ,
+    db_instances = function(){
+      from_formatted_afl("list('instances')")
+    }  
+    ,
+    db_queries = function(){
+      from_formatted_afl("list('queries')")
+    }
+    ,
+    db_macros = function(){
+      from_formatted_afl("list('macros')")
+    }
+    ,
+    db_types = function(){
+      from_formatted_afl("list('types')")
+    }
+    ,
+    db_libraries = function(){
+      from_formatted_afl("list('libraries')")
+    }
+    ,
+    db_aggregates = function(){
+      from_formatted_afl("list('aggregates')")
+    }
+    
   )
   ,
   private = list(
@@ -85,12 +113,18 @@ dbutils = make_env(
     cached = list(),
     from_formatted_afl = function(afl_template, ...){
       fullAfl = sprintf(afl_template, ...)
-      result = .private$cached[[fullAfl]]
+      result = private$cached[[fullAfl]]
       if(is.null(result)) {
         result = get_conn()$array_from_afl(fullAfl)
-        .private$cached[[fullAfl]] = result
+        private$cached[[fullAfl]] = result
       }
       result
     }
   )
 )
+
+# dbutils singleton object ----
+dbutils = DBUtils$new()
+
+#' @export dbutils
+NULL
