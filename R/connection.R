@@ -2,7 +2,7 @@
 #' Connect to SciDB server
 #' 
 #' @export
-connect = function(username, token, 
+db_connect = function(username, token, 
                    host = "127.0.0.1",
                    port = 8083, protocol = "https", auth_type = "scidb",
                    ..., # other optional args for scidb::scidbconnect
@@ -37,9 +37,9 @@ get_default_connection = function(.report_error_if_not_connected = TRUE) {
 # ScidbConnection class ----
 
 #' @export
-print.ScidbConnection = function(conn) conn$print()
+print.ScidbConnection = function(conn) conn$private$to_str()
 #' @export
-str.ScidbConnection = function(conn) conn$print()
+str.ScidbConnection = function(conn) conn$private$to_str()
 
 empty_connection = function() ScidbConnection$new()
 
@@ -62,6 +62,11 @@ ScidbConnection <- R6::R6Class(
     ,
     new_ArrayOp = function(...) {
       .arrayop_class(...)
+    }
+    ,
+    to_str = function() {
+      glue("ScidbConnection: {.conn_args$username}@{.conn_args$host} ",
+          "[{.scidb_version$major}.{.scidb_version$minor}.{.scidb_version$patch}]")
     }
     ,
     upload_df_or_vector = function(v, ...) {
@@ -155,10 +160,10 @@ ScidbConnection <- R6::R6Class(
     ,
     # Get an array as template from a 't' or a 'dataFrame' if 't' is null
     #' @param array_like An array_op, schema string or existing scidb array name
-    get_array_template = function(array_like, df = NULL){
+    get_array_template = function(array_like, df = NULL, .df_symbol = deparse(substitute(df))){
       assertf(length(array_like) > 0 || length(df) > 0,
               "Error in get_array_template: no template found.")
-      if(is.null(array_like)) array_like = infer_scidb_types_from_df(df)
+      if(is.null(array_like)) array_like = infer_scidb_types_from_df(df, .symbol = .df_symbol)
       if(inherits(array_like, "ArrayOpBase")) return(array_like)
       if(is.list(array_like)){
         assert_named_list(array_like, "ERROR: get_array_template: a list as template must have names")
@@ -168,7 +173,7 @@ ScidbConnection <- R6::R6Class(
         if(grepl("<", array_like))
           return(array_from_schema(array_like))
         else if(grepl("^\\w+(\\.\\w+)?$", array_like))
-          return(array(array_like))
+          return(self$array(array_like))
       }
       
       stopf("ERROR: get_array_template: template must be an array_op or named list, but got: [%s]", 
@@ -177,7 +182,7 @@ ScidbConnection <- R6::R6Class(
     }
     ,
     # Return a named list of scidb data types in string format
-    infer_scidb_types_from_df = function(dataFrame) {
+    infer_scidb_types_from_df = function(dataFrame, .symbol = deparse(substitute(dataFrame))) {
       colClasses = lapply(dataFrame, function(vec){
         if(inherits(vec, "integer")) "int32"
         else if(inherits(vec, "integer64")) "int64"
@@ -190,7 +195,7 @@ ScidbConnection <- R6::R6Class(
       naCols = Filter(is.na, colClasses)
       assertf(length(naCols) == 0, 
               "{.symbol} has unknown-typed column(s): [{.na_cols}]",
-              .symbol = deparse(substitute(dataFrame)),
+              .symbol = .symbol,
               .na_cols = paste(names(naCols), collapse = ','))
       colClasses
     }
@@ -201,9 +206,7 @@ ScidbConnection <- R6::R6Class(
     }
   ),
   active = list(
-    # scidb_version = function() private$.scidb_version,
-    # username = function() private$.conn_args[["username"]],
-    # host = function() private$.conn_args[["host"]]
+      # placeholder for active bindings, which do not work for package-level singletons.
   ),
   public = list(
     initialize = function(){
@@ -235,11 +238,6 @@ ScidbConnection <- R6::R6Class(
     },
     scidb_version = function() .scidb_version,
     conn_args = function() .conn_args,
-    print = function() {
-      glue("ScidbConnection: {.conn_args$username}@{.conn_args$host} ",
-          "[{.scidb_version$major}.{.scidb_version$minor}.{.scidb_version$patch}]")
-    }
-    ,
     query_all = function(afl_str){
       assert_single_str(afl_str)
       private$.iquery(afl_str, return = TRUE, only_attributes = FALSE)
@@ -268,7 +266,7 @@ ScidbConnection <- R6::R6Class(
                 schema_array$to_schema_str()
                 )
       )
-      array(name)
+      self$array(name)
     }
     ,
     array = function(array_name) {
@@ -422,7 +420,7 @@ ScidbConnection <- R6::R6Class(
       if(force_template_schema)
         assert_not_empty(template, "param template cannot be NULL when `force_template_schema=T`")
       
-      array_template = get_array_template(template, df)
+      array_template = get_array_template(template, df, .df_symbol = deparse(substitute(df)))
       buildOp = array_template$build_new(df, build_dim_spec)
       result = if(skip_scidb_schema_check){
         buildOp

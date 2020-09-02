@@ -16,18 +16,17 @@ Create an array_op from a schema string with an optional array name
 \item \href{#method-connect}{\code{ScidbConnection$connect()}}
 \item \href{#method-scidb_version}{\code{ScidbConnection$scidb_version()}}
 \item \href{#method-conn_args}{\code{ScidbConnection$conn_args()}}
-\item \href{#method-print}{\code{ScidbConnection$print()}}
 \item \href{#method-query_all}{\code{ScidbConnection$query_all()}}
 \item \href{#method-query}{\code{ScidbConnection$query()}}
 \item \href{#method-execute}{\code{ScidbConnection$execute()}}
-\item \href{#method-create_new_scidb_array}{\code{ScidbConnection$create_new_scidb_array()}}
-\item \href{#method-array_op_from_name}{\code{ScidbConnection$array_op_from_name()}}
-\item \href{#method-array_op_from_schema_str}{\code{ScidbConnection$array_op_from_schema_str()}}
-\item \href{#method-array_op_from_afl}{\code{ScidbConnection$array_op_from_afl()}}
-\item \href{#method-array_op_from_stored_afl}{\code{ScidbConnection$array_op_from_stored_afl()}}
-\item \href{#method-array_op_from_df}{\code{ScidbConnection$array_op_from_df()}}
-\item \href{#method-array_op_from_uploaded_df}{\code{ScidbConnection$array_op_from_uploaded_df()}}
-\item \href{#method-array_op_from_build_literal}{\code{ScidbConnection$array_op_from_build_literal()}}
+\item \href{#method-create_array}{\code{ScidbConnection$create_array()}}
+\item \href{#method-array}{\code{ScidbConnection$array()}}
+\item \href{#method-array_from_schema}{\code{ScidbConnection$array_from_schema()}}
+\item \href{#method-array_from_afl}{\code{ScidbConnection$array_from_afl()}}
+\item \href{#method-array_from_stored_afl}{\code{ScidbConnection$array_from_stored_afl()}}
+\item \href{#method-array_from_df}{\code{ScidbConnection$array_from_df()}}
+\item \href{#method-upload_df}{\code{ScidbConnection$upload_df()}}
+\item \href{#method-compile_df}{\code{ScidbConnection$compile_df()}}
 \item \href{#method-fread}{\code{ScidbConnection$fread()}}
 \item \href{#method-clone}{\code{ScidbConnection$clone()}}
 }
@@ -85,15 +84,6 @@ Create an array_op from a schema string with an optional array name
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-print"></a>}}
-\if{latex}{\out{\hypertarget{method-print}{}}}
-\subsection{Method \code{print()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$print()}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-query_all"></a>}}
 \if{latex}{\out{\hypertarget{method-query_all}{}}}
 \subsection{Method \code{query_all()}}{
@@ -121,48 +111,48 @@ Create an array_op from a schema string with an optional array name
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-create_new_scidb_array"></a>}}
-\if{latex}{\out{\hypertarget{method-create_new_scidb_array}{}}}
-\subsection{Method \code{create_new_scidb_array()}}{
+\if{html}{\out{<a id="method-create_array"></a>}}
+\if{latex}{\out{\hypertarget{method-create_array}{}}}
+\subsection{Method \code{create_array()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$create_new_scidb_array(name, schema_template, .temp = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$create_array(name, schema_template, .temp = FALSE)}\if{html}{\out{</div>}}
 }
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-array_op_from_name"></a>}}
-\if{latex}{\out{\hypertarget{method-array_op_from_name}{}}}
-\subsection{Method \code{array_op_from_name()}}{
+\if{html}{\out{<a id="method-array"></a>}}
+\if{latex}{\out{\hypertarget{method-array}{}}}
+\subsection{Method \code{array()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$array_op_from_name(array_name)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$array(array_name)}\if{html}{\out{</div>}}
 }
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-array_op_from_schema_str"></a>}}
-\if{latex}{\out{\hypertarget{method-array_op_from_schema_str}{}}}
-\subsection{Method \code{array_op_from_schema_str()}}{
+\if{html}{\out{<a id="method-array_from_schema"></a>}}
+\if{latex}{\out{\hypertarget{method-array_from_schema}{}}}
+\subsection{Method \code{array_from_schema()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$array_op_from_schema_str(schema_str)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$array_from_schema(schema_str)}\if{html}{\out{</div>}}
 }
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-array_op_from_afl"></a>}}
-\if{latex}{\out{\hypertarget{method-array_op_from_afl}{}}}
-\subsection{Method \code{array_op_from_afl()}}{
+\if{html}{\out{<a id="method-array_from_afl"></a>}}
+\if{latex}{\out{\hypertarget{method-array_from_afl}{}}}
+\subsection{Method \code{array_from_afl()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$array_op_from_afl(afl_str)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$array_from_afl(afl_str)}\if{html}{\out{</div>}}
 }
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-array_op_from_stored_afl"></a>}}
-\if{latex}{\out{\hypertarget{method-array_op_from_stored_afl}{}}}
-\subsection{Method \code{array_op_from_stored_afl()}}{
+\if{html}{\out{<a id="method-array_from_stored_afl"></a>}}
+\if{latex}{\out{\hypertarget{method-array_from_stored_afl}{}}}
+\subsection{Method \code{array_from_stored_afl()}}{
 Create a persistent array_op by storing AFL as an array
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$array_op_from_stored_afl(
+\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$array_from_stored_afl(
   afl_str,
   save_array_name = NULL,
   .temp = FALSE,
@@ -180,11 +170,11 @@ Only effective when \code{save_array_name = NULL}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-array_op_from_df"></a>}}
-\if{latex}{\out{\hypertarget{method-array_op_from_df}{}}}
-\subsection{Method \code{array_op_from_df()}}{
+\if{html}{\out{<a id="method-array_from_df"></a>}}
+\if{latex}{\out{\hypertarget{method-array_from_df}{}}}
+\subsection{Method \code{array_from_df()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$array_op_from_df(
+\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$array_from_df(
   df,
   template = NULL,
   build_or_upload_threshold = 8000L,
@@ -197,11 +187,11 @@ Only effective when \code{save_array_name = NULL}}
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-array_op_from_uploaded_df"></a>}}
-\if{latex}{\out{\hypertarget{method-array_op_from_uploaded_df}{}}}
-\subsection{Method \code{array_op_from_uploaded_df()}}{
+\if{html}{\out{<a id="method-upload_df"></a>}}
+\if{latex}{\out{\hypertarget{method-upload_df}{}}}
+\subsection{Method \code{upload_df()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$array_op_from_uploaded_df(
+\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$upload_df(
   df,
   template = NULL,
   name = utility$random_array_name(),
@@ -215,11 +205,11 @@ Only effective when \code{save_array_name = NULL}}
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-array_op_from_build_literal"></a>}}
-\if{latex}{\out{\hypertarget{method-array_op_from_build_literal}{}}}
-\subsection{Method \code{array_op_from_build_literal()}}{
+\if{html}{\out{<a id="method-compile_df"></a>}}
+\if{latex}{\out{\hypertarget{method-compile_df}{}}}
+\subsection{Method \code{compile_df()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$array_op_from_build_literal(
+\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$compile_df(
   df,
   template = NULL,
   build_dim_spec = utility$random_field_name(),
