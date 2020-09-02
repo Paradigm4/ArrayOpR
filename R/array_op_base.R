@@ -1568,7 +1568,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       if(self$is_schema_from_scidb) self else 
         if(!self$is_persistent())
           private$conn$array_op_from_afl(self$to_afl()) else
-            private$conn$array_op_from_name(self$to_afl())
+            private$conn$array(self$to_afl())
     }
     ,
     group_by = function(...) {

@@ -168,7 +168,7 @@ ScidbConnection <- R6::R6Class(
         if(grepl("<", array_like))
           return(array_op_from_schema_str(array_like))
         else if(grepl("^\\w+(\\.\\w+)?$", array_like))
-          return(array_op_from_name(array_like))
+          return(array(array_like))
       }
       
       stopf("ERROR: get_array_template: template must be an array_op or named list, but got: [%s]", 
@@ -268,10 +268,10 @@ ScidbConnection <- R6::R6Class(
                 schema_array$to_schema_str()
                 )
       )
-      array_op_from_name(name)
+      array(name)
     }
     ,
-    array_op_from_name = function(array_name) {
+    array = function(array_name) {
       assert_single_str(array_name, "ERROR: param 'array_name' must be a single string")
       schema = query(sprintf("project(show(%s), schema)", array_name))
       result = array_op_from_schema_str(schema[["schema"]])

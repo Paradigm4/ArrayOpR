@@ -17,7 +17,7 @@ test_that("persistent array_op from stored AFL", {
   name = random_array_name()
   
   storedArr = conn$array_op_from_stored_afl(rawAfl, name)
-  retrievedArr = conn$array_op_from_name(name)
+  retrievedArr = conn$array(name)
   
   expect_identical(storedArr$to_afl(), name)
   expect_equal(
@@ -48,7 +48,7 @@ test_that("store transient array_op from afl as a persistent one", {
   conn$execute(afl(rawAfl | store(name)))
   
   transientArr = conn$array_op_from_afl(rawAfl)
-  storedArr = conn$array_op_from_name(name)
+  storedArr = conn$array(name)
   
   expect_identical(transientArr$to_afl(), rawAfl)
   expect_identical(storedArr$to_afl(), name)

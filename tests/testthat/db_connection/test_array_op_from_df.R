@@ -142,27 +142,27 @@ test_that("upload data frame with GC setting", {
     name = "Rarrayop_test_upload_array_gc_on"
     arr = conn$array_op_from_uploaded_df(df, template, name = name, .gc = TRUE)
     expect_true(!is.null(
-      conn$array_op_from_name(name) # array with name must exist
+      conn$array(name) # array with name must exist
     ))
     rm(arr)
     gc()
-    expect_error(conn$array_op_from_name(name)) # array should be removed during GC
+    expect_error(conn$array(name)) # array should be removed during GC
   }
   
   gc_off = function() {
     name = "Rarrayop_test_upload_array_gc_off"
     arr = conn$array_op_from_uploaded_df(df, template, name = name, .gc = F)
     expect_true(!is.null(
-      conn$array_op_from_name(name) # array with name must exist
+      conn$array(name) # array with name must exist
     ))
     rm(arr)
     gc()
     
-    retried = conn$array_op_from_name(name)
+    retried = conn$array(name)
     expect_identical(retried$to_afl(), name) # array should still exists
     
     retried$remove_self()
-    expect_error(conn$array_op_from_name(name)) # now the array should be removed 
+    expect_error(conn$array(name)) # now the array should be removed 
   }
   
   gc_on()
