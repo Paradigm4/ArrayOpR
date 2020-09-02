@@ -1081,10 +1081,10 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' @param ignore_case A Boolean. If TRUE, ignore case in string match patterns. 
     #' Otherwise, perform case-sensitive regex matches.
     #' @return A new arrayOp 
-    filter = function(..., expr, missing_fields_error_template = NULL, 
+    filter = function(..., expr = NULL, missing_fields_error_template = NULL, 
                      regex_func = getOption('arrayop.regex_func', default = 'regex'), 
                      ignore_case = getOption('arrayop.ignore_case', default = TRUE)) {
-      filterExpr = if(methods::hasArg('expr')) expr else e_merge(e(...))
+      filterExpr = expr %?% aflutils$e_merge(aflutils$e(...))
       status = validate_filter_expr(filterExpr, self$dims_n_attrs)
       if(!status$success){
         if(.not_empty(status$absent_fields)){
@@ -1096,7 +1096,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
         stop(paste(status$error_msgs, collapse = '\n'))
       }
       newRawAfl = if(.not_empty(filterExpr)) 
-        afl(self | filter(afl_filter_from_expr(filterExpr, regex_func = regex_func, ignore_case = ignore_case)))
+        afl(self | filter(aflutils$e_to_afl_filter(filterExpr, regex_func = regex_func, ignore_case = ignore_case)))
       else self$to_afl()
       self$spawn(newRawAfl)
     }

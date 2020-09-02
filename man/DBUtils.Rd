@@ -8,6 +8,9 @@ Database utility class
 
 Database utility class
 }
+\details{
+Common scidb operations
+}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{

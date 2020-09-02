@@ -7,5 +7,5 @@
 get_default_connection(.report_error_if_not_connected = TRUE)
 }
 \description{
-Call \code{connect} to establish a connection
+Call \code{arrayop::db_connect} to establish a connection
 }

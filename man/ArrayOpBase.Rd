@@ -277,7 +277,7 @@ Similar to SQL where clause and dplyr::filter.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$filter(
   ...,
-  expr,
+  expr = NULL,
   missing_fields_error_template = NULL,
   regex_func = getOption("arrayop.regex_func", default = "regex"),
   ignore_case = getOption("arrayop.ignore_case", default = TRUE)

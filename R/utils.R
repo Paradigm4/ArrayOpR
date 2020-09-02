@@ -3,6 +3,8 @@ source("R/private_utils/__source.R", local = TRUE, chdir = TRUE)
 # DBUtils class ----
 
 #' Database utility class
+#' 
+#' Common scidb operations
 DBUtils = R6::R6Class(
   "DBUtils", portable = F, cloneable = F,
   public = list(
