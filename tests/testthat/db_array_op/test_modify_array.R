@@ -56,7 +56,7 @@ test_that("Update array", {
 
 
 test_that("error cases", {
-  Target = conn$array_op_from_schema_str("array_name <fa:string, fb:int32> [da;db]")
+  Target = conn$array_from_schema("array_name <fa:string, fb:int32> [da;db]")
   dfArray = conn$array_op_from_df(data.frame(fa = letters[1:2], da=1:2, db=11:12), Target)
   
   # before redimension, the number of dimensions do not match between source and target

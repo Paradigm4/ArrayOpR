@@ -89,7 +89,7 @@ ScidbConnection <- R6::R6Class(
       joinedItems
     },
     array_op_from_scidbr_obj = function(obj) {
-      array_op_from_schema_str(obj@meta$schema)$spawn(
+      array_from_schema(obj@meta$schema)$spawn(
         obj@name
       )$.private$confirm_schema_synced()
     }
@@ -166,7 +166,7 @@ ScidbConnection <- R6::R6Class(
       }
       if(is.character(array_like) && length(array_like) == 1) {
         if(grepl("<", array_like))
-          return(array_op_from_schema_str(array_like))
+          return(array_from_schema(array_like))
         else if(grepl("^\\w+(\\.\\w+)?$", array_like))
           return(array(array_like))
       }
@@ -260,7 +260,7 @@ ScidbConnection <- R6::R6Class(
       assert_single_str(name)
       assert_inherits(schema_template, c("character", "ArrayOpBase"))
       schema_array = if(is.character(schema_template)) 
-        array_op_from_schema_str(schema_template) else schema_template
+        array_from_schema(schema_template) else schema_template
       self$execute(
         sprintf("CREATE %s ARRAY %s %s", 
                 if(.temp) "TEMP" else "", 
@@ -274,12 +274,12 @@ ScidbConnection <- R6::R6Class(
     array = function(array_name) {
       assert_single_str(array_name, "ERROR: param 'array_name' must be a single string")
       schema = query(sprintf("project(show(%s), schema)", array_name))
-      result = array_op_from_schema_str(schema[["schema"]])
+      result = array_from_schema(schema[["schema"]])
       result$.private$confirm_schema_synced()
       set_array_op_conn(result)
     }
     ,
-    array_op_from_schema_str = function(schema_str) {
+    array_from_schema = function(schema_str) {
       assert_single_str(schema_str, "ERROR: param 'schema_str' must be a single string")
       result = private$new_arrayop_from_schema_string(
         schema_str, 
@@ -287,11 +287,11 @@ ScidbConnection <- R6::R6Class(
       set_array_op_conn(result)
     }
     ,
-    array_op_from_afl = function(afl_str) {
+    array_from_afl = function(afl_str) {
       assert_single_str(afl_str, "ERROR: param 'afl_str' must be a single string")
       escapedAfl = gsub("'", "\\\\'", afl_str)
       schema = query(sprintf("project(show('%s', 'afl'), schema)", escapedAfl))
-      schemaArray = array_op_from_schema_str(schema[["schema"]])
+      schemaArray = array_from_schema(schema[["schema"]])
       result = schemaArray$spawn(afl_str)
       result$.private$confirm_schema_synced()
       set_array_op_conn(result)
@@ -302,7 +302,7 @@ ScidbConnection <- R6::R6Class(
     #' Create a persistent array_op by storing AFL as an array
     #' @param .temp Whether to create a temporary scidb array.
     #' Only effective when `save_array_name = NULL`
-    array_op_from_stored_afl = function(
+    array_from_stored_afl = function(
       afl_str, 
       # save_array_name = utility$random_array_name(),
       save_array_name = NULL,
@@ -394,7 +394,7 @@ ScidbConnection <- R6::R6Class(
           vectorArrays[[1]]
         } else {
           joinAfl = join_arrays_by_two(vectorArrayNames)
-          .result = array_op_from_afl(joinAfl)
+          .result = array_from_afl(joinAfl)
           .result$.set_meta('.ref', vectorArrays)
           .result
         }
@@ -430,7 +430,7 @@ ScidbConnection <- R6::R6Class(
         # We need to infer schema from the 'build' afl, but avoid unnecessary data transfer to scidb/shim.
         # So only the first row is sent to 'probe' the correct array schema
         probeOp = array_template$build_new(head(df, 1), build_dim_spec)
-        remoteSchema = array_op_from_afl(probeOp$to_afl())
+        remoteSchema = array_from_afl(probeOp$to_afl())
         # Still use the buildOp for actual data
         remoteSchema$
           spawn(buildOp$to_afl())$

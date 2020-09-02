@@ -39,7 +39,7 @@ utility = make_env(
       arrayRecordsDf = list_arrays_in_ns(ns)$transmute('name', 'schema')$to_df()
       .conn = get_conn()
       new_named_list(
-        sapply(arrayRecordsDf$schema, .conn$array_op_from_schema_str),
+        sapply(arrayRecordsDf$schema, .conn$array_from_schema),
         names = arrayRecordsDf$name
       )
     }
@@ -69,7 +69,7 @@ utility = make_env(
       fullAfl = sprintf(afl_template, ...)
       result = .private$cached[[fullAfl]]
       if(is.null(result)) {
-        result = get_conn()$array_op_from_afl(fullAfl)
+        result = get_conn()$array_from_afl(fullAfl)
         .private$cached[[fullAfl]] = result
       }
       result

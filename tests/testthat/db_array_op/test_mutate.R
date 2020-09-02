@@ -1,6 +1,6 @@
 context("ArrayOp: mutate")
 
-schemaTemplate = conn$array_op_from_schema_str(
+schemaTemplate = conn$array_from_schema(
   "<lower:string COMPRESSION 'zlib', upper:string, f_int32:int32, f_int64:int64, f_bool: bool, f_double: double> 
       [da=0:*:0:*; db=0:*:0:*]"
 )

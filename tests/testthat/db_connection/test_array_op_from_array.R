@@ -17,7 +17,7 @@ test_that("array_op from scidb array name", {
 # from schema string ----
 
 verify_array = function(input_schema_str, expected_afl, expected_schema_str, expected_attrs, expected_dims){
-  arr = conn$array_op_from_schema_str(input_schema_str)
+  arr = conn$array_from_schema(input_schema_str)
   expect_identical(arr$to_afl(), expected_afl)
   expect_identical(arr$to_schema_str(), expected_schema_str)
   expect_identical(arr$attrs, expected_attrs)
@@ -26,9 +26,9 @@ verify_array = function(input_schema_str, expected_afl, expected_schema_str, exp
 
 verify_parsing_error = function(input_schema_str, error_pattern){
   if(missing(error_pattern))
-    expect_error(conn$array_op_from_schema_str(input_schema_str))
+    expect_error(conn$array_from_schema(input_schema_str))
   else 
-    expect_error(conn$array_op_from_schema_str(input_schema_str), error_pattern)
+    expect_error(conn$array_from_schema(input_schema_str), error_pattern)
 }
 
 

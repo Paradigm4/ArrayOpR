@@ -8,17 +8,17 @@ test_that("persistent array_op from uploaded data frame", {
     f_bool = c(T,NA,F,NA,F),
     f_int64 = 1:5 * 10.0
   )
-  template = conn$array_op_from_schema_str(
+  template = conn$array_from_schema(
     " <f_str:string COMPRESSION 'zlib', f_int32:int32, f_int64:int64, f_bool: bool, f_double: double, f_datetime: datetime> [da=0:*:0:*]"
   )
   
   uploaded = conn$array_op_from_uploaded_df(df, template, .temp = F)
   filtered = uploaded$filter(f_double > 0)
   
-  stored1 = conn$array_op_from_stored_afl(
+  stored1 = conn$array_from_stored_afl(
     filtered$to_afl(), 
     save_array_name = random_array_name(), .temp = F, .gc = F)
-  stored2 = conn$array_op_from_stored_afl(filtered$to_afl(), .temp = T)
+  stored2 = conn$array_from_stored_afl(filtered$to_afl(), .temp = T)
   filteredDf = dplyr::filter(df, f_double > 0)
   
   expect_equal(stored1$to_df(), filteredDf)
@@ -38,7 +38,7 @@ test_that("Store AFL as scidb array and return arrayOp", {
     f_bool = c(T,NA,F,NA,F),
     f_int64 = 1:5 * 10.0
   )
-  template = conn$array_op_from_schema_str(
+  template = conn$array_from_schema(
     "<f_str:string COMPRESSION 'zlib', f_int32:int32, f_int64:int64, f_bool: bool, f_double: double, f_datetime: datetime> [da=0:*:0:*]"
   )
   
@@ -47,12 +47,12 @@ test_that("Store AFL as scidb array and return arrayOp", {
   
   randomName = random_array_name()
   
-  stored = conn$array_op_from_stored_afl(
+  stored = conn$array_from_stored_afl(
     uploaded$filter(f_double > 0)$to_afl(), 
     save_array_name = randomName, .temp = T, .gc = F
   )
   # 'overwrite' an existing array
-  stored = conn$array_op_from_stored_afl(
+  stored = conn$array_from_stored_afl(
     uploaded$filter(f_double < 0)$to_afl(), 
     save_array_name = randomName
   )

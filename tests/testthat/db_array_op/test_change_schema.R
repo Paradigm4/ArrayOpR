@@ -3,7 +3,7 @@ context("ArrayOp: change schema according to template")
 Template = conn$create_new_scidb_array(utility$random_array_name(), "<aa:string, ab:double, ac:int64, ad:int32> [da; db]")
 
 test_that("strict mode requires all fields match", {
-  # Template = conn$array_op_from_schema_str("Template <aa:string, ab:double, ac:int64, ad:int32> [da; db]")
+  # Template = conn$array_from_schema("Template <aa:string, ab:double, ac:int64, ad:int32> [da; db]")
   
   verify = function(changed){
     expect_identical(changed$dims, Template$dims)
@@ -50,7 +50,7 @@ test_that("sync_schema will update array schema from scidb only if the schema is
     expect_true(!identical(arr$sync_schema(), arr))
   }
   
-  verify_already_synced(conn$array_op_from_afl("list()"))
+  verify_already_synced(conn$array_from_afl("list()"))
   
   verify_already_synced(conn$array_op_from_df(data.frame(a=1,b='B')))
   verify_already_synced(conn$array_op_from_df(data.frame(a=1,b='B'), skip_scidb_schema_check = T)$sync_schema())

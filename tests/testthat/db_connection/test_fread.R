@@ -81,11 +81,11 @@ test_that("explicit template; with file header; column mapping", {
   
   # conn$fread returns array_op with fields order by template's dimensions and attributes that match file's col.names
   expect_equal(
-    conn$fread(f, template = conn$array_op_from_schema_str("<fa:string, fb:double> [da]"), header = T)$to_df(), 
+    conn$fread(f, template = conn$array_from_schema("<fa:string, fb:double> [da]"), header = T)$to_df(), 
     df %>% dplyr::select(da, fa, fb)
   )
   expect_equal(
-    conn$fread(f, template = conn$array_op_from_schema_str("<fa:string, fb:double> [da]"), header = T, col.name=names(df))$to_df(), 
+    conn$fread(f, template = conn$array_from_schema("<fa:string, fb:double> [da]"), header = T, col.name=names(df))$to_df(), 
     df %>% dplyr::select(da, fa, fb)
   )
   

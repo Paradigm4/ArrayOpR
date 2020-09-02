@@ -76,7 +76,7 @@ test_that("Drop dims", {
 # spawn ----
 
 test_that("no field data type requirement for locally created arrays", {
-  template = conn$array_op_from_schema_str("<fa:string, fb:int32, fc:bool> [da;db]")
+  template = conn$array_from_schema("<fa:string, fb:int32, fc:bool> [da;db]")
   a = template$spawn(excluded = c('da', 'fa'), added = 'extra', renamed = list(fc='fc_re'))
   
   expect_identical(a$dims, c('db'))

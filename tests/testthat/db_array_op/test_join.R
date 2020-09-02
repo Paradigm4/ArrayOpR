@@ -11,8 +11,8 @@ df_equal = function(actual_df, expected_df) {
 test_that("join with no conflicting field names", {
   leftDf = data.frame(lda = 1:5, ldb = 11:15, lfa = LETTERS[1:5],  lfb = 3.14 * 1:5)
   rightDf = data.frame(rda = 3:10, rdb = 13:20, rfa = LETTERS[3:10], rfb = 3.14 * 3:10)
-  leftTemplate = conn$array_op_from_schema_str("<lfa:string, lfb:double> [lda;ldb] ")
-  rightTemplate = conn$array_op_from_schema_str("<rfa:string, rfb:double> [rda;rdb] ")
+  leftTemplate = conn$array_from_schema("<lfa:string, lfb:double> [lda;ldb] ")
+  rightTemplate = conn$array_from_schema("<rfa:string, rfb:double> [rda;rdb] ")
   
   L = conn$array_op_from_df(leftDf, leftTemplate)$change_schema(leftTemplate)
   R = conn$array_op_from_df(rightDf, rightTemplate)$change_schema(rightTemplate)
@@ -161,8 +161,8 @@ test_that("join with no conflicting field names", {
 test_that("join with conflicting field names", {
   leftDf = data.frame(lda = 1:5, db = 11:15, fa = LETTERS[1:5],  lfb = 3.14 * 1:5)
   rightDf = data.frame(rda = 3:10, db = 13:20, fa = LETTERS[3:10], rfb = 3.14 * 3:10)
-  leftTemplate = conn$array_op_from_schema_str("<fa:string, lfb:double> [lda;db] ")
-  rightTemplate = conn$array_op_from_schema_str("<fa:string, rfb:double> [rda;db] ")
+  leftTemplate = conn$array_from_schema("<fa:string, lfb:double> [lda;db] ")
+  rightTemplate = conn$array_from_schema("<fa:string, rfb:double> [rda;db] ")
   # At least one input to 'cross_join' must have a specified chunk size.
   # So we need to persist the arrays
   L = conn$array_op_from_df(leftDf, leftTemplate)$change_schema(leftTemplate)$persist(.gc = F)
@@ -257,9 +257,9 @@ test_that("join with three operands", {
   df2 = data.frame(da = 3:10, dc = 13:20, fa = LETTERS[3:10], fc = 3.14 * 3:10)
   df3 = data.frame(dd = 5:15, db = 12:22, fd = LETTERS[5:15], fe = 1.23 * 0:10)
   
-  template1 = conn$array_op_from_schema_str("<fa:string, fb:double> [da;db] ")
-  template2 = conn$array_op_from_schema_str("<fa:string, fc:double> [da;dc] ")
-  template3 = conn$array_op_from_schema_str("<fd:string, fe:double> [dd;db] ")
+  template1 = conn$array_from_schema("<fa:string, fb:double> [da;db] ")
+  template2 = conn$array_from_schema("<fa:string, fc:double> [da;dc] ")
+  template3 = conn$array_from_schema("<fd:string, fe:double> [dd;db] ")
   
   a1 = conn$array_op_from_df(df1, template1)$change_schema(template1)
   a2 = conn$array_op_from_df(df2, template2)$change_schema(template2)
