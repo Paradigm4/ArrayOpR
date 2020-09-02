@@ -4,7 +4,7 @@ source("R/private_utils/__source.R", local = TRUE, chdir = TRUE)
 
 #' An R env that hosts arrayop package utility functions
 #' @export
-utility = make_env(
+dbutils = make_env(
   public = list(
     random_array_name = function(prefix = "Rarrayop_", n = 10L) {
       sprintf("%s_%s_", prefix, rawToChar(as.raw(sample(c(65:90,97:122), n, replace=TRUE))))

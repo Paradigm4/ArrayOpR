@@ -194,7 +194,7 @@ Only effective when \code{save_array_name = NULL}}
 \if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$upload_df(
   df,
   template = NULL,
-  name = utility$random_array_name(),
+  name = dbutils$random_array_name(),
   force_template_schema = FALSE,
   upload_by_vector = FALSE,
   .use_aio_input = FALSE,
@@ -212,7 +212,7 @@ Only effective when \code{save_array_name = NULL}}
 \if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$compile_df(
   df,
   template = NULL,
-  build_dim_spec = utility$random_field_name(),
+  build_dim_spec = dbutils$random_field_name(),
   force_template_schema = FALSE,
   skip_scidb_schema_check = FALSE
 )}\if{html}{\out{</div>}}

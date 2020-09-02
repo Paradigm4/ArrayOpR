@@ -302,7 +302,7 @@ ScidbConnection <- R6::R6Class(
     #' Only effective when `save_array_name = NULL`
     array_from_stored_afl = function(
       afl_str, 
-      # save_array_name = utility$random_array_name(),
+      # save_array_name = dbutils$random_array_name(),
       save_array_name = NULL,
       .temp = FALSE,
       .gc = TRUE
@@ -351,7 +351,7 @@ ScidbConnection <- R6::R6Class(
     upload_df = function(
       df, 
       template = NULL, 
-      name = utility$random_array_name(), 
+      name = dbutils$random_array_name(), 
       force_template_schema = FALSE,
       upload_by_vector = FALSE,
       .use_aio_input = FALSE, 
@@ -412,7 +412,7 @@ ScidbConnection <- R6::R6Class(
     ,
     compile_df = function(
       df, template = NULL, 
-      build_dim_spec = utility$random_field_name(),
+      build_dim_spec = dbutils$random_field_name(),
       force_template_schema = FALSE,
       skip_scidb_schema_check = FALSE
     ) {

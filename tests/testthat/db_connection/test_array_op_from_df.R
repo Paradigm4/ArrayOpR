@@ -15,7 +15,7 @@ test_that("upload data frame: no template", {
 
 test_that("various types of template", {
   templateStr = "<a:int32, b:string, c:bool> [x;y]"
-  templateArray = conn$create_array(utility$random_array_name(), templateStr)
+  templateArray = conn$create_array(dbutils$random_array_name(), templateStr)
   df = data.frame(x=1:2, y=3:4, a=1:2, b=letters[1:2], c=c(T,F))
   
   verify_template = function(template) {

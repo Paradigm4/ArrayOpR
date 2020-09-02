@@ -6,7 +6,7 @@ ALLOW_DB_TEST = TRUE
 run_sub_folders = function(){
   # import shared objects
   conn = get_default_connection()
-  random_array_name = utility$random_array_name
+  random_array_name = dbutils$random_array_name
   
   source("db_array_op/__source.R", local = TRUE, chdir = TRUE)
   source("db_connection/__source.R", local = TRUE, chdir = TRUE)

@@ -9,7 +9,7 @@ expect_df_equal = function(actual_df, expected_df) {
 
 
 test_that("Overwrite array", {
-  Target = conn$create_array(utility$random_array_name(), "<fa:string, fb:int32> [da;db]")
+  Target = conn$create_array(dbutils$random_array_name(), "<fa:string, fb:int32> [da;db]")
   
   df1 = data.frame(da=1:5, db=11:15, fa = letters[1:5], fb = 1:5)
   df2 = data.frame(da=3:8, db=13:18, fa = letters[3:8], fb = 3:8)
@@ -34,7 +34,7 @@ test_that("Overwrite array", {
 })
 
 test_that("Update array", {
-  Target = conn$create_array(utility$random_array_name(), "<fa:string, fb:int32> [da;db]")
+  Target = conn$create_array(dbutils$random_array_name(), "<fa:string, fb:int32> [da;db]")
   
   df1 = data.frame(da=1:5, db=11:15, fa = letters[1:5], fb = 1:5)
   df2 = data.frame(da=3:8, db2=13:18, fa2 = letters[3:8], fb = 3:8)

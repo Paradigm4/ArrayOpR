@@ -1,6 +1,6 @@
 context("ArrayOp: change schema according to template")
 
-Template = conn$create_array(utility$random_array_name(), "<aa:string, ab:double, ac:int64, ad:int32> [da; db]")
+Template = conn$create_array(dbutils$random_array_name(), "<aa:string, ab:double, ac:int64, ad:int32> [da; db]")
 
 test_that("strict mode requires all fields match", {
   # Template = conn$array_from_schema("Template <aa:string, ab:double, ac:int64, ad:int32> [da; db]")

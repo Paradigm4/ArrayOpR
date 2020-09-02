@@ -1,6 +1,6 @@
 context("ArrayOp: select")
 
-RefArray = conn$create_array(utility$random_array_name(), "<fa:string, fb:int32, fc:double> [da; db]", .temp = T)
+RefArray = conn$create_array(dbutils$random_array_name(), "<fa:string, fb:int32, fc:double> [da; db]", .temp = T)
 DataContent = data.frame(fa = letters[1:3], fb = 1:3, fc = 3.14 * 1:3, da = 1:3, db = 11:13)
 conn$array_from_df(DataContent)$change_schema(RefArray)$overwrite(RefArray)$execute()
 

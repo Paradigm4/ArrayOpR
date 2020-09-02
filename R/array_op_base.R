@@ -148,7 +148,7 @@ ArrayOpBase <- R6::R6Class(
     #' @param keyFileds Field names as join keys
     #' @param keep_dimensiosn If `keep_dimensions` is specified in scidb `equi_join` operator
     #' @return An AFL string
-    to_join_operand_afl = function(keyFields, keep_dimensions = FALSE, artificial_field = utility$random_field_name()) {
+    to_join_operand_afl = function(keyFields, keep_dimensions = FALSE, artificial_field = dbutils$random_field_name()) {
       
       selectedFields = self$selected
       if(.is_empty(selectedFields))
@@ -1413,7 +1413,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     }
     ,
     # @param .chunk_size aka. cells_per_chunk in 'flatten' mode.
-    drop_dims = function(mode = 'unpack', .chunk_size = NULL, .unpack_dim = utility$random_field_name()){
+    drop_dims = function(mode = 'unpack', .chunk_size = NULL, .unpack_dim = dbutils$random_field_name()){
       assert_single_str(mode)
       if(!is.null(.chunk_size)) assert_single_num(.chunk_size)
       VALID_MODES = c('unpack', 'flatten')

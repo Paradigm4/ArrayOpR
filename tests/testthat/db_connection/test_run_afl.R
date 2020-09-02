@@ -7,7 +7,7 @@ test_that("run afl query", {
 })
 
 test_that("create an array then remove it", {
-  name = utility$random_array_name()
+  name = dbutils$random_array_name()
   
   show_array = function(){
     conn$query(sprintf("show(%s)", name))

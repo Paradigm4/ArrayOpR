@@ -505,7 +505,7 @@ A new arrayOp
 \if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$drop_dims(
   mode = "unpack",
   .chunk_size = NULL,
-  .unpack_dim = utility$random_field_name()
+  .unpack_dim = dbutils$random_field_name()
 )}\if{html}{\out{</div>}}
 }
 
