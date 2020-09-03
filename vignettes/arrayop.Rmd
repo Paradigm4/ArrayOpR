@@ -18,7 +18,6 @@ library(arrayop) # optional step to leave out the `arrayop::` prefix.
 auth = yaml::yaml.load_file("~/.scidb_auth")
 # Then connect to scidb. Params host, username and token are all single strings and can be provided in any way
 conn = db_connect(host = "localhost", username = auth[["user-name"]], token = auth[["user-password"]])
-print(conn) # print out `username@host [scidb version]` if the connection is succesful
 ```
 
 Once we have connected to scidb with `db_connect`, we can get save the connection instance as shown above.
@@ -26,6 +25,7 @@ Or call `arrayop::get_default_connection()` anywhere in code, which always retur
 
 ```{r}
 identical(get_default_connection(), conn) # the exact same thing!
+print(conn) # print out `username@host [scidb version]` if the connection is succesful
 ```
 
 
@@ -102,14 +102,16 @@ arr_stored$to_df_all() # Notice the dimension column [i]
 ```
 
 
-# Common array operations
+**Common array operations**
 
-We can create array_ops on the fly and download as data frame.
-Each operation also returns an array_op instance. 
-So we can chain up the operations in a `dplyr` like data flow.
+We can create array_ops on the fly and download them as data frames.
+Each array operation also returns an array_op instance. 
+So we can chain up the operations in a `dplyr` like data flow. 
+All the array operation verbs are named following `dplyr` convention where appropriate,
+e.g. `filter`, `inner_join`, `mutate`, `group_by` and `summarize` etc.
 
 
-## Filter
+# Filter
 
 ```{r}
 # Comma separated expressions are joined with logical AND
@@ -120,12 +122,13 @@ arr_existing$filter(conc > 80, uptake > 40)$to_df()
 arr_existing$filter(conc <= 100 | conc > 900)$to_df() # logical OR
 
 # Filter on string fields
+# %like% takes regex as the right operand; all other verbs treat strings literally.
 arr_existing$filter(Plant %contains% "3", Plant %starts_with% "Q", Treatment %contains% "chill", Treatment %like% "chill[a-z]{2}$")$to_df()
 ```
 
-## Mutate/Transmute
+# Mutate/Transmute
 
-### By expressions
+## By expressions
 
 As shown below, field names can be either quoted or not quoted. 
 But the field expression must be a single string. 
@@ -153,7 +156,7 @@ result$to_afl()
 result$to_df()
 ```
 
-### By arrays
+## By arrays
 
 `mutate` and `transmute` are useful if the mutated fields are in expressions. 
 Another common use case is mutating fields of an existing array by another array, rather than by expressions.
@@ -165,7 +168,7 @@ result$to_afl()
 result$to_df()
 ```
 
-## Mutability by `update`/`overwrite`
+# Array Mutability 
 
 **NOTE**: the source arrays remain the same in examples above. All mutate operations
 just created **mutated data copies** of the source.
@@ -182,14 +185,94 @@ arr_stored$to_df() # Only matched data cells are updated
 
 mutated$overwrite(arr_stored)$execute()
 arr_stored$to_df() # Caution: Overwrite all array content!!!
+```
 
+# Join
 
+Three joins are supported: `inner_join`, `left_join` and `right_join`.
+
+First, let's populate two arrays.
+
+```{r}
+leftDf = data.frame(lda = 1:5, db = 11:15, fa = LETTERS[1:5],  lfb = 3.14 * 1:5)
+rightDf = data.frame(rda = 3:10, db = 13:20, fa = LETTERS[3:10], rfb = 3.14 * 3:10)
+
+leftDf
+rightDf
+
+# At least one input to 'cross_join' must have a specified chunk size.
+# So we need to persist the arrays
+L = conn$array_from_df(leftDf, "<fa:string, lfb:double> [lda;db] ", force_template_schema = T)$persist(.gc = F)
+R = conn$array_from_df(rightDf, "<fa:string, rfb:double> [rda;db] ", force_template_schema = T)$persist(.gc = F)
+```
+
+Then, start with a vinilla join where join keys are inferred from array fields.
+In this case, `fa` and `db` are join keys since they exist in both arrays.
+
+```{r}
+L$inner_join(R)$to_df()
+L$left_join(R)$to_df()
+L$right_join(R)$to_df()
+```
+
+We can specify which fields to keep with `array_op$select`. 
+By default, all fields are selected, except that the join keys only exist once in the result even if they are selected on both operands.
+
+```{r}
+L$select("lfb", "lda")$
+  inner_join(R)$to_df()
+
+L$inner_join(R$select("rda", "rfb"))$to_df()
+
+L$select("lfb", "db")$inner_join(R$select("rfb"))$to_df()
+```
+
+We can specify the join keys and aliases explicitly.
+Array aliases are important to disambiguate overlapping fields.
+
+```{r}
+# `db` as join key, `fa` exists in both arrays and will be suffixed with array aliaes in the result
+L$left_join(R, on_both = c('db'), left_alias = "_LL", right_alias = "_RR")$to_df()
+
+# different join keys
+L$right_join(R, on_left = "lda", on_right = "rda", left_alias = "_LL", right_alias = "_RR")$to_df()
+```
+
+## Join mode
+
+By default, join is implemented by SciDB `equi_join` operator, which works great on either array dimensions and/or attributes. 
+But `equi_join` has one drawback as it materializes results. This can be underiable in a complex nested join.
+
+We can choose a different join mode, `cross_join`, to avoid result materialization. 
+
+Two constraints with `cross_join` mode:
+
+  1. join keys must be dimensions on both operands.
+  1. only `inner_join` is supported.
+
+```{r}
+L$inner_join(R, 
+             on_left = c('db', 'lda'), 
+             on_right = c('db', 'rda'), 
+             join_mode = 'cross_join', left_alias = "_LL", right_alias = "_RR")$
+  to_df()
+```
+
+## Custom settings
+
+```{r}
+result = L$inner_join(R, 
+             settings = list(
+               algorithm = "'hash_replicate_right'", # string setting item
+               hash_join_threshold = 1024 # numeric setting item
+         ))
+result$to_afl()
+result$to_df()
 ```
 
 
 
-
-## Aggregation
+# Aggregation
 ```{r}
 # Tip: Call `dbutils$db_aggregates()$to_df()` to see supported aggregate functions
 arr_existing$
@@ -197,8 +280,7 @@ arr_existing$
   summarize("count" = "count(*)",
             "uptake_sd" = "stdev(uptake)",
             "avg(conc)", # unamed fields are named by SciDB
-            "max(uptake)"
-            )$
+            "max(uptake)")$
   to_df()
 
 # Aggregation result is still an array_op. So we can carry on.
@@ -207,19 +289,36 @@ arr_existing$
   summarize("count" = "count(*)",
             "uptake_sd" = "stdev(uptake)",
             "avg(conc)", 
-            "max(uptake)"
-            )$
-  filter(uptake_sd > 20)
+            "max(uptake)")$
+  filter(uptake_sd > 8)$ # requires uptake standard deviation > 8
   to_df()
 ```
 
+# Versions
 
-# Run raw AFL statements in SciDB
+Since we just modified `arr_stored` several times. 
+Let's check out how many versions it has so far and delete the version history.
+
+```{r}
+arr_stored$versions()
+arr_stored$remove_versions()
+arr_stored$versions()
+```
+
+
+
+
+
+# Raw AFL
+
+Hopefully `arrayop` captures all your common SciDB use cases.
+In case something is missing, we can run raw AFL statements directly on a ScidbConnection object.
 
 To run AFL statements (in string aka. length-1 R character vector format), use one of the methods of a `ScidbConnection`:
 
-  1. `ScidbConnection$query` if we expect results (normally as R data frames)
-  1. `ScidbConnection$execute` if we do not expect results 
+  1. `query` if we expect results (array attributes as R data frames).
+  1. `query_all` if we need both array dimensions and attributes.
+  1. `execute` if we do not expect results 
   
 ```{r}
 conn$query("list('operators')")
@@ -249,112 +348,25 @@ conn$query(afl(
 ```
 
 
-<!-- # Interact with SciDB Arrays -->
+# Remove arrays
 
-<!-- We normally deal with a database with array already populated.  -->
-<!-- In this case, let's first create an array. -->
-<!-- ```{r} -->
-<!-- # Try to remove the temp array just in case it exists -->
-<!-- try(conn$execute("remove(temparray_quick_start)"), silent = TRUE) -->
-<!-- conn$execute("create array temparray_quick_start <a:int32, b:string, c:bool> [z]") -->
-<!-- ``` -->
+**NOTE:** removed arrays cannot be recovered. 
+Always double check and back up if necessary before entering the danger zone.
 
-<!-- ## Get an Array instance  -->
+```{r}
+conn$execute("remove(temp_array)") # manually remove
 
-<!-- ```{r} -->
-<!-- tempArray = conn$array_op_from_name("public.temparray_quick_start") # here we use an explicit "public" namespace which is optional -->
-<!-- print(tempArray)  -->
-<!-- print(tempArray$to_afl()) -->
-<!-- print(tempArray$to_schema_str()) -->
-<!-- ``` -->
+for(x in c(arr_uploaded, 
+           arr_created, 
+           arr_existing,
+           arr_compiled, 
+           arr_stored, 
+           L, R
+           )){
+  if(x$exists_persistent_array()) { # can only remove persistent arrays
+    x$remove_self()
+  }
+}
 
-<!-- ## Store a data frame into an existing Array -->
-<!-- ```{r} -->
-<!-- df = data.frame(a=1:10, b=letters[1:10], c=c(T,F,F,T,NA), z=101:110) -->
-<!-- build = tempArray$build_new(df = df) -->
-<!-- overwriteOp = build$change_schema(tempArray)$overwrite(tempArray) -->
-<!-- overwriteOp$execute() -->
-<!-- tempArray$to_df() -->
-<!-- ``` -->
-
-<!-- ## Handy methods to inspect Array -->
-
-<!-- ```{r} -->
-<!-- tempArray$summarize() -->
-<!-- tempArray$row_count() -->
-<!-- tempArray$head(5) -->
-<!-- tempArray$head(5, skip = 3) -->
-<!-- ``` -->
-
-
-<!-- ## Filter Array data -->
-
-<!-- ```{r} -->
-<!-- tempArray$where(z >= 105)$to_df() -->
-<!-- tempArray$where(not_null(c))$to_df() -->
-
-<!-- tempArray$where(z >= 105, not_null(c))$to_df() # AND -->
-<!-- tempArray$where(z >= 105 || is_null(c))$to_df() # OR -->
-<!-- ``` -->
-<!-- ## Modify Array data -->
-
-<!-- There is no in-place modification similar to SQL `update` in either `arrayop` package or SciDB.  -->
-<!-- So we need to create a mutated data array and then overwrite the original with it. -->
-
-<!-- ```{r} -->
-<!-- mutated = tempArray$where(z > 105)$mutate(list(b = "'mutated'")) -->
-<!-- # notice that `mutated` is just an Array instance in R and a piece of AFL for SciDB,  -->
-<!-- # but not materialized or stored into any array -->
-<!-- mutated$to_afl() -->
-<!-- mutated$to_df() -->
-
-<!-- # The original tempArray is not changed -->
-<!-- tempArray$to_df() -->
-
-<!-- # Now let's update the tempArray.  -->
-<!-- mutated$update(tempArray)$execute() -->
-<!-- tempArray$to_df() -->
-
-<!-- # Now restore the array content -->
-<!-- build$change_schema(tempArray)$overwrite(tempArray)$execute() -->
-<!-- # And try 'overwrite' the tempArray -->
-<!-- mutated$overwrite(tempArray)$execute() -->
-<!-- tempArray$to_df() -->
-
-<!-- ``` -->
-<!-- ## Remove Arrays and array versions -->
-
-<!-- **Danger Zone Alert** -->
-<!-- Remove operations cannot be undone!!!  -->
-
-<!-- ```{r} -->
-<!-- # Let's create many versions -->
-<!-- for(i in 1:10){ -->
-<!--   build$change_schema(tempArray)$overwrite(tempArray)$execute() -->
-<!-- } -->
-
-<!-- # List array versions -->
-<!-- tempArray$versions() -->
-
-<!-- # Remove versions up to a version_id so that the version_id is the earliest version remaining  -->
-<!-- tempArray$remove_versions(version_id = 5) -->
-<!-- tempArray$versions() -->
-
-<!-- # Or just remove all versions -->
-<!-- tempArray$remove_versions() -->
-<!-- tempArray$versions() -->
-<!-- ``` -->
-<!-- Ready to finally remove the temp array?  -->
-<!-- ```{r} -->
-<!-- tempArray$remove_self() -->
-
-<!-- # tempArray is no longer available! -->
-<!-- tryCatch(tempArray$versions(), error = print) -->
-<!-- ``` -->
-
-```{r, echo=FALSE}
-conn$execute("remove(temp_array)")
-arr_CO2s = c(arr_uploaded, arr_created, arr_existing, arr_compiled, arr_stored)
-sapply(arr_CO2s, function(x) if(x$exists_persistent_array()) x$remove_self())
 ```
 
