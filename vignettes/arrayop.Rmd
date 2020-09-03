@@ -306,6 +306,66 @@ arr_stored$versions()
 ```
 
 
+# Read Files
+
+`fread` method of a connection object takes a file path or multiple file paths as input,
+with other params, and returns an array_op which can be further processed to 
+modify existing arrays or join with other arrays. 
+
+If we need to read data from all file columns, use `fread` without a template.
+This behaves similarly to `data.table::fread`. 
+
+```{r, eval=F}
+# file column names and types are inferred by peeking into a few lines into the file
+conn$fread("/file/path", header = T, sep = "\t") # default sep is "\t"
+
+# col.names are V1, V2, ... types are inferred.
+conn$fread("/file/path", header = F, nrow = 10) # infer column type using only up to first 10 rows
+
+# file column types are inferred, but names are provided explicitly. col.names can be different than actual file column names but must be the same number as columns.
+conn$fread("/file/path", header = T, col.names = c("chrom", "pos", "ref", "alt"))
+conn$fread("/file/path", header = F, col.names = c("chrom", "pos", "ref", "alt")) # same as above, but read the first row of data
+```
+
+More commonly, we want to load data from file into an existing array.
+In this case, we provide a template (either array_op or schema string), 
+only the columns whose name matches the template's fields are imported.
+
+**NOTE:** `template` field types will superceedes actual file column types. 
+If `header=T`, column names can still be inferred.
+
+```{r, eval=F}
+conn$fread("/file/path", template = templateArray, header = T)
+# template can also be a schema string 
+# When header = F, we need to provide the correct col.names so they match the template fields.
+conn$fread("/file/path", template = "<ref:string, alt:string> [chrom;pos]", 
+           header = F, col.names = c("chrom", "pos", "extra_col1", "ref", "alt", "extra_col2")) # extra_cols ignored
+
+```
+
+In examples above, `fread` generates AFL where fields are coerced to the template data types.
+If no template provided, we can think of the data.frame read from `nrows` lines of the file as a template.
+But no all files are perfectly formatted. We often need to error handle ill-formatted fields or missing data.
+
+`auto_dcast` param, if set TRUE, will cast all numerical fields using `dcast(a1, double(null))` where `double` can be any numerical types, and `a1` is the matching field.
+
+```{r, eval=F}
+conn$fread("/file/path", template = myArray, header = T, auto_dcast = T)
+```
+
+In case of special field casting, we can provide mutate imported fields on the fly.
+`@` is replaced with raw imported string fields, e.g. a0, a1, a2, ...
+
+```{r, eval=F}
+conn$fread("/file/path", template = myArray, header = T,
+           mutate_fields = list('chrom' = "iif(@='X', 23, iif(@='Y', 24, dcast(@, int64(null))))"))
+
+# We can still dcast other numeric fields while casting `chrom` differently
+conn$fread("/file/path", template = myArray, header = T, 
+           auto_dcast = T,
+           mutate_fields = list('chrom' = "iif(@='X', 23, iif(@='Y', 24, dcast(@, int64(null))))"))
+
+```
 
 
 

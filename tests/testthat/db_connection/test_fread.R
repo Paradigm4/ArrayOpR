@@ -118,9 +118,7 @@ test_that("explicit template; without file header; column mapping", {
     df %>% dplyr::select(da, fa, fb)
   )
   expect_equal(
-    #todo: if array schema string doesn't have a dimension (ie. [i]), an error will occur.
     conn$fread(f, template = "<extra:bool, da:int32, fa:string, fb:double>", header = F, col.names = names(df))$to_df(),
-    # conn$fread(f, template = "<extra:bool, da:int32, fa:string, fb:double> [i]", header = F, col.names = names(df))$to_df(),
     df
   )
   expect_equal(
