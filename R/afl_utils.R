@@ -12,16 +12,14 @@
 
 # AFL Expressions denoted by R Expressions ------------------------------------------------------------------------
 
-
-
-#' Validate a filter expression ('filterExpr' must be a single R call expression)
-#'
-#' Current only report errors on:
-#'   1. Name symbols that are not existing schema fields
-#'   2. Non-atomic 'values'
-#' @param filterExpr An rlang::expr
-#' @return A list object with named elements:
-#   success:bool, absent_fields: c(''), error_msgs: c('')
+# Validate a filter expression ('filterExpr' must be a single R call expression)
+#
+# Current only report errors on:
+#   1. Name symbols that are not existing schema fields
+#   2. Non-atomic 'values'
+# @param filterExpr An rlang::expr
+# @return A list object with named elements:
+#  success:bool, absent_fields: c(''), error_msgs: c('')
 validate_filter_expr = function(filterExpr, allFieldNames) {
   absentFields = c()
   errorMsgs = c()
@@ -52,6 +50,18 @@ validate_filter_expr = function(filterExpr, allFieldNames) {
     success = .is_empty(absentFields) && .is_empty(errorMsgs),
     absent_fields = absentFields, error_msgs = errorMsgs
   ))
+}
+
+# Just multple fields with sep = ','
+# 
+# Default behavior: `paste(..., sep = sep, collapse = sep)` where `sep = ','`
+# 
+# afl(...) will convert vectors to joined strings separated by `,`. 
+# This function is useful in concatenating multiple vectors in parallel, 
+# e.g. joining a new field vector and expression vector for the `apply` operator.
+# @param ... Multiple string vectors
+afl_join_fields <- function(..., sep = ',') {
+  paste(..., sep = sep, collapse = sep)
 }
 
 # Construct AFL expressions ---------------------------------------------------------------------------------------
@@ -135,23 +145,18 @@ afl <- function(..., envir = parent.frame()) {
   return(convert_operand(e))
 }
 
-#' Just multple fields with sep = ','
-#' 
-#' Default behavior: `paste(..., sep = sep, collapse = sep)` where `sep = ','`
-#' 
-#' afl(...) will convert vectors to joined strings separated by `,`. 
-#' This function is useful in concatenating multiple vectors in parallel, 
-#' e.g. joining a new field vector and expression vector for the `apply` operator.
-#' @param ... Multiple string vectors
-afl_join_fields <- function(..., sep = ',') {
-  paste(..., sep = sep, collapse = sep)
-}
 
 # AFLUtils class -----
 
-AFLUtils = R6::R6Class(
+#' AFL utility functions
+#' 
+#' 
+#' Normally you don't need these functions. But they are flexible in constructing
+#' high-order AFL expressions.
+AFLUtils <- R6::R6Class(
   "AFLUtils", cloneable = F, portable = F,
   public = list(
+    #' @description 
     #' Convert filter expression(s) to AFL filter
     #' 
     #' @param e An R expression vector of length 1 or more
@@ -271,6 +276,7 @@ AFLUtils = R6::R6Class(
       walkThru(e)
     }
     ,
+    #' @description 
     #' Convert API ... args to an R expression vector
     #' 
     #' Some API functions include ... arg to represent arbitrary search criteria. 
@@ -360,6 +366,7 @@ AFLUtils = R6::R6Class(
       res
     }
     ,
+    #' @description 
     #' Create a list of R expressions
     #' 
     #' The ... ellipsis arg can include arbitrary expressions, where all names are preserved in their literal forms,
@@ -382,6 +389,7 @@ AFLUtils = R6::R6Class(
       return(structure(allExprs, names = NULL))
     }
     ,
+    #' @description 
     #' Merge multiple R expressions into one
     #' 
     #' Merge an ExprsList into a single Expression so that it can be used as a FilterExpr

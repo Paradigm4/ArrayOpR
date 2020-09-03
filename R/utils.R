@@ -66,8 +66,7 @@ DBUtils = R6::R6Class(
       names(obj) <- sanitize_names(names(obj))
       obj
     }
-  ),
-  active = list(
+    ,
     db_namespaces= function(){
       from_formatted_afl("list('namespaces')") 
     }
@@ -107,6 +106,9 @@ DBUtils = R6::R6Class(
     db_aggregates = function(){
       from_formatted_afl("list('aggregates')")
     }
+  ),
+  active = list(
+    
     
   )
   ,

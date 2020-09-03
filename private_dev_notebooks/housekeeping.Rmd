@@ -2,11 +2,18 @@
 title: "Housekeeping"
 ---
 
+```{r}
+library(arrayop)
+auth = yaml::yaml.load_file("~/.scidb_auth")
+conn = arrayop::db_connect(host = "localhost", username = auth[["user-name"]], token = auth[["user-password"]])
+```
+
+
 Check if temporary arrays are auto deleted after R's gc()
 
 ```{r}
 conn = arrayop::get_default_connection()
-listArrays = conn$array_op_from_afl("list()")
+listArrays = conn$array_from_afl("list()")
 ```
 
 ```{r}
@@ -22,6 +29,13 @@ for(name in tempArrayNames){
   conn$execute(afl(name | remove))
 }
 ```
+
+```{r}
+testArrays = dbutils$list_arrays_in_ns()$filter(name %starts_with% "test_")$select("name")$to_df()
+testArrays
+testArrays$name %>% sapply(., function(x) conn$execute(afl(x | remove)))
+```
+
 
 ## Create tmeporary arrays
 

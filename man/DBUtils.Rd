@@ -23,6 +23,16 @@ Common scidb operations
 \item \href{#method-load_array_ops_from_namespace}{\code{DBUtils$load_array_ops_from_namespace()}}
 \item \href{#method-sanitize_names}{\code{DBUtils$sanitize_names()}}
 \item \href{#method-sanitize_names_for}{\code{DBUtils$sanitize_names_for()}}
+\item \href{#method-db_namespaces}{\code{DBUtils$db_namespaces()}}
+\item \href{#method-db_users}{\code{DBUtils$db_users()}}
+\item \href{#method-db_roles}{\code{DBUtils$db_roles()}}
+\item \href{#method-db_operators}{\code{DBUtils$db_operators()}}
+\item \href{#method-db_instances}{\code{DBUtils$db_instances()}}
+\item \href{#method-db_queries}{\code{DBUtils$db_queries()}}
+\item \href{#method-db_macros}{\code{DBUtils$db_macros()}}
+\item \href{#method-db_types}{\code{DBUtils$db_types()}}
+\item \href{#method-db_libraries}{\code{DBUtils$db_libraries()}}
+\item \href{#method-db_aggregates}{\code{DBUtils$db_aggregates()}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -118,6 +128,96 @@ A character vector of sanitized names
 \subsection{Method \code{sanitize_names_for()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DBUtils$sanitize_names_for(obj)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-db_namespaces"></a>}}
+\if{latex}{\out{\hypertarget{method-db_namespaces}{}}}
+\subsection{Method \code{db_namespaces()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DBUtils$db_namespaces()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-db_users"></a>}}
+\if{latex}{\out{\hypertarget{method-db_users}{}}}
+\subsection{Method \code{db_users()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DBUtils$db_users()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-db_roles"></a>}}
+\if{latex}{\out{\hypertarget{method-db_roles}{}}}
+\subsection{Method \code{db_roles()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DBUtils$db_roles()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-db_operators"></a>}}
+\if{latex}{\out{\hypertarget{method-db_operators}{}}}
+\subsection{Method \code{db_operators()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DBUtils$db_operators()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-db_instances"></a>}}
+\if{latex}{\out{\hypertarget{method-db_instances}{}}}
+\subsection{Method \code{db_instances()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DBUtils$db_instances()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-db_queries"></a>}}
+\if{latex}{\out{\hypertarget{method-db_queries}{}}}
+\subsection{Method \code{db_queries()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DBUtils$db_queries()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-db_macros"></a>}}
+\if{latex}{\out{\hypertarget{method-db_macros}{}}}
+\subsection{Method \code{db_macros()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DBUtils$db_macros()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-db_types"></a>}}
+\if{latex}{\out{\hypertarget{method-db_types}{}}}
+\subsection{Method \code{db_types()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DBUtils$db_types()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-db_libraries"></a>}}
+\if{latex}{\out{\hypertarget{method-db_libraries}{}}}
+\subsection{Method \code{db_libraries()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DBUtils$db_libraries()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-db_aggregates"></a>}}
+\if{latex}{\out{\hypertarget{method-db_aggregates}{}}}
+\subsection{Method \code{db_aggregates()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DBUtils$db_aggregates()}\if{html}{\out{</div>}}
 }
 
 }

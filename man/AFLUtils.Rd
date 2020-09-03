@@ -2,11 +2,15 @@
 % Please edit documentation in R/afl_utils.R
 \name{AFLUtils}
 \alias{AFLUtils}
-\title{Convert filter expression(s) to AFL filter}
+\title{AFL utility functions}
 \description{
-Convert filter expression(s) to AFL filter
+AFL utility functions
 
-Convert filter expression(s) to AFL filter
+AFL utility functions
+}
+\details{
+Normally you don't need these functions. But they are flexible in constructing
+high-order AFL expressions.
 }
 \seealso{
 See \code{\link{e}} for more.
@@ -24,6 +28,7 @@ See \code{\link{e}} for more.
 \if{html}{\out{<a id="method-e_to_afl_filter"></a>}}
 \if{latex}{\out{\hypertarget{method-e_to_afl_filter}{}}}
 \subsection{Method \code{e_to_afl_filter()}}{
+Convert filter expression(s) to AFL filter
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{AFLUtils$e_to_afl_filter(e, regex_func = "rsub", ignore_case = TRUE)}\if{html}{\out{</div>}}
 }
@@ -37,6 +42,12 @@ See \code{\link{e}} for more.
 }
 \subsection{Returns}{
 An AFL filter string
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-args_to_expressions"></a>}}
+\if{latex}{\out{\hypertarget{method-args_to_expressions}{}}}
+\subsection{Method \code{args_to_expressions()}}{
 Convert API ... args to an R expression vector
 
 Some API functions include ... arg to represent arbitrary search criteria.
@@ -45,14 +56,8 @@ e.g. xxx_contains, xxx_range, xxx_not.
 
 Eg. name_contains = 'str' => name \%contains\% 'str'
 Eg. value_range = c(1, 9) => c(value >= 1, value <= 9)
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-args_to_expressions"></a>}}
-\if{latex}{\out{\hypertarget{method-args_to_expressions}{}}}
-\subsection{Method \code{args_to_expressions()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{AFLUtils$args_to_expressions(..., .param_list = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{AFLUtils$args_to_expressions(..., .dots = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -60,12 +65,18 @@ Eg. value_range = c(1, 9) => c(value >= 1, value <= 9)
 \describe{
 \item{\code{...}}{API ellipsis arg}
 
-\item{\code{.param_list}}{Explicitly provide a parameter list. If not NULL, the ellipsis params are ignored}
+\item{\code{.dots}}{Explicitly provide a parameter list. If not NULL, the ellipsis params are ignored}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
 R expression vector
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-e"></a>}}
+\if{latex}{\out{\hypertarget{method-e}{}}}
+\subsection{Method \code{e()}}{
 Create a list of R expressions
 
 The ... ellipsis arg can include arbitrary expressions, where all names are preserved in their literal forms,
@@ -78,12 +89,6 @@ supported to ease AFL generation:
 \item \code{\%in\%} semantically similar to R. \code{a \%in\% !!c(1,2,3)} will be translated to \verb{(a == 1 or a == 2 or a == 3)}
 \item \verb{\%like\%} for string regex matching.
 }
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-e"></a>}}
-\if{latex}{\out{\hypertarget{method-e}{}}}
-\subsection{Method \code{e()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{AFLUtils$e(...)}\if{html}{\out{</div>}}
 }
@@ -97,15 +102,15 @@ supported to ease AFL generation:
 }
 \subsection{Returns}{
 A list of R expressions
-Merge multiple R expressions into one
-
-Merge an ExprsList into a single Expression so that it can be used as a FilterExpr
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-e_merge"></a>}}
 \if{latex}{\out{\hypertarget{method-e_merge}{}}}
 \subsection{Method \code{e_merge()}}{
+Merge multiple R expressions into one
+
+Merge an ExprsList into a single Expression so that it can be used as a FilterExpr
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{AFLUtils$e_merge(el, mode = "AND")}\if{html}{\out{</div>}}
 }
