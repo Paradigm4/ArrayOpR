@@ -50,7 +50,7 @@ test_that("sync_schema will update array schema from scidb only if the schema is
     expect_true(!identical(arr$sync_schema(), arr))
   }
   
-  verify_already_synced(conn$array_from_afl("list()"))
+  verify_already_synced(conn$afl_expr("list()"))
   
   verify_already_synced(conn$array_from_df(data.frame(a=1,b='B')))
   verify_already_synced(conn$array_from_df(data.frame(a=1,b='B'), skip_scidb_schema_check = T)$sync_schema())

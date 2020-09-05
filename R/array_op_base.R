@@ -1319,7 +1319,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
                                                  source_anti_collision_dim_spec = source_anti_collision_dim_spec)
       }
       # browser()
-      result = private$conn$array_from_afl(result$to_afl())
+      result = private$conn$afl_expr(result$to_afl())
       return(result)
     }
     ,
@@ -1372,7 +1372,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       # old
       # fieldExprs = .dots %?% list(...)
       # reshaped = private$reshape_attrs_with_dtypes(fieldExprs)
-      # private$conn$array_from_afl(reshaped$to_afl())
+      # private$conn$afl_expr(reshaped$to_afl())
     }
     ,
     mutate_by = function(data_array, 
@@ -1423,14 +1423,14 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       if(mode == 'unpack'){
         .ifelse(
           is.null(.chunk_size),
-          conn$array_from_afl(afl(self | unpack(.unpack_dim))),
-          conn$array_from_afl(afl(self | unpack(.unpack_dim, .chunk_size)))
+          conn$afl_expr(afl(self | unpack(.unpack_dim))),
+          conn$afl_expr(afl(self | unpack(.unpack_dim, .chunk_size)))
         )
       } else {
         .ifelse(
           is.null(.chunk_size),
-          conn$array_from_afl(afl(self | flatten)),
-          conn$array_from_afl(afl(self | flatten(glue("cells_per_chunk: {.chunk_size}"))))
+          conn$afl_expr(afl(self | flatten)),
+          conn$afl_expr(afl(self | flatten(glue("cells_per_chunk: {.chunk_size}"))))
         )
       }
     },
@@ -1567,7 +1567,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     sync_schema = function() {
       if(self$is_schema_from_scidb) self else 
         if(!self$is_persistent())
-          private$conn$array_from_afl(self$to_afl()) else
+          private$conn$afl_expr(self$to_afl()) else
             private$conn$array(self$to_afl())
     }
     ,
@@ -1598,7 +1598,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
                paste0(agg_exprs, ' as ', aliases))
       } else agg_exprs
       
-      result = private$conn$array_from_afl(afl(
+      result = private$conn$afl_expr(afl(
         self | grouped_aggregate(
           paste(agg_exprs_pairs, collapse = ','),
           group_by_fields

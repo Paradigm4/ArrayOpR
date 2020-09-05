@@ -119,7 +119,7 @@ DBUtils = R6::R6Class(
       fullAfl = sprintf(afl_template, ...)
       result = private$cached[[fullAfl]]
       if(is.null(result)) {
-        result = get_conn()$array_from_afl(fullAfl)
+        result = get_conn()$afl_expr(fullAfl)
         private$cached[[fullAfl]] = result
       }
       result

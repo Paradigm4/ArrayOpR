@@ -286,7 +286,7 @@ ScidbConnection <- R6::R6Class(
       set_array_op_conn(result)
     }
     ,
-    array_from_afl = function(afl_str) {
+    afl_expr = function(afl_str) {
       assert_single_str(afl_str, "ERROR: param 'afl_str' must be a single string")
       escapedAfl = gsub("'", "\\\\'", afl_str)
       schema = query(sprintf("project(show('%s', 'afl'), schema)", escapedAfl))
@@ -393,7 +393,7 @@ ScidbConnection <- R6::R6Class(
           vectorArrays[[1]]
         } else {
           joinAfl = join_arrays_by_two(vectorArrayNames)
-          .result = array_from_afl(joinAfl)
+          .result = afl_expr(joinAfl)
           .result$.set_meta('.ref', vectorArrays)
           .result
         }
@@ -429,7 +429,7 @@ ScidbConnection <- R6::R6Class(
         # We need to infer schema from the 'build' afl, but avoid unnecessary data transfer to scidb/shim.
         # So only the first row is sent to 'probe' the correct array schema
         probeOp = array_template$build_new(head(df, 1), build_dim_spec)
-        remoteSchema = array_from_afl(probeOp$to_afl())
+        remoteSchema = afl_expr(probeOp$to_afl())
         # Still use the buildOp for actual data
         remoteSchema$
           spawn(buildOp$to_afl())$
