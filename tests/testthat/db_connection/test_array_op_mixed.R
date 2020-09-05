@@ -15,10 +15,8 @@ test_that("persistent array_op from uploaded data frame", {
   uploaded = conn$upload_df(df, template, .temp = F)
   filtered = uploaded$filter(f_double > 0)
   
-  stored1 = conn$array_from_stored_afl(
-    filtered$to_afl(), 
-    save_array_name = random_array_name(), .temp = F, .gc = F)
-  stored2 = conn$array_from_stored_afl(filtered$to_afl(), .temp = T)
+  stored1 = filtered$persist(.temp = F, .gc = F)
+  stored2 = filtered$persist(.temp = T)
   filteredDf = dplyr::filter(df, f_double > 0)
   
   expect_equal(stored1$to_df(), filteredDf)
@@ -45,17 +43,11 @@ test_that("Store AFL as scidb array and return arrayOp", {
   uploaded = conn$upload_df(df, template, .temp = F)
   filtered = uploaded$filter(f_double > 0)
   
-  randomName = random_array_name()
+  randomName = dbutils$random_array_name()
   
-  stored = conn$array_from_stored_afl(
-    uploaded$filter(f_double > 0)$to_afl(), 
-    save_array_name = randomName, .temp = T, .gc = F
-  )
+  stored = uploaded$filter(f_double > 0)$persist(randomName, .temp = T, .gc = F)
   # 'overwrite' an existing array
-  stored = conn$array_from_stored_afl(
-    uploaded$filter(f_double < 0)$to_afl(), 
-    save_array_name = randomName
-  )
+  stored = uploaded$filter(f_double < 0)$persist(randomName)
   
   expect_equal(
     stored$to_df(),

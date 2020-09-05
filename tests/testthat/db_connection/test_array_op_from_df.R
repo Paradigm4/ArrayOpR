@@ -74,24 +74,21 @@ test_that("upload data frame: no template, by vectors", {
 
 test_that("upload data frame with a template", {
   df = data.frame(a = letters[1:5], b = 1:5, z = 11:15)
-  
-  joinOp = conn$upload_df(
+  uploaded = conn$upload_df(
     df, 
     template = "<a:string, b:int32, extra:bool> [z]", 
   )
-  stored = conn$array_from_stored_afl(joinOp$to_afl())
   
-  expect_equal(joinOp$to_df(), df)
-  expect_equal(stored$to_df(), df)
+  expect_equal(uploaded$to_df(), df)
 })
 
 test_that("uploaded data frame by vectors and store the joined vectors", {
   df = data.frame(a = letters[1:5], b = 1:5, z = 11:15)
   
-  joinOp = conn$upload_df(df, "<a:string, b:int32, extra:bool> [z]", upload_by_vector = T, .temp = T)
-  stored = conn$array_from_stored_afl(joinOp$to_afl())
+  uploaded = conn$upload_df(df, "<a:string, b:int32, extra:bool> [z]", upload_by_vector = T, .temp = T)
+  stored = uploaded$persist()
   
-  expect_equal(joinOp$to_df(), df)
+  expect_equal(uploaded$to_df(), df)
   expect_equal(stored$to_df(), df)
 })
 

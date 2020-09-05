@@ -99,6 +99,31 @@ ScidbConnection <- R6::R6Class(
       )$.private$confirm_schema_synced()
     }
     ,
+    #' @description 
+    #' Create a persistent array_op by storing AFL as an array
+    #' @param .temp Whether to create a temporary scidb array.
+    #' Only effective when `save_array_name = NULL`
+    array_from_stored_afl = function(
+      afl_str, 
+      # save_array_name = dbutils$random_array_name(),
+      save_array_name = NULL,
+      .temp = FALSE,
+      .gc = TRUE
+    ) {
+      assert_single_str(afl_str, "ERROR: param 'afl_str' must be a single string")
+      if(!is.null(save_array_name))
+        assert_single_str(save_array_name, "ERROR: param 'save_array_name' must be a single string or NULL")
+      
+      storedAfl = scidb::scidb(.db, afl_str)
+      storedArray = scidb::store(.db, expr = storedAfl, name = save_array_name, 
+                                 temp = .temp, gc = .gc)
+      
+      result = array_op_from_scidbr_obj(storedArray)
+      result$.private$confirm_schema_synced()
+      result$.set_meta('.ref', storedArray)
+      set_array_op_conn(result)
+    }
+    ,
     #' Create an array_op from a schema string with an optional array name
     new_arrayop_from_schema_string = function(schema_str, .symbol) {
       # Return all matched substrings in 'x'
@@ -295,31 +320,6 @@ ScidbConnection <- R6::R6Class(
       result$.private$confirm_schema_synced()
       set_array_op_conn(result)
       result
-    }
-    ,
-    #' @description 
-    #' Create a persistent array_op by storing AFL as an array
-    #' @param .temp Whether to create a temporary scidb array.
-    #' Only effective when `save_array_name = NULL`
-    array_from_stored_afl = function(
-      afl_str, 
-      # save_array_name = dbutils$random_array_name(),
-      save_array_name = NULL,
-      .temp = FALSE,
-      .gc = TRUE
-    ) {
-      assert_single_str(afl_str, "ERROR: param 'afl_str' must be a single string")
-      if(!is.null(save_array_name))
-        assert_single_str(save_array_name, "ERROR: param 'save_array_name' must be a single string or NULL")
-      
-      storedAfl = scidb::scidb(.db, afl_str)
-      storedArray = scidb::store(.db, expr = storedAfl, name = save_array_name, 
-                                 temp = .temp, gc = .gc)
-      
-      result = array_op_from_scidbr_obj(storedArray)
-      result$.private$confirm_schema_synced()
-      result$.set_meta('.ref', storedArray)
-      set_array_op_conn(result)
     }
     ,
     array_from_df = function(

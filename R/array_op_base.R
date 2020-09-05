@@ -1832,11 +1832,12 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     ){
       # No need to store an already persistent arrary
       if(self$is_persistent()) return(self) 
-      private$conn$array_from_stored_afl(private$to_df_afl(), 
-                                    save_array_name = save_array_name,
-                                    .temp = .temp,
-                                    .gc = .gc
-                                    )
+      private$conn$private$array_from_stored_afl(
+        private$to_df_afl(),
+        save_array_name = save_array_name,
+        .temp = .temp,
+        .gc = .gc
+      )
     }
     ,
     is_persistent = function(){

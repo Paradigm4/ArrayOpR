@@ -16,7 +16,7 @@ test_that("persistent array_op from stored AFL", {
   rawAfl = "apply(list('operators'), extra, 'abc')"
   name = random_array_name()
   
-  storedArr = conn$array_from_stored_afl(rawAfl, name)
+  storedArr = conn$afl_expr(rawAfl)$persist(name)
   retrievedArr = conn$array(name)
   
   expect_identical(storedArr$to_afl(), name)
@@ -31,7 +31,7 @@ test_that("persistent array_op from stored AFL", {
 test_that("persistent array_op from stored AFL", {
   rawAfl = "apply(list('operators'), extra, 'abc')"
   
-  storedArr = conn$array_from_stored_afl(rawAfl, .temp = T, .gc = F)
+  storedArr = conn$afl_expr(rawAfl)$persist(.temp = T, .gc = F)
   
   expect_identical(storedArr$array_meta_data()$temporary, TRUE)
   
