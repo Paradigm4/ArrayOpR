@@ -199,8 +199,8 @@ test_that("upload data frame with other scidbR settings", {
   expect_equal(dbdf2, df)
   
   # Validate number of rows
-  expect_equal(uploaded$row_count(), nrow(df))
-  expect_equal(uploaded2$row_count(), nrow(df))
+  expect_equal(uploaded$cell_count(), nrow(df))
+  expect_equal(uploaded2$cell_count(), nrow(df))
   
   uploaded$remove_self()
   uploaded2$remove_self()

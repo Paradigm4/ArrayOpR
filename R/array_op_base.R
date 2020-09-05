@@ -1551,7 +1551,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       self$spawn(aflStr)
     }
     ,
-    row_count = function(){
+    cell_count = function(){
       private$conn$query(afl(self | op_count))[["count"]]
     }
     ,

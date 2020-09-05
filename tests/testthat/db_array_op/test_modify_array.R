@@ -28,7 +28,7 @@ test_that("Overwrite array", {
   
   # Overwrite with source data
   Target$filter(1 == 2)$overwrite(Target)$execute()
-  expect_equal(Target$row_count(), 0)
+  expect_equal(Target$cell_count(), 0)
   
   Target$remove_self()
 })
