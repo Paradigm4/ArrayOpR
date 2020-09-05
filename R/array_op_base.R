@@ -1555,8 +1555,10 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       private$conn$query(afl(self | op_count))[["count"]]
     }
     ,
-    summarize_array = function(){
-      private$conn$query(afl(self | summarize))
+    summarize_array = function(by_attribute = FALSE, by_instance = FALSE){
+      private$conn$query_all(afl(self | summarize(
+        glue("by_attribute:{by_attribute}, by_instance:{by_instance}")))
+      )
     }
     ,
     #' @description 
