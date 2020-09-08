@@ -14,8 +14,8 @@ test_that("join with no conflicting field names", {
   leftTemplate = conn$array_from_schema("<lfa:string, lfb:double> [lda;ldb] ")
   rightTemplate = conn$array_from_schema("<rfa:string, rfb:double> [rda;rdb] ")
   
-  L = conn$array_from_df(leftDf, leftTemplate)$change_schema(leftTemplate)
-  R = conn$array_from_df(rightDf, rightTemplate)$change_schema(rightTemplate)
+  L = conn$array_from_df(leftDf, leftTemplate, force_template_schema = T)
+  R = conn$array_from_df(rightDf, rightTemplate, force_template_schema = T)
   
   test_inner_join = function() {
     df_equal(

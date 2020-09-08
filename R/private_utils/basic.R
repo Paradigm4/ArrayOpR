@@ -120,9 +120,25 @@ log_job_duration = function(job, msg = '', done_msg = 'done') {
   }
 }
 
+# Return a named character vector
+# whose values are the string values in 'list_or_vec'
+# and names are retained if available otherwise assigned with string values
+.to_named_char_vec = function(list_or_vec) {
+  structure(as.character(list_or_vec), names = .get_element_names(list_or_vec))
+}
+
 # Remove all NULL entrieds from a list. Same as plyr::compact
 .remove_null_values = function(list_values) {
   Filter(Negate(is.null), list_values)
+}
+
+# Return a named string vector
+# 
+# param values Will be casted to strings
+# param names Defaults to values as strings
+.new_named_char_vec = function(values, names = as.character(values)){
+  values = as.character(values)
+  structure(values, names = names)
 }
 
 new_named_list = function(values, names = as.character(values)){

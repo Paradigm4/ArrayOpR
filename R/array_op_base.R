@@ -236,12 +236,12 @@ ArrayOpBase <- R6::R6Class(
                                left_fields)
         selectedRightNames = Map(function(x) if(x %in% duplicatedFields) sprintf("%s%s", x, .right_alias) else x, 
                                  right_fields)
-        new_named_list(
+        .new_named_char_vec(
           values = selectedLeftFields %u% selectedRightFields,
           names = selectedLeftNames %u% selectedRightNames
         )
       } else { 
-        new_named_list(rawFields, rawFields)
+        .new_named_char_vec(rawFields)
       }
     }
     ,
@@ -302,7 +302,8 @@ Please select on left operand's fields OR do not select on either operand. Look 
         )
         joinedOp = self$create_new(joinExpr, names(dims), attrs, dtypes = dtypes)
         return(
-          joinedOp$.private$reshape_attrs_with_dtypes(selectedFields)$select(names(selectedFields))
+          # selectedFields names and values may be different due to disambiguation
+          joinedOp$.private$reshape_fields(selectedFields)$select(names(selectedFields))
         )
         # return(do.call(joinedOp$transmute, selectedFields)$select(names(selectedFields)))
       }
@@ -310,7 +311,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
       selectedFields = if(hasSelected) attrs else NULL
       joinedOp = self$create_new(joinExpr, names(dims), attrs, dtypes = dtypes)
       if(hasSelected) {
-        joinedOp = joinedOp$reshape(select = selectedFields)
+        joinedOp = joinedOp$afl_project(selectedFields)
         if(.auto_select)
           joinedOp = joinedOp$select(selectedFields)
       }
@@ -353,8 +354,9 @@ Please select on left operand's fields OR do not select on either operand. Look 
         left$selected, right$selected %-% on_right,
         .left_alias, .right_alias
       )
-      joinedOp$.private$reshape_attrs_with_dtypes(selectedFields)$select(names(selectedFields))
-      # joinedOp = self$create_new(joinExpr, names(dims), attrs, dtypes = dtypes)
+      # cross_join keeps operands' dimensions, no need to apply dimensions as attributes
+      selectedAttrs = Filter(function(x) !x %in% left$dims && !x %in% right$dims, selectedFields)
+      joinedOp$.private$reshape_fields(selectedAttrs)$select(names(selectedFields))
     }
     ,
     # todo: Move logic from `match` method
@@ -529,7 +531,8 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
         templateOp = template
         if(templateField %in% self$dims_n_attrs) { 
           # if the template field name exist on the source too, there will be field name conflicts when we 'project'
-          templateOp = template$reshape(new_named_list(templateField, names = sprintf("alt_%s_", templateField)))
+          # templateOp = template$reshape(new_named_list(templateField, names = sprintf("alt_%s_", templateField)))
+          templateOp = template$.private$reshape_fields(structure(templateField, names = sprintf("alt_%s_", templateField)))
         }
         
         afl(
@@ -598,20 +601,23 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       return(self$create_new(projectedExpr, c(), names(fieldTypes), dtypes = fieldTypes))
     }
     ,
-    #' reshape array attributes
+    #' reshape array attributes by name and expression
     #' 
+    #' Do not infer field data type because field can be mutated to a differnt dtype.
+    #' Do not alter dimensions
     #' @param field_vec A named string vector
     #' @return A new transient array_op
     reshape_fields = function(field_vec) {
+      field_names = names(field_vec)
       assert_inherits(field_vec, 'character')
-      assert_not_empty(names(field_vec))
-      assertf(!any(is.na(field_vec)) && !any(is.na(names(field_vec))),
+      assert_not_empty(field_names)
+      assertf(!any(is.na(field_vec)) && !any(is.na(field_names)),
               glue("No NA allowed in either field names or expressions: {field_vec}"))
       
       # existing dims are also regarded as new fields
-      newFileds = field_vec[names(field_vec) %-% self$attrs] 
+      newFileds = field_vec[field_names %-% self$attrs] 
       
-      existingFields = field_vec[names(field_vec) %n% self$attrs]
+      existingFields = field_vec[field_names %n% self$attrs]
       replacedFields = existingFields[existingFields != names(existingFields)]
       passedOnFields = existingFields[existingFields == names(existingFields)]
       
@@ -623,73 +629,19 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
               apply(afl_join_fields(
                 c(names(replacedFields), names(newFileds)),
                 c(replaceFieldsNamesAlt, newFileds))) |
-              project(names(field_vec))
+              project(field_names)
         )
       } else if(.not_empty(newFileds)){
         afl(self |
               apply(afl_join_fields(names(newFileds), newFileds)) |
-              project(names(field_vec))
+              project(field_names)
         )
       } else {
-        afl(self | project(names(field_vec)))
+        afl(self | project(field_names))
       }
-      self$create_new(newAfl, dims = self$dims, attrs = names(field_vec), 
+      self$create_new(newAfl, dims = self$dims, attrs = field_names, 
                       dim_specs = private$get_dim_specs())
       
-    }
-    ,
-    # Reshape an array without modifying its dimensions
-    # 
-    # This is an enhanced version inspired by scidb 'project' and 'apply' operators which also only work on attributes.
-    reshape_attrs_with_dtypes = function(select=NULL, dtypes = NULL, artificial_field = .random_attr_name(), .force_project = TRUE) {
-      assert(.not_empty(select),
-             "ERROR: ArrayOp$reshape_attrs_with_dtypes: param 'select' must be a non-empty character list, but got: %s", 
-             class(select))
-      
-      # Plain selected fields without change
-      existingFields = if(.not_empty(names(select))) {
-        as.character(select[names(select) == '' | names(select) == select])
-      } else {
-        as.character(select)
-      }
-      # Names of the retained fields (existing or new)
-      selectFieldNames = .get_element_names(select)
-      fieldExprs = select[names(select) != '']
-      fieldNamesWithExprs = names(fieldExprs)
-      
-      newFieldNames = fieldNamesWithExprs %-% self$attrs
-      newFields = fieldExprs[newFieldNames]
-      
-      replacedFieldNames = fieldNamesWithExprs %-% newFieldNames %-% existingFields
-      replacedFieldNamesAlt = sprintf("_%s", replacedFieldNames)
-      replacedFields = sapply(replacedFieldNames, function(x) gsub('@', x, fieldExprs[[x]]))
-      
-      mergedDtypes = utils::modifyList(self$dtypes, as.list(dtypes))
-      
-      attrs = selectFieldNames %-% self$dims
-      
-      newAfl = if(.not_empty(replacedFieldNames)){
-        afl(self | apply(afl_join_fields(replacedFieldNamesAlt, replacedFields))
-            | project(attrs %-% newFieldNames %-% replacedFieldNames %u% replacedFieldNamesAlt) 
-            | apply(afl_join_fields(replacedFieldNames %u% newFieldNames, replacedFieldNamesAlt %u% newFields))
-            | project(attrs)
-            )
-      }
-      else if(.not_empty(attrs)) {
-        inner = self
-        if(.not_empty(newFieldNames))
-          inner = afl(self | apply(afl_join_fields(newFieldNames, newFields)))
-        if(!.force_project && length(attrs) == length(self$attrs) && all(attrs == self$attrs))
-          afl(inner)
-        else
-          afl(inner | project(attrs))
-      }
-      else {
-        attrs = artificial_field
-        mergedDtypes[[artificial_field]] = 'void'
-        afl(self | apply(c(artificial_field, 'null')) | project(artificial_field))
-      }
-      self$create_new(newAfl, self$dims, attrs, mergedDtypes, dim_specs = private$get_dim_specs())
     }
     ,
     # Reshape an arrayOp on a compound key (consisted of one or multiple fields) according to the template (self)
@@ -709,7 +661,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
                                   .redimension_setting = NULL, .join_setting = NULL){
       if(length(operand$dims) == length(self$dims) && all(operand$dims == self$dims))
         # If all dimensions match, no need to do anything about dimensions.
-        return(operand$reshape(reserved_fields))
+        return(operand$.private$afl_project(reserved_fields))
       
       operandKeyFields = .get_element_names(keys)
       templateKeyFields = as.character(keys)
@@ -717,9 +669,12 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       
       if(all(self$dims %in% operandKeyFields)){
         if(.not_empty(extraFields))
-          operand = operand$reshape(c(keys, reserved_fields))
-        return(operand$change_schema(self, strict = FALSE, .setting = .redimension_setting)$
-                 reshape(reserved_fields, .force_project = FALSE))
+          # operand = operand$reshape(c(keys, reserved_fields))
+          operand = operand$.private$afl_project(c(keys, reserved_fields))
+        return(operand$
+                 change_schema(self, strict = FALSE, .setting = .redimension_setting)$
+                 # reshape(reserved_fields, .force_project = FALSE))
+                 .private$afl_project(reserved_fields))
       }
       
       joinOp = private$join(
@@ -787,10 +742,11 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
             afl_join_fields(new_field, newFieldExpr)
           )
       )
-      result = self$spawn(added = new_field, dtypes = new_named_list(reference$.private$get_field_types(ref_field), new_field))
-      result = result$spawn(crossJoined)
-      result = result$reshape(result$attrs)
-      result
+      result = self$spawn(crossJoined,
+                          added = new_field, 
+                          dtypes = new_named_list(reference$.private$get_field_types(ref_field), new_field))
+      # result = result$reshape(result$attrs)
+      result$.private$afl_project(result$attrs)
     }
     ,
     #' @description 
@@ -866,7 +822,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       # src's attributes (that are target dimensions) are converted to dimensions according to the target
       resultTemplate = redimensionTemplate$
         spawn(renamed = invert.list(renamedList))
-      resultTemplate = resultTemplate$reshape(dim_mode = 'drop')
+      resultTemplate = resultTemplate$.private$afl_unpack()
       
       
       result = resultTemplate$
@@ -874,7 +830,8 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
           joined | apply(anti_collision_field, sprintf(
             "iif(%s is null, %s, %s + %s + 1)", targetAltIdMax, srcAltId, srcAltId, targetAltIdMax
           )))
-        )$reshape(resultTemplate$attrs)
+        # )$reshape(resultTemplate$attrs)
+        )$.private$afl_project(resultTemplate$attrs)
       
       return(result)
     }
@@ -929,9 +886,13 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     # Functions prefixed with 'afl_' are implemented according to scidb operators with sanity checks.
     ,
     # Project a list of array's attributes.
+    # 
     # Return a result array instance with the same dimensions and a subset (projected) attributes
-    # If no fields provided, then result self
+    # If length(c(...)), then result self
     # Throw an error if there are non-attribute fileds because scidb only allows project'ing on attributes
+    # Dimensions canont be projected
+    # 
+    # param ... c(...) is used as projected fields. NULL is discarded.
     afl_project = function(...) {
       fields = c(...)
       if(.is_empty(fields)) return(self)
@@ -942,20 +903,30 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
                       dtypes = private$get_field_types(c(self$dims, fields)), dim_specs = private$get_dim_specs())
     }
     ,
-    # Apply new attributes to an existing array. 
-    # Return a result array with added (applied) attributes
-    # If fields are existing dimensions, data types are inheritted; otherwise new attributes require data types
-    # @param fields: a named list or character. Cannot contain existing attributes because it creates conflicts.
-    afl_apply = function(fields, dtypes = NULL) {
-      fieldNames = .get_element_names(fields)
-      fieldExprs = as.character(fields)
-      conflictFields = fields %n% self$attrs
-      assert_not_has_len(conflictFields, "ERROR: afl_apply: cannot apply existing attribute(s): %s", paste(conflictFields, collapse = ', '))
-      
-      newDTypes = utils::modifyList(private$get_field_types(), as.list(dtypes))
-      self$create_new(afl(self | apply(afl_join_fields(fieldNames, fieldExprs))), dims = self$dims, 
-                      attrs = self$attrs %u% fields, dtypes = newDTypes, dim_specs = private$get_dim_specs())
+    # AFL unpack operator
+    # 
+    # Return an array_op with self's dims + attrs, plus an extra dimension
+    afl_unpack = function(dim_name = dbutils$random_field_name(), chunk_size = NULL) {
+      self$create_new(afl(self | unpack(c(dim_name, chunk_size))), 
+                      dims = dim_name,
+                      attrs = self$dims_n_attrs,
+                      dtypes = private$get_field_types())
     }
+    # ,
+    # # Apply new attributes to an existing array. 
+    # # Return a result array with added (applied) attributes
+    # # If fields are existing dimensions, data types are inheritted; otherwise new attributes require data types
+    # # @param fields: a named list or character. Cannot contain existing attributes because it creates conflicts.
+    # afl_apply = function(fields, dtypes = NULL) {
+    #   fieldNames = .get_element_names(fields)
+    #   fieldExprs = as.character(fields)
+    #   conflictFields = fields %n% self$attrs
+    #   assert_not_has_len(conflictFields, "ERROR: afl_apply: cannot apply existing attribute(s): %s", paste(conflictFields, collapse = ', '))
+    #   
+    #   newDTypes = utils::modifyList(private$get_field_types(), as.list(dtypes))
+    #   self$create_new(afl(self | apply(afl_join_fields(fieldNames, fieldExprs))), dims = self$dims, 
+    #                   attrs = self$attrs %u% fields, dtypes = newDTypes, dim_specs = private$get_dim_specs())
+    # }
     ,
     # Redimension `self` according to a template.
     # 
@@ -1119,50 +1090,6 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       newMeta = private$metaList
       newMeta[['selected']] <- fieldNames
       self$create_new(private$raw_afl, metaList = newMeta)
-    }
-    ,
-    #' @description 
-    #' Create a new ArrayOp instance with a different schema/shape
-    #' 
-    #' @param select Which attributes to select or create.
-    #' In dim_mode='keep', `select` must be a non-empty list, where named items are derived new attributes and
-    #' unamed string values are existing dimensions/attributes. Dimensions, selected or not, are all retained in
-    #' dim_mode='keep'.
-    #' In dim_mode='drop', `select` can be NULL, which effectively select all source dimensions and attributes.
-    #' Unselected dimensions will be discarded. 
-    #' @param dtypes a named list to provide field data types for newly derived fields
-    #' @param dim_mode a string [keep, drop]. 
-    #' In the default 'keep' mode, only attributes can be selected. All dimensions are kept.
-    #' In 'drop' mode, dimensions are first converted to attributes, then selected.  
-    #' @param artificial_field ONLY relevant when `dim_mode='drop'`.
-    #' A field name used as the artificial dimension name in 'drop' dim_mode 
-    #' (internally used by `unpack` scidb operator). By default, a random string is generated.
-    #' @return A new arrayOp 
-    reshape = function(select=NULL, dtypes = NULL, dim_mode = 'keep', artificial_field = .random_attr_name(), 
-                       .force_project = TRUE) {
-      
-      keep = function(){
-        private$reshape_attrs_with_dtypes(select, dtypes, artificial_field, .force_project = .force_project)
-      }
-      
-      drop = function() {
-        unpacked = self$create_new(
-          afl(self | unpack(artificial_field)), 
-          attrs = self$dims_n_attrs, dims = artificial_field,
-          dtypes = utils::modifyList(private$get_field_types(), as.list(rlang::set_names('int64', artificial_field)))
-        )
-        if(.is_empty(select))
-          unpacked
-        else 
-          unpacked$.private$reshape_attrs_with_dtypes(select, dtypes, artificial_field)
-      }
-      
-      switch (dim_mode,
-        'keep' = keep,
-        'drop' = drop,
-        # 'ignore_in_parent' = ignore_in_parent,
-        stopf("ERROR: ArrayOp$reshape: invalid 'dim_mode' %s.", dim_mode)
-      ) ()
     }
     ,
     #' @description 
