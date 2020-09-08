@@ -12,45 +12,7 @@
 
 # AFL Expressions denoted by R Expressions ------------------------------------------------------------------------
 
-# Validate a filter expression ('filterExpr' must be a single R call expression)
-#
-# Current only report errors on:
-#   1. Name symbols that are not existing schema fields
-#   2. Non-atomic 'values'
-# @param filterExpr An rlang::expr
-# @return A list object with named elements:
-#  success:bool, absent_fields: c(''), error_msgs: c('')
-validate_filter_expr = function(filterExpr, allFieldNames) {
-  absentFields = c()
-  errorMsgs = c()
 
-  # a recurrsive function that traverses every element in filterExpr
-  traverseSingleExpr <- function(rExpr) {
-    if (is.name(rExpr)) {
-      symbolName <- as.character(rExpr)
-      if (!is.element(symbolName, allFieldNames)) {
-        assign('absentFields', c(absentFields, symbolName), inherits = TRUE)
-      }
-    } else if (is.call(rExpr)) {
-      # rExpr is a call, then traverse its args
-      lapply(rExpr[-1], traverseSingleExpr)
-    } else {
-      # Neither a name symbol nor a call node, then must be an atomic vector, e.g. 42, c(3, 4), 'abc'
-      if (!is.atomic(rExpr)) {
-        assign('errorMsgs',
-          c(errorMsgs, sprintf("Non-atomic '%s' object can not be used in filter expression", class(rExpr))),
-          inherits = TRUE)
-      }
-    }
-  }
-
-  traverseSingleExpr(filterExpr)
-
-  return(list(
-    success = .is_empty(absentFields) && .is_empty(errorMsgs),
-    absent_fields = absentFields, error_msgs = errorMsgs
-  ))
-}
 
 
 
@@ -408,6 +370,47 @@ AFLUtils <- R6::R6Class(
     #' @param ... Multiple string vectors
     join_fields = function(..., sep = ',') {
       paste(..., sep = sep, collapse = sep)
+    }
+    ,
+    #' @description 
+    #' Validate a filter expression ('filter_expr' must be a single R call expression)
+    #'
+    #' Current only report errors on:
+    #'   1. Name symbols that are not existing schema fields
+    #'   2. Non-atomic 'values'
+    #' @param filter_expr An rlang::expr
+    #' @return A list object with named elements:
+    #'  success:bool, absent_fields: c(''), error_msgs: c('')
+    validate_filter_expr = function(filter_expr, all_fields) {
+      absentFields = c()
+      errorMsgs = c()
+    
+      # a recurrsive function that traverses every element in filter_expr
+      traverseSingleExpr <- function(rExpr) {
+        if (is.name(rExpr)) {
+          symbolName <- as.character(rExpr)
+          if (!is.element(symbolName, all_fields)) {
+            assign('absentFields', c(absentFields, symbolName), inherits = TRUE)
+          }
+        } else if (is.call(rExpr)) {
+          # rExpr is a call, then traverse its args
+          lapply(rExpr[-1], traverseSingleExpr)
+        } else {
+          # Neither a name symbol nor a call node, then must be an atomic vector, e.g. 42, c(3, 4), 'abc'
+          if (!is.atomic(rExpr)) {
+            assign('errorMsgs',
+              c(errorMsgs, sprintf("Non-atomic '%s' object can not be used in filter expression", class(rExpr))),
+              inherits = TRUE)
+          }
+        }
+      }
+    
+      traverseSingleExpr(filter_expr)
+    
+      return(list(
+        success = .is_empty(absentFields) && .is_empty(errorMsgs),
+        absent_fields = absentFields, error_msgs = errorMsgs
+      ))
     }
   )
 )

@@ -1058,7 +1058,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
                      regex_func = getOption('arrayop.regex_func', default = 'regex'), 
                      ignore_case = getOption('arrayop.ignore_case', default = TRUE)) {
       filterExpr = expr %?% aflutils$e_merge(aflutils$e(...))
-      status = validate_filter_expr(filterExpr, self$dims_n_attrs)
+      status = aflutils$validate_filter_expr(filterExpr, self$dims_n_attrs)
       if(!status$success){
         if(.not_empty(status$absent_fields)){
           if(is.null(missing_fields_error_template))
