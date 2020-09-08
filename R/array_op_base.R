@@ -173,7 +173,7 @@ ArrayOpBase <- R6::R6Class(
       # case-2: Regular mode. Just 'apply'/'project' for dimensions/attributes when needed.
       else{
         applyExpr = if(.not_empty(applyList))
-          afl(arrName | apply(afl_join_fields(applyList, applyList)))
+          afl(arrName | apply(aflutils$join_fields(applyList, applyList)))
         else arrName
         res =  if(.not_empty(projectList))
           afl(applyExpr | project(projectList))
@@ -478,7 +478,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
         regionHighAttrNames = sprintf('_%s_high', self$dims)
         
         # apply new attributes as the region array in 'cross_between'
-        applyExpr = afl_join_fields(regionLowAttrNames, regionLowAttrValues, regionHighAttrNames, regionHighAttrValues)
+        applyExpr = aflutils$join_fields(regionLowAttrNames, regionLowAttrValues, regionHighAttrNames, regionHighAttrValues)
         afl_literal = afl(
           self | cross_between(
             template | apply(applyExpr) | 
@@ -594,8 +594,8 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
           sprintf(fmt, attrName)
       }, fieldTypes, colIndexes, names(fieldTypes))
       
-      aioExpr = afl(afl_join_fields(settingItems) | aio_input)
-      applyExpr = afl(aioExpr | apply(afl_join_fields(names(fieldTypes), castedItems)))
+      aioExpr = afl(aflutils$join_fields(settingItems) | aio_input)
+      applyExpr = afl(aioExpr | apply(aflutils$join_fields(names(fieldTypes), castedItems)))
       projectedExpr = afl(applyExpr | project(names(fieldTypes)))
       # return(self$create_new(projectedExpr, metaList = list()))
       return(self$create_new(projectedExpr, c(), names(fieldTypes), dtypes = fieldTypes))
@@ -624,16 +624,16 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       newAfl = if(.not_empty(replacedFields)){
         replaceFieldsNamesAlt = sprintf("_%s", names(replacedFields))
         afl(self | 
-              apply(afl_join_fields(replaceFieldsNamesAlt, replacedFields)) |
+              apply(aflutils$join_fields(replaceFieldsNamesAlt, replacedFields)) |
               project(c(replaceFieldsNamesAlt, names(passedOnFields))) |
-              apply(afl_join_fields(
+              apply(aflutils$join_fields(
                 c(names(replacedFields), names(newFileds)),
                 c(replaceFieldsNamesAlt, newFileds))) |
               project(field_names)
         )
       } else if(.not_empty(newFileds)){
         afl(self |
-              apply(afl_join_fields(names(newFileds), newFileds)) |
+              apply(aflutils$join_fields(names(newFileds), newFileds)) |
               project(field_names)
         )
       } else {
@@ -733,13 +733,13 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
                              source_field, .to_signed_integer_str(defaultOffset), 
                              maxRefFields, source_field, .to_signed_integer_str(nonDefaultOffset))
       
-      forAggregate = if(.not_empty(refDims)) afl(reference | apply(afl_join_fields(refDims, refDims))) else reference
+      forAggregate = if(.not_empty(refDims)) afl(reference | apply(aflutils$join_fields(refDims, refDims))) else reference
       aggregated = afl(forAggregate | aggregate(aggFields))
       crossJoined = afl(
         self |
           cross_join(aggregated) | 
           apply( 
-            afl_join_fields(new_field, newFieldExpr)
+            aflutils$join_fields(new_field, newFieldExpr)
           )
       )
       result = self$spawn(crossJoined,
@@ -867,9 +867,9 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       if(drop_dims){
         selectedDims = base::intersect(selected_fields, self$dims)
         inner = if(.not_empty(selectedDims))
-          afl(self | apply(afl_join_fields(selectedDims, selectedDims)))
+          afl(self | apply(aflutils$join_fields(selectedDims, selectedDims)))
         else self$to_afl()
-        return(afl(inner | project(afl_join_fields(selected_fields))))
+        return(afl(inner | project(aflutils$join_fields(selected_fields))))
       }
       
       # drop_dims = F. All dims are preserved in parent operations, we can only select/drop attrs.
@@ -924,7 +924,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #   assert_not_has_len(conflictFields, "ERROR: afl_apply: cannot apply existing attribute(s): %s", paste(conflictFields, collapse = ', '))
     #   
     #   newDTypes = utils::modifyList(private$get_field_types(), as.list(dtypes))
-    #   self$create_new(afl(self | apply(afl_join_fields(fieldNames, fieldExprs))), dims = self$dims, 
+    #   self$create_new(afl(self | apply(aflutils$join_fields(fieldNames, fieldExprs))), dims = self$dims, 
     #                   attrs = self$attrs %u% fields, dtypes = newDTypes, dim_specs = private$get_dim_specs())
     # }
     ,

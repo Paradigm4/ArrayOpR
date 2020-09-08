@@ -52,17 +52,7 @@ validate_filter_expr = function(filterExpr, allFieldNames) {
   ))
 }
 
-# Just multple fields with sep = ','
-# 
-# Default behavior: `paste(..., sep = sep, collapse = sep)` where `sep = ','`
-# 
-# afl(...) will convert vectors to joined strings separated by `,`. 
-# This function is useful in concatenating multiple vectors in parallel, 
-# e.g. joining a new field vector and expression vector for the `apply` operator.
-# @param ... Multiple string vectors
-afl_join_fields <- function(..., sep = ',') {
-  paste(..., sep = sep, collapse = sep)
-}
+
 
 # Construct AFL expressions ---------------------------------------------------------------------------------------
 
@@ -405,6 +395,19 @@ AFLUtils <- R6::R6Class(
         return(as.call(concatList))
       }
       stop(sprintf(".el_merge error: mode must be 'AND' or 'OR', but got %s", mode))
+    }
+    ,
+    #' @description 
+    #' Just multple fields with sep = ','
+    #' 
+    #' Default behavior: `paste(..., sep = sep, collapse = sep)` where `sep = ','`
+    #' 
+    #' afl(...) will convert vectors to joined strings separated by `,`. 
+    #' This function is useful in concatenating multiple vectors in parallel, 
+    #' e.g. joining a new field vector and expression vector for the `apply` operator.
+    #' @param ... Multiple string vectors
+    join_fields = function(..., sep = ',') {
+      paste(..., sep = sep, collapse = sep)
     }
   )
 )
