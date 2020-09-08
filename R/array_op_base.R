@@ -930,12 +930,14 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     ,
     # Project a list of array's attributes.
     # Return a result array instance with the same dimensions and a subset (projected) attributes
+    # If no fields provided, then result self
     # Throw an error if there are non-attribute fileds because scidb only allows project'ing on attributes
     afl_project = function(...) {
-      fields = c(....)
-      nonAttrs = fields %-% self$attrs
-      assert_not_has_len(nonAttrs, "ERROR: afl_project: %d non-attribute field(s) found: %s", length(nonAttrs), paste(nonAttrs, collapse = ', '))
+      fields = c(...)
       if(.is_empty(fields)) return(self)
+      assert_inherits(fields, "character")
+      assert_empty(fields %-% self$attrs, "afl_project: invalid field(s) to project: [{.value}]")
+      # assert_not_has_len(nonAttrs, "ERROR: afl_project: %d non-attribute field(s) found: %s", length(nonAttrs), paste(nonAttrs, collapse = ', '))
       self$create_new(afl(self | project(fields)), dims = self$dims, attrs = fields, 
                       dtypes = private$get_field_types(c(self$dims, fields)), dim_specs = private$get_dim_specs())
     }
@@ -1380,11 +1382,13 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       data_source = data_array
       
       # updateFields default to the overlapping attrs between source and self
-      updatedFields = if(.not_empty(updated_fields)) updated_fields else data_source$attrs %n% self$attrs
+      # updatedFields = if(.not_empty(updated_fields)) updated_fields else data_source$attrs %n% self$attrs
+      updatedFields = updated_fields %?% data_source$attrs %n% self$attrs
+      assert_not_empty(updatedFields, "param 'data_source' does not have any target attributes to mutate.")
       reservedFields = self$attrs %-% updatedFields
-      needTransform = !(length(data_source$dims) == length(self$dims) && all(data_source$dims == self$dims))
+      sameDims = length(data_source$dims) == length(self$dims) && all(data_source$dims == self$dims)
       
-      if(needTransform){
+      if(!sameDims){ # not the same dimensions, transform the data_source first
         assert_not_empty(keys, "param 'keys' cannot be empty")
         assert_not_empty(updated_fields, "param 'updated_fields' cannot be empty")
         assert_no_fields(
@@ -1395,16 +1399,22 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
           "param 'updated_fields' has invalid field(s) [%s]")
         data_source = private$key_to_coordinates(data_source, keys = keys, reserved_fields = updatedFields, 
                                                  .redimension_setting = .redimension_setting, .join_setting = .join_setting)
+      } else {
+        if(.not_empty(keys %-% self$dims)) 
+          warning(sprintf("Extra key(s) [%s] ignored because source/target dimensions match.",
+                          keys %-% self$dims))
       }
-      assert_not_empty(updatedFields, "param 'data_source' does not have any target attributes to mutate.")
-      self$spawn(
-        afl(
-          data_source$reshape(updatedFields, .force_project = FALSE) | 
-            join(
-              .ifelse(.not_empty(reservedFields), self$reshape(reservedFields), self)
+      if(.is_empty(reservedFields)){
+        # No need to join with self. Just ensure ordering of data_source attributes conforms to 'self'
+        data_source$.private$afl_project(self$attrs)
+      } else {
+        self$spawn(
+          afl(
+            data_source$.private$afl_project(updatedFields) | 
+              join(private$afl_project(reservedFields))
           )
-        )
-      )$reshape(self$attrs)
+        )$.private$afl_project(self$attrs)
+      }
     }
     ,
     # @param .chunk_size aka. cells_per_chunk in 'flatten' mode.

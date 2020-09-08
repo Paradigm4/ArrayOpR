@@ -290,5 +290,52 @@ test_that("mutate: key: 1 dim + 1 attr, update_fields: 2 attrs", {
   )
 })
 
+test_that("mutate_by: no reserved fields", {
+  mutateDataSource = ArrayContent %>% 
+    dplyr::filter(da %% 2 == 0) %>% 
+    dplyr::mutate(f_int32 = 1:3, upper = "changed")
+  dataArray = conn$array_from_df(
+    mutateDataSource %>% dplyr::select(db, lower, upper, f_int32, f_int64, f_bool, f_double),
+    schemaTemplate
+  )
+  assert_df_match(
+    RefArray$mutate_by(
+      dataArray, keys = c('lower', 'db'), updated_fields = dataArray$attrs %-% c('lower', 'db')
+    )$to_df_all(),
+    mutateDataSource
+  )
+})
+
+test_that("mutate_by: data_array already conforms to target schema", {
+  mutateDataSource = ArrayContent %>% 
+    dplyr::filter(da %% 2 == 0) %>% 
+    dplyr::mutate(f_int32 = 1:3, upper = "changed")
+  dataArray = conn$array_from_df(
+    mutateDataSource,
+    schemaTemplate, force_template_schema = T
+  )
+  assert_df_match(
+    RefArray$mutate_by(
+      dataArray # no keys or updated_fields required. keys = dataArray$dims, updated_fields = dataArray$attrs
+    )$to_df_all(),
+    mutateDataSource
+  )
+  assert_df_match(
+    RefArray$mutate_by(
+      dataArray, updated_fields = c("lower", "upper", "f_int32")
+    )$to_df_all(),
+    mutateDataSource
+  )
+  expect_warning({
+    result = RefArray$mutate_by(
+      dataArray, keys = c("da", "db", "lower"), updated_fields = c("upper", "f_int32")
+    )$to_df_all()
+  }, "lower")
+  assert_df_match(
+    result,
+    mutateDataSource
+  )
+})
+
 RefArray$remove_self()
 
