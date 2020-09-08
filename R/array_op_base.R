@@ -1368,11 +1368,6 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       fields_vec = structure(as.character(paramFieldExprs), names = names(paramFieldExprs))
       result = private$reshape_fields(fields_vec)
       if(.sync_schema) result$sync_schema() else result
-      
-      # old
-      # fieldExprs = .dots %?% list(...)
-      # reshaped = private$reshape_attrs_with_dtypes(fieldExprs)
-      # private$conn$afl_expr(reshaped$to_afl())
     }
     ,
     mutate_by = function(data_array, 
@@ -1390,23 +1385,23 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       needTransform = !(length(data_source$dims) == length(self$dims) && all(data_source$dims == self$dims))
       
       if(needTransform){
-        assert_has_len(keys, "ERROR: ArrayOp$mutate: param 'keys' cannot be empty if data_source is an arrayOp")
-        assert_has_len(updated_fields, "ERROR: ArrayOp$mutate: param 'updated_fields' cannot be empty if data_source is an arrayOp")
+        assert_not_empty(keys, "param 'keys' cannot be empty")
+        assert_not_empty(updated_fields, "param 'updated_fields' cannot be empty")
         assert_no_fields(
           (keys %-% self$dims_n_attrs) %u% (keys %-% data_source$dims_n_attrs),
-          "ERROR: ArrayOp$mutate: param 'keys' has invalid field(s) [%s]")
+          "param 'keys' has invalid field(s) [%s]")
         assert_no_fields(
           (updated_fields %-% self$dims_n_attrs) %u% (updated_fields %-% data_source$dims_n_attrs),
-          "ERROR: ArrayOp$mutate: param 'updated_fields' has invalid field(s) [%s]")
+          "param 'updated_fields' has invalid field(s) [%s]")
         data_source = private$key_to_coordinates(data_source, keys = keys, reserved_fields = updatedFields, 
                                                  .redimension_setting = .redimension_setting, .join_setting = .join_setting)
       }
-      # mutate_by_arrayop(data_source, updatedFields, reservedFields)
-      assert_has_len(updatedFields, "ERROR: ArrayOp$mutate: param 'data_source' does not have any target attributes to mutate.")
+      assert_not_empty(updatedFields, "param 'data_source' does not have any target attributes to mutate.")
       self$spawn(
         afl(
-          data_source$reshape(updatedFields, .force_project = FALSE) | join( 
-            .ifelse(.not_empty(reservedFields), self$reshape(reservedFields), self)
+          data_source$reshape(updatedFields, .force_project = FALSE) | 
+            join(
+              .ifelse(.not_empty(reservedFields), self$reshape(reservedFields), self)
           )
         )
       )$reshape(self$attrs)
