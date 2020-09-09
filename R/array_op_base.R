@@ -1254,7 +1254,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     ,
     mutate = function(..., .dots = NULL, .sync_schema = TRUE){
       
-      paramFieldExprs = .dots %?% list(...)
+      paramFieldExprs = lapply(.dots %?% rlang::exprs(...), aflutils$e_to_afl)
       assert_unique_named_list(
         paramFieldExprs,
         "'mutate fields' should be a named list where each element has a unique name. E.g. mutate(field_name = 'field_expression') "
@@ -1277,7 +1277,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     }
     ,
     transmute = function(..., .dots = NULL, .sync_schema = TRUE){
-      paramFieldExprs = .dots %?% list(...)
+      paramFieldExprs = lapply(.dots %?% rlang::exprs(...), aflutils$e_to_afl)
       assertf(all(sapply(paramFieldExprs, is.character)),
               glue(
               "'transmute fields' should be a list of non-nullable strings with optional names. E.g. transmute('a', b='a + 2').",

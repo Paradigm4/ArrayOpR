@@ -68,7 +68,7 @@ test_that("set auto increment fields", {
   
   df_equal(
     build_arr_literal$
-      mutate("xx" = "z+10")$
+      mutate(xx = z+10)$
       set_auto_fields(SourceArray, c("xx"=10), "da")$
       mutate("xx" = NULL)$ # remove the xx field
       to_df(),
@@ -77,7 +77,7 @@ test_that("set auto increment fields", {
   
   df_equal(
     build_arr_literal$
-      mutate("xx" = "z+10")$
+      mutate(xx = z+10)$
       set_auto_fields(SourceArray, c("xx"=10, "z"=0), c("da", "f_int64"))$
       mutate("xx" = NULL)$ # remove the xx field
       to_df(),
@@ -86,18 +86,18 @@ test_that("set auto increment fields", {
   
   df_equal(
     build_arr_literal$
-      mutate("xx" = "z")$
+      mutate(xx = z)$
       set_auto_fields(SourceArray, "xx", "da")$
-      mutate("xx" = NULL)$ # remove the xx field
+      mutate(xx = NULL)$ # remove the xx field
       to_df(),
     data.frame(f_str = LETTERS[1:3], da = 11:13)
   )
   
   df_equal(
     build_arr_literal$
-      mutate("xx" = "z")$
+      mutate(xx = z)$
       set_auto_fields(SourceEmptyArray, "xx", "da")$
-      mutate("xx" = NULL)$ # remove the xx field
+      mutate(xx = NULL)$ # remove the xx field
       to_df(),
     data.frame(f_str = LETTERS[1:3], da = 0:2)
   )

@@ -23,7 +23,7 @@ test_that("strict mode requires all fields match", {
   
   verify(arr1$change_schema(Template)$sync_schema())
   verify(arr2$
-           mutate("ac"="int64(ac)")$ # Here we corcerce 'ac' to int64 
+           mutate(ac=int64(ac))$ # Here we corcerce 'ac' to int64 
            change_schema(Template, .setting = c('cells_per_chunk: 1234'))$sync_schema())
   expect_identical(
     # without sync_schema, the invalid setting is not verified locally in R
