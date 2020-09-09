@@ -1069,7 +1069,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
         stop(paste(status$error_msgs, collapse = '\n'))
       }
       newRawAfl = if(.not_empty(filterExpr)) 
-        afl(self | filter(aflutils$e_to_afl_filter(filterExpr, regex_func = regex_func, ignore_case = ignore_case)))
+        afl(self | filter(aflutils$e_to_afl(filterExpr, regex_func = regex_func, ignore_case = ignore_case)))
       else self$to_afl()
       self$spawn(newRawAfl)
     }

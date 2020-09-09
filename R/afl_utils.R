@@ -113,7 +113,7 @@ AFLUtils <- R6::R6Class(
     #' 
     #' @param e An R expression vector of length 1 or more
     #' @return An AFL filter string
-    e_to_afl_filter = function(e, regex_func = 'rsub', ignore_case = TRUE) {
+    e_to_afl = function(e, regex_func = 'rsub', ignore_case = TRUE) {
     
       # If 'e' is an ExprsList, then we merge it with 'AND' call by default
       # Otherwise 'e' is already a single Expression ready to be translated to AFL

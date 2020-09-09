@@ -3,7 +3,7 @@ context('Test expression utility functions')
 expr = rlang::expr
 e = aflutils$e
 args_to_expressions = aflutils$args_to_expressions
-e_to_afl_filter = aflutils$e_to_afl_filter
+e_to_afl = aflutils$e_to_afl
 
 # Terms definition ------------------------------------------------------------------------------------------------
 
@@ -136,93 +136,93 @@ test_that("Error cases", {
 
 
 
-# e_to_afl_filter --------------------------------------------------------------------------------------------
+# e_to_afl --------------------------------------------------------------------------------------------
 
 test_that("Generate afl filter expressions from R expressions", {
-  assert_afl_equal(e_to_afl_filter(e(a == TRUE)), "a = true")
-  assert_afl_equal(e_to_afl_filter(e(a == !!T)), "a = true")
-  assert_afl_equal(e_to_afl_filter(e(a == FALSE)), "a = false")
-  assert_afl_equal(e_to_afl_filter(e(a == !!F)), "a = false")
+  assert_afl_equal(e_to_afl(e(a == TRUE)), "a = true")
+  assert_afl_equal(e_to_afl(e(a == !!T)), "a = true")
+  assert_afl_equal(e_to_afl(e(a == FALSE)), "a = false")
+  assert_afl_equal(e_to_afl(e(a == !!F)), "a = false")
   
-  assert_afl_equal(e_to_afl_filter(e(a == 42)), "a = 42")
-  assert_afl_equal(e_to_afl_filter(e(is_null(a))), "a is null")
-  assert_afl_equal(e_to_afl_filter(e(not_null(a))), "a is not null")
-  assert_afl_equal(e_to_afl_filter(e(is_null(a), b != 0)), "a is null and b <> 0")
+  assert_afl_equal(e_to_afl(e(a == 42)), "a = 42")
+  assert_afl_equal(e_to_afl(e(is_null(a))), "a is null")
+  assert_afl_equal(e_to_afl(e(not_null(a))), "a is not null")
+  assert_afl_equal(e_to_afl(e(is_null(a), b != 0)), "a is null and b <> 0")
   
-  assert_afl_equal(e_to_afl_filter(e(a %in% !!c(1,2,3))), "(a = 1 or a = 2 or a = 3)")
-  assert_afl_equal(e_to_afl_filter(e(a %like% '.+a.+')), "(a <> '' and rsub(a, 's/.+a.+//i') = '')")
+  assert_afl_equal(e_to_afl(e(a %in% !!c(1,2,3))), "(a = 1 or a = 2 or a = 3)")
+  assert_afl_equal(e_to_afl(e(a %like% '.+a.+')), "(a <> '' and rsub(a, 's/.+a.+//i') = '')")
   
-  assert_afl_equal(e_to_afl_filter(e((a + b + "c") == 'value')), "(a + b + 'c') = 'value'")
+  assert_afl_equal(e_to_afl(e((a + b + "c") == 'value')), "(a + b + 'c') = 'value'")
 })
 
 test_that("Regular expressions", {
   # rsub mode
-  assert_afl_equal(e_to_afl_filter(e(field %like% '.+a.+')), "(field <> '' and rsub(field, 's/.+a.+//i') = '')")
-  assert_afl_equal(e_to_afl_filter(e(field %like% '.+a.+'), regex_func = 'rsub'), 
+  assert_afl_equal(e_to_afl(e(field %like% '.+a.+')), "(field <> '' and rsub(field, 's/.+a.+//i') = '')")
+  assert_afl_equal(e_to_afl(e(field %like% '.+a.+'), regex_func = 'rsub'), 
                    "(field <> '' and rsub(field, 's/.+a.+//i') = '')")
-  assert_afl_equal(e_to_afl_filter(e(field %like% '.+a.+'), regex_func = 'rsub', ignore_case = F), 
+  assert_afl_equal(e_to_afl(e(field %like% '.+a.+'), regex_func = 'rsub', ignore_case = F), 
                    "(field <> '' and rsub(field, 's/.+a.+//') = '')")
   
   # regex mode
-  assert_afl_equal(e_to_afl_filter(e(field %like% '.+a.+'), regex_func = 'regex'), 
+  assert_afl_equal(e_to_afl(e(field %like% '.+a.+'), regex_func = 'regex'), 
                    "regex(field, '(?i).+a.+')")
-  assert_afl_equal(e_to_afl_filter(e(field %like% '.+a.+'), regex_func = 'regex', ignore_case = T), 
+  assert_afl_equal(e_to_afl(e(field %like% '.+a.+'), regex_func = 'regex', ignore_case = T), 
                    "regex(field, '(?i).+a.+')")
-  assert_afl_equal(e_to_afl_filter(e(field %like% '.+a.+'), regex_func = 'regex', ignore_case = F), 
+  assert_afl_equal(e_to_afl(e(field %like% '.+a.+'), regex_func = 'regex', ignore_case = F), 
                    "regex(field, '.+a.+')")
   
   # Other string match functions derived from %like%
-  assert_afl_equal(e_to_afl_filter(e(field %contains% 'a'), regex_func = 'rsub'), 
+  assert_afl_equal(e_to_afl(e(field %contains% 'a'), regex_func = 'rsub'), 
                    "(field <> '' and rsub(field, 's/.*a.*//i') = '')")
-  assert_afl_equal(e_to_afl_filter(e(field %contains% 'a'), regex_func = 'rsub', ignore_case = F), 
+  assert_afl_equal(e_to_afl(e(field %contains% 'a'), regex_func = 'rsub', ignore_case = F), 
                    "(field <> '' and rsub(field, 's/.*a.*//') = '')")
-  assert_afl_equal(e_to_afl_filter(e(field %contains% 'a'), regex_func = 'regex'), 
+  assert_afl_equal(e_to_afl(e(field %contains% 'a'), regex_func = 'regex'), 
                    "regex(field, '(?i).*a.*')")
-  assert_afl_equal(e_to_afl_filter(e(field %starts_with% 'a'), regex_func = 'regex', ignore_case = F), 
+  assert_afl_equal(e_to_afl(e(field %starts_with% 'a'), regex_func = 'regex', ignore_case = F), 
                    "regex(field, 'a.*')")
-  assert_afl_equal(e_to_afl_filter(e(field %ends_with% 'a'), regex_func = 'regex', ignore_case = T), 
+  assert_afl_equal(e_to_afl(e(field %ends_with% 'a'), regex_func = 'regex', ignore_case = T), 
                    "regex(field, '(?i).*a')")
   
   # escape special characters in contains, starts_with and ends_with
-  assert_afl_equal(e_to_afl_filter(e(field %contains% ' a*b(par\\en)\\ '), regex_func = 'regex'), 
+  assert_afl_equal(e_to_afl(e(field %contains% ' a*b(par\\en)\\ '), regex_func = 'regex'), 
                    "regex(field, '(?i) .*a\\*b\\(par\\\\\\en\\)\\\\\\ .*')")
-  assert_afl_equal(e_to_afl_filter(e(field %starts_with% ' ]"[ '), regex_func = 'regex'), 
+  assert_afl_equal(e_to_afl(e(field %starts_with% ' ]"[ '), regex_func = 'regex'), 
                    "regex(field, '(?i) \\]\"\\[ .*')")
-  assert_afl_equal(e_to_afl_filter(e(field %ends_with% "a'a"), regex_func = 'regex'), 
+  assert_afl_equal(e_to_afl(e(field %ends_with% "a'a"), regex_func = 'regex'), 
                    "regex(field, '(?i).*a\\'a')")
-  assert_afl_equal(e_to_afl_filter(e(field %ends_with% "a'a"), regex_func = 'rsub'), 
+  assert_afl_equal(e_to_afl(e(field %ends_with% "a'a"), regex_func = 'rsub'), 
                    "(field <> '' and rsub(field, 's/.*a\\'a//i') = '')")
   
   
   # Error regex_func mode
-  expect_error(e_to_afl_filter(e(field %like% '.+a.+'), regex_func = 'non-existent'), "Unknown regex function")
-  expect_error(e_to_afl_filter(e(field %like% !!c('a', 'b'))), "must be a single string")
+  expect_error(e_to_afl(e(field %like% '.+a.+'), regex_func = 'non-existent'), "Unknown regex function")
+  expect_error(e_to_afl(e(field %like% !!c('a', 'b'))), "must be a single string")
   
 })
 
 test_that("Generate complex filter expression with logical operators", {
   # NOTE: &&/& takes precedence over ||/|  
-  assert_afl_equal(e_to_afl_filter(e(a == 3, b == 'val')), "a = 3 and b = 'val'")
-  assert_afl_equal(e_to_afl_filter(e(a == 3 && b == 'val')), "a = 3 and b = 'val'")
-  assert_afl_equal(e_to_afl_filter(e(a == 3 & b == 'val')), "a = 3 and b = 'val'")
-  assert_afl_equal(e_to_afl_filter(e(a == 3 || b == 'val')), "a = 3 or b = 'val'")
-  assert_afl_equal(e_to_afl_filter(e(a == 3 | b == 'val')), "a = 3 or b = 'val'")
+  assert_afl_equal(e_to_afl(e(a == 3, b == 'val')), "a = 3 and b = 'val'")
+  assert_afl_equal(e_to_afl(e(a == 3 && b == 'val')), "a = 3 and b = 'val'")
+  assert_afl_equal(e_to_afl(e(a == 3 & b == 'val')), "a = 3 and b = 'val'")
+  assert_afl_equal(e_to_afl(e(a == 3 || b == 'val')), "a = 3 or b = 'val'")
+  assert_afl_equal(e_to_afl(e(a == 3 | b == 'val')), "a = 3 or b = 'val'")
   
-  assert_afl_equal(e_to_afl_filter(
+  assert_afl_equal(e_to_afl(
     e(AND(a == 3, b == 4, c == 5))), 
     "a = 3 and b = 4 and c = 5")
   
-  assert_afl_equal(e_to_afl_filter(
+  assert_afl_equal(e_to_afl(
     e(OR(a == 3, b == 4, c == 5))), 
     "a = 3 or b = 4 or c = 5")
   
   # Use paranthese to change operands association
-  assert_afl_equal(e_to_afl_filter(
+  assert_afl_equal(e_to_afl(
     e( a == 3 & (b == 4 | c == 5) )),
     "a = 3 and (b = 4 or c = 5)")
   # More verbose way to do the same as above. Notice the parathenses around OR operator. 
   # If ommitted, no paratheses are generated
-  assert_afl_equal(e_to_afl_filter(
+  assert_afl_equal(e_to_afl(
     e( AND(a == 3,  (OR(b == 4 | c == 5))) )),
     "a = 3 and (b = 4 or c = 5)")
 })
