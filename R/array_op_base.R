@@ -42,7 +42,7 @@ ArrayOpBase <- R6::R6Class(
     conn = NULL # The ScidbConnection instance
     ,
     clone_self = function(raw_afl = private$raw_afl) {
-      result = self$create_new(raw_afl, metaList = private$metaList)
+      result = private$create_new(raw_afl, metaList = private$metaList)
       result$.private$set_conn(private$conn)
       result
     }
@@ -300,7 +300,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
           left$selected, right$selected %-% on_right,
           .left_alias, .right_alias
         )
-        joinedOp = self$create_new(joinExpr, names(dims), attrs, dtypes = dtypes)
+        joinedOp = private$create_new(joinExpr, names(dims), attrs, dtypes = dtypes)
         return(
           # selectedFields names and values may be different due to disambiguation
           joinedOp$.private$reshape_fields(selectedFields)$select(names(selectedFields))
@@ -309,7 +309,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
       }
       
       selectedFields = if(hasSelected) attrs else NULL
-      joinedOp = self$create_new(joinExpr, names(dims), attrs, dtypes = dtypes)
+      joinedOp = private$create_new(joinExpr, names(dims), attrs, dtypes = dtypes)
       if(hasSelected) {
         joinedOp = joinedOp$afl_project(selectedFields)
         if(.auto_select)
@@ -348,7 +348,7 @@ Please select on left operand's fields OR do not select on either operand. Look 
                  right$.private$get_field_types(right$dims_n_attrs %-% on_right))
       dim_specs = c(left$.private$get_dim_specs(), 
                     right$.private$get_dim_specs(right$dims %-% on_right))
-      joinedOp = self$create_new(aflStr, dims = dims, attrs = attrs, dtypes = dtypes, dim_specs = dim_specs)
+      joinedOp = private$create_new(aflStr, dims = dims, attrs = attrs, dtypes = dtypes, dim_specs = dim_specs)
       
       selectedFields = private$disambiguate_join_fields(
         left$selected, right$selected %-% on_right,
@@ -554,6 +554,19 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     }
     ,
     #' @description 
+    #' Return a new arrayOp instance with the same version as `self`
+    #' 
+    #' Work in sub-class without requiring class names or constructor function.
+    #' @param ... The samme params with Repo$ArrayOp(...)
+    #' @return A new arrayOp 
+    create_new = function(...){
+      classConstructor = get(class(self))$new
+      result = classConstructor(...)
+      result$.private$set_conn(private$conn)
+      result
+    }
+    ,
+    #' @description 
     #' Create a new ArrayOp instance from 'build'ing a data.frame
     #' 
     #' All matching fields are built as attributes of the result ArrayOp.
@@ -600,7 +613,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       )
       if(!as_scidb_data_frame){
         builtDtypes[[artificial_field]] = 'int64'
-        self$create_new(
+        private$create_new(
           sprintf("build(<%s>[%s], '[%s]', true)", 
                 attrStr, artificial_field, contentStr),
           dims = artificial_field,
@@ -608,7 +621,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
           dtypes = builtDtypes
         )
       } else { # build as a scidb data frame
-        self$create_new(
+        private$create_new(
           sprintf("build(<%s>, '[[%s]]', true)", 
                 attrStr, contentStr),
           dims = c("$inst", "$seq"),
@@ -616,18 +629,6 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
           dtypes = builtDtypes
         )
       }
-      
-      # afl_literal = if(!as_scidb_data_frame) {
-      #   sprintf("build(<%s>[%s], '[%s]', true)", 
-      #           attrStr, artificial_field, contentStr)
-      # } else { # build as a scidb data frame
-      #   sprintf("build(<%s>, '[[%s]]', true)", 
-      #           attrStr, contentStr)
-      # }
-      # 
-      # builtDtypes[[artificial_field]] = 'int64'
-      # return(self$create_new(afl_literal, artificial_field, builtAttrs, 
-      #   dtypes = builtDtypes)$sync_schema())
     }
     ,
     #' @description 
@@ -674,8 +675,8 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       aioExpr = afl(aflutils$join_fields(settingItems) | aio_input)
       applyExpr = afl(aioExpr | apply(aflutils$join_fields(names(fieldTypes), castedItems)))
       projectedExpr = afl(applyExpr | project(names(fieldTypes)))
-      # return(self$create_new(projectedExpr, metaList = list()))
-      return(self$create_new(projectedExpr, c(), names(fieldTypes), dtypes = fieldTypes))
+      # return(private$create_new(projectedExpr, metaList = list()))
+      return(private$create_new(projectedExpr, c(), names(fieldTypes), dtypes = fieldTypes))
     }
     ,
     #' reshape array attributes by name and expression
@@ -716,7 +717,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       } else {
         afl(self | project(field_names))
       }
-      self$create_new(newAfl, dims = self$dims, attrs = field_names, 
+      private$create_new(newAfl, dims = self$dims, attrs = field_names, 
                       dim_specs = private$get_dim_specs())
       
     }
@@ -866,7 +867,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       else
         utils::modifyList(renamedTarget$.private$get_dim_specs(),
                           as.list(structure(source_anti_collision_dim_spec, names = srcAltId)))
-      redimensionTemplate = self$create_new("TEMPLATE", 
+      redimensionTemplate = private$create_new("TEMPLATE", 
                                             dims = renamedTarget$dims, 
                                             attrs = self$attrs %-% renamedTarget$dims,
                                             dtypes = utils::modifyList(private$get_field_types(), renamedTarget$.private$get_field_types(renamedTarget$dims)),
@@ -877,7 +878,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       
       # Get the max anti-collision-field from group aggregating the target on the remainder of target dimensions
       targetAltIdMax = sprintf("max_%s_", anti_collision_field)
-      groupedTarget = self$create_new('',
+      groupedTarget = private$create_new('',
         attrs = c(regularTargetDims, targetAltIdMax), dims = c('instance_id', 'value_no'),
         dtypes = c(invert.list(list("int64" = c('instance_id', 'value_no', regularTargetDims, targetAltIdMax))))
       )$spawn(afl(
@@ -976,7 +977,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       assert_inherits(fields, "character")
       assert_empty(fields %-% self$attrs, "afl_project: invalid field(s) to project: [{.value}]")
       # assert_not_has_len(nonAttrs, "ERROR: afl_project: %d non-attribute field(s) found: %s", length(nonAttrs), paste(nonAttrs, collapse = ', '))
-      self$create_new(afl(self | project(fields)), dims = self$dims, attrs = fields, 
+      private$create_new(afl(self | project(fields)), dims = self$dims, attrs = fields, 
                       dtypes = private$get_field_types(c(self$dims, fields)), dim_specs = private$get_dim_specs())
     }
     ,
@@ -984,7 +985,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     # 
     # Return an array_op with self's dims + attrs, plus an extra dimension
     afl_unpack = function(dim_name = dbutils$random_field_name(), chunk_size = NULL) {
-      self$create_new(afl(self | unpack(c(dim_name, chunk_size))), 
+      private$create_new(afl(self | unpack(c(dim_name, chunk_size))), 
                       dims = dim_name,
                       attrs = self$dims_n_attrs,
                       dtypes = private$get_field_types())
@@ -1001,7 +1002,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #   assert_not_has_len(conflictFields, "ERROR: afl_apply: cannot apply existing attribute(s): %s", paste(conflictFields, collapse = ', '))
     #   
     #   newDTypes = utils::modifyList(private$get_field_types(), as.list(dtypes))
-    #   self$create_new(afl(self | apply(aflutils$join_fields(fieldNames, fieldExprs))), dims = self$dims, 
+    #   private$create_new(afl(self | apply(aflutils$join_fields(fieldNames, fieldExprs))), dims = self$dims, 
     #                   attrs = self$attrs %u% fields, dtypes = newDTypes, dim_specs = private$get_dim_specs())
     # }
     ,
@@ -1113,19 +1114,6 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     # Functions that creat new ArrayOps -------------------------------------------------------------------------------
     ,
     #' @description 
-    #' Return a new arrayOp instance with the same version as `self`
-    #' 
-    #' Work in sub-class without requiring class names or constructor function.
-    #' @param ... The samme params with Repo$ArrayOp(...)
-    #' @return A new arrayOp 
-    create_new = function(...){
-      classConstructor = get(class(self))$new
-      result = classConstructor(...)
-      result$.private$set_conn(private$conn)
-      result
-    }
-    ,
-    #' @description 
     #' Create a new ArrayOp instance by using a filter expression on the parent ArrayOp
     #' 
     #' Similar to SQL where clause and dplyr::filter.
@@ -1174,7 +1162,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       assert_no_fields(fieldNames %-% self$dims_n_attrs, "ERROR: ArrayOp$select: invalid select fields [%s] in: %%s", self$to_afl())
       newMeta = private$metaList
       newMeta[['selected']] <- fieldNames
-      self$create_new(private$raw_afl, metaList = newMeta)
+      private$create_new(private$raw_afl, metaList = newMeta)
     }
     ,
     #' @description 
@@ -1496,7 +1484,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       
       dim_specs = .ifelse(.not_empty(dim_specs), c(dim_specs, oldDimSpecs), oldDimSpecs)
       
-      self$create_new(afl_str, dims, attrs, dtypes, dim_specs = dim_specs)
+      private$create_new(afl_str, dims, attrs, dtypes, dim_specs = dim_specs)
     }
 
     # Common array operators ------------------------------------------------------------------------------------------
@@ -1771,7 +1759,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
           names = dfFields
         )
         
-        arrayTemplate = self$create_new(
+        arrayTemplate = private$create_new(
           "", dims = "x",
           attrs = dfFields,
           dtypes = templateDtypes
