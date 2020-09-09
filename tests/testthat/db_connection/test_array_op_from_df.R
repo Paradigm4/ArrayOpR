@@ -239,6 +239,16 @@ test_that("transient array_op from build literal", {
   
 })
 
+test_that("build as scidb data frame", {
+  myDf = data.frame(a = 1:3)
+  arr = conn$compile_df(myDf, "<a:int32> [i]", as_scidb_data_frame = F)
+  arrDf = conn$compile_df(myDf, "<a:int32> [i]", as_scidb_data_frame = T)
+  expect_identical(arr$is_scidb_data_frame, F)
+  expect_identical(arrDf$is_scidb_data_frame, T)
+  expect_equal(arr$to_df(), myDf)
+  expect_equal(arrDf$to_df(), myDf)
+})
+
 test_that("Error case: invalid dimension specs in build_literal", {
   # should report error if build_dim is invalid, verified by scidb show
   expect_error(conn$compile_df(data.frame(a=1:10), build_dim_spec = "i=non-sense"))

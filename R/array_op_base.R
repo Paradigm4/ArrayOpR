@@ -998,6 +998,12 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     attrs_n_dims = function() c(self$attrs, self$dims),
     #' @field is_schema_from_scidb If the array schema is retrieved from SciDB or inferred locally in R
     is_schema_from_scidb = function() private$get_meta('is_schema_from_scidb') %?% FALSE,
+    #' @field is_scidb_data_frame Whether current array_op is a regular array or
+    #' SciDB data frame (array with hidden dimensions; not to be confused with R data frames)
+    is_scidb_data_frame = function() {
+      # True if any dimension starts with $
+      any(grepl("^\\$", self$sync_schema()$dims))
+    },
     #' @field .private For internal testing only. Do not access this field to avoid unintended consequences!!!
     .private = function() private
   ),
@@ -1128,7 +1134,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' By default, a random string is generated, and the dimension starts from 0. 
     #' A customized dimension can be provided e.g. `z=42:*` or `z=0:*:0:1000`.
     #' @return A new ArrayOp instance whose attributes share the same name and data types with the template's fields.
-    build_new = function(df,  artificial_field = .random_attr_name()) {
+    build_new = function(df, artificial_field = .random_attr_name(), as_scidb_data_frame = FALSE) {
 #       assert(inherits(df, c('data.frame')), "ERROR: ArrayOp$build_new: unknown df class '%s'. 
 # Only data.frame is supported", class(df))
       assert_inherits(df, "data.frame")
@@ -1165,13 +1171,36 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
         glue::glue_data(colStrs, glueTemplate, .sep = ',', .na = ''),
         sep = ','
       )
+      if(!as_scidb_data_frame){
+        builtDtypes[[artificial_field]] = 'int64'
+        self$create_new(
+          sprintf("build(<%s>[%s], '[%s]', true)", 
+                attrStr, artificial_field, contentStr),
+          dims = artificial_field,
+          attrs = builtAttrs,
+          dtypes = builtDtypes
+        )
+      } else { # build as a scidb data frame
+        self$create_new(
+          sprintf("build(<%s>, '[[%s]]', true)", 
+                attrStr, contentStr),
+          dims = c("$inst", "$seq"),
+          attrs = builtAttrs,
+          dtypes = builtDtypes
+        )
+      }
       
-      afl_literal = sprintf("build(<%s>[%s], '[%s]', true)", 
-        attrStr, artificial_field, contentStr)
-      
-      builtDtypes[[artificial_field]] = 'int64'
-      return(self$create_new(afl_literal, artificial_field, builtAttrs, 
-        dtypes = builtDtypes))
+      # afl_literal = if(!as_scidb_data_frame) {
+      #   sprintf("build(<%s>[%s], '[%s]', true)", 
+      #           attrStr, artificial_field, contentStr)
+      # } else { # build as a scidb data frame
+      #   sprintf("build(<%s>, '[[%s]]', true)", 
+      #           attrStr, contentStr)
+      # }
+      # 
+      # builtDtypes[[artificial_field]] = 'int64'
+      # return(self$create_new(afl_literal, artificial_field, builtAttrs, 
+      #   dtypes = builtDtypes)$sync_schema())
     }
     ,
     #' @description 
