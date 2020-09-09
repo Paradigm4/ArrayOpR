@@ -205,6 +205,13 @@ AFLUtils <- R6::R6Class(
             # special case for aggregation function becasue * is not a valid R operand
             return("count(*)")
           }
+          
+          # Replace operator name from R convetion to SciDB operators/functions
+          operator = switch (operator,
+            "nchar" = "strlen",
+            "if" = "iif",
+            operator
+          )
     
           # Regular operators are treated recursively
           operands <- sapply(node[-1], walkThru)

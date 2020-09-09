@@ -32,15 +32,16 @@ test_that("Mutate an array by expression", {
   # Mutate existing field
   assert_df_match(
     RefArray$
-      mutate(f_bool=iif(f_double > 1, true, false), upper='mutated', f_int32 = strlen(lower))$
+      mutate(f_bool=iif(f_double > 1, true, false), upper=" \"'mutated'\" ", f_int32 = strlen(lower))$
       to_df_all(),
     ArrayContent %>% 
-      dplyr::mutate("f_bool" = !is.na(f_double) & f_double > 1, upper = "mutated", f_int32 = nchar(lower))
+      dplyr::mutate("f_bool" = !is.na(f_double) & f_double > 1, upper = " \"'mutated'\" ", f_int32 = nchar(lower))
   )
+  # R `if` and `nchar` functions are converted to SciDB `iif` and `strlen`, respectively
   assert_df_match(
     RefArray$
       filter(is_null(f_bool))$
-      mutate(f_bool=iif(f_double > 1, !!T, !!F), upper='mutated', f_int32 = strlen(lower), 
+      mutate(f_bool=if(f_double > 1) !!T else !!F, upper='mutated', f_int32 = nchar(lower), 
              .sync_schema = F)$ # do not check schema
       to_df_all(),
     ArrayContent %>% 
@@ -148,14 +149,16 @@ test_that("mutate error cases", {
 
 test_that("transmute does not preserve old fields", {
   # transmute an array will keep the dimensions
+  
+  # Single and double quotes should be escaped
   assert_df_match(
     RefArray$
       filter(is_null(f_bool))$
-      transmute(f_double, upper='mutated', f_int32 = strlen(lower))$
+      transmute(f_double, upper=" \"'mutated'\" ", f_int32 = nchar(lower))$
       to_df_all(),
     ArrayContent %>% 
       dplyr::filter(is.na(f_bool)) %>%
-      dplyr::transmute(da, db, f_double, upper = "mutated", f_int32 = nchar(lower))
+      dplyr::transmute(da, db, f_double, upper = " \"'mutated'\" ", f_int32 = nchar(lower))
   )
   assert_df_match(
     RefArray$
