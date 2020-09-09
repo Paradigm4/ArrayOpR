@@ -150,14 +150,16 @@ test_that("Generate afl filter expressions from R expressions", {
   assert_afl_equal(e_to_afl(e(is_null(a), b != 0)), "a is null and b <> 0")
   
   assert_afl_equal(e_to_afl(e(a %in% !!c(1,2,3))), "(a = 1 or a = 2 or a = 3)")
-  assert_afl_equal(e_to_afl(e(a %like% '.+a.+')), "(a <> '' and rsub(a, 's/.+a.+//i') = '')")
+  assert_afl_equal(e_to_afl(e(a %like% '.+a.+'), regex_func = 'rsub'), "(a <> '' and rsub(a, 's/.+a.+//i') = '')")
   
-  assert_afl_equal(e_to_afl(e((a + b + "c") == 'value')), "(a + b + 'c') = 'value'")
+  assert_afl_equal(e_to_afl(e((a + b + "c") == 'value')),
+                   "(a + b + 'c') = 'value'")
 })
 
 test_that("Regular expressions", {
   # rsub mode
-  assert_afl_equal(e_to_afl(e(field %like% '.+a.+')), "(field <> '' and rsub(field, 's/.+a.+//i') = '')")
+  assert_afl_equal(e_to_afl(e(field %like% '.+a.+'), regex_func = 'rsub'), 
+                   "(field <> '' and rsub(field, 's/.+a.+//i') = '')")
   assert_afl_equal(e_to_afl(e(field %like% '.+a.+'), regex_func = 'rsub'), 
                    "(field <> '' and rsub(field, 's/.+a.+//i') = '')")
   assert_afl_equal(e_to_afl(e(field %like% '.+a.+'), regex_func = 'rsub', ignore_case = F), 

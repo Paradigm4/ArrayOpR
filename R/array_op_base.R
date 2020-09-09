@@ -1521,7 +1521,8 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
                        paste0("'{.symbol}' should not be empty (0-length) ",
                               "Consider call `anArrayOp$group_by(...)` first")
       )
-      rawFieldsList = .dots %?% list(...)
+      # rawFieldsList = .dots %?% list(...)
+      rawFieldsList = lapply(.dots %?% rlang::exprs(...), aflutils$e_to_afl)
       
       # get aggregation expressions
       aliases = names(rawFieldsList)

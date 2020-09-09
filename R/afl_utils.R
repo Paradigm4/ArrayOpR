@@ -113,7 +113,7 @@ AFLUtils <- R6::R6Class(
     #' 
     #' @param e An R expression vector of length 1 or more
     #' @return An AFL filter string
-    e_to_afl = function(e, regex_func = 'rsub', ignore_case = TRUE) {
+    e_to_afl = function(e, regex_func = 'regex', ignore_case = TRUE) {
     
       # If 'e' is an ExprsList, then we merge it with 'AND' call by default
       # Otherwise 'e' is already a single Expression ready to be translated to AFL
@@ -150,7 +150,7 @@ AFLUtils <- R6::R6Class(
             operator <- lookup # Convert to AFL compliant operator if found in operatorList
           }
     
-          leftOp = walkThru(node[[2]])
+          leftOp = if(length(node) > 1L) walkThru(node[[2]]) else NULL
           # Special operators are treated specially. E.g. %like%, %in%
     
           if(operator == '%in%'){
@@ -200,6 +200,11 @@ AFLUtils <- R6::R6Class(
           if(operator == '!'){
             return(sprintf("not %s", walkThru(node[[2]])))
           }
+          
+          if(operator == 'count' && is.null(leftOp)){ 
+            # special case for aggregation function becasue * is not a valid R operand
+            return("count(*)")
+          }
     
           # Regular operators are treated recursively
           operands <- sapply(node[-1], walkThru)
@@ -219,7 +224,8 @@ AFLUtils <- R6::R6Class(
           else if(is.logical(node))
             return(tolower(as.character(node)))
           else if(is.character(node))
-            return(sprintf("'%s'", node))
+            # Escape single quotes in strings
+            return(paste0("'", gsub("(')", "\\\\\\1", node), "'"))
         } else {
           stop(sprintf('Unknow class: [%s]', paste(class(node), collapse = ',')))
         }
