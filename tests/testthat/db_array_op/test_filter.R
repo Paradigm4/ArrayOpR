@@ -57,6 +57,17 @@ test_that("filter numeric fields", {
   )
 })
 
+test_that("null filter returns self", {
+  assert_df_match(
+    RefArray$filter()$to_df_all(),
+    dplyr::filter(dfArraySource, T)
+  )
+  assert_df_match(
+    RefArray$filter(NULL)$to_df_all(),
+    dfArraySource
+  )
+})
+
 test_that("filter string fields: exact, starts_with, ends_with", {
   assert_df_match(
     RefArray$filter(text == 'exact match')$to_df_all(),

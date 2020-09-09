@@ -1046,32 +1046,34 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' Create a new ArrayOp instance by using a filter expression on the parent ArrayOp
     #' 
     #' Similar to SQL where clause and dplyr::filter.
-    #' @param missing_fields_error_template Error template for missing fields. 
-    #' Only one %s is allowed which is substituted with an concatnation of the missing fields separated by commas.
     #' @param regex_func A string of regex function implementation. 
     #' Due to scidb compatiblity issue with its dependencies, the regex function from boost library may not be available
     #' Supported values: rsub, regex
     #' @param ignore_case A Boolean. If TRUE, ignore case in string match patterns. 
     #' Otherwise, perform case-sensitive regex matches.
     #' @return A new arrayOp 
-    filter = function(..., expr = NULL, missing_fields_error_template = NULL, 
-                     regex_func = getOption('arrayop.regex_func', default = 'regex'), 
-                     ignore_case = getOption('arrayop.ignore_case', default = TRUE)) {
-      filterExpr = expr %?% aflutils$e_merge(aflutils$e(...))
-      status = aflutils$validate_filter_expr(filterExpr, self$dims_n_attrs)
-      if(!status$success){
-        if(.not_empty(status$absent_fields)){
-          if(is.null(missing_fields_error_template))
-            missing_fields_error_template = 
-              sprintf("ERROR: ArrayOp$where: Field(s) '%%s' not found in ArrayOp: %s", private$raw_afl)
-          stopf(missing_fields_error_template, paste(status$absent_fields, collapse = ','))
+    filter = function(..., .expr = NULL, .validate_fields = TRUE, 
+                     .regex_func = getOption('arrayop.regex_func', default = 'regex'), 
+                     .ignore_case = getOption('arrayop.ignore_case', default = TRUE)) {
+      filterExpr = .expr %?% aflutils$e_merge(aflutils$e(...))
+      # No actual filter expression
+      if(.is_empty(filterExpr)) return(self)
+      
+      # If we need to validate every field is actually one of self's fields
+      if(.validate_fields){
+        status = aflutils$validate_filter_expr(filterExpr, self$dims_n_attrs)
+        if(!status$success){
+          # either invalid fields or R expression syntax error
+          assert_empty(status$absent_fields,
+                       "invalid field(s) [{.value}] in filter expression")
+          stop(paste(status$error_msgs, collapse = '\n'))
         }
-        stop(paste(status$error_msgs, collapse = '\n'))
       }
-      newRawAfl = if(.not_empty(filterExpr)) 
-        afl(self | filter(aflutils$e_to_afl(filterExpr, regex_func = regex_func, ignore_case = ignore_case)))
-      else self$to_afl()
-      self$spawn(newRawAfl)
+      
+      self$spawn(afl(self | 
+                       filter(aflutils$e_to_afl(filterExpr, 
+                                                regex_func = .regex_func, 
+                                                ignore_case = .ignore_case))))
     }
     ,
     #' @description 
