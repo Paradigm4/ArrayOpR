@@ -337,5 +337,5 @@ test_that("mutate_by: data_array already conforms to target schema", {
   )
 })
 
-RefArray$remove_self()
+RefArray$remove_array()
 

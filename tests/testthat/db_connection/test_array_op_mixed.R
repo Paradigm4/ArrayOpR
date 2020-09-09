@@ -23,10 +23,10 @@ test_that("persistent array_op from uploaded data frame", {
   expect_equal(stored2$to_df(), filteredDf)
   
   # Clean up
-  stored1$remove_self()
+  stored1$remove_array()
   gc() 
   # stored2 should be auto deleted after GC
-  try(stored2$remove_self(), silent = T)
+  try(stored2$remove_array(), silent = T)
 })
 
 test_that("Store AFL as scidb array and return arrayOp", {
@@ -55,6 +55,6 @@ test_that("Store AFL as scidb array and return arrayOp", {
   )
   
   # Cleanup
-  stored$remove_self()
-  uploaded$remove_self()
+  stored$remove_array()
+  uploaded$remove_array()
 })

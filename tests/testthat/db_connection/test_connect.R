@@ -29,7 +29,7 @@ test_that("create scidb array", {
   validate_array_exists(a2, F)
   validate_array_exists(a3, T)
   
-  a1$remove_self()
-  a2$remove_self()
-  a3$remove_self()
+  a1$remove_array()
+  a2$remove_array()
+  a3$remove_array()
 })

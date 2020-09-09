@@ -200,5 +200,5 @@ test_that("set both auto-incremented fields and anti-collision fields", {
   )
 })
 
-SourceArray$remove_self()
-SourceEmptyArray$remove_self()
+SourceArray$remove_array()
+SourceEmptyArray$remove_array()

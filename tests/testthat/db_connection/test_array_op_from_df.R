@@ -10,7 +10,7 @@ test_that("upload data frame: no template", {
   
   # uploaded data frame will have an artificial dimension
   expect_equal(uploaded$to_df(), df)
-  uploaded$remove_self()
+  uploaded$remove_array()
 })
 
 test_that("various types of template", {
@@ -21,7 +21,7 @@ test_that("various types of template", {
   verify_template = function(template) {
     a1 = conn$upload_df(df, template, .gc = F)
     expect_identical(a1$attrs, templateArray$dims_n_attrs)
-    a1$remove_self()
+    a1$remove_array()
   }
   
   verify_template(templateStr)
@@ -34,8 +34,8 @@ test_that("various types of template", {
   expect_identical(a2$attrs, templateArray$attrs)
   expect_identical(a2$dims, templateArray$dims)
   
-  a2$remove_self()
-  templateArray$remove_self()
+  a2$remove_array()
+  templateArray$remove_array()
   
 })
 
@@ -47,7 +47,7 @@ test_that("upload data frame: no template, temporary", {
   # uploaded data frame will have an artificial dimension
   expect_equal(uploaded$to_df(), df)
   
-  uploaded$remove_self()
+  uploaded$remove_array()
 })
 
 test_that("upload data frame: by a single vector", {
@@ -57,7 +57,7 @@ test_that("upload data frame: by a single vector", {
   # uploaded data frame will have an artificial dimension
   expect_equal(uploaded$to_df(), df)
   
-  uploaded$remove_self()
+  uploaded$remove_array()
 })
 
 test_that("upload data frame: no template, by vectors", {
@@ -68,7 +68,7 @@ test_that("upload data frame: no template, by vectors", {
   expect_equal(uploaded$to_df(), df)
   columnArrays = uploaded$.get_meta(".ref")
   for(arr in columnArrays){
-    arr$remove_self()
+    arr$remove_array()
   }
 })
 
@@ -108,7 +108,7 @@ test_that("upload data frame with special chars", {
   expect_identical(arr$attrs, c('a', 'b', 'z'))
   expect_equal(arr$to_df(), df)
   
-  arr$remove_self()
+  arr$remove_array()
 })
 
 test_that("upload data frame by vectors", {
@@ -158,7 +158,7 @@ test_that("upload data frame with GC setting", {
     retried = conn$array(name)
     expect_identical(retried$to_afl(), name) # array should still exists
     
-    retried$remove_self()
+    retried$remove_array()
     expect_error(conn$array(name)) # now the array should be removed 
   }
   
@@ -202,8 +202,8 @@ test_that("upload data frame with other scidbR settings", {
   expect_equal(uploaded$cell_count(), nrow(df))
   expect_equal(uploaded2$cell_count(), nrow(df))
   
-  uploaded$remove_self()
-  uploaded2$remove_self()
+  uploaded$remove_array()
+  uploaded2$remove_array()
 })
 
 test_that("Error cases: upload data frames", {

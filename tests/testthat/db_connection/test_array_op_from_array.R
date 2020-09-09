@@ -10,7 +10,7 @@ test_that("array_op from scidb array name", {
   expect_identical(arr$to_afl(), name)
   expect_identical(conn$array(name)$to_afl(), name)
   
-  arr$remove_self()
+  arr$remove_array()
 })
 
 

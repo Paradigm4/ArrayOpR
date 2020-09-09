@@ -1594,10 +1594,12 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     }
     ,
     versions = function(){
+      assertf(self$is_persistent(), "versions only works on persistent arrays")
       private$conn$query(afl(self | versions))
     }
     ,
     remove_versions = function(version_id = NULL){
+      assertf(self$is_persistent(), "remove_versions only works on persistent arrays")
       if(is.null(version_id)) {
         private$conn$execute(afl(self | remove_versions))
       } else {
@@ -1608,8 +1610,8 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       invisible(NULL)
     }
     ,
-    remove_self = function(){
-      assertf(self$is_persistent(), glue::glue("Cannot remove a transient array: \n\n{self$to_afl()}"))
+    remove_array = function(){
+      assertf(self$is_persistent(), "remove_array only works on persistent arrays")
       private$conn$execute(afl(self | remove))
       invisible(NULL)
     }

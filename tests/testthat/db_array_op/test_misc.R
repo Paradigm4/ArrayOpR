@@ -26,8 +26,8 @@ test_that("persist arrays so they can be reused", {
   expect_identical(arrayBuildPersisted$array_meta_data()$temporary, FALSE)
   expect_identical(arrayBuildPersistedTemp$array_meta_data()$temporary, TRUE)
   
-  arrayBuildPersisted$remove_self()
-  arrayBuildPersistedTemp$remove_self()
+  arrayBuildPersisted$remove_array()
+  arrayBuildPersistedTemp$remove_array()
 })
 
 test_that("verify persistent array existence", {
@@ -38,7 +38,7 @@ test_that("verify persistent array existence", {
   expect_true(arr$exists_persistent_array())
   expect_identical(arr$array_meta_data()$name, name)
   
-  arr$remove_self()
+  arr$remove_array()
   
   expect_true(!arr$exists_persistent_array())
 })
@@ -70,7 +70,7 @@ test_that("Drop dims", {
   verify(RefArray$drop_dims(mode = 'flatten'))
   verify(RefArray$drop_dims(mode = 'flatten', .chunk_size = 123), '123')
   
-  RefArray$remove_self()
+  RefArray$remove_array()
 })
 
 # spawn ----

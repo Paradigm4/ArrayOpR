@@ -30,7 +30,7 @@ test_that("Overwrite array", {
   Target$filter(1 == 2)$overwrite(Target)$execute()
   expect_equal(Target$cell_count(), 0)
   
-  Target$remove_self()
+  Target$remove_array()
 })
 
 test_that("Update array", {
@@ -51,7 +51,7 @@ test_that("Update array", {
   Target$filter(1 == 2)$update(Target)$execute()
   expect_df_equal(Target$to_df_all(), df3)
   
-  Target$remove_self()
+  Target$remove_array()
 })
 
 

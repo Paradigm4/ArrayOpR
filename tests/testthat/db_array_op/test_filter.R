@@ -202,4 +202,4 @@ test_that("filter by compound expressions", {
   )
 })
 
-RefArray$remove_self()
+RefArray$remove_array()

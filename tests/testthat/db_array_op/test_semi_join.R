@@ -279,7 +279,7 @@ test_that("param format error checking", {
   expect_error(RefArray$semi_join(list()), "list")
 })
 
-RefArray$remove_self()
+RefArray$remove_array()
 
 
 

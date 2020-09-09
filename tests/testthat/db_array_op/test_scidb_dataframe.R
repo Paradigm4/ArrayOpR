@@ -15,6 +15,6 @@ test_that("scidb data frame", {
   # Scidb does not seem to support insert data from build'ed array
   # buildDf = conn$array_from_df(dataContent, template = "<a:string, b:int32>")
   
-  dfArray$remove_self()
-  uploaded$remove_self()
+  dfArray$remove_array()
+  uploaded$remove_array()
 })

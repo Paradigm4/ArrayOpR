@@ -58,4 +58,4 @@ test_that("sync_schema will update array schema from scidb only if the schema is
   
 })
 
-Template$remove_self()
+Template$remove_array()

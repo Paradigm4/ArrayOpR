@@ -154,8 +154,8 @@ test_that("join with no conflicting field names", {
   test_left_join()
   test_right_join()
   
-  # L$remove_self()
-  # R$remove_self()
+  # L$remove_array()
+  # R$remove_array()
 })
 
 test_that("join with conflicting field names", {
@@ -248,8 +248,8 @@ test_that("join with conflicting field names", {
   test_joins_with_conflicted_fields()
   test_cross_join_mode()
   
-  L$remove_self()
-  R$remove_self()
+  L$remove_array()
+  R$remove_array()
 })
 
 test_that("join with three operands", {

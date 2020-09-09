@@ -103,4 +103,4 @@ test_that("Error cases", {
 })
 
 
-arrayCO2$remove_self()
+arrayCO2$remove_array()

@@ -25,7 +25,7 @@ test_that("persistent array_op from stored AFL", {
     retrievedArr$to_df()
   )
   
-  storedArr$remove_self()
+  storedArr$remove_array()
 })
 
 test_that("persistent array_op from stored AFL", {
@@ -35,7 +35,7 @@ test_that("persistent array_op from stored AFL", {
   
   expect_identical(storedArr$array_meta_data()$temporary, TRUE)
   
-  storedArr$remove_self()
+  storedArr$remove_array()
 })
 
 
@@ -58,6 +58,6 @@ test_that("store transient array_op from afl as a persistent one", {
     transientArr$to_df()
   )
   
-  storedArr$remove_self()
+  storedArr$remove_array()
 })
 

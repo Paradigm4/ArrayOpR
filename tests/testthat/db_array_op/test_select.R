@@ -35,4 +35,4 @@ test_that("error cases: select", {
   expect_error(RefArray$select("non-existent", 'fa'), 'non-existent')
 })
 
-RefArray$remove_self()
+RefArray$remove_array()
