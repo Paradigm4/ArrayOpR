@@ -425,13 +425,13 @@ ScidbConnection <- R6::R6Class(
         assert_not_empty(template, "param template cannot be NULL when `force_template_schema=T`")
       
       array_template = get_array_template(template, df, .df_symbol = deparse(substitute(df)))
-      buildOp = array_template$build_new(df, build_dim_spec, as_scidb_data_frame = as_scidb_data_frame)
+      buildOp = array_template$.private$build_new(df, build_dim_spec, as_scidb_data_frame = as_scidb_data_frame)
       result = if(skip_scidb_schema_check){
         buildOp
       } else {
         # We need to infer schema from the 'build' afl, but avoid unnecessary data transfer to scidb/shim.
         # So only the first row is sent to 'probe' the correct array schema
-        probeOp = array_template$build_new(head(df, 1), build_dim_spec, as_scidb_data_frame = as_scidb_data_frame)
+        probeOp = array_template$.private$build_new(head(df, 1), build_dim_spec, as_scidb_data_frame = as_scidb_data_frame)
         remoteSchema = afl_expr(probeOp$to_afl())
         # Still use the buildOp for actual data
         remoteSchema$

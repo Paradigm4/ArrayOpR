@@ -554,6 +554,83 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     }
     ,
     #' @description 
+    #' Create a new ArrayOp instance from 'build'ing a data.frame
+    #' 
+    #' All matching fields are built as attributes of the result ArrayOp.
+    #' Build operator accepts compound attribute types, so the result may have something like "build(<aa:string not null, ...)"
+    #' @param df a data.frame, where all column names must all validate template fields.
+    #' @param artificial_field A field name used as the artificial dimension name in `build` scidb operator
+    #' By default, a random string is generated, and the dimension starts from 0. 
+    #' A customized dimension can be provided e.g. `z=42:*` or `z=0:*:0:1000`.
+    #' @return A new ArrayOp instance whose attributes share the same name and data types with the template's fields.
+    build_new = function(df, artificial_field = .random_attr_name(), as_scidb_data_frame = FALSE) {
+      assert_inherits(df, "data.frame")
+      
+      builtAttrs = names(df)
+      
+      dfNonMatchingCols = builtAttrs %-% self$dims_n_attrs
+      assert_not_has_len(dfNonMatchingCols, "ERROR: ArrayOp$build_new: df column(s) '%s' not found in template %s",
+        paste(dfNonMatchingCols, collapse = ','), self$to_afl())
+      
+      builtDtypes = private$get_field_types(builtAttrs, .raw = T)
+      
+      attrStr = paste(builtAttrs, builtDtypes, collapse = ',', sep = ':')
+      # convert columns to escaped strings
+      colStrs = 
+          lapply(builtAttrs, function(x) {
+            colScidbType = builtDtypes[[x]]
+            vec = df[[x]]
+            switch(
+              colScidbType,
+              # "string" = sprintf("\\'%s\\'", gsub("(['\\])", "\\\\\\\\\\1", vec)),
+              "string" = sapply(
+                gsub("(['\\&])", "\\\\\\\\\\1", vec),
+                function(singleStr) if(is.na(singleStr)) "" else sprintf("\\'%s\\'", singleStr)
+              ),
+              "datetime" = sprintf("\\'%s\\'", vec),
+              "bool" = tolower(vec),
+              vec # should be numeric types
+            )
+          })
+      names(colStrs) = builtAttrs
+      glueTemplate = sprintf("(%s)", paste("{", names(df), "}", sep = '', collapse = ","))
+      contentStr = glue::glue_collapse(
+        glue::glue_data(colStrs, glueTemplate, .sep = ',', .na = ''),
+        sep = ','
+      )
+      if(!as_scidb_data_frame){
+        builtDtypes[[artificial_field]] = 'int64'
+        self$create_new(
+          sprintf("build(<%s>[%s], '[%s]', true)", 
+                attrStr, artificial_field, contentStr),
+          dims = artificial_field,
+          attrs = builtAttrs,
+          dtypes = builtDtypes
+        )
+      } else { # build as a scidb data frame
+        self$create_new(
+          sprintf("build(<%s>, '[[%s]]', true)", 
+                attrStr, contentStr),
+          dims = c("$inst", "$seq"),
+          attrs = builtAttrs,
+          dtypes = builtDtypes
+        )
+      }
+      
+      # afl_literal = if(!as_scidb_data_frame) {
+      #   sprintf("build(<%s>[%s], '[%s]', true)", 
+      #           attrStr, artificial_field, contentStr)
+      # } else { # build as a scidb data frame
+      #   sprintf("build(<%s>, '[[%s]]', true)", 
+      #           attrStr, contentStr)
+      # }
+      # 
+      # builtDtypes[[artificial_field]] = 'int64'
+      # return(self$create_new(afl_literal, artificial_field, builtAttrs, 
+      #   dtypes = builtDtypes)$sync_schema())
+    }
+    ,
+    #' @description 
     #' Create a new ArrayOp instance by loading a file and checking it against an ArrayOp template (self).
     #'
     #' The ArrayOp instance where this function is called from serves as a template. By defulat, it assumes file 
@@ -1122,85 +1199,6 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
         template$spawn(excluded = template$dims_n_attrs %-% matchedFileds)
       }
       private$afl_redimension(realTemplate, .setting)
-    }
-    ,
-    #' @description 
-    #' Create a new ArrayOp instance from 'build'ing a data.frame
-    #' 
-    #' All matching fields are built as attributes of the result ArrayOp.
-    #' Build operator accepts compound attribute types, so the result may have something like "build(<aa:string not null, ...)"
-    #' @param df a data.frame, where all column names must all validate template fields.
-    #' @param artificial_field A field name used as the artificial dimension name in `build` scidb operator
-    #' By default, a random string is generated, and the dimension starts from 0. 
-    #' A customized dimension can be provided e.g. `z=42:*` or `z=0:*:0:1000`.
-    #' @return A new ArrayOp instance whose attributes share the same name and data types with the template's fields.
-    build_new = function(df, artificial_field = .random_attr_name(), as_scidb_data_frame = FALSE) {
-#       assert(inherits(df, c('data.frame')), "ERROR: ArrayOp$build_new: unknown df class '%s'. 
-# Only data.frame is supported", class(df))
-      assert_inherits(df, "data.frame")
-      
-      builtAttrs = names(df)
-      
-      dfNonMatchingCols = builtAttrs %-% self$dims_n_attrs
-      assert_not_has_len(dfNonMatchingCols, "ERROR: ArrayOp$build_new: df column(s) '%s' not found in template %s",
-        paste(dfNonMatchingCols, collapse = ','), self$to_afl())
-      
-      builtDtypes = private$get_field_types(builtAttrs, .raw = T)
-      
-      attrStr = paste(builtAttrs, builtDtypes, collapse = ',', sep = ':')
-      # convert columns to escaped strings
-      colStrs = 
-          lapply(builtAttrs, function(x) {
-            colScidbType = builtDtypes[[x]]
-            vec = df[[x]]
-            switch(
-              colScidbType,
-              # "string" = sprintf("\\'%s\\'", gsub("(['\\])", "\\\\\\\\\\1", vec)),
-              "string" = sapply(
-                gsub("(['\\&])", "\\\\\\\\\\1", vec),
-                function(singleStr) if(is.na(singleStr)) "" else sprintf("\\'%s\\'", singleStr)
-              ),
-              "datetime" = sprintf("\\'%s\\'", vec),
-              "bool" = tolower(vec),
-              vec # should be numeric types
-            )
-          })
-      names(colStrs) = builtAttrs
-      glueTemplate = sprintf("(%s)", paste("{", names(df), "}", sep = '', collapse = ","))
-      contentStr = glue::glue_collapse(
-        glue::glue_data(colStrs, glueTemplate, .sep = ',', .na = ''),
-        sep = ','
-      )
-      if(!as_scidb_data_frame){
-        builtDtypes[[artificial_field]] = 'int64'
-        self$create_new(
-          sprintf("build(<%s>[%s], '[%s]', true)", 
-                attrStr, artificial_field, contentStr),
-          dims = artificial_field,
-          attrs = builtAttrs,
-          dtypes = builtDtypes
-        )
-      } else { # build as a scidb data frame
-        self$create_new(
-          sprintf("build(<%s>, '[[%s]]', true)", 
-                attrStr, contentStr),
-          dims = c("$inst", "$seq"),
-          attrs = builtAttrs,
-          dtypes = builtDtypes
-        )
-      }
-      
-      # afl_literal = if(!as_scidb_data_frame) {
-      #   sprintf("build(<%s>[%s], '[%s]', true)", 
-      #           attrStr, artificial_field, contentStr)
-      # } else { # build as a scidb data frame
-      #   sprintf("build(<%s>, '[[%s]]', true)", 
-      #           attrStr, contentStr)
-      # }
-      # 
-      # builtDtypes[[artificial_field]] = 'int64'
-      # return(self$create_new(afl_literal, artificial_field, builtAttrs, 
-      #   dtypes = builtDtypes)$sync_schema())
     }
     ,
     #' @description 

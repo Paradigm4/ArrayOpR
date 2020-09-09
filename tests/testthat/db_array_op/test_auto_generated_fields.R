@@ -109,8 +109,8 @@ test_that("set anti-collision fields", {
   # but when we want to insert the source data to target array, there will be duplicates
   # so 'db' is incremented to ensure unqiue dimension coordinates
   df_equal(
-    SourceArray$
-      build_new(data.frame(f_str = LETTERS[4:10], f_int32 = 4:10, da = 1:7))$
+    conn$
+      compile_df(data.frame(f_str = LETTERS[4:10], f_int32 = 4:10, da = 1:7))$
       set_auto_fields(SourceArray,
                       anti_collision_field = 'db')$
       to_df(),
@@ -119,8 +119,8 @@ test_that("set anti-collision fields", {
   
   # 'da' has duplicates in both the data source and target arrays
   df_equal(
-    SourceArray$
-      build_new(data.frame(f_str = LETTERS[4:10], f_int32 = 4:10, da = c(1:3,1:3,1L)))$
+    conn$
+      compile_df(data.frame(f_str = LETTERS[4:10], f_int32 = 4:10, da = c(1:3,1:3,1L)))$
       set_auto_fields(SourceArray,
                       anti_collision_field = 'db')$
       to_df(),
@@ -129,8 +129,8 @@ test_that("set anti-collision fields", {
   
   # When the target array is empty
   df_equal(
-    SourceArray$
-      build_new(data.frame(f_str = LETTERS[4:10], f_int32 = 4:10, da = 1:7))$
+    conn$
+      compile_df(data.frame(f_str = LETTERS[4:10], f_int32 = 4:10, da = 1:7))$
       set_auto_fields(SourceEmptyArray,
                       anti_collision_field = 'db')$
       to_df(),
@@ -139,8 +139,8 @@ test_that("set anti-collision fields", {
   
   # when dimensions 'da' has duplicated values, the anti-collision 'db' dimension should disambiguate
   df_equal(
-    SourceArray$
-      build_new(data.frame(f_str = LETTERS[4:10], f_int32 = 4:10, da = c(1:3,1:3,1L)))$
+    conn$
+      compile_df(data.frame(f_str = LETTERS[4:10], f_int32 = 4:10, da = c(1:3,1:3,1L)))$
       set_auto_fields(SourceEmptyArray,
                       anti_collision_field = 'db')$
       to_df() ,
@@ -153,8 +153,8 @@ test_that("set both auto-incremented fields and anti-collision fields", {
   # but when we want to insert the source data to target array, there will be duplicates
   # so 'db' is incremented to ensure unqiue dimension coordinates
   df_equal(
-    SourceArray$
-      build_new(data.frame(f_str = LETTERS[4:10], f_int32 = 4:10, da = 1:7), artificial_field = 'z')$
+    conn$
+      compile_df(data.frame(f_str = LETTERS[4:10], f_int32 = 4:10, da = 1:7), build_dim_spec = 'z')$
       set_auto_fields(SourceArray,
                       source_auto_increment = c(z=0),
                       target_auto_increment = c(f_int64=121),
@@ -165,8 +165,8 @@ test_that("set both auto-incremented fields and anti-collision fields", {
   
   # 'da' has duplicates in both the data source and target arrays
   df_equal(
-    SourceArray$
-      build_new(data.frame(f_str = LETTERS[4:10], f_int32 = 4:10, da = c(1:3,1:3,1L)), artificial_field = 'z')$
+    conn$
+      compile_df(data.frame(f_str = LETTERS[4:10], f_int32 = 4:10, da = c(1:3,1:3,1L)), build_dim_spec = 'z')$
       set_auto_fields(SourceArray,
                       source_auto_increment = c(z=0),
                       target_auto_increment = c(f_int64=121),
@@ -177,8 +177,8 @@ test_that("set both auto-incremented fields and anti-collision fields", {
   
   # When the target array is empty
   df_equal(
-    SourceArray$
-      build_new(data.frame(f_str = LETTERS[4:10], f_int32 = 4:10, da = 1:7), artificial_field = 'z')$
+    conn$
+      compile_df(data.frame(f_str = LETTERS[4:10], f_int32 = 4:10, da = 1:7), build_dim_spec = 'z')$
       set_auto_fields(SourceEmptyArray,
                       source_auto_increment = "z",
                       target_auto_increment = c(f_int64=121),
@@ -189,8 +189,8 @@ test_that("set both auto-incremented fields and anti-collision fields", {
   
   # when dimensions 'da' has duplicated values, the anti-collision 'db' dimension should disambiguate
   df_equal(
-    SourceArray$
-      build_new(data.frame(f_str = LETTERS[4:10], f_int32 = 4:10, da = c(1:3,1:3,1L)), artificial_field = 'z')$
+    conn$
+      compile_df(data.frame(f_str = LETTERS[4:10], f_int32 = 4:10, da = c(1:3,1:3,1L)), build_dim_spec = 'z')$
       set_auto_fields(SourceEmptyArray,
                       source_auto_increment = "z",
                       target_auto_increment = c(f_int64=121),
