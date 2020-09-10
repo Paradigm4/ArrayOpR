@@ -40,7 +40,7 @@ DBUtils = R6::R6Class(
     }
     ,
     load_array_ops_from_namespace = function(ns = 'public'){
-      arrayRecordsDf = list_arrays_in_ns(ns)$transmute('name', 'schema')$to_df()
+      arrayRecordsDf = list_arrays_in_ns(ns)$transmute(name, schema)$to_df()
       .conn = get_conn()
       new_named_list(
         sapply(arrayRecordsDf$schema, .conn$array_from_schema),
