@@ -297,8 +297,10 @@ ScidbConnection <- R6::R6Class(
     ,
     array = function(array_name) {
       assert_single_str(array_name, "ERROR: param 'array_name' must be a single string")
+      array_name = trimws(array_name)
       schema = query(sprintf("project(show(%s), schema)", array_name))
-      result = array_from_schema(schema[["schema"]])
+      # 'show' operator only returns partial array name (without namespace)
+      result = array_from_schema(schema[["schema"]])$spawn(array_name)
       result$.private$confirm_schema_synced()
       set_array_op_conn(result)
     }
