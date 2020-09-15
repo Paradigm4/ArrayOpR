@@ -1,0 +1,28 @@
+---
+title: "_setup.Rmd"
+output: 
+  html_document:
+    df_print: paged
+description: >
+  Code chunks below are run to ensure a valid ScidbConnection is setup 
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r, echo = FALSE}
+library(arrayop)
+auth = yaml::yaml.load_file("~/.scidb_auth")
+conn = arrayop::db_connect(host = "localhost", username = auth[["user-name"]], token = auth[["user-password"]])
+```
+
+```{r, echo=FALSE, include=FALSE}
+# For dev only
+devtools::load_all(export_all = F)
+auth = yaml::yaml.load_file("~/.scidb_auth")
+conn = arrayop::db_connect(host = "localhost", username = auth[["user-name"]], token = auth[["user-password"]])
+```

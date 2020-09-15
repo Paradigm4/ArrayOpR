@@ -25,6 +25,8 @@ in another operation. Operands and Opreration results can all be denoted by Arra
 
 \item{\code{attrs_n_dims}}{Attribute and dimension names}
 
+\item{\code{is_schema_from_scidb}}{If the array schema is retrieved from SciDB or inferred locally in R}
+
 \item{\code{.private}}{For internal testing only. Do not access this field to avoid unintended consequences!!!}
 }
 \if{html}{\out{</div>}}
@@ -33,44 +35,109 @@ in another operation. Operands and Opreration results can all be denoted by Arra
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-new}{\code{ArrayOpBase$new()}}
-\item \href{#method-get_field_types}{\code{ArrayOpBase$get_field_types()}}
-\item \href{#method-get_dim_specs}{\code{ArrayOpBase$get_dim_specs()}}
-\item \href{#method-get_absent_fields}{\code{ArrayOpBase$get_absent_fields()}}
 \item \href{#method-create_new}{\code{ArrayOpBase$create_new()}}
-\item \href{#method-create_new_with_same_schema}{\code{ArrayOpBase$create_new_with_same_schema()}}
-\item \href{#method-where}{\code{ArrayOpBase$where()}}
+\item \href{#method-filter}{\code{ArrayOpBase$filter()}}
 \item \href{#method-select}{\code{ArrayOpBase$select()}}
 \item \href{#method-reshape}{\code{ArrayOpBase$reshape()}}
 \item \href{#method-change_schema}{\code{ArrayOpBase$change_schema()}}
-\item \href{#method-join}{\code{ArrayOpBase$join()}}
-\item \href{#method-load_file}{\code{ArrayOpBase$load_file()}}
-\item \href{#method-match}{\code{ArrayOpBase$match()}}
 \item \href{#method-build_new}{\code{ArrayOpBase$build_new()}}
-\item \href{#method-set_auto_increment_field}{\code{ArrayOpBase$set_auto_increment_field()}}
-\item \href{#method-set_anti_collision_field}{\code{ArrayOpBase$set_anti_collision_field()}}
-\item \href{#method-set_null_fields}{\code{ArrayOpBase$set_null_fields()}}
 \item \href{#method-set_auto_fields}{\code{ArrayOpBase$set_auto_fields()}}
-\item \href{#method-write_to}{\code{ArrayOpBase$write_to()}}
 \item \href{#method-mutate}{\code{ArrayOpBase$mutate()}}
+\item \href{#method-transmute}{\code{ArrayOpBase$transmute()}}
+\item \href{#method-mutate_by}{\code{ArrayOpBase$mutate_by()}}
+\item \href{#method-drop_dims}{\code{ArrayOpBase$drop_dims()}}
 \item \href{#method-update}{\code{ArrayOpBase$update()}}
 \item \href{#method-overwrite}{\code{ArrayOpBase$overwrite()}}
 \item \href{#method-spawn}{\code{ArrayOpBase$spawn()}}
-\item \href{#method-create_array_cmd}{\code{ArrayOpBase$create_array_cmd()}}
-\item \href{#method-remove_array_cmd}{\code{ArrayOpBase$remove_array_cmd()}}
-\item \href{#method-remove_array_versions_cmd}{\code{ArrayOpBase$remove_array_versions_cmd()}}
+\item \href{#method-limit}{\code{ArrayOpBase$limit()}}
+\item \href{#method-row_count}{\code{ArrayOpBase$row_count()}}
+\item \href{#method-summarize_array}{\code{ArrayOpBase$summarize_array()}}
+\item \href{#method-sync_schema}{\code{ArrayOpBase$sync_schema()}}
+\item \href{#method-group_by}{\code{ArrayOpBase$group_by()}}
+\item \href{#method-summarize}{\code{ArrayOpBase$summarize()}}
 \item \href{#method-to_afl}{\code{ArrayOpBase$to_afl()}}
-\item \href{#method-to_df_afl}{\code{ArrayOpBase$to_df_afl()}}
 \item \href{#method-to_schema_str}{\code{ArrayOpBase$to_schema_str()}}
-\item \href{#method-.to_afl_explicit}{\code{ArrayOpBase$.to_afl_explicit()}}
-\item \href{#method-.to_join_operand_afl}{\code{ArrayOpBase$.to_join_operand_afl()}}
+\item \href{#method-to_df_all}{\code{ArrayOpBase$to_df_all()}}
+\item \href{#method-to_df}{\code{ArrayOpBase$to_df()}}
+\item \href{#method-execute}{\code{ArrayOpBase$execute()}}
+\item \href{#method-versions}{\code{ArrayOpBase$versions()}}
+\item \href{#method-remove_versions}{\code{ArrayOpBase$remove_versions()}}
+\item \href{#method-remove_self}{\code{ArrayOpBase$remove_self()}}
+\item \href{#method-inner_join}{\code{ArrayOpBase$inner_join()}}
+\item \href{#method-left_join}{\code{ArrayOpBase$left_join()}}
+\item \href{#method-right_join}{\code{ArrayOpBase$right_join()}}
+\item \href{#method-semi_join}{\code{ArrayOpBase$semi_join()}}
+\item \href{#method-persist}{\code{ArrayOpBase$persist()}}
+\item \href{#method-is_persistent}{\code{ArrayOpBase$is_persistent()}}
+\item \href{#method-exists_persistent_array}{\code{ArrayOpBase$exists_persistent_array()}}
+\item \href{#method-array_meta_data}{\code{ArrayOpBase$array_meta_data()}}
 \item \href{#method-.set_meta}{\code{ArrayOpBase$.set_meta()}}
 \item \href{#method-.get_meta}{\code{ArrayOpBase$.get_meta()}}
-\item \href{#method-clone}{\code{ArrayOpBase$clone()}}
+\item \href{#method-finalize}{\code{ArrayOpBase$finalize()}}
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
+Return ArrayOp field types
+
+NOTE: private$info has to be defined, otherwise returns NULL
+
+
+Get dimension specifications
+
+A dimension spec str is formatted as "lower bound : upper bound : overlap : chunk_length",
+as seen in scidb \code{show(array_name)} operator.
+All dimensions' data types are int64.
+
+
+Validate fields existence according the 'type' which defaults to 'owned' fields
+
+This function is useful for validating fields in use cases:
+
+
+Generate afl for ArrayOp used in a join context (equi_join).
+
+
+Create a new ArrayOp instance by joining with another ArrayOp
+
+Currently implemented with scidb \code{equi_join} operator.
+
+
+Create a new ArrayOp by matching a template against a source (self).
+
+The result has the same schema with the source.
+All fields in the template are compared to their matching source fields by equality, except for thos in
+lower_bound/upper_bound which will be used as a range \verb{[lower_bound, upper_bound]}.
+
+
+Create a new ArrayOp instance by loading a file and checking it against an ArrayOp template (self).
+
+The ArrayOp instance where this function is called from serves as a template. By defulat, it assumes file
+column headers match the template's dims and attrs; otherwise an explicit file_headers can be provided and will
+be used to match the template's schema.
+
+
+Create a new ArrayOp instance that with added auto incremented fields
+
+
+Create a new ArrayOp instance that has an anti-collision field set according to a template arrayOp
+
+The source (self) operand should have N fields given the target has N+1 dimensions. The one missing field is
+treated as the anti-collision field.
+
+
+Return AFL suitable for retrieving data.frame.
+
+scidb::iquery has a param \code{only_attributes}, which, if set TRUE, will effectively drop all dims.
+
+
+Returns AFL when self used as an operand in another parent operation.
+
+By default, 1. dimensions are not dropped in parent operation; 2. no intent to select fields
+
+
 Base class initialize function, to be called in sub-class
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$new(
@@ -78,7 +145,6 @@ Base class initialize function, to be called in sub-class
   dims = as.character(c()),
   attrs = as.character(c()),
   dtypes = list(),
-  validate_fields = TRUE,
   dim_specs = list(),
   ...,
   metaList
@@ -88,28 +154,89 @@ Base class initialize function, to be called in sub-class
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{info}}{A list that stores ArrayOp meta data, e.g. field types}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-get_field_types"></a>}}
-\subsection{Method \code{get_field_types()}}{
-Return ArrayOp field types
-
-NOTE: private$info has to be defined, otherwise returns NULL
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$get_field_types(field_names = NULL, .strict = TRUE, .raw = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
 \item{\code{field_names}}{R character. If NULL, defaults to \code{self$dims_n_attrs}, ie. dimensions and attributes.}
 
 \item{\code{.raw}}{Default FALSE, full data types are returned; if set TRUE, only the raw data types are returned
 (raw data types are string, int32, int64, bool, etc, without scidb attribute specs such as: string compression 'zlib')}
+
+\item{\code{dim_names}}{Default NULL equals all dimensions.}
+
+\item{\code{keyFileds}}{Field names as join keys}
+
+\item{\code{keep_dimensiosn}}{If \code{keep_dimensions} is specified in scidb \code{equi_join} operator}
+
+\item{\code{right}}{The other ArrayOp instance to join with.}
+
+\item{\code{on_left}}{R character vector. Join keys from the left (self).}
+
+\item{\code{on_right}}{R character vector. Join keys from the \code{right}. Must be of the same length as \code{on_left}}
+
+\item{\code{on_both}}{Join keys on both operand.}
+
+\item{\code{.auto_select}}{default: FALSE. If set to TRUE, the resultant ArrayOp instance will auto \code{select} the fields
+that are selected in the left and right operands but not in the right join keys (since they are masked by equi_join operator).}
+
+\item{\code{settings}}{\code{equi_join} settings, a named list where both key and values are strings.}
+
+\item{\code{.dim_mode}}{How to reshape the resultant ArrayOp. Same meaning as in \code{ArrayOp$reshape} function.
+By default, dim_mode = 'keep', the artificial dimensions, namely \code{instance_id} and \code{value_no} from \code{equi_join}
+are retained. If set to 'drop', the artificial dimensions will be removed. See \code{ArrayOp$reshape} for more details.}
+
+\item{\code{.artificial_field}}{As in \code{ArrayOp$reshape}, it defaults to a random field name. It can be safely ignored in
+client code. It exists only for test purposes.}
+
+\item{\code{template}}{A data.frame or ArrayOp used to reduce the number of source cells without changing its schema}
+
+\item{\code{op_mode}}{\link{'filter', 'cross_between'}}
+
+\item{\code{lower_bound}}{Field names as lower bounds.}
+
+\item{\code{upper_bound}}{Field names as upper bounds.}
+
+\item{\code{field_mapping}}{A named list where name is source field name and value is template field name.
+Default NULL: fields are mapped between template and source by field names only.
+If there is mapping fields in the template which are intended for lower or upper bound,
+provide an empty list or a list with matching fields}
+
+\item{\code{filepath}}{A single file path}
+
+\item{\code{aio_settings}}{Customized settings of aio_input}
+
+\item{\code{field_conversion}}{If NULL (default), use template's field type to convert aio_input attributes; Or provide
+a list for customized field conversion}
+
+\item{\code{file_headers}}{Column headers of the input file regardless of whether there is a header line in the file.
+Default NULL assumes file headers match self$dims_n_attrs. If the headers order are different or there are
+columns to skip, please provide a string vector, in which case only columns with matching template field are
+loaded. Names of the unmatching column headers are irrelevant.}
+
+\item{\code{field_vec}}{A named string vector}
+
+\item{\code{reference}}{ArrayOp instance to draw existing max id from}
+
+\item{\code{source_field}}{}
+
+\item{\code{ref_field}}{}
+
+\item{\code{source_start}}{}
+
+\item{\code{ref_start}}{}
+
+\item{\code{new_field}}{}
+
+\item{\code{target}}{A target arrayOp that the source draws anti-collision dimension from.}
+
+\item{\code{anti_collision_field}}{a target dimension name which exsits only to resolve cell collision
+(ie. cells with the same dimension coordinate).}
+
+\item{\code{drop_dims}}{Whether self's dimensions are dropped when generating AFL for data.frame conversion}
+
+\item{\code{drop_dims}}{Whether self dimensions will be dropped in parent operations}
+
+\item{\code{selected_fields}}{which fields are selected no matter what the parent operation is.
+If NULL, self fields will pass on by default depending on the parent operation.}
+
+\item{\code{info}}{A list that stores ArrayOp meta data, e.g. field types}
 }
 \if{html}{\out{</div>}}
 }
@@ -119,44 +246,8 @@ unless \code{.strict=F}, absent fields are ignored
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-get_dim_specs"></a>}}
-\subsection{Method \code{get_dim_specs()}}{
-Get dimension specifications
-
-A dimension spec str is formatted as "lower bound : upper bound : overlap : chunk_length",
-as seen in scidb \code{show(array_name)} operator.
-All dimensions' data types are int64.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$get_dim_specs(dim_names = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{dim_names}}{Default NULL equals all dimensions.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A named list where the name is dimension name and value is a dimension spec string
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-get_absent_fields"></a>}}
-\subsection{Method \code{get_absent_fields()}}{
-Validate fields existence according the 'type' which defaults to 'owned' fields
-
-This function is useful for validating fields in use cases:
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$get_absent_fields(fieldNames)}\if{html}{\out{</div>}}
-}
-
-\subsection{Returns}{
-A list of absent field names
-}
-}
-\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-create_new"></a>}}
+\if{latex}{\out{\hypertarget{method-create_new}{}}}
 \subsection{Method \code{create_new()}}{
 Return a new arrayOp instance with the same version as \code{self}
 
@@ -177,36 +268,20 @@ A new arrayOp
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-create_new_with_same_schema"></a>}}
-\subsection{Method \code{create_new_with_same_schema()}}{
-Create a new ArrayOp instance of the same class
-
-The new instance shares all meta data with the template
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$create_new_with_same_schema(new_afl, ...)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{new_afl}}{AFL for the new ArrayOp}
-
-\item{\code{...}}{Named params in \code{...} will replace the items in the template's metaList}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A new arrayOp
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-where"></a>}}
-\subsection{Method \code{where()}}{
+\if{html}{\out{<a id="method-filter"></a>}}
+\if{latex}{\out{\hypertarget{method-filter}{}}}
+\subsection{Method \code{filter()}}{
 Create a new ArrayOp instance by using a filter expression on the parent ArrayOp
 
-Similar to SQL where clause.
+Similar to SQL where clause and dplyr::filter.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$where(..., expr, missing_fields_error_template = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$filter(
+  ...,
+  expr = NULL,
+  missing_fields_error_template = NULL,
+  regex_func = getOption("arrayop.regex_func", default = "regex"),
+  ignore_case = getOption("arrayop.ignore_case", default = TRUE)
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -214,6 +289,13 @@ Similar to SQL where clause.
 \describe{
 \item{\code{missing_fields_error_template}}{Error template for missing fields.
 Only one \%s is allowed which is substituted with an concatnation of the missing fields separated by commas.}
+
+\item{\code{regex_func}}{A string of regex function implementation.
+Due to scidb compatiblity issue with its dependencies, the regex function from boost library may not be available
+Supported values: rsub, regex}
+
+\item{\code{ignore_case}}{A Boolean. If TRUE, ignore case in string match patterns.
+Otherwise, perform case-sensitive regex matches.}
 }
 \if{html}{\out{</div>}}
 }
@@ -223,6 +305,7 @@ A new arrayOp
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-select"></a>}}
+\if{latex}{\out{\hypertarget{method-select}{}}}
 \subsection{Method \code{select()}}{
 Create a new ArrayOp instance with selected fields
 
@@ -245,6 +328,7 @@ A new arrayOp
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-reshape"></a>}}
+\if{latex}{\out{\hypertarget{method-reshape}{}}}
 \subsection{Method \code{reshape()}}{
 Create a new ArrayOp instance with a different schema/shape
 \subsection{Usage}{
@@ -285,6 +369,7 @@ A new arrayOp
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-change_schema"></a>}}
+\if{latex}{\out{\hypertarget{method-change_schema}{}}}
 \subsection{Method \code{change_schema()}}{
 Change \code{self} schema according to a template
 
@@ -311,137 +396,8 @@ A new arrayOp
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-join"></a>}}
-\subsection{Method \code{join()}}{
-Create a new ArrayOp instance by joining with another ArrayOp
-
-Currently implemented with scidb \code{equi_join} operator.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$join(
-  right,
-  on_left = NULL,
-  on_right = NULL,
-  settings = NULL,
-  on_both = NULL,
-  .auto_select = FALSE,
-  join_mode = "equi_join",
-  .dim_mode = "keep",
-  .left_alias = "_L",
-  .right_alias = "_R",
-  .artificial_field = .random_attr_name()
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{right}}{The other ArrayOp instance to join with.}
-
-\item{\code{on_left}}{R character vector. Join keys from the left (self).}
-
-\item{\code{on_right}}{R character vector. Join keys from the \code{right}. Must be of the same length as \code{on_left}}
-
-\item{\code{settings}}{\code{equi_join} settings, a named list where both key and values are strings.}
-
-\item{\code{on_both}}{Join keys on both operand.}
-
-\item{\code{.auto_select}}{default: FALSE. If set to TRUE, the resultant ArrayOp instance will auto \code{select} the fields
-that are selected in the left and right operands but not in the right join keys (since they are masked by equi_join operator).}
-
-\item{\code{.dim_mode}}{How to reshape the resultant ArrayOp. Same meaning as in \code{ArrayOp$reshape} function.
-By default, dim_mode = 'keep', the artificial dimensions, namely \code{instance_id} and \code{value_no} from \code{equi_join}
-are retained. If set to 'drop', the artificial dimensions will be removed. See \code{ArrayOp$reshape} for more details.}
-
-\item{\code{.artificial_field}}{As in \code{ArrayOp$reshpae}, it defaults to a random field name. It can be safely ignored in
-client code. It exists only for test purposes.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A new arrayOp
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-load_file"></a>}}
-\subsection{Method \code{load_file()}}{
-Create a new ArrayOp instance by loading a file and checking it against an ArrayOp template (self).
-
-The ArrayOp instance where this function is called from serves as a template. By defulat, it assumes file
-column headers match the template's dims and attrs; otherwise an explicit file_headers can be provided and will
-be used to match the template's schema.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$load_file(
-  filepath,
-  aio_settings = list(),
-  field_conversion = NULL,
-  file_headers = NULL
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{filepath}}{A single file path}
-
-\item{\code{aio_settings}}{Customized settings of aio_input}
-
-\item{\code{field_conversion}}{If NULL (default), use template's field type to convert aio_input attributes; Or provide
-a list for customized field conversion}
-
-\item{\code{file_headers}}{Column headers of the input file regardless of whether there is a header line in the file.
-Default NULL assumes file headers match self$dims_n_attrs. If the headers order are different or there are
-columns to skip, please provide a string vector, in which case only columns with matching template field are
-loaded. Names of the unmatching column headers are irrelevant.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A new ArrayOp instance with matching fields
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-match"></a>}}
-\subsection{Method \code{match()}}{
-Create a new ArrayOp by matching a template against a source (self).
-
-The result has the same schema with the source.
-All fields in the template are compared to their matching source fields by equality, except for thos in
-lower_bound/upper_bound which will be used as a range \verb{[lower_bound, upper_bound]}.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$match(
-  template,
-  op_mode,
-  lower_bound = NULL,
-  upper_bound = NULL,
-  field_mapping = NULL,
-  ...
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{template}}{A data.frame or ArrayOp used to reduce the number of source cells without changing its schema}
-
-\item{\code{op_mode}}{\link{'filter', 'cross_between'}}
-
-\item{\code{lower_bound}}{Field names as lower bounds.}
-
-\item{\code{upper_bound}}{Field names as upper bounds.}
-
-\item{\code{field_mapping}}{A named list where name is source field name and value is template field name.
-Default NULL: fields are mapped between template and source by field names only.
-If there is mapping fields in the template which are intended for lower or upper bound,
-provide an empty list or a list with matching fields}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A new ArrayOp instance which has the same schema as the source.
-}
-}
-\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-build_new"></a>}}
+\if{latex}{\out{\hypertarget{method-build_new}{}}}
 \subsection{Method \code{build_new()}}{
 Create a new ArrayOp instance from 'build'ing a data.frame
 
@@ -464,97 +420,11 @@ A customized dimension can be provided e.g. \verb{z=42:*} or \verb{z=0:*:0:1000}
 }
 \subsection{Returns}{
 A new ArrayOp instance whose attributes share the same name and data types with the template's fields.
-Create a build expression from a data.frame and specified scidb data types
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-set_auto_increment_field"></a>}}
-\subsection{Method \code{set_auto_increment_field()}}{
-Create a new ArrayOp instance that with added auto incremented fields
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$set_auto_increment_field(
-  reference,
-  source_field,
-  ref_field,
-  source_start,
-  ref_start,
-  new_field = NULL
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{reference}}{ArrayOp instance to draw existing max id from}
-
-\item{\code{source_field}}{}
-
-\item{\code{ref_field}}{}
-
-\item{\code{source_start}}{}
-
-\item{\code{ref_start}}{}
-
-\item{\code{new_field}}{}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A new arrayOp
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-set_anti_collision_field"></a>}}
-\subsection{Method \code{set_anti_collision_field()}}{
-Create a new ArrayOp instance that has an anti-collision field set according to a template arrayOp
-
-The source (self) operand should have N fields given the target has N+1 dimensions. The one missing field is
-treated as the anti-collision field.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$set_anti_collision_field(
-  target,
-  anti_collision_field = NULL,
-  join_setting = NULL,
-  source_anti_collision_dim_spec = NULL
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{target}}{A target arrayOp that the source draws anti-collision dimension from.}
-
-\item{\code{anti_collision_field}}{a target dimension name which exsits only to resolve cell collision
-(ie. cells with the same dimension coordinate).}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A new arrayOp
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-set_null_fields"></a>}}
-\subsection{Method \code{set_null_fields()}}{
-Create a new ArrayOp instance that added null values to the missing fields compared to a reference ArrayOp
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$set_null_fields(reference)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{reference}}{An ArrayOp instance that has fields absent in the source; or a named list.
-If reference is ArrayOp, a named list is generated by calling \code{reference$get_field_types(reference$attrs, .raw = T)}}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A new arrayOp
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-set_auto_fields"></a>}}
+\if{latex}{\out{\hypertarget{method-set_auto_fields}{}}}
 \subsection{Method \code{set_auto_fields()}}{
 Create a new ArrayOp instance that has auto incremented fields and/or anti-collision fields according to a template arrayOp
 
@@ -595,113 +465,54 @@ A new arrayOp
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-write_to"></a>}}
-\subsection{Method \code{write_to()}}{
-(Deprecated) Create a new ArrayOp instance that represents a writing data operation
-
-NOTE: this function is deprecated. DO NOT USE except for legacy code. Will be removed in future versions.
-Please use ArrayOp's set_auto_fields, mutate, update and overwrite functions instead.
-
-If the dimension count, attribute count and data types match between the source(self) and target,
-then no redimension will be performed, otherwise redimension on the source first.
-
-Redimension mode requires all target fields exist on the source disregard of being attributes or dimensions.
-Redimension mode does not check on whether source data types match the target because auto data conversion
-occurs within scidb where necessary/applicable.
+\if{html}{\out{<a id="method-mutate"></a>}}
+\if{latex}{\out{\hypertarget{method-mutate}{}}}
+\subsection{Method \code{mutate()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$write_to(
-  target,
-  append = TRUE,
-  force_redimension = TRUE,
-  source_auto_increment = NULL,
-  target_auto_increment = NULL,
-  anti_collision_field = NULL
-)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$mutate(..., .dots = NULL, .sync_schema = TRUE)}\if{html}{\out{</div>}}
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{target}}{A target ArrayOp the source data is written to.}
-
-\item{\code{append}}{Append to existing target array if set to TRUE (default).
-Otherwise replace the whole target array with the source.}
-
-\item{\code{force_redimension}}{Redimension the source even if the source fields match perfectly the target fields (default TRUE)}
-
-\item{\code{source_auto_increment}}{a named number vector e.g. c(z=0), where the name is a source field and value is the starting index}
-
-\item{\code{target_auto_increment}}{a named number vector e.g. c(aid=0), where the name is a target field and value is the starting index.
-Here the \code{target_auto_increment} param only affects the initial load when the field is still null in the target array.}
-
-\item{\code{anti_collision_field}}{a target dimension name which exsits only to resolve cell collision
-(ie. cells with the same dimension coordinate).}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A new arrayOp
-}
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-mutate"></a>}}
-\subsection{Method \code{mutate()}}{
-Generate a mutated arrayOp of the source \code{self} by the \code{data_source}.
-
-Neither \code{self} or \code{data_source} is mutated. The resultant arrayOp is a 'mutated' version of \code{self} in the sense
-that \code{result} has the exact same schema as \code{self} and a subset of cells that match to \code{self}.
-
-This function works in two modes: 1. \code{data_source} is a named list that specifies the expression for mutation.
-2. \code{data_source} is an arrayOp that contains the mutated data and 'key' data for cell identification.
-
-Mode-1: \code{data_source} is a named list.
-The \code{data_source} list should only contain names as the mutated fields and string values as the mutate expression.
-All other fields not present in the list would remain the same.
-Normally, the list should only have \code{self}'s attributes as the mutated fields.
-But if \code{data_source} contains target's dimensions, then the number of matching cells should be no more than 1,
-otherwise mutiple matching cells would cause dimension collision error thrown by scidb.
-
-Mode-2: \code{data_source} is an arrayOp instance.
-The \code{data_source} arrayOp must have two types of data. One type is the 'key' data that are used to identify which
-cells to mutate. The other is the 'mutated' data of the matching cells.
-If the \code{keys} have all \code{self}'s dimensions, then no join is needed to match cell coordinates.
-Otherwise we need to map \code{keys} to cell coordinates using join and redimension.
+\if{html}{\out{<a id="method-transmute"></a>}}
+\if{latex}{\out{\hypertarget{method-transmute}{}}}
+\subsection{Method \code{transmute()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$mutate(
-  data_source,
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$transmute(..., .dots = NULL, .sync_schema = TRUE)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-mutate_by"></a>}}
+\if{latex}{\out{\hypertarget{method-mutate_by}{}}}
+\subsection{Method \code{mutate_by()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$mutate_by(
+  data_array,
   keys = NULL,
   updated_fields = NULL,
-  artificial_field = .random_attr_name(),
   .redimension_setting = NULL,
   .join_setting = NULL
 )}\if{html}{\out{</div>}}
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{data_source}}{A named list of mutated field expressions or an arrayOp instance.}
-
-\item{\code{keys}}{Which fields of \code{data_source} to identify the matching cells. Only applicable when \code{data_source} is arrayOp.}
-
-\item{\code{updated_fields}}{Which fields of \code{data_source} to mutate for the matching cells.
-Only applicable when \code{data_source} is arrayOp.}
-
-\item{\code{artificial_field}}{The attribute name in unpack if we need to drop \code{self}'s dimensions.
-Only applicable when \code{data_source} is a list and contains \code{self}'s dimensions, which is rare.}
-
-\item{\code{.redimension_setting}}{Only applicable when \code{data_source} is arrayOp.}
-
-\item{\code{.join_setting}}{Only applicable when \code{data_source} is arrayOp and it does not have all \code{self}'s dimensions.}
 }
-\if{html}{\out{</div>}}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-drop_dims"></a>}}
+\if{latex}{\out{\hypertarget{method-drop_dims}{}}}
+\subsection{Method \code{drop_dims()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$drop_dims(
+  mode = "unpack",
+  .chunk_size = NULL,
+  .unpack_dim = dbutils$random_field_name()
+)}\if{html}{\out{</div>}}
 }
-\subsection{Returns}{
-a new arrayOp instance that carries the mutated data and has the exact same schema as the target
-}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-update"></a>}}
+\if{latex}{\out{\hypertarget{method-update}{}}}
 \subsection{Method \code{update()}}{
 Update Target array with self's content
 
@@ -724,6 +535,7 @@ A new arrayOp that encapsulates the insert operation
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-overwrite"></a>}}
+\if{latex}{\out{\hypertarget{method-overwrite}{}}}
 \subsection{Method \code{overwrite()}}{
 Overwrite Target array with self's content
 
@@ -748,6 +560,7 @@ A new arrayOp that encapsulates the insert operation
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-spawn"></a>}}
+\if{latex}{\out{\hypertarget{method-spawn}{}}}
 \subsection{Method \code{spawn()}}{
 Create a new ArrayOp instance from a \code{self} template
 
@@ -758,6 +571,7 @@ Note: except for scidb build or aio_input operators, the spawned ArrayOp is not 
 use this function for operations other than 'build'/ArrayOp$build_new and 'aio_input'/ArrayOp$load_file
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$spawn(
+  afl_str = "spawned array_op (as template only)",
   renamed = NULL,
   added = NULL,
   excluded = NULL,
@@ -786,50 +600,76 @@ A new arrayOp instance
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-create_array_cmd"></a>}}
-\subsection{Method \code{create_array_cmd()}}{
-Generate a command string that creates a new array based on the caller's schema
+\if{html}{\out{<a id="method-limit"></a>}}
+\if{latex}{\out{\hypertarget{method-limit}{}}}
+\subsection{Method \code{limit()}}{
+Get the first \code{n} rows of an array
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$create_array_cmd(array_name)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$limit(n = 5, skip = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{array_name}}{Full array name}
+\item{\code{n}}{How many rows to take}
+
+\item{\code{skip}}{How many rows to skip before taking}
 }
 \if{html}{\out{</div>}}
 }
-\subsection{Returns}{
-An AFL string
-}
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-remove_array_cmd"></a>}}
-\subsection{Method \code{remove_array_cmd()}}{
-Generate a command string that removes the array (use with CAUTION!!!)
+\if{html}{\out{<a id="method-row_count"></a>}}
+\if{latex}{\out{\hypertarget{method-row_count}{}}}
+\subsection{Method \code{row_count()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$remove_array_cmd()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$row_count()}\if{html}{\out{</div>}}
 }
 
-\subsection{Returns}{
-An AFL string
-}
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-remove_array_versions_cmd"></a>}}
-\subsection{Method \code{remove_array_versions_cmd()}}{
-Generate a command string that removes the versions of the array (use with CAUTION!!!)
+\if{html}{\out{<a id="method-summarize_array"></a>}}
+\if{latex}{\out{\hypertarget{method-summarize_array}{}}}
+\subsection{Method \code{summarize_array()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$remove_array_versions_cmd(version_id = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$summarize_array()}\if{html}{\out{</div>}}
 }
 
-\subsection{Returns}{
-An AFL string
 }
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-sync_schema"></a>}}
+\if{latex}{\out{\hypertarget{method-sync_schema}{}}}
+\subsection{Method \code{sync_schema()}}{
+Create a new array_op with actual schema from SciDB
+
+Useful in confirmming the schema of transient arrays with complex operations
+If we are sure the array schema is already from SciDB, then just return self.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$sync_schema()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-group_by"></a>}}
+\if{latex}{\out{\hypertarget{method-group_by}{}}}
+\subsection{Method \code{group_by()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$group_by(...)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-summarize"></a>}}
+\if{latex}{\out{\hypertarget{method-summarize}{}}}
+\subsection{Method \code{summarize()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$summarize(..., .dots = NULL)}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-to_afl"></a>}}
+\if{latex}{\out{\hypertarget{method-to_afl}{}}}
 \subsection{Method \code{to_afl()}}{
 AFL representation of the ArrayOp instance
 
@@ -845,31 +685,8 @@ an AFL expression string
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-to_df_afl"></a>}}
-\subsection{Method \code{to_df_afl()}}{
-Return AFL suitable for retrieving data.frame.
-
-scidb::iquery has a param \code{only_attributes}, which, if set TRUE, will effectively drop all dims.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$to_df_afl(
-  drop_dims = FALSE,
-  artificial_field = .random_attr_name()
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{drop_dims}}{Whether self's dimensions are dropped when generating AFL for data.frame conversion}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-An AFL string
-}
-}
-\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-to_schema_str"></a>}}
+\if{latex}{\out{\hypertarget{method-to_schema_str}{}}}
 \subsection{Method \code{to_schema_str()}}{
 Return a schema representation of the ArrayOp <attr1 \link{, attr2 ...}> [dim1 \link{;dim2}]
 \subsection{Usage}{
@@ -881,60 +698,176 @@ An AFL string
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-.to_afl_explicit"></a>}}
-\subsection{Method \code{.to_afl_explicit()}}{
-Returns AFL when self used as an operand in another parent operation.
-
-By default, 1. dimensions are not dropped in parent operation; 2. no intent to select fields
+\if{html}{\out{<a id="method-to_df_all"></a>}}
+\if{latex}{\out{\hypertarget{method-to_df_all}{}}}
+\subsection{Method \code{to_df_all()}}{
+Run query encapsulated by current array_op and return a R data.frame with
+all dimensions and attributes as columns.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$.to_afl_explicit(
-  drop_dims = FALSE,
-  selected_fields = NULL,
-  artificial_field = .random_attr_name()
-)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$to_df_all()}\if{html}{\out{</div>}}
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{drop_dims}}{Whether self dimensions will be dropped in parent operations}
-
-\item{\code{selected_fields}}{which fields are selected no matter what the parent operation is.
-If NULL, self fields will pass on by default depending on the parent operation.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-An AFL string
-}
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-.to_join_operand_afl"></a>}}
-\subsection{Method \code{.to_join_operand_afl()}}{
-Generate afl for ArrayOp used in a join context (equi_join).
+\if{html}{\out{<a id="method-to_df"></a>}}
+\if{latex}{\out{\hypertarget{method-to_df}{}}}
+\subsection{Method \code{to_df()}}{
+Run query encapsulated by current array_op and return a R data.frame with
+all attributes as columns.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$.to_join_operand_afl(
-  keyFields,
-  keep_dimensions = FALSE,
-  artificial_field = .random_attr_name()
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$to_df()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-execute"></a>}}
+\if{latex}{\out{\hypertarget{method-execute}{}}}
+\subsection{Method \code{execute()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$execute()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-versions"></a>}}
+\if{latex}{\out{\hypertarget{method-versions}{}}}
+\subsection{Method \code{versions()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$versions()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-remove_versions"></a>}}
+\if{latex}{\out{\hypertarget{method-remove_versions}{}}}
+\subsection{Method \code{remove_versions()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$remove_versions(version_id = NULL)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-remove_self"></a>}}
+\if{latex}{\out{\hypertarget{method-remove_self}{}}}
+\subsection{Method \code{remove_self()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$remove_self()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-inner_join"></a>}}
+\if{latex}{\out{\hypertarget{method-inner_join}{}}}
+\subsection{Method \code{inner_join()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$inner_join(
+  right,
+  on_left = NULL,
+  on_right = NULL,
+  on_both = NULL,
+  left_alias = "_L",
+  right_alias = "_R",
+  join_mode = "equi_join",
+  settings = NULL
 )}\if{html}{\out{</div>}}
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{keyFileds}}{Field names as join keys}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-left_join"></a>}}
+\if{latex}{\out{\hypertarget{method-left_join}{}}}
+\subsection{Method \code{left_join()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$left_join(
+  right,
+  on_left = NULL,
+  on_right = NULL,
+  on_both = NULL,
+  left_alias = "_L",
+  right_alias = "_R",
+  settings = NULL
+)}\if{html}{\out{</div>}}
+}
 
-\item{\code{keep_dimensiosn}}{If \code{keep_dimensions} is specified in scidb \code{equi_join} operator}
 }
-\if{html}{\out{</div>}}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-right_join"></a>}}
+\if{latex}{\out{\hypertarget{method-right_join}{}}}
+\subsection{Method \code{right_join()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$right_join(
+  right,
+  on_left = NULL,
+  on_right = NULL,
+  on_both = NULL,
+  left_alias = "_L",
+  right_alias = "_R",
+  settings = NULL
+)}\if{html}{\out{</div>}}
 }
-\subsection{Returns}{
-An AFL string
+
 }
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-semi_join"></a>}}
+\if{latex}{\out{\hypertarget{method-semi_join}{}}}
+\subsection{Method \code{semi_join()}}{
+Similar to dplyr::semi_join
+
+params \code{field_mapping}, \code{lower_bound} and \code{upper_bound}, if provided, must be named list,
+where the.names are from the source array (i.e. self), and values are from
+the right operand \code{df_or_arrayop}
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$semi_join(
+  df_or_arrayop,
+  field_mapping = NULL,
+  lower_bound = NULL,
+  upper_bound = NULL,
+  mode = "auto",
+  filter_threshold = 200L,
+  upload_threshold = 6000L
+)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-persist"></a>}}
+\if{latex}{\out{\hypertarget{method-persist}{}}}
+\subsection{Method \code{persist()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$persist(save_array_name = NULL, .temp = FALSE, .gc = TRUE)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-is_persistent"></a>}}
+\if{latex}{\out{\hypertarget{method-is_persistent}{}}}
+\subsection{Method \code{is_persistent()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$is_persistent()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-exists_persistent_array"></a>}}
+\if{latex}{\out{\hypertarget{method-exists_persistent_array}{}}}
+\subsection{Method \code{exists_persistent_array()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$exists_persistent_array()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-array_meta_data"></a>}}
+\if{latex}{\out{\hypertarget{method-array_meta_data}{}}}
+\subsection{Method \code{array_meta_data()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$array_meta_data()}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-.set_meta"></a>}}
+\if{latex}{\out{\hypertarget{method-.set_meta}{}}}
 \subsection{Method \code{.set_meta()}}{
 Set ArrayOp meta data directly
 
@@ -958,6 +891,7 @@ NULL
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-.get_meta"></a>}}
+\if{latex}{\out{\hypertarget{method-.get_meta}{}}}
 \subsection{Method \code{.get_meta()}}{
 Get ArrayOp meta data directly
 \subsection{Usage}{
@@ -976,19 +910,12 @@ An metadata object of any type registered with \code{key}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
+\if{html}{\out{<a id="method-finalize"></a>}}
+\if{latex}{\out{\hypertarget{method-finalize}{}}}
+\subsection{Method \code{finalize()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$finalize()}\if{html}{\out{</div>}}
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
 }
 }

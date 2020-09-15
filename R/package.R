@@ -13,20 +13,7 @@
 #' @name arrayop
 NULL
 
-# Set source file loading order -----------------------------------------------------------------------------------
+# initialize an empty connection, which will be initialized once `arrayop::connect` is called
+default_conn = empty_connection()
 
 # Global utility functions/classes
-
-
-#' @include array_op_v19.R
-#' @include array_op_v18.R
-#' @include repo_v19.R
-#' @include repo_v18.R
-#' @include array_op_base.R
-#' @include repo_base.R
-NULL
-
-#' @include afl_utils.R
-#' @include arg_list.R
-#' @include utils.R 
-NULL

@@ -4,13 +4,17 @@
 \alias{afl}
 \title{Create AFL expressions from R expressions}
 \usage{
-afl(...)
+afl(..., envir = parent.frame())
 }
 \arguments{
-\item{...}{In the ellipsis arg, only R infix functions \verb{\%name\%} are converted to operators,
+\item{...}{In the ellipsis arg, any R functions right after a pipe sign `|`` is converted to
+a scidb operator of the same name.
 All regular functions are first evaluated in the calling environment, and then convereted to strings
-depending on the result types. ArrayOp => ArrayOp$to_afl(), v:NonEmptyVector => paste(v, collapse=','),
+depending on the result types.
+ArrayOp => ArrayOp$to_afl(), v:NonEmptyVector => paste(v, collapse=','),
 NULL is ignored.}
+
+\item{envir}{The environment where expressions are evaluated. Default: the calling env.}
 }
 \value{
 AFL string
@@ -19,12 +23,12 @@ AFL string
 This is a convenience function for AFL generation.
 }
 \details{
-Any \code{a \%op_name\% b} call will be translated to \verb{\%op_name\%(a, b)} in R, then translated to AFL:
+Any \code{a | op_name(b)} call will be translated to \code{op_name(a, b)} in R, then translated to AFL:
 \code{op_name(a, b)}
 
 Using this syntax, we can chain multiple AFL operators
 
-E.g. \code{'array' \%filter\% 'a > 3 and b < 4' \%project\% c('a', 'b')}
+E.g. \code{'array' | filter('a > 3 and b < 4') | project('a', 'b')}
 will be translated into: \verb{project(filter(array, a > 3 and b < 4), 'a', 'b')}
-Use NULL if no 2nd operand is needed. E.g. 'array' \%op_count\% NULL => op_count(array)
+Use NULL if no 2nd operand is needed. E.g. \code{'array' | op_count} => \code{op_count(array)}
 }

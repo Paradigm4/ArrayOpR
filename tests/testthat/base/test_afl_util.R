@@ -41,9 +41,9 @@ test_that("ArrayOp instance automatically converted to string with to_afl() meth
   expect_identical(afl(anArray$to_afl() | filter('true')), "filter(array,true)")
 })
 
-test_that("Unsupported data types", {
-  expect_error(afl(list()), "unsupported operand data type")
-  expect_error(afl(data.frame()), "unsupported operand data type")
+test_that("Unsupported AFL operand data types", {
+  expect_error(afl(list()), "AFL operands")
+  expect_error(afl(data.frame()), "AFL operands")
 })
 
 test_that("Use case for common scidb operators", {

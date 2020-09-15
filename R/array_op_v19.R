@@ -12,9 +12,10 @@
 #' @details 
 #' One operation consists of an scidb operator and [1..*] operands, of which the result can be used as an operand 
 #' in another operation. Operands and Opreration results can all be denoted by ArrayOp.
-#' @export
+#' @noRd
 ArrayOpV19 <- R6::R6Class("ArrayOpV19",
   inherit = ArrayOpBase,
+  cloneable = FALSE,
   private = list(
     equi_join_template = function(left_alias, right_alias) {
       sprintf("equi_join(%%s as %s, %%s as %s, %%s)", left_alias, right_alias)
@@ -33,8 +34,12 @@ ArrayOpV19 <- R6::R6Class("ArrayOpV19",
       if(is.character(value))
         value = sprintf("'%s'", value)  # Quote string value(s)
       valueStr = if(length(value) > 1) sprintf("(%s)", paste(value, collapse = ',')) else value
-      if(key == 'path') 
-        valueStr
+      if(key == 'path') { 
+        # key 'path' is retained for compatibility with Scidb v18
+        # Scidb v19 uses 'paths' no matter a single or multiple files are provided
+        if(length(value)==1) valueStr else
+          sprintf("%s:%s", 'paths', valueStr)
+      }
       else 
         sprintf("%s:%s", key, valueStr)
     }
