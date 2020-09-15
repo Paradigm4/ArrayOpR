@@ -33,11 +33,18 @@ print(conn) # print out `username@host [scidb version]` if the connection is suc
 
 We use the term `array_op` to denote two types of arrays:
 
-  1. persistent array in SciDB.
-  2. transient array, ie. any numbers of potentially nested operations on one or multiple arrays. 
+  1. persistent arrays in SciDB, denoted by an array name, e.g. `myNamespace.myArray`.
+  2. array operations, ie. any numbers of potentially nested operations on one or multiple arrays.
   E.g. filter on one array; or join two arrays then filter the joined.
   
-Semantically, both arrays are the same, and support the same [set of verbs](`ArrayOpBase`). 
+Semantically, both types of arrays are the same, and support the same [set of verbs](`ArrayOpBase`). 
+They also both have:
+
+  1. one or more attributes
+  2. zero or more dimensions 
+
+Regular arrays have at least one explicit dimensions.
+SciDB data frames have no explit dimension, but internally two hidden dimensions whose names starts with a dollar sign $.
   
 
 ```{r}
@@ -49,22 +56,30 @@ arr_created = conn$create_array(
   name = "test_CO2_empty",  
   schema_template = "<Plant:string,Type:string,Treatment:string,conc:double,uptake:double> [i]"
 )
+# Create a scidb data frame. Notice no dimension provided
+arr_created_df = conn$create_array(
+  name = "test_CO2_empty_df",  
+  schema_template = "<Plant:string,Type:string,Treatment:string,conc:double,uptake:double>" # leave out any dimension
+)
 
 # Retrieve an existing array (the one we just uploaded)
 arr_existing = conn$array("test_CO2")
 
-# Compile data.frame into a transient array
+# Compile data.frame into a scidb 'build' operation with a build dimension
 arr_compiled = conn$compile_df(head(CO2,4))
+# Compile to a scidb data frame without explicit dimensions
+arr_compiled_df = conn$compile_df(head(CO2,4), as_scidb_data_frame = T)
 
 # Create a transient array by AFL
-arr_from_afl = conn$array_from_afl(arr_existing$filter(conc > 800)$to_afl())
+arr_from_afl = conn$afl_expr(arr_existing$filter(conc > 800)$to_afl())
 
 # Store an AFL statement into a persistent array
-arr_stored = conn$array_from_stored_afl(
-  # afl_str = "filter(test_CO2, conc > 800)" # equivalent to code below
-  afl_str = arr_existing$filter(conc > 800)$to_afl(), 
-  save_array_name = "test_CO2_stored", .gc = F # prevent from being destroyed by R's garbage collected
-)
+arr_stored = conn$afl_expr(
+    # afl_str = "filter(test_CO2, conc > 800)" # equivalent to code below
+    arr_existing$filter(conc > 800)$to_afl()
+  )$persist(
+    save_array_name = "test_CO2_stored", .gc = F # prevent from being destroyed by R's garbage collected
+  )
 ```
 
 Let's inspect these arrays!
@@ -72,10 +87,11 @@ Let's inspect these arrays!
 ```{r}
 arr_uploaded$to_afl()
 arr_uploaded$to_schema_str()
-arr_uploaded$is_persistent()
+arr_uploaded$is_persistent() # test if the afl is an array name, without checking in db
+arr_uploaded$exists_persistent_array() # whether the persistent array exists in db (does check in db)
 arr_uploaded$array_meta_data()
 arr_uploaded$summarize_array()
-arr_uploaded$row_count()
+arr_uploaded$cell_count()
 
 str(arr_created)
 str(arr_existing) # same as arr_uploaded
@@ -84,11 +100,15 @@ arr_compiled$to_afl()
 arr_compiled$to_schema_str()
 arr_compiled$is_persistent()
 
+# SciDB data frames
+arr_created_df$to_schema_str()
+arr_compiled_df$to_schema_str()
+
 arr_from_afl$to_afl()
-arr_from_afl$row_count()
+arr_from_afl$cell_count()
 
 str(arr_stored)
-arr_stored$row_count()
+arr_stored$cell_count()
 ```
 
 # Download array_op as data.frame
@@ -136,12 +156,16 @@ Unlike R, SciDB uses single quotes for string literals. E.g. `'at'` is single-qu
 
 ```{r}
 # Modify existing fields
-result = arr_stored$mutate("Type" = " 'at' + Type ", conc = "conc/1000")
+result = arr_stored$mutate(Type = 'at_' + Type, conc = conc/1000)
 result$to_afl()
 result$to_df()
 
 # Add new fields
-result = arr_stored$mutate("Plant_Type" = "Plant + '-' + Type", "feel" = "iif(Treatment = 'chilled', 'cold', 'ok')")
+result = arr_stored$mutate(Plant_Type = Plant + '-' + Type, feel = if(Treatment == 'chilled') 'cold' else 'ok')
+
+# Same as above. Notice the `iif` operator is explicitly written here, 
+# equivalent to native R `if` statement
+# result = arr_stored$mutate(Plant_Type = Plant + '-' + Type, feel = iif(Treatment == 'chilled', 'cold', 'ok'))
 result$to_afl()
 result$to_df()
 ```
@@ -151,7 +175,8 @@ result$to_df()
 `transmute` allows us to explicitly specify which fields to keep.
 
 ```{r}
-result = arr_stored$transmute("Plant", "Plant_Type" = "Plant + '-' + Type", "feel" = "iif(Treatment = 'chilled', 'cold', 'ok')")
+# strings are escaped for AFL 
+result = arr_stored$transmute(Plant, Plant_Type = Plant + "'-'" + Type, feel = iif(Treatment == 'chilled', 'c"ooo"ld', "OK"))
 result$to_afl()
 result$to_df()
 ```
@@ -273,26 +298,40 @@ result$to_df()
 
 
 # Aggregation
+
+## Group by and then Summarize
 ```{r}
 # Tip: Call `dbutils$db_aggregates()$to_df()` to see supported aggregate functions
 arr_existing$
   group_by("Plant", "Type")$
-  summarize("count" = "count(*)",
-            "uptake_sd" = "stdev(uptake)",
-            "avg(conc)", # unamed fields are named by SciDB
-            "max(uptake)")$
+  summarize(count = count(),
+            uptake_sd = stdev(uptake),
+            avg(conc), # unamed fields are named by SciDB
+            max(uptake))$
   to_df()
 
 # Aggregation result is still an array_op. So we can carry on.
 arr_existing$
   group_by("Plant", "Type")$
-  summarize("count" = "count(*)",
-            "uptake_sd" = "stdev(uptake)",
-            "avg(conc)", 
-            "max(uptake)")$
+  summarize(count = count(),
+            uptake_sd = stdev(uptake),
+            avg(conc), 
+            max(uptake))$
   filter(uptake_sd > 8)$ # requires uptake standard deviation > 8
   to_df()
 ```
+## Summarize without group_by fields
+
+Sometimes we need to get stats on array fields for all cells without any group_by fields, e.g. find the max/min value of a field.
+
+```{r}
+arr_existing$summarize(
+  count(), max(conc), stdev(uptake),
+  max(i) # this is a dimension 
+)$to_df()
+```
+
+
 
 # Versions
 
@@ -414,7 +453,7 @@ conn$query(afl(
 Always double check and back up if necessary before entering the danger zone.
 
 ```{r}
-conn$execute("remove(temp_array)") # manually remove
+try(conn$execute("remove(temp_array)"), silent = T) # manually remove
 
 for(x in c(arr_uploaded, 
            arr_created, 
@@ -424,7 +463,7 @@ for(x in c(arr_uploaded,
            L, R
            )){
   if(x$exists_persistent_array()) { # can only remove persistent arrays
-    x$remove_self()
+    x$remove_array()
   }
 }
 
