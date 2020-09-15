@@ -97,8 +97,25 @@ test_that("group by both dims and attributes", {
   )
 })
 
+test_that("summarize without group_by", {
+  expect_equal(
+    arrayCO2$summarize(max_conc = max(conc))$to_df()$max_conc,
+    max(CO2$conc)
+  )
+  expect_equal(
+    as.integer(arrayCO2$summarize(min(conc))$to_df()[[1]]),
+    min(CO2$conc)
+  )
+  
+  # summarize on both dimension and attribute
+  expect_equal(
+    arrayCO2$summarize(max_uid = max(uid), min_uptake = min(uptake))$to_df(),
+    data.frame(max_uid = nrow(CO2), min_uptake = min(CO2$uptake))
+  )
+})
+
 test_that("Error cases", {
-  expect_error(arrayCO2$summarize(max(conc)), "group_by_fields")
+  # expect_error(arrayCO2$summarize(max(conc)), "group_by_fields")
   expect_error(arrayCO2$group_by("non-existent"), "non-existent")
 })
 

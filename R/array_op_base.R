@@ -1544,11 +1544,13 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     ,
     summarize = function(..., .dots = NULL){
       group_by_fields = private$get_meta("group_by_fields")
-      assert_not_empty(group_by_fields,
-                       paste0("'{.symbol}' should not be empty (0-length) ",
-                              "Consider call `anArrayOp$group_by(...)` first")
-      )
-      # rawFieldsList = .dots %?% list(...)
+      
+      # assert_not_empty(group_by_fields,
+      #                  paste0("'{.symbol}' should not be empty (0-length) ",
+      #                         "Consider call `anArrayOp$group_by(...)` first")
+      # )
+      
+      # expression list converted to a string list
       rawFieldsList = lapply(.dots %?% rlang::exprs(...), aflutils$e_to_afl)
       
       # get aggregation expressions
@@ -1560,13 +1562,21 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
                paste0(agg_exprs, ' as ', aliases))
       } else agg_exprs
       
-      result = private$conn$afl_expr(afl(
-        self | grouped_aggregate(
-          paste(agg_exprs_pairs, collapse = ','),
-          group_by_fields
-        )
-      ))
-      result$.private$set_conn(private$conn)
+      result = 
+        if(.not_empty(group_by_fields)){
+          private$conn$afl_expr(afl(
+          self | grouped_aggregate(
+            paste(agg_exprs_pairs, collapse = ','),
+            group_by_fields
+          )))
+        } else {
+          private$conn$afl_expr(afl(
+            self | 
+              apply(aflutils$join_fields(self$dims, self$dims)) |
+              aggregate(paste(agg_exprs_pairs, collapse = ','))
+          ))
+        }
+      # result$.private$set_conn(private$conn)
       result
     }
     # AFL -------------------------------------------------------------------------------------------------------------
