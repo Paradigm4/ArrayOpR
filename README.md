@@ -1,2 +1,2 @@
- - Check out documentation at [Wiki](https://github.com/Paradigm4/ArrayOpR/wiki)
-
+Documentation at
+https://paradigm4.github.io/ArrayOpR/
