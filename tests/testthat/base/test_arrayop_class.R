@@ -29,3 +29,14 @@ test_that("manually create new instances", {
   
   expect_error(a$spawn(renamed = list(aa1 = 'aa')), "aa1")
 })
+
+test_that("ArrayOp active bindings", {
+  a = ArrayOp("array", attrs = c("fa", "fb"), dims = c("da", "db"), 
+              dtypes = list(fa = "string COMPRESSION 'zlib'", fb = "int32"),
+              dim_specs = list(da = "0:*:0:*"))
+  
+  expect_identical(a$dtypes, list(fa = "string COMPRESSION 'zlib'", fb = "int32", da = "int64", db = "int64"))
+  expect_identical(a$raw_dtypes, list(fa = "string", fb = "int32", da = "int64", db = "int64"))
+  
+  expect_identical(a$to_schema_str(), "<fa:string COMPRESSION 'zlib',fb:int32> [da=0:*:0:*;db]")
+})

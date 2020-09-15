@@ -42,7 +42,7 @@ ArrayOpBase <- R6::R6Class(
     conn = NULL # The ScidbConnection instance
     ,
     clone_self = function(raw_afl = private$raw_afl) {
-      result = private$create_new(raw_afl, metaList = private$metaList)
+      result = private$create_new(raw_afl, meta_list = private$metaList)
       result$.private$set_conn(private$conn)
       result
     }
@@ -675,7 +675,6 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       aioExpr = afl(aflutils$join_fields(settingItems) | aio_input)
       applyExpr = afl(aioExpr | apply(aflutils$join_fields(names(fieldTypes), castedItems)))
       projectedExpr = afl(applyExpr | project(names(fieldTypes)))
-      # return(private$create_new(projectedExpr, metaList = list()))
       return(private$create_new(projectedExpr, c(), names(fieldTypes), dtypes = fieldTypes))
     }
     ,
@@ -1070,6 +1069,8 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     selected = function() private$get_meta('selected'),
     #' @field dtypes A named list, where key is dim/attr name and value is respective SciDB data type as string
     dtypes = function() private$get_meta('dtypes'),
+    #' @field raw_dtypes A named list, where key is dim/attr name and value is first part of respective SciDB data type as string
+    raw_dtypes = function() lapply(private$get_meta('dtypes'), function(x) gsub("^(\\S+).*$", "\\1", x)),
     #' @field dims_n_attrs Dimension and attribute names
     dims_n_attrs = function() c(self$dims, self$attrs),
     #' @field attrs_n_dims Attribute and dimension names
@@ -1092,7 +1093,8 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
   public = list(
     #' @description 
     #' Base class initialize function, to be called in sub-class 
-    #' @param info A list that stores ArrayOp meta data, e.g. field types 
+    #' @param meta_list A list that stores ArrayOp meta data, e.g. field types 
+    #' If provided, other regular parms are not allowed.
     initialize = function(
       raw_afl,
       dims = as.character(c()), 
@@ -1100,16 +1102,24 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       dtypes = list(),
       dim_specs = list(),
       ...,
-      metaList
+      meta_list
     ) {
       assert(
-        xor(methods::hasArg('metaList'), 
+        xor(methods::hasArg('meta_list'), 
               methods::hasArg('dims') || methods::hasArg('attrs') || methods::hasArg('dtypes')
         ),
-      "ERROR: ArrayOp:initialze: metaList cannot be provided with any of the args: dims, attrs, dtypes")
+      "ERROR: ArrayOp:initialze: meta_list cannot be provided with any of the args: dims, attrs, dtypes")
+      assert_single_str(raw_afl, "character")
+      # assert_inherits(dims, "character")
+      # assert_inherits(attrs, "character")
+      # assert_inherits(dtypes, "list")
+      # assert_inherits(dim_specs, "list")
+      
       private$raw_afl = raw_afl
-      private$metaList = if(methods::hasArg('metaList')) metaList else
-        list(dims = dims, attrs = attrs, dtypes = dtypes, dim_specs = dim_specs, ...)
+      private$metaList = if(methods::hasArg('meta_list')) meta_list else
+        list(dims = dims, attrs = attrs, 
+             dtypes = utils::modifyList(dtypes, invert.list(list("int64" = dims))), 
+             dim_specs = dim_specs, ...)
     }
     # Functions that creat new ArrayOps -------------------------------------------------------------------------------
     ,
@@ -1162,7 +1172,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       assert_no_fields(fieldNames %-% self$dims_n_attrs, "ERROR: ArrayOp$select: invalid select fields [%s] in: %%s", self$to_afl())
       newMeta = private$metaList
       newMeta[['selected']] <- fieldNames
-      private$create_new(private$raw_afl, metaList = newMeta)
+      private$create_new(private$raw_afl, meta_list = newMeta)
     }
     ,
     #' @description 
