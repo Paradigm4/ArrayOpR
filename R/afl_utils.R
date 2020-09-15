@@ -80,10 +80,10 @@ afl <- function(..., envir = parent.frame()) {
       }
     }
     evaluated = eval(obj, envir = envir)
-    assert(inherits(evaluated, c('character', 'numeric', 'logical', 'ArrayOpBase')) || is.null(evaluated), 
-      "afl2(...): unsupported operand data type. 
-      Operand must be (or inherit) character, numeric, logical, or ArrayOpBase, but got '%s'", 
-      paste(class(evaluated), collapse = ','))
+    
+    assert_inherits(evaluated, c('character', 'numeric', "integer", "integer64", "logical", "NULL", "ArrayOpBase"),
+                    .symbol = "'AFL operands'")
+    
     if(inherits(evaluated, 'ArrayOpBase')){
       evaluated = evaluated$to_afl()
     } else if(is.logical(evaluated)) {
