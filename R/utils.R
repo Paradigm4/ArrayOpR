@@ -1,110 +1,134 @@
-# System and validation -------------------------------------------------------------------------------------------
+source("R/private_utils/__source.R", local = TRUE, chdir = TRUE)
 
-# Here we use R's naming convention.
-# fmt = format, msg = message
+# DBUtils class ----
 
-stopf <- function(fmt, ...) { stop(sprintf(fmt, ...)) }
-
-printf <- function(fmt, ...) { print(sprintf(fmt, ...)) }
-
-assert <- function(cond, errorMsgFmt = '', ...) { if(!cond) stop(sprintf(errorMsgFmt, ...))}
-
-assert_has_len <- function(obj, ...) { assert(rlang::has_length(obj), ...) }
-assert_not_has_len <- function(obj, ...) { assert(!rlang::has_length(obj), ...) }
-assert_named_list <- function(obj, ...) {
-  assert(.has_len(names(obj)) && all(names(obj) != ''), ...)
-}
-
-assert_single_str <- function(obj, ...) {
-  assert(is.character(obj) && length(obj) == 1, ...)
-}
-
-assert_single_number <- function(obj, ...) {
-  assert(is.numeric(obj) && length(obj) == 1, ...)
-}
-
-# %s in errorMsgFmt will be replaced the concatenated fields; only one %s is allowed. 
-# Extra format placeholders should be denoted by %%s, %%d, etc. due to the extra layer of indirection.
-assert_no_fields <- function(fields, errorMsgFmt = "Field(s) not empty: %s", ..., sep = ','){
-  assert_not_has_len(fields, sprintf(errorMsgFmt, paste(fields, collapse = sep)), ...)
-}
-
-.ifelse <- function(condition, yes, no) if(condition) yes else no
-.has_len <- function(...) rlang::has_length(...)
-
-.random_attr_name <- function(n = 4){
-  sprintf("_%s", rawToChar(as.raw(sample(c(65:90,97:122), n, replace=TRUE))))
-}
-
-
-`%u%` = function(lhs, rhs) base::union(lhs, rhs)
-`%-%` = function(lhs, rhs) base::setdiff(lhs, rhs)
-`%n%` = function(lhs, rhs) base::intersect(lhs, rhs)
-
-
-#' Invert names and values of a list (or named vector)
-#'
-#' @param obj a named list
-#' @param .as.list Return a list if set TRUE; otherwise a named vector
-#' @return A list or named vector whose key/values are inverted from the original `obj`
-invert.list = function(obj, .as.list = T) {
-  res = structure(
-    unlist(mapply(rep, names(obj), sapply(obj, length)), use.names=F),
-    names = unlist(obj)
+#' Database utility class
+#' 
+#' Common scidb operations
+DBUtils = R6::R6Class(
+  "DBUtils", portable = F, cloneable = F,
+  public = list(
+    #' @description 
+    #' Generate a random array name so it does not collides with existing array names
+    random_array_name = function(prefix = "Rarrayop_", n = 10L) {
+      sprintf("%s_%s_", prefix, rawToChar(as.raw(sample(c(65:90,97:122), n, replace=TRUE))))
+    }
+    ,
+    random_field_name = function(n = 10L) {
+      sprintf("%s_", rawToChar(as.raw(sample(c(65:90,97:122), n, replace=TRUE))))
+    }
+    ,
+    set_conn = function(new_conn) {
+      private$conn = new_conn
+    }
+    ,
+    get_conn = function(){
+      if(is.null(private$conn)){
+        private$conn = get_default_connection()
+      }
+      private$conn
+    }
+    ,
+    clear_cache = function() {
+      private$cached = list()
+    }
+    # start scidb utility functions
+    ,
+    list_arrays_in_ns = function(ns = "public"){
+      assert_single_str(ns)
+      from_formatted_afl("list(ns:%s)", ns) 
+    }
+    ,
+    load_array_ops_from_namespace = function(ns = 'public'){
+      arrayRecordsDf = list_arrays_in_ns(ns)$transmute(name, schema)$to_df()
+      .conn = get_conn()
+      new_named_list(
+        sapply(arrayRecordsDf$schema, .conn$array_from_schema),
+        names = arrayRecordsDf$name
+      )
+    }
+    ,
+    #' @description 
+    #' Sanitize (data frame or scidb array) names
+    #'
+    #' First replace any non-alphanumerical letter to _
+    #' Then trim off any leading or trailing underscores.
+    #' @param original_names A character vector
+    #' @return A character vector of sanitized names
+    sanitize_names = function(original_names) {
+      gsub("^[_]+|[_]+$", '',
+           gsub('_+', '_',
+                gsub('[^a-zA-Z0-9_]+', '_', original_names)))
+    }
+    ,
+    sanitize_names_for = function(obj) {
+      assert_not_empty(names(obj), "No names found for `{.symbol}`", .symbol = deparse(substitute(obj)))
+      names(obj) <- sanitize_names(names(obj))
+      obj
+    }
+    ,
+    db_namespaces= function(){
+      from_formatted_afl("list('namespaces')") 
+    }
+    ,
+    db_users = function(){
+      from_formatted_afl("list('users')")
+    }
+    ,
+    db_roles = function(){
+      from_formatted_afl("list('roles')")
+    }
+    ,
+    db_operators = function(){
+      from_formatted_afl("list('operators')")
+    }  
+    ,
+    db_instances = function(){
+      from_formatted_afl("list('instances')")
+    }  
+    ,
+    db_queries = function(){
+      from_formatted_afl("list('queries')")
+    }
+    ,
+    db_macros = function(){
+      from_formatted_afl("list('macros')")
+    }
+    ,
+    db_types = function(){
+      from_formatted_afl("list('types')")
+    }
+    ,
+    db_libraries = function(){
+      from_formatted_afl("list('libraries')")
+    }
+    ,
+    db_aggregates = function(){
+      from_formatted_afl("list('aggregates')")
+    }
+  ),
+  active = list(
+    
+    
   )
-  if(.as.list) res = as.list(res)
-  res
-}
+  ,
+  private = list(
+    conn = NULL,
+    cached = list(),
+    from_formatted_afl = function(afl_template, ...){
+      fullAfl = sprintf(afl_template, ...)
+      result = private$cached[[fullAfl]]
+      if(is.null(result)) {
+        result = get_conn()$afl_expr(fullAfl)
+        private$cached[[fullAfl]] = result
+      }
+      result
+    }
+  )
+)
 
-log_job = function(job, msg = '', done_msg = 'done') {
-  cat(sprintf("%s ... ", msg))
-  result = force(job)
-  cat(sprintf("%s. [%s]\n", done_msg, Sys.time()))
-  invisible(result)
-}
+# dbutils singleton object ----
+dbutils = DBUtils$new()
 
-print_error <- function(...){ 
-  cat(sprintf(...), file=stderr())
-}
-
-# Output job duration.
-# 
-# Fields of durations are `names(proc.time())`, i.e. [user.self, sys.self, elapsed, user.child, sys.child]
-# Units are seconds.
-# @param job An R expression to be evaluated and returned
-# @param msg A message shown as the log entry, followed by a timestamp and time durations.
-# @return evaluated 'job' 
-log_job_duration = function(job, msg = '', done_msg = 'done') {
-  cat(sprintf("%s ... ", msg))
-  start = proc.time()
-  result = force(job)
-  duration = proc.time() - start
-  cat(sprintf("%s. \t[%s]\t%s\n", done_msg, Sys.time(), paste(duration, collapse = '\t')))
-  invisible(result)
-}
-
-.to_signed_integer_str = function(values) {
-  single_value = function(v) {
-    if(v == 0) '' else sprintf("%+d", v)
-  }
-  values = as.integer(values)
-  vapply(values, single_value, FUN.VALUE = '')
-}
-
-# param named_values: A named list or named vector
-# return The names of the elements. If an element has no name, then its string representation will be used as name.
-.get_element_names = function(named_values) {
-  if (!.has_len(names(named_values)))
-    as.character(named_values)
-  else {
-    mapply(function(name, value) {
-      if (name == '') value
-      else name
-    }, names(named_values), named_values, USE.NAMES = F)
-  }
-}
-
-# Remove all NULL entrieds from a list. Same as plyr::compact
-.remove_null_values = function(list_values) {
-  Filter(Negate(is.null), list_values)
-}
+#' @export dbutils
+NULL
