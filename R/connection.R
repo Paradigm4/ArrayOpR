@@ -30,7 +30,7 @@ db_connect = function(username, token,
 #' @export
 get_default_connection = function(.report_error_if_not_connected = TRUE) { 
   if(.report_error_if_not_connected)
-    assert(default_conn$is_connected(), "ERROR: please call `arrayop::db_connect` to create a valid connection first")
+    assert(default_conn$has_connected(), "please call `arrayop::db_connect` to create a valid connection first")
   default_conn 
 }
 
@@ -229,16 +229,13 @@ ScidbConnection <- R6::R6Class(
       array_op$.private$set_conn(self)
       array_op
     }
-  ),
-  active = list(
-      # placeholder for active bindings, which do not work for package-level singletons.
-    dbversion = function() private$.scidb_version
-  ),
+  )
+  ,
   public = list(
     initialize = function(){
       
     },
-    is_connected = function() {
+    has_connected = function() {
       .not_empty(.conn_args)
     }
     ,

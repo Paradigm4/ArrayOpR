@@ -19,7 +19,7 @@ if(!ALLOW_DB_TEST){
   # db setup may fail if no config found or conneciton cannot be initiated
   try(source("db_tests_setup/__source.R", local = TRUE, chdir = TRUE), silent = T)
   
-  if(!get_default_connection(F)$is_connected()){
+  if(!get_default_connection(F)$has_connected()){
     return(invisible(NULL))
   } else {
     run_sub_folders()
