@@ -26,25 +26,27 @@ print.ArrayOpBase = function(op) {
 ArrayOpBase <- R6::R6Class(
   "ArrayOpBase",
   cloneable = FALSE,                         
+  # ArrayOpBase class internally maintains three private fields to represent its state.
   private = list(
+    # Raw AFL encapsulated in the ArrayOp instance. 
+    # A string of either an array name or potentially nested AFL operations.
     raw_afl = NULL
     ,
+    # A list that stores other meta including: field types, dimension specs.
     metaList = NULL
     ,
+    # A ScidbConnection instance which determines where and how AFL is executed.
+    conn = NULL 
+    ,
+    # Generailized funtion to set or update a metadata with a (key, value) pair.
     set_meta = function(key, value) {
       private$metaList[[key]] <- value
     }
     ,
+    # Generalized function to return a medatadata with key. 
+    # Return NULL if key doesn't exist.
     get_meta = function(key) {
       private$metaList[[key]]
-    }
-    ,
-    conn = NULL # The ScidbConnection instance
-    ,
-    clone_self = function(raw_afl = private$raw_afl) {
-      result = private$create_new(raw_afl, meta_list = private$metaList)
-      result$.private$set_conn(private$conn)
-      result
     }
     ,
     # todo: move connection setup to initialize function
@@ -52,24 +54,27 @@ ArrayOpBase <- R6::R6Class(
       private$conn = connection
     }
     ,
+    # set the metadata to indicate the schema from this array_op instance is 
+    # returned from SciDB rather than locally inferred in R
     confirm_schema_synced = function(){
       private$set_meta('is_schema_from_scidb', TRUE)
       invisible(self)
     }
     ,
     #' @description 
-    #' Return ArrayOp field types
+    #' Return ArrayOp field types as a list
     #'
-    #' NOTE: private$info has to be defined, otherwise returns NULL
     #' @param field_names R character. If NULL, defaults to `self$dims_n_attrs`, ie. dimensions and attributes.
     #' @param .raw Default FALSE, full data types are returned; if set TRUE, only the raw data types are returned 
     #' (raw data types are string, int32, int64, bool, etc, without scidb attribute specs such as: string compression 'zlib')
-    #' @return a named list as `field_names`, where absent fields or fields without data types will cause error; 
-    #' unless `.strict=F`, absent fields are ignored
+    #' @return a named list where keys are field names, 
+    #' and values are scidb data types (single word or multiple words).
+    #' 
+    #' Throw an error if field_names are not all valid.
     get_field_types = function(field_names = NULL, .raw = FALSE){
-      
+      # field_names default to dims + attrs
       field_names = field_names %?% self$dims_n_attrs
-      assert_empty(field_names %-% self$dims_n_attrs, "param 'field_names' has invalid fields: [{.value}]")
+      assert_empty(field_names %-% self$dims_n_attrs, "Invalid field(s): [{.value}]")
       result = new_named_list(self$dtypes[field_names], field_names)
       if(.raw){
         result = new_named_list(regmatches(result, regexpr("^\\w+", result)), names = field_names)
@@ -78,27 +83,19 @@ ArrayOpBase <- R6::R6Class(
     }
     ,
     #' @description 
-    #' Get dimension specifications
+    #' Get dimension specifications as a list
     #' 
     #' A dimension spec str is formatted as "lower bound : upper bound : overlap : chunk_length", 
     #' as seen in scidb `show(array_name)` operator.
-    #' All dimensions' data types are int64. 
+    #' All dimensions' data types are int64, as returned by `get_field_types` function.
     #' @param dim_names Default NULL equals all dimensions.
     #' @return A named list where the name is dimension name and value is a dimension spec string
-    get_dim_specs = function(dim_names = NULL) {
-      if(.is_empty(dim_names)) dim_names = self$dims
-      private$get_meta('dim_specs')[dim_names]
-    }
-    ,
-    #' @description 
-    #' Validate fields existence according the 'type' which defaults to 'owned' fields
     #' 
-    #' This function is useful for validating fields in use cases:
-    #    1. whether fields are valid for 'select' or 'filter';
-    #    2. whether fields can be used as keys in JoinOp
-    #' @return A list of absent field names
-    get_absent_fields = function(fieldNames) {
-      fieldNames %-% self$dims_n_attrs
+    #' Throw an error if dim_names are not all valid dimension names.
+    get_dim_specs = function(dim_names = NULL) {
+      dim_names = dim_names %?% self$dims
+      assert_empty(dim_names %-% self$dims, "Invalid dimension(s): [{.value}]")
+      private$get_meta('dim_specs')[dim_names]
     }
     ,
     # if no fields selected of self, then select all fields
@@ -109,13 +106,16 @@ ArrayOpBase <- R6::R6Class(
     }
     ,
     validate_join_operand = function(side, operand, keys){
-      assert(inherits(operand, class(self)),
+      assert(inherits(operand, "ArrayOpBase"),
         "JoinOp arg '%s' must be class of [%s], but got '%s' instead.",
-        side, 'ArrayOpBase', class(operand))
+        side, 'ArrayOpBase', paste(class(operand), collapse=","))
+      
       assert(is.character(keys) && .not_empty(keys),
-        "Join arg 'on_%s' must be a non-empty R character, but got '%s' instead", side, class(keys))
-      absentKeys = operand$.private$get_absent_fields(keys)
-      assert_not_has_len(absentKeys, "JoinOp arg 'on_%s' has invalid fields: %s", side, paste(absentKeys, collapse = ', '))
+        "Join params 'on_%s' must be a non-empty R character, but got '%s' instead", 
+        side, paste(class(keys), collapse = ","))
+      
+      assert_empty(keys %-% operand$dims_n_attrs, 
+                   sprintf("Invalid key field(s): [{.value}] on the %s operand", side))
     }
     ,
     validate_join_params = function(left, right, on_left, on_right, settings) {
@@ -124,14 +124,14 @@ ArrayOpBase <- R6::R6Class(
       
       # Assert left and right keys lengths match
       assert(length(on_left) == length(on_right),
-        "ERROR: ArrayOp$join: on_left[%s field(s)] and on_right[%s field(s)] must have the same length.",
+        "ArrayOp join: on_left[%s field(s)] and on_right[%s field(s)] must have the same length.",
         length(on_left), length(on_right))
       
       # Validate settings
       if(.not_empty(settings)){
         settingKeys <- names(settings)
         if(.is_empty(settingKeys) || any(settingKeys == '')){
-          stop("ERROR: ArrayOp$join: Settings must be a named list and each setting item must have a non-empty name when creating a JoinOp")
+          stop("ArrayOp join settings must be a named list and each setting item must have a non-empty name")
         }
       }
     }
@@ -190,8 +190,6 @@ ArrayOpBase <- R6::R6Class(
     #' @param on_left R character vector. Join keys from the left (self).
     #' @param on_right R character vector. Join keys from the `right`. Must be of the same length as `on_left`
     #' @param on_both Join keys on both operand.
-    #' @param .auto_select default: FALSE. If set to TRUE, the resultant ArrayOp instance will auto `select` the fields
-    #' that are selected in the left and right operands but not in the right join keys (since they are masked by equi_join operator).
     #' @param settings `equi_join` settings, a named list where both key and values are strings. 
     #' @param .dim_mode How to reshape the resultant ArrayOp. Same meaning as in `ArrayOp$reshape` function. 
     #' By default, dim_mode = 'keep', the artificial dimensions, namely `instance_id` and `value_no` from `equi_join`
@@ -201,7 +199,7 @@ ArrayOpBase <- R6::R6Class(
     #' @return A new arrayOp 
     join = function(left, right, 
                     on_left = NULL, on_right = NULL, on_both = NULL, 
-                    auto_select = FALSE, join_mode = 'equi_join',
+                    join_mode = 'equi_join',
                     settings = NULL, 
                     left_alias = '_L', right_alias = '_R') {
       if(.is_empty(on_left) && .is_empty(on_right) && .is_empty(on_both)){
@@ -219,10 +217,18 @@ ArrayOpBase <- R6::R6Class(
         left$.private$auto_select(), 
         right$.private$auto_select(), 
         on_left, on_right, settings = settings, 
-        .auto_select = auto_select, 
         .left_alias = left_alias, .right_alias = right_alias)
     }
     ,
+    #' @description 
+    #' Disambiguate selected fields of join
+    #' 
+    #' If no name clashes between selected fields of both operands, 
+    #' nothing changes. 
+    #' Otherwise, add suffix to duplicated fields for each operand.
+    #' E.g. if a field named 'value' exists on both operands and is retained,
+    #' it will be renamed as 'value_left' and 'value_right' if left_alias and right_alias
+    #' are '_left' and '_right', respectively. 
     disambiguate_join_fields = function(left_fields, right_fields, .left_alias, .right_alias) {
       rawFields = c(left_fields, right_fields)
       duplicatedFields = rawFields[duplicated(rawFields)]
@@ -245,31 +251,24 @@ ArrayOpBase <- R6::R6Class(
       }
     }
     ,
-    equi_join = function(left, right, on_left, on_right, settings = NULL, .auto_select = FALSE, 
+    equi_join = function(left, right, on_left, on_right, settings = NULL,
       .left_alias = '_L', .right_alias = '_R') {
       # Validate join params
       private$validate_join_params(left, right, on_left, on_right, settings)
       
       # Validate selected fields
       hasSelected = .not_empty(left$selected) || .not_empty(right$selected)
-      if(hasSelected && .is_empty(left$selected))
-        assert(right$selected != on_right, 
-          "ERROR: ArrayOp$join: Right operand's selected field(s) '%s' cannot be its join key(s) '%s' when there is no left operand fields selected.
-Please select on left operand's fields OR do not select on either operand. Look into 'equi_join' documentation for more details.",
-          paste(right$selected, collapse = ','), paste(on_right, collapse = ','))
+      assertf(hasSelected, "There should be selected fields of equi_join operands.")
       
       # Create setting items
-      
       mergedSettings <- c(list(left_names = on_left, right_names = on_right), settings)
       # Values of setting items cannot be quoted.
       # But the whole 'key=value' needs single quotation according to equi_join plugin specs
       settingItems = mapply(function(k, v) private$to_equi_join_setting_item_str(k, v, .left_alias, .right_alias), 
         names(mergedSettings), mergedSettings)
 
-      keep_dimensions = (function(){
-        val = settings[['keep_dimensions']]
-        .not_empty(val) && val == 1
-      })()
+      keep_dimensions = .not_empty(settings[['keep_dimensions']]) && 
+        (settings[['keep_dimensions']] == 1 || settings[['keep_dimensions']])
       
       # Join two operands
       joinExpr <- sprintf(private$equi_join_template(.left_alias, .right_alias),
@@ -279,46 +278,21 @@ Please select on left operand's fields OR do not select on either operand. Look 
       
       
       dims = list(instance_id = 'int64', value_no = 'int64')
-      attrs = (function() {
-        if(hasSelected){
-          rightSelected = right$selected %-% on_right  # Right key(s) are ignored/masked in equi_join
-          as.character(unique(c(left$selected, rightSelected)))
-        }
-        else{
-          leftRetained = if(keep_dimensions) left$attrs_n_dims else left$attrs
-          rightRetained = if(keep_dimensions) right$attrs_n_dims else right$attrs
-          return(c(on_left,
-            leftRetained %-% on_left,
-            rightRetained %-% on_right
-          ))
-        }
-      }) ()
+      attrs = as.character(unique(c(left$selected, right$selected %-% on_right)))
       dtypes = .remove_null_values(c(dims, c(left$dtypes, right$dtypes)[attrs]))
       
-      if(hasSelected){
-        selectedFields = private$disambiguate_join_fields(
-          left$selected, right$selected %-% on_right,
-          .left_alias, .right_alias
-        )
-        joinedOp = private$create_new(joinExpr, names(dims), attrs, dtypes = dtypes)
-        return(
-          # selectedFields names and values may be different due to disambiguation
-          joinedOp$.private$reshape_fields(selectedFields)$select(names(selectedFields))
-        )
-        # return(do.call(joinedOp$transmute, selectedFields)$select(names(selectedFields)))
-      }
-      
-      selectedFields = if(hasSelected) attrs else NULL
+      selectedFields = private$disambiguate_join_fields(
+        left$selected, right$selected %-% on_right,
+        .left_alias, .right_alias
+      )
       joinedOp = private$create_new(joinExpr, names(dims), attrs, dtypes = dtypes)
-      if(hasSelected) {
-        joinedOp = joinedOp$afl_project(selectedFields)
-        if(.auto_select)
-          joinedOp = joinedOp$select(selectedFields)
-      }
-      joinedOp
+      return(
+        # selectedFields names and values may be different due to disambiguation
+        joinedOp$.private$reshape_fields(selectedFields)$select(names(selectedFields))
+      )
     }
     ,
-    cross_join = function(left, right, on_left, on_right, settings = NULL, .auto_select = FALSE, 
+    cross_join = function(left, right, on_left, on_right, settings = NULL,  
       .left_alias = '_L', .right_alias = '_R') {
       # Scidb cross_join operator only allows join on operands' dimensions
       assert_keys_are_all_dimensions = function(side, operand, keys){
@@ -589,22 +563,20 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       
       attrStr = paste(builtAttrs, builtDtypes, collapse = ',', sep = ':')
       # convert columns to escaped strings
-      colStrs = 
-          lapply(builtAttrs, function(x) {
-            colScidbType = builtDtypes[[x]]
-            vec = df[[x]]
-            switch(
-              colScidbType,
-              # "string" = sprintf("\\'%s\\'", gsub("(['\\])", "\\\\\\\\\\1", vec)),
-              "string" = sapply(
-                gsub("(['\\&])", "\\\\\\\\\\1", vec),
-                function(singleStr) if(is.na(singleStr)) "" else sprintf("\\'%s\\'", singleStr)
-              ),
-              "datetime" = sprintf("\\'%s\\'", vec),
-              "bool" = tolower(vec),
-              vec # should be numeric types
-            )
-          })
+      colStrs = lapply(builtAttrs, function(x) {
+        colScidbType = builtDtypes[[x]]
+        vec = df[[x]]
+        switch(
+          colScidbType,
+          "string" = sapply(
+            gsub("(['\\&])", "\\\\\\\\\\1", vec),
+            function(singleStr) if(is.na(singleStr)) "" else sprintf("\\'%s\\'", singleStr)
+          ),
+          "datetime" = sprintf("\\'%s\\'", vec),
+          "bool" = tolower(vec),
+          vec # should be numeric types
+        )
+      })
       names(colStrs) = builtAttrs
       glueTemplate = sprintf("(%s)", paste("{", names(df), "}", sep = '', collapse = ","))
       contentStr = glue::glue_collapse(
@@ -774,31 +746,6 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' @param new_field 
     #' @return A new arrayOp 
     set_auto_increment_field = function(reference, source_field, ref_field, source_start, ref_start, new_field = NULL) {
-      assert(inherits(reference, 'ArrayOpBase'),
-             "ERROR: ArrayOp$set_auto_increment_field: param 'reference' must be ArrayOp, but got '%s' instead.", 
-             class(reference))
-      
-      assert(is.character(source_field), 
-             "ERROR: ArrayOp$set_auto_increment_field: param 'source_field' must be a character, but got '%s' instead.", 
-             class(source_field))
-      assert(is.character(ref_field), 
-             "ERROR: ArrayOp$set_auto_increment_field: param 'ref_field' must be a character, but got '%s' instead.", 
-             class(ref_field))
-      
-      assert(is.numeric(source_start), 
-             "ERROR: ArrayOp$set_auto_increment_field: param 'source_start' must be a numeric, but got '%s' instead.", 
-             class(source_start))
-      assert(is.numeric(ref_start), 
-             "ERROR: ArrayOp$set_auto_increment_field: param 'ref_start' must be a numeric, but got '%s' instead.", 
-             class(ref_start))
-      
-      assert_not_has_len(source_field %-% self$dims_n_attrs, 
-                         "ERROR: ArrayOp$set_auto_increment_field: source_field '%s' not exist.",
-                         paste(source_field %-% self$dims_n_attrs, ','))
-      assert_not_has_len(ref_field %-% reference$dims_n_attrs, 
-                         "ERROR: ArrayOp$set_auto_increment_field: ref_field '%s' not exist.",
-                         paste(ref_field %-% reference$dims_n_attrs, ','))
-      
       refDims = ref_field %-% reference$attrs
       maxRefFields = sprintf("_max_%s", ref_field)
       aggFields = sprintf("max(%s) as %s", ref_field, maxRefFields)
@@ -822,7 +769,6 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       result = self$spawn(crossJoined,
                           added = new_field, 
                           dtypes = new_named_list(reference$.private$get_field_types(ref_field), new_field))
-      # result = result$reshape(result$attrs)
       result$.private$afl_project(result$attrs)
     }
     ,
@@ -837,8 +783,6 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' (ie. cells with the same dimension coordinate).
     #' @return A new arrayOp 
     set_anti_collision_field = function(target, anti_collision_field = NULL, join_setting = NULL, source_anti_collision_dim_spec = NULL) {
-      assert(inherits(target, 'ArrayOpBase'),
-             "ERROR: ArrayOp$set_anti_collision_field: param target must be ArrayOp, but got '%s' instead.", class(target))
       matchedFieldsOfTargetDimensions = self$dims_n_attrs %n% target$dims
       assert(length(matchedFieldsOfTargetDimensions) + 1 == length(target$dims), 
              "ERROR: ArrayOp$set_anti_collision_field: incorrect number of matching fields: source has %d field(s) (SHOULD BE %d) that match %d target dimension(s).",
@@ -892,7 +836,6 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       joined = private$join(redimenedSource$select(redimenedSource$dims_n_attrs), 
                             groupedTarget$select(targetAltIdMax), 
                             on_both = regularTargetDims,
-                            auto_select = TRUE,
                             settings = joinSetting)
       
       # Finally calculate the values of anti_collision_field
@@ -1209,12 +1152,20 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' Redimension mode does not check on whether source data types match the target because auto data conversion 
     #' occurs within scidb where necessary/applicable. 
     #' @param target A target ArrayOp the source data is written to. 
-    #' @param source_auto_increment a named number vector e.g. c(z=0), where the name is a source field and value is the starting index
-    #' @param target_auto_increment a named number vector e.g. c(aid=0), where the name is a target field and value is the starting index.
+    #' @param source_auto_increment A single named integer, a single string, or NULL.
+    #' Eg. c(z=0) for field 'z' in the source (ie. self) starting from 0; 
+    #' or a single string 'z' equivalent to c(z=0). If NULL, assume it to be the 
+    #' only dimension in self, normally from an artificial dimension of a build literal or unpack operation.
+    #' @param target_auto_increment a named number vector or string vector or NULL.
+    #' where the name is a target field and value is the starting index.
+    #' E.g. c(aid=0, bid=1) means to set auto fields 'aid', 'bid' according to the target fields of the same name.
+    #' If 'target' doesn't have a cell, then default values start from 0 and 1 for aid and bid, respectively.
+    #' A string vector c("aid", "bid") is equvilant to c(aid=0, bid=0).
+    #' NULL means treat all missing fields (absent in self but present in target) as 0-based auto increment fields.
     #' Here the `target_auto_increment` param only affects the initial load when the field is still null in the target array.
     #' @param anti_collision_field a target dimension name which exsits only to resolve cell collision 
     #' (ie. cells with the same dimension coordinate).
-    #' @return A new arrayOp 
+    #' @return A new arrayop instance
     set_auto_fields = function(target,
                                source_auto_increment = NULL,
                                target_auto_increment = NULL,
@@ -1226,40 +1177,46 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       
       result = self
       
-      if(.is_empty(anti_collision_field)){
-        if(.is_empty(source_auto_increment)){
-          # if the param is not provided, we assume the source array has only 
-          # one 0-based dimension which is used as the source_auto_increment
-          assertf(length(self$dims) == 1L, 
-                  paste0("Cannot infer param source_auto_increment.", 
-                  "Please provide `c(z=1)` if `z` is a field in the source array starting from 1;",
-                  "or `'z'` if z starts from 0."))
-          source_auto_increment = structure(0L, names = self$dims)
-        } 
-        
-        if(.is_empty(target_auto_increment)){
+      assertf(length(source_auto_increment) == 1L || length(source_auto_increment) == 0L, 
+              "source_auto_increment should be a single value of string or integer")
+      if(.is_empty(source_auto_increment)){
+        # if the param is not provided, we assume the source array has only 
+        # one 0-based dimension which is used as the source_auto_increment
+        assertf(length(self$dims) == 1L, 
+                paste0("Cannot infer param source_auto_increment.", 
+                "Please provide `c(z=1)` if `z` is a field in the source array starting from 1;",
+                "or `'z'` if z starts from 0."))
+        source_auto_increment = structure(0L, names = self$dims)
+      } else {
+        # if auto increment fields are strings, assume they are 0-based
+        if(is.character(source_auto_increment) && is.null(names(source_auto_increment))) 
+          source_auto_increment = structure(0, names = source_auto_increment)
+        else{
+          source_auto_increment = structure(as.integer(source_auto_increment), names = names(source_auto_increment))
+        }
+      }
+      assertf(!any(is.na(source_auto_increment)), 
+              "Invalid param 'source_auto_increment': must be a named integer where name is the field name, and value is the field starting value")
+      srcIncName = names(source_auto_increment)
+      assertf(.not_empty(srcIncName) && srcIncName %in% self$dims_n_attrs,
+              glue("source_auto_increment is not a valid field: {srcIncName}"))
+      
+      # Infer target_auto_increment fields
+      if(.is_empty(anti_collision_field) &&
+          .is_empty(target_auto_increment)){
           missingTargetFields = target$dims_n_attrs %-% self$dims_n_attrs
           assert_not_empty(missingTargetFields,
                            "Cannot not infer param target_auto_increment because there are no fields in target array for the source array to add.")
           target_auto_increment = structure(rep(0L, length(missingTargetFields)),
                                             names = missingTargetFields)
-        }
       }
-      
-      # if auto increment fields are strings, assume they are 0-based
-      if(is.character(source_auto_increment) &&
-         is.null(names(source_auto_increment))) {
-        # change field name 'z' to c('z' = 0)
-        source_auto_increment = structure(rep(0L, length(source_auto_increment)),
-                                          names = source_auto_increment)
-      }
+      # Infer target_auto_increment fields which can be mutiple, unlike source_auto_increment.
       if(is.character(target_auto_increment) &&
          is.null(names(target_auto_increment))) {
         target_auto_increment = structure(rep(0L, length(target_auto_increment)),
                                           names = target_auto_increment)
       }
       
-        
       # If there is an auto-incremnt field, it needs to be inferred from the params
       # After this step, 'src' is an updated ArrayOp with auto-incremented id calculated (during AFL execution only due to lazy evaluation)
       if(.not_empty(target_auto_increment)){
@@ -1274,7 +1231,6 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
         result = result$.private$set_anti_collision_field(target, anti_collision_field, join_setting = join_setting, 
                                                  source_anti_collision_dim_spec = source_anti_collision_dim_spec)
       }
-      # browser()
       result = private$conn$afl_expr(result$to_afl())
       return(result)
     }
@@ -1537,18 +1493,13 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       assert_inherits(fields, "character", .symbol = "group_by_fields")
       assert_empty(fields %-% self$dims_n_attrs, 
                    "invalid group_by field(s): [{.value}]")
-      result = private$clone_self()
+      result = self$spawn(self$to_afl())
       result$.private$set_meta('group_by_fields', unique(fields))
       result
     }
     ,
     summarize = function(..., .dots = NULL){
       group_by_fields = private$get_meta("group_by_fields")
-      
-      # assert_not_empty(group_by_fields,
-      #                  paste0("'{.symbol}' should not be empty (0-length) ",
-      #                         "Consider call `anArrayOp$group_by(...)` first")
-      # )
       
       # expression list converted to a string list
       rawFieldsList = lapply(.dots %?% rlang::exprs(...), aflutils$e_to_afl)
@@ -1665,8 +1616,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
                    on_left = on_left, on_right = on_right, on_both = on_both,
                    left_alias = left_alias, right_alias = right_alias,
                    join_mode = join_mode,
-                   settings = settings,
-                   auto_select = TRUE
+                   settings = settings
                    )  
     }
     ,
@@ -1679,8 +1629,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
                    on_left = on_left, on_right = on_right, on_both = on_both,
                    left_alias = left_alias, right_alias = right_alias,
                    settings = list(left_outer=1),
-                   join_mode = 'equi_join', 
-                   auto_select = TRUE
+                   join_mode = 'equi_join'
                    )  
     }
     ,
@@ -1693,8 +1642,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
                    on_left = on_left, on_right = on_right, on_both = on_both,
                    left_alias = left_alias, right_alias = right_alias,
                    settings = list(right_outer=1),
-                   join_mode = 'equi_join', 
-                   auto_select = TRUE
+                   join_mode = 'equi_join'
                    )  
     }
     ,
