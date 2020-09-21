@@ -1,5 +1,20 @@
 
-#' Connect to SciDB server
+#' Connect to SciDB server and get a ScidbConnection object.
+#' 
+#' @param username SciDB user name
+#' @param token SciDB user password or token
+#' @param port Port
+#' @param protocol Protocol. "https" (preferred, secure) or "http"
+#' @param auth_type Authentication type
+#' @param ... other optional params used in scidb::scidbconnect
+#' @param save_to_default_conn A boolean value that determines whether to save
+#' the connection object as the default in the `arrayop` package scope so that 
+#' it can be retrieved anywhere using `get_default_connection`.
+#' 
+#' In rare cases should we need to maintain multiple connection objects, we can
+#' set `save_to_default_conn` to FALSE.
+#' 
+#' @return A Scidbconnection object.
 #' 
 #' @export
 db_connect = function(username, token, 
@@ -27,6 +42,16 @@ db_connect = function(username, token,
 #' Get the default ScidbConnection
 #' 
 #' Call `arrayop::db_connect` to establish a connection 
+#' 
+#' @param .report_error_if_not_connected Whether to report error if `db_connect`
+#' has not been called before this function. Default TRUE to ensure a valid
+#' connection object is returned or throw an error. Set to FALSE, if we need to
+#' test if a connection object exists or not without causing an error. 
+#' 
+#' E.g. `conn_obj_available = get_default_connection(F)$has_connected()`
+#' 
+#' @return The default ScidbConnection object. Report error if `db_connect` is 
+#' not called prior to this function.
 #' @export
 get_default_connection = function(.report_error_if_not_connected = TRUE) { 
   if(.report_error_if_not_connected)
