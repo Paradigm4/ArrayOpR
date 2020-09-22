@@ -97,7 +97,7 @@ ScidbConnection <- R6::R6Class(
     upload_df_or_vector = function(v, ...) {
       uploaded = scidb::as.scidb(private$.db, v, ...)
       res = array_op_from_scidbr_obj(uploaded)
-      res$.set_meta('.ref', uploaded) # prevent GC
+      res$.private$set_meta('.ref', uploaded) # prevent GC
       res
     },
     # generate afl by recursively 'join' two arrays
@@ -145,7 +145,7 @@ ScidbConnection <- R6::R6Class(
       
       result = array_op_from_scidbr_obj(storedArray)
       result$.private$confirm_schema_synced()
-      result$.set_meta('.ref', storedArray)
+      result$.private$set_meta('.ref', storedArray)
       set_array_op_conn(result)
     }
     ,
@@ -420,7 +420,7 @@ ScidbConnection <- R6::R6Class(
         } else {
           joinAfl = join_arrays_by_two(vectorArrayNames)
           .result = afl_expr(joinAfl)
-          .result$.set_meta('.ref', vectorArrays)
+          .result$.private$set_meta('.ref', vectorArrays)
           .result
         }
       }

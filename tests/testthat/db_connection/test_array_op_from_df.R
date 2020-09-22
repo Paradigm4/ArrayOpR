@@ -66,7 +66,7 @@ test_that("upload data frame: no template, by vectors", {
   
   # uploaded data frame will have an artificial dimension
   expect_equal(uploaded$to_df(), df)
-  columnArrays = uploaded$.get_meta(".ref")
+  columnArrays = uploaded$.private$get_meta(".ref")
   for(arr in columnArrays){
     arr$remove_array()
   }

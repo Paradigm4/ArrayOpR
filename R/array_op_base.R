@@ -963,7 +963,8 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     ,
     # Insert to a target array (scidb `insert` operator)
     # 
-    # Perform field data types check. Field names are irrelevant
+    # Require numbers of attributes and dimensions of self and target match.
+    # Field names are irrelevant
     # 
     # @param target: Target array
     # @return An scidb insert operation
@@ -983,7 +984,8 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     ,
     # Overwrite a target array (scidb `store` operator)
     # 
-    # Perform field data types check. Field names are irrelevant
+    # Require numbers of attributes and dimensions of self and target match.
+    # Field names are irrelevant
     # 
     # @param target: Target array
     # @return An scidb insert operation
@@ -1035,7 +1037,9 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
 
   public = list(
     #' @description 
-    #' Base class initialize function, to be called in sub-class 
+    #' Base class initialize function, to be called in sub-class internally.
+    #' 
+    #' Always use `ScidbConnection` to get array_op instances.
     #' @param meta_list A list that stores ArrayOp meta data, e.g. field types 
     #' If provided, other regular parms are not allowed.
     initialize = function(
@@ -1067,13 +1071,30 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     # Functions that creat new ArrayOps -------------------------------------------------------------------------------
     ,
     #' @description 
-    #' Create a new ArrayOp instance by using a filter expression on the parent ArrayOp
+    #' Create a new ArrayOp instance with filter expressions
     #' 
-    #' Similar to SQL where clause and dplyr::filter.
-    #' @param regex_func A string of regex function implementation. 
+    #' Similar to `dplyr::filter`, fields are not quoted. 
+    #' 
+    #' Operators for any type of fields include `==`, `!=`, 
+    #' `%in%`, `%not_in%`.
+    #' To test whether a field is null, use unary operators: `is_null`, `not_null`.
+    #'
+    #' Special binary operators for string fields include:
+    #' `%contains%`, `%starts_with%`, `%ends_with%`, `%like%`, where 
+    #' only `%like%` takes a regular expression and other operators escape any special
+    #' characters in the right operand.
+    #' 
+    #' Operators for numeric fields include: `>`, `<`, `>=`, `<=`
+    #' 
+    #' @param ... Filter expression(s) in R syntax. 
+    #' These expression(s) are not evaluated in R but first captured then converted to scidb expressions with appropriate syntax.
+    #' @param .expr A single R expression, or a list of R exprs, or NULL. 
+    #' If provided, `...` is ignored. Mutiple exprs are joined by 'and'.
+    #' This param is useful when we want to pass an already captured R expression.
+    #' @param regex_func A string of regex function implementation, default 'regex'.
     #' Due to scidb compatiblity issue with its dependencies, the regex function from boost library may not be available
-    #' Supported values: rsub, regex
-    #' @param ignore_case A Boolean. If TRUE, ignore case in string match patterns. 
+    #' Currently supported options include 'rsub', and 'regex'
+    #' @param ignore_case A Boolean, default TRUE. If TRUE, ignore case in string match patterns. 
     #' Otherwise, perform case-sensitive regex matches.
     #' @return A new arrayOp 
     filter = function(..., .expr = NULL, .validate_fields = TRUE, 
@@ -1103,32 +1124,39 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' @description 
     #' Create a new ArrayOp instance with selected fields
     #' 
-    #' NOTE: this does NOT change the to_afl output, but explicitly state which field(s) are retained if used in
-    #' a parent operation that changes its schema, e.g. equi_join or to_df(only_attributes = T)
-    #' @param ... Which field(s) are retained during a schema-change operation
+    #' NOTE: this does NOT change the to_afl output, but explicitly state which field(s) should be retained if used in
+    #' a parent operation that changes its schema, e.g. `inner_join`, `left_join`, `right_join` and `to_df`.
+    #' 
+    #' The `select`ed fields are passed on to derived ArrayOp instances. 
+    #' 
+    #' In all join operations, if no field is explicitly `select`ed, then all fields are assumed be retained.
+    #' In `to_df`, if no field is explicitly `select`ed, only the attributes are retrieved as data frame columns.
+    #' In `to_df_all`, if no field is explicitly `select`ed, it is equivalent to select all dimensions and attributes.
+    #' @param ... Which field(s) to retain.
     #' @return A new arrayOp 
     select = function(...) {
       fieldNames = c(...)
-      assert(is.character(fieldNames) || is.null(fieldNames), 
-        "ERROR: ArrayOp$select: ... must be a character or NULL, but got: %s", fieldNames)
-      # private$assert_fields_exist(fieldNames, "ArrayOp$select")
-      assert_no_fields(fieldNames %-% self$dims_n_attrs, "ERROR: ArrayOp$select: invalid select fields [%s] in: %%s", self$to_afl())
+      if(!is.null(fieldNames)) assert_inherits(fieldNames, "character")
+      assert_empty(fieldNames %-% self$dims_n_attrs,
+                   "Invalid field(s) in select: [{.value}]")
       newMeta = private$metaList
       newMeta[['selected']] <- fieldNames
       private$create_new(private$raw_afl, meta_list = newMeta)
     }
     ,
     #' @description 
-    #' Change `self` schema according to a template
+    #' Create a new ArrayOp instance whose schema is the same as the `template`.
     #' 
     #' This operation throws away any fields that do not exist in `template` while keeping the `self`'s data of the 
-    #' matching fields. Implemented by scidb `redimension` operator, but it allows for partial-fields match if `strict=F`.
+    #' matching fields. 
     #' 
-    #' @param template an arrayOp instance that determines the resultant schema.
+    #' Implemented by scidb `redimension` operator, but it allows for partial-fields match if `strict=F`.
+    #' 
+    #' @param template an ArrayOp instance as the schema template.
     #' @param strict If TRUE(default), requires `self` has all the `template` fields.
     #' @param .setting a string vector, where each item will be appended to the redimension operand. 
     #' E.g. .setting = c('false', 'cells_per_chunk: 1234') ==> redimension(source, template, false, cells_per_chunk: 1234)
-    #' @return A new arrayOp 
+    #' @return A new arrayOp instance 
     change_schema = function(template, strict = TRUE, .setting = NULL){
       realTemplate = if(strict) template
       else {
@@ -1235,6 +1263,25 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       return(result)
     }
     ,
+    #' @description 
+    #' Create a new ArrayOp instance with mutated fields
+    #' 
+    #' Similar to `dplyr::mutate`, fields of source (self) can be removed or added to the result arrayOp
+    #' Any field that are not in the mutate expressions remain unchanged.
+    #' 
+    #' @param ... Named R expressions. Names are field names in the result arrayOp and must not be empty.
+    #' Set field = NULL to remove existing fields. E.g. `abcd = NULL, def = def` removes
+    #' field 'abcd' and keep field 'def'. 
+    #' 
+    #' Values are R expressions similar to the `filter` method. 
+    #' E.g. `a = b + 2, name = first + "-" + last, chrom = if(chrom == 'x') 23 else if(chrom == 'y') 24 else chrom`
+    #' @param .dots A named list of R expressions or NULL. If provided,
+    #' the `...` param is ignored. Useful when an a list of mutation expressions is already 
+    #' created and can be passed around.
+    #' @param .sync_schema Whether to get the exact schema from scidb. Default 
+    #' TRUE will cause a scidb query to get the schema. Set to FALSE to avoid schema checking.
+    #' 
+    #' @return a new ArrayOp instance
     mutate = function(..., .dots = NULL, .sync_schema = TRUE){
       
       paramFieldExprs = lapply(.dots %?% rlang::exprs(...), aflutils$e_to_afl)
@@ -1259,6 +1306,25 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       if(.sync_schema) result$sync_schema() else result
     }
     ,
+    #' @description 
+    #' Create a new ArrayOp instance with mutated fields
+    #' 
+    #' Similar to `dplyr::transmute`, only listed fields are retained in the result arrayOp
+    #' NOTE: Any field that are not in the mutate expressions will be discarded.
+    #' 
+    #' @param ... R expressions. Names are optional. 
+    #' For each named expression, the name is used as field name in the result arrayOp. 
+    #' Unnamed expressions must be existing field names, unquoted, which result in unchanged source fields of self.
+    #' 
+    #' Values are R expressions similar to the `filter` method. 
+    #' E.g. `a = b + 2, name = first + "-" + last, chrom = if(chrom == 'x') 23 else if(chrom == 'y') 24 else chrom`
+    #' @param .dots A named list of R expressions or NULL. If provided,
+    #' the `...` param is ignored. Useful when an a list of mutation expressions is already 
+    #' created and can be passed around.
+    #' @param .sync_schema Whether to get the exact schema from scidb. Default 
+    #' TRUE will cause a scidb query to get the schema. Set to FALSE to avoid schema checking.
+    #' 
+    #' @return a new ArrayOp instance
     transmute = function(..., .dots = NULL, .sync_schema = TRUE){
       paramFieldExprs = lapply(.dots %?% rlang::exprs(...), aflutils$e_to_afl)
       assertf(all(sapply(paramFieldExprs, is.character)),
@@ -1282,6 +1348,20 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       if(.sync_schema) result$sync_schema() else result
     }
     ,
+    #' @description 
+    #' Create a ArrayOp instance with the same schema of self, but different cells
+    #' from 'data_array' for the 'updated_fields'.
+    #' 
+    #' @param data_array An ArrayOp instance that have at least two overlapping fields with self.
+    #' @param keys Field names in both self and data_array. Cell content of these
+    #' fields are from the 'self' arrayOp rather than 'data_array'.
+    #' @param updated_fields Field names in both self and data_array. Cell content
+    #' of these fields are from the 'data_array', NOT 'self'.
+    #' @param .redimension_setting A list of strings used as the settings of scidb
+    #' 'redimension' operator. Only applicable when a 'redimension' is needed.
+    #' @param .join_setting A list of strings used as the settings of scidb
+    #' 'join' operator. Only applicable when a 'join' is needed.
+    #' @return A new arrayOp with the same schema as self
     mutate_by = function(data_array, 
                          keys = NULL, 
                          updated_fields = NULL,
@@ -1328,6 +1408,20 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     }
     ,
     # @param .chunk_size aka. cells_per_chunk in 'flatten' mode.
+    #' @description 
+    #' Create a new arrayOp by dropping dimensions of 'self'.
+    #' 
+    #' Use `mode = 'unpack'` to still keep an artificial dimension in result arrayOp.
+    #' The dimension is 0-based, auto-incremented up until `self$cell_count() - 1`.
+    #' 'unpack' mode is useful in taking advantage of this artifical dimension to 
+    #' auto populate other fields, e.g. in `set_auto_fields`.
+    #' 
+    #' Use `mode = 'flatten'` to return a scidb data frame which has no explicit dimensions.
+    #' 
+    #' Result arrayOp in both modes has attributes of self's attributes and dimensions.
+    #' @param mode String 'unpack' (default) or 'flatten'.
+    #' @param .chunk_size NULL or an integer. Converted to the 'chunk_size' param
+    #' in 'unpack' mode; and 'cells_per_chunk' in 'flatten' mode.
     drop_dims = function(mode = 'unpack', .chunk_size = NULL, .unpack_dim = dbutils$random_field_name()){
       assert_single_str(mode)
       if(!is.null(.chunk_size)) assert_single_num(.chunk_size)
@@ -1350,13 +1444,19 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       }
     },
     #' @description 
-    #' Update Target array with self's content
+    #' Update the target array with self's content
     #' 
-    #' Similar behavior to scidb insert operator
-    #' Fields of self and Target must match by raw data type. Field names are irrelevant.
+    #' Similar behavior to scidb insert operator.
+    #' Require numbers of attributes and dimensions of self and target arrays match.
+    #' Field names are irrelevant.
     #' 
-    #' @param target An arrayOp instance where self's content is written to.
-    #' @return A new arrayOp that encapsulates the insert operation
+    #' This function only returns an arrayOp with the update operation AFL 
+    #' encapsulated. No real action is performed in scidb until 
+    #' `source$update(target)$execute()` is called.
+    #' 
+    #' @param target An arrayOp instance where self's content is updated. Must be
+    #' a persistent array, since it is meanlingless to update an array operation.
+    #' @return A new arrayOp that encapsulates the update operation
     update = function(target) {
       assert_inherits(target, "ArrayOpBase")
       assertf(target$is_persistent(), "update: param 'target' must be a persistent array")
@@ -1364,15 +1464,21 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     }
     ,
     #' @description 
-    #' Overwrite Target array with self's content
+    #' Overwrite the target array with self's content
+    #' 
+    #' Similar behavior to scidb store operator.
+    #' Require numbers of attributes and dimensions of self and target arrays match.
+    #' Field names are irrelevant.
+    #' 
+    #' This function only returns an arrayOp with the update operation AFL 
+    #' encapsulated. No real action is performed in scidb until 
+    #' `source$overwrite(target)$execute()` is called.
     #' 
     #' Warning: Target's content will be erased and filled with self's content.
-    #' Similar behavior to scidb `store` operator. 
-    #' Fields of self and Target must match by raw data type. Field names are irrelevant.
-    #' See `ArrayOp$change_schema`
     #' 
     #' @param target An arrayOp instance where self's content is written to.
-    #' @return A new arrayOp that encapsulates the insert operation
+    #' Must be a persitent array either preexist or does not exist in scidb.
+    #' @return A new arrayOp that encapsulates the overwrite operation
     overwrite = function(target) {
      assert_inherits(target, "ArrayOpBase")
       assertf(target$is_persistent(), "update: param 'target' must be a persistent array")
@@ -1380,18 +1486,24 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     }
     ,
     #' @description 
-    #' Create a new ArrayOp instance from a `self` template
+    #' Create a new ArrayOp instance using 'self' as a template
     #' 
-    #' This function is mainly for array schema string generation where we might want to rename and/or exclude certain
-    #' fields of the template. Data types and dimension specs will be inherited from the template unless provided. 
+    #' This function is mainly for array schema string generation when
+    #' we want to rename, add, and/or exclude certain fields of self, but still 
+    #' keep other unspecified fields unchanged.
+    #'  
+    #' Data types and dimension specs of existing fields are inherited from 'self' unless provided explicitly.
+    #' New field data types default to NAs unless provided explicitly. 
     #' 
-    #' Note: except for scidb build or aio_input operators, the spawned ArrayOp is not meaningful semantically. So do not
-    #' use this function for operations other than 'build'/ArrayOp$build_new and 'aio_input'/ArrayOp$load_file
-    #' @param renamed Rename fields
-    #' @param added New fields
-    #' @param excluded Fields to exclude from `self`
-    #' @param dtypes Data types for any existing or new fields, which default to `self`'s data types if available.
-    #' @param dim_specs A list of array dimension specs if dimensions are changed.
+    #' This function is normally used internally for arrayOp generation.
+    #' 
+    #' @param renamed A list of renamed fields where names are old fields and values are new field names.
+    #' @param added New fields added to result arrayOp. String vector or NULL.
+    #' @param excluded Fields excluded from `self`. String vector or NULL.
+    #' @param dtypes NULL or a named list of data types for fields of the result arrayOp, 
+    #' where names are field names, values (strings) are data types. 
+    #' @param dim_specs NULL or a named list of array dimension specs,
+    #' where names are dimension names, values (strings) are dimension specs in scidb format.
     #' @return A new arrayOp instance
     spawn = function(afl_str = "spawned array_op (as template only)",
                  renamed = NULL,
@@ -1399,16 +1511,12 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
                  excluded = NULL,
                  dtypes = NULL,
                  dim_specs = NULL) {
-  
+      assert_inherits(afl_str, "character")
       if(.not_empty(renamed)){
         assert_named_list(renamed, "ERROR: ArrayOp$spawn: 'renamed' param must be a named list, but got: %s", renamed)
       }
       assert_inherits(added,  c("NULL", "character"))
       assert_inherits(excluded,  c("NULL", "character"))
-      # assert(.is_empty(added) || is.character(added), 
-      #   "ERROR: ArrayOp$spawn: 'added' param must be an R character, but got: %s", class(added))
-      # assert(.is_empty(excluded) || is.character(excluded), 
-      #   "ERROR: ArrayOp$spawn: 'excluded' param must be an R character, but got: %s", class(excluded))
       
       attrs = self$attrs
       dims = self$dims
@@ -1442,23 +1550,24 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
         dims = dims %-% excluded
       }
       
-      # dtypes = .ifelse(.not_empty(dtypes), c(dtypes, oldDtypes), oldDtypes)
-      # dtypes = dtypes[c(dims, attrs)]
       dtypes = .remove_null_values(
         c(dtypes, oldDtypes)[c(dims, attrs)]
       )
       
       dim_specs = .ifelse(.not_empty(dim_specs), c(dim_specs, oldDimSpecs), oldDimSpecs)
       
-      private$create_new(afl_str, dims, attrs, dtypes, dim_specs = dim_specs)
+      private$create_new(afl_str, dims = dims, attrs = attrs, dtypes = dtypes, dim_specs = dim_specs)
     }
 
     # Common array operators ------------------------------------------------------------------------------------------
     ,
     #' @description 
-    #' Get the first `n` rows of an array
-    #' @param n How many rows to take
+    #' Create a new arrayOp that encapsulate AFL for the first `n` cells of 'self'
+    #' 
+    #' We still need to append a `to_df` call to download the result as data frame.
+    #' @param n How many cells to take
     #' @param skip How many rows to skip before taking
+    #' @return A new ArrayOp instance
     limit = function(n = 5, skip = NULL) {
       assert_single_number(n)
       assert(is.null(skip) || is.numeric(skip))
@@ -1466,10 +1575,21 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       self$spawn(aflStr)
     }
     ,
+    #' @description 
+    #' Return the number of cells of 'self'
+    #' @return A number of cells if the AFL that 'self' encapsulates is run.
     cell_count = function(){
-      private$conn$query(afl(self | op_count))[["count"]]
+      if(self$is_persistent()) self$summarize_array()$count
+      else private$conn$query(afl(self | op_count))[["count"]]
     }
     ,
+    #' @description 
+    #' Return a data frame of the summary of the 'self' array
+    #' 
+    #' Implemented by scidb 'summarize' operator
+    #' @by_attribute Summarize by array attributes
+    #' @by_instance Summarize by array scidb instances
+    #' @return A data frame of the 'self' array summary 
     summarize_array = function(by_attribute = FALSE, by_instance = FALSE){
       private$conn$query_all(afl(self | summarize(
         glue("by_attribute:{by_attribute}, by_instance:{by_instance}")))
@@ -1477,10 +1597,12 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     }
     ,
     #' @description 
-    #' Create a new array_op with actual schema from SciDB
+    #' Create a new arrayOp with actual schema from SciDB or 'self' if 
+    #' `self$is_schema_from_scidb == T`.
     #' 
-    #' Useful in confirmming the schema of transient arrays with complex operations 
-    #' If we are sure the array schema is already from SciDB, then just return self.
+    #' Useful in confirmming the schema of complex array operations.
+    #' If the array schema is already retrieved from SciDB, then just return self.
+    #' @return An arrayOp instance
     sync_schema = function() {
       if(self$is_schema_from_scidb) self else 
         if(!self$is_persistent())
@@ -1488,6 +1610,12 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
             private$conn$array(self$to_afl())
     }
     ,
+    #' @description 
+    #' Create a new arrayOp with 'group by' fields
+    #' 
+    #' The result arrayOp is identical to self except for the 'group_by' fields.
+    #' Useful for `summarize` function, which will be converted into `grouped_aggregate` operations.
+    #' @return An arrayOp instance with group_by fields
     group_by = function(...) {
       fields = c(...)
       assert_inherits(fields, "character", .symbol = "group_by_fields")
@@ -1498,6 +1626,16 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       result
     }
     ,
+    #' @description 
+    #' Create a new arrayOp with aggregated fields
+    #' 
+    #' @param ... aggregation expressions in R syntax. Names of expressions are optional.
+    #' If provided, names will be the fields of result arrayOp; otherwise field
+    #' names are auto generated by scidb.
+    #' Same syntax as `...` in 'filter' and 'mutate' functions.
+    #' @param .dots a list of aggregation expressions. Similar to '.dots' in 
+    #' 'mutate' and 'transmute'.
+    #' @return A new arrayOp instance
     summarize = function(..., .dots = NULL){
       group_by_fields = private$get_meta("group_by_fields")
       
@@ -1533,22 +1671,25 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     # AFL -------------------------------------------------------------------------------------------------------------
     ,
     #' @description 
-    #' AFL representation of the ArrayOp instance
+    #' AFL string encapsulated by of the self ArrayOp
+    #' 
+    #' AFL can be either an scidb array name or array operation(s) on array(s).
     #' 
     #' The ArrayOp instance may have 'selected' fields but they are not reflected in the result.
-    #' 'selected' fields are meaningful in `to_df_afl` and `.to_afl_explicit` functions, where the parent operation
-    #' treats dimension and attributes differently.
+    #' 'selected' fields are not reflected here, but determines which fields are retained in `to_df()` calls.
     #' 
     #' @return an AFL expression string
     to_afl = function() {
       return(private$raw_afl)
     }
-   
     ,
     #' @description 
-    #' Return a schema representation of the ArrayOp <attr1 [, attr2 ...]> \[dim1 [;dim2]\]
+    #' Return a schema representation of the ArrayOp `<attr1:type1 [, attr2:type2 ...]> [dim1 [;dim2]]`
     #' 
-    #' @return An AFL string
+    #' Unless `sync_schema()` is called, the schema may be inferred locally in R to save round trips between R and SciDB server. 
+    #' SciDB data frames have hidden dimensions that start with `$`
+    #' 
+    #' @return SciDB schema string
     to_schema_str = function() {
       attrStr = paste(self$attrs, private$get_field_types(self$attrs), sep = ':', collapse = ',')
       # SciDB data frame format
@@ -1564,29 +1705,51 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     # db functions ----
     ,
     #' @description 
-    #' Run query encapsulated by current array_op and return a R data.frame with
-    #' all dimensions and attributes as columns.
+    #' Download query result of self's AFL string with all self's fields.
+    #' 
+    #' @return An R data frame with columns from self's dimensions and 
+    #' attributes if no fields are selcted, or the selcted fields.
     to_df_all = function() {
       private$conn$query_all(private$to_df_afl())
     }
     ,
     #' @description 
-    #' Run query encapsulated by current array_op and return a R data.frame with
-    #' all attributes as columns.
+    #' Download query result of self's AFL string with all self's attributes.
+    #' 
+    #' @return An R data frame with columns from self's attributes if no fields
+    #' are selected, or the selcted fields only.
     to_df = function() {
       private$conn$query(private$to_df_afl(drop_dims = TRUE))
     }
     ,
+    #' @description 
+    #' Execute the AFL string for pure side effect without result returned.
+    #' 
+    #' @return self
     execute = function() {
       private$conn$execute(self$to_afl())
       invisible(NULL)
     }
     ,
+    #' @description 
+    #' Return a data frame of all self's versions
+    #' @return An R data frame with columns: version_id and timestamp
     versions = function(){
       assertf(self$is_persistent(), "versions only works on persistent arrays")
       private$conn$query(afl(self | versions))
     }
     ,
+    #' @description 
+    #' Remove array versions of self
+    #' 
+    #' Only applicable to persistent arrays.
+    #' **Warning**: This function will be executed effectively in scidb without
+    #' extra 'execute()' and cannot be undone.
+    #' @param version_id NULL or a number. When set to NULL, all array versions 
+    #' are removed except for the latest one. When set to an number, must be 
+    #' a valid version_id of self, in which case all versions up to the 'version_id'
+    #' are removed.
+    #' @return NULL
     remove_versions = function(version_id = NULL){
       assertf(self$is_persistent(), "remove_versions only works on persistent arrays")
       if(is.null(version_id)) {
@@ -1599,12 +1762,41 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       invisible(NULL)
     }
     ,
+    #' @description 
+    #' Remove array versions of self
+    #' 
+    #' Only applicable to persistent arrays.
+    #' **Warning**: This function will be executed effectively in scidb without
+    #' extra 'execute()' and cannot be undone.
+    #' @return NULL
     remove_array = function(){
       assertf(self$is_persistent(), "remove_array only works on persistent arrays")
       private$conn$execute(afl(self | remove))
       invisible(NULL)
     }
     ,
+    #' @description 
+    #' Inner join two arrays: 'self' (left) and 'right' 
+    #' 
+    #' Similar to `dplyr::inner_join`, the result arrayOp performs an inner join.
+    #' For both left and right arrays, only selected fields are included in the result arrayOp.
+    #' If no fields are selected, then all fields are treated as selected. 
+    #' 
+    #' @param right An arrayOp instance
+    #' @param on_left NULL or a string vector as join keys. If set to NULL, join
+    #' keys are inferred as shared fields of 'left' and 'right'.
+    #' @param on_right NULL or a string vector as join keys. If set to NULL, join
+    #' keys are inferred as shared fields of 'left' and 'right'.
+    #' @param on_both NULL or a string vector as join keys. If set to NULL, join
+    #' keys are inferred as shared fields of 'left' and 'right'. If not NULL,
+    #' must be fields of both operands.
+    #' @param left_alias Alias for left array to resolve potential conflicting fields in result
+    #' @param right_alias Alias for right array to resolve potential conflicting fields in result
+    #' @param join_mode String 'equi_join' or 'cross_join'. The latter requires
+    #' join keys are all dimensions of both operands, which is more strigenet than 'equi_join' 
+    #' with the benifit of non-materializing result in scidb.
+    #' @param settings A named list as join settings. E.g. ` list(algorithm = "'hash_replicate_right'")`
+    #' @return A new arrayOp instance 
     inner_join = function(right, 
                           on_left = NULL, on_right = NULL, on_both = NULL, 
                           left_alias = '_L', right_alias = '_R',
@@ -1620,6 +1812,25 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
                    )  
     }
     ,
+    #' @description 
+    #' Left join two arrays: 'self' (left) and 'right' 
+    #' 
+    #' Similar to `dplyr::left_join`, the result arrayOp performs a left join.
+    #' For both left and right arrays, only selected fields are included in the result arrayOp.
+    #' If no fields are selected, then all fields are treated as selected. 
+    #' 
+    #' @param right An arrayOp instance
+    #' @param on_left NULL or a string vector as join keys. If set to NULL, join
+    #' keys are inferred as shared fields of 'left' and 'right'.
+    #' @param on_right NULL or a string vector as join keys. If set to NULL, join
+    #' keys are inferred as shared fields of 'left' and 'right'.
+    #' @param on_both NULL or a string vector as join keys. If set to NULL, join
+    #' keys are inferred as shared fields of 'left' and 'right'. If not NULL,
+    #' must be fields of both operands.
+    #' @param left_alias Alias for left array to resolve potential conflicting fields in result
+    #' @param right_alias Alias for right array to resolve potential conflicting fields in result
+    #' @param settings A named list as join settings. E.g. ` list(algorithm = "'hash_replicate_right'")`
+    #' @return A new arrayOp instance 
     left_join = function(right, 
                          on_left = NULL, on_right = NULL, on_both = NULL, 
                          left_alias = '_L', right_alias = '_R',
@@ -1633,6 +1844,25 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
                    )  
     }
     ,
+    #' @description 
+    #' Right join two arrays: 'self' (left) and 'right' 
+    #' 
+    #' Similar to `dplyr::right_join`, the result arrayOp performs a right join.
+    #' For both left and right arrays, only selected fields are included in the result arrayOp.
+    #' If no fields are selected, then all fields are treated as selected. 
+    #' 
+    #' @param right An arrayOp instance
+    #' @param on_left NULL or a string vector as join keys. If set to NULL, join
+    #' keys are inferred as shared fields of 'left' and 'right'.
+    #' @param on_right NULL or a string vector as join keys. If set to NULL, join
+    #' keys are inferred as shared fields of 'left' and 'right'.
+    #' @param on_both NULL or a string vector as join keys. If set to NULL, join
+    #' keys are inferred as shared fields of 'left' and 'right'. If not NULL,
+    #' must be fields of both operands.
+    #' @param left_alias Alias for left array to resolve potential conflicting fields in result
+    #' @param right_alias Alias for right array to resolve potential conflicting fields in result
+    #' @param settings A named list as join settings. E.g. ` list(algorithm = "'hash_replicate_right'")`
+    #' @return A new arrayOp instance 
     right_join = function(right, 
                           on_left = NULL, on_right = NULL, on_both = NULL, 
                           left_alias = '_L', right_alias = '_R',
@@ -1647,11 +1877,23 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     }
     ,
     #' @description 
-    #' Similar to dplyr::semi_join
+    #' Return an arrayOp instance with same schema as self and content cells that
+    #' match the cells of 'df_or_arrayop'.
+    #' 
+    #' Similar to `dplyr::semi_join`, the result has the same schema as the left
+    #' operand 'self' and with content filtered by 'df_or_arrayop'.
     #' 
     #' params `field_mapping`, `lower_bound` and `upper_bound`, if provided, must be named list,
     #' where the.names are from the source array (i.e. self), and values are from 
     #' the right operand `df_or_arrayop`
+    #' @param df_or_arrayop An R data frame or arrayOp instance.
+    #' @param mode String of 'filter', 'cross_between', 'index_lookup' or 'auto'
+    #' @param filter_threshold A number below which the 'filter' mode is used
+    #' unless a mode other than 'auto' is provided. 
+    #' @param upload_threshold A number below which the 'df_or_arrayop' data frame
+    #' is compield into a build literal array; otherwise uploaded to scidb as a regular array.
+    #' Only applicable when 'df_or_arrayop' is an R data frame.
+    #' @return An arrayOp instance
     semi_join = function(df_or_arrayop, 
                          field_mapping = NULL,
                          lower_bound = NULL,
@@ -1743,7 +1985,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
                              lower_bound = lower_bound,
                              upper_bound = upper_bound)
       # Add to ref count to avoid R's GC
-      result$.set_meta('.ref', dataArray)
+      result$.private$set_meta('.ref', dataArray)
       return(result)
     }
     ,
@@ -1781,27 +2023,15 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
         sprintf("list('arrays', ns:%s)", ns)
       private$conn$query(sprintf("filter(%s, name = '%s')", query_str, bare_name))
     }
-    
-    # Old -------------------------------------------------------------------------------------------------------------
     ,
     #' @description 
-    #' Set ArrayOp meta data directly
-    #'
-    #' Useful in keeping reference of other relevant R objects that should have a same life cycle with the ArrayOp instance.
-    #' @param key A string key
-    #' @param value A value of any type
-    #' @return NULL
-    .set_meta = function(key, value) private$set_meta(key, value)
-    ,
-    #' @description 
-    #' Get ArrayOp meta data directly
-    #' @param key A string key
-    #' @return An metadata object of any type registered with `key`
-    .get_meta = function(key) private$get_meta(key)
-    ,
+    #' A finalize function executed when the 'self' instance is garbage collected in R
+    #' 
+    #' If an arrayOp is marked as .gc = T, then it should be removed from scidb
+    #' when this function is executed. 
     finalize = function() {
       refKey = '.ref'
-      refObj = self$.get_meta(refKey)
+      refObj = private$get_meta(refKey)
       if(!is.null(refObj)) {
         
         removeSciDbRObj = function(obj) {
@@ -1821,7 +2051,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
         if(is.list(refObj)) sapply(refObj, cleanUpObj)
         else cleanUpObj(refObj)
         
-        self$.set_meta(refKey, NULL)
+        private$set_meta(refKey, NULL)
       }
     }
   )
