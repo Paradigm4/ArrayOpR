@@ -1040,6 +1040,16 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' Base class initialize function, to be called in sub-class internally.
     #' 
     #' Always use `ScidbConnection` to get array_op instances.
+    #' @param dims A string vector used as dimension names
+    #' @param attrs A string vector used as attribute names
+    #' @param dtypes A named list of strings, where names are attribute names and
+    #' values are full scidb data types. 
+    #' E.g. `dtypes = list(field_str = "string NOT NULL", field_int32 = "int32")`
+    #' @param dim_specs A named list of string, where names are dimension names 
+    #' and values are dimension specs.
+    #' E.g. `dim_sepcs = list(da = "0:*:0:*", chrom = "1:24:0:1")`. 
+    #' @param ... A  named list of metadata items, where names are used as keys
+    #' in `private$set_meta` and `private$get_meta` functions.
     #' @param meta_list A list that stores ArrayOp meta data, e.g. field types 
     #' If provided, other regular parms are not allowed.
     initialize = function(
@@ -1497,6 +1507,9 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' 
     #' This function is normally used internally for arrayOp generation.
     #' 
+    #' @param afl_str An AFL expression. In case of using the spawned result as
+    #' a schema template only, the afl_str does not need to be provided. Otherwise,
+    #' it should conform with the actual resultant arrayOp instance, which is very rare.
     #' @param renamed A list of renamed fields where names are old fields and values are new field names.
     #' @param added New fields added to result arrayOp. String vector or NULL.
     #' @param excluded Fields excluded from `self`. String vector or NULL.
@@ -1587,9 +1600,9 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' Return a data frame of the summary of the 'self' array
     #' 
     #' Implemented by scidb 'summarize' operator
-    #' @by_attribute Summarize by array attributes
-    #' @by_instance Summarize by array scidb instances
-    #' @return A data frame of the 'self' array summary 
+    #' @param by_attribute Summarize by array attributes
+    #' @param by_instance Summarize by array scidb instances
+    #' @param return A data frame of the 'self' array summary 
     summarize_array = function(by_attribute = FALSE, by_instance = FALSE){
       private$conn$query_all(afl(self | summarize(
         glue("by_attribute:{by_attribute}, by_instance:{by_instance}")))

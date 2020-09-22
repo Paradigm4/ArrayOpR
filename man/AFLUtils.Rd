@@ -18,19 +18,21 @@ See \code{\link{e}} for more.
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-e_to_afl_filter}{\code{AFLUtils$e_to_afl_filter()}}
+\item \href{#method-e_to_afl}{\code{AFLUtils$e_to_afl()}}
 \item \href{#method-args_to_expressions}{\code{AFLUtils$args_to_expressions()}}
 \item \href{#method-e}{\code{AFLUtils$e()}}
 \item \href{#method-e_merge}{\code{AFLUtils$e_merge()}}
+\item \href{#method-join_fields}{\code{AFLUtils$join_fields()}}
+\item \href{#method-validate_filter_expr}{\code{AFLUtils$validate_filter_expr()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-e_to_afl_filter"></a>}}
-\if{latex}{\out{\hypertarget{method-e_to_afl_filter}{}}}
-\subsection{Method \code{e_to_afl_filter()}}{
+\if{html}{\out{<a id="method-e_to_afl"></a>}}
+\if{latex}{\out{\hypertarget{method-e_to_afl}{}}}
+\subsection{Method \code{e_to_afl()}}{
 Convert filter expression(s) to AFL filter
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{AFLUtils$e_to_afl_filter(e, regex_func = "rsub", ignore_case = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{AFLUtils$e_to_afl(e, regex_func = "regex", ignore_case = TRUE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -126,6 +128,56 @@ Merge an ExprsList into a single Expression so that it can be used as a FilterEx
 }
 \subsection{Returns}{
 R expression
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-join_fields"></a>}}
+\if{latex}{\out{\hypertarget{method-join_fields}{}}}
+\subsection{Method \code{join_fields()}}{
+Just multple fields with sep = ','
+
+Default behavior: \code{paste(..., sep = sep, collapse = sep)} where \code{sep = ','}
+
+afl(...) will convert vectors to joined strings separated by \verb{,}.
+This function is useful in concatenating multiple vectors in parallel,
+e.g. joining a new field vector and expression vector for the \code{apply} operator.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{AFLUtils$join_fields(..., sep = ",")}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{Multiple string vectors}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-validate_filter_expr"></a>}}
+\if{latex}{\out{\hypertarget{method-validate_filter_expr}{}}}
+\subsection{Method \code{validate_filter_expr()}}{
+Validate a filter expression ('filter_expr' must be a single R call expression)
+
+Current only report errors on:
+\enumerate{
+\item Name symbols that are not existing schema fields
+\item Non-atomic 'values'
+}
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{AFLUtils$validate_filter_expr(filter_expr, all_fields)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{filter_expr}}{An rlang::expr}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A list object with named elements:
+success:bool, absent_fields: c(''), error_msgs: c('')
 }
 }
 }

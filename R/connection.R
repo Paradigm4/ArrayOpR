@@ -68,9 +68,17 @@ str.ScidbConnection = function(conn) conn$private$to_str()
 
 empty_connection = function() ScidbConnection$new()
 
+#' A Scidb connection
+#' 
+#' @description 
+#' A connection object that talks to SciDB 
+#' 
+#' The connection object creates ArrayOp instances, execute AFL queries of arrayOps,
+#' and download qurey results as R data frames.
 ScidbConnection <- R6::R6Class(
   "ScidbConnection",
-  portable = FALSE,
+  portable = FALSE, 
+  cloneable = FALSE,
   private = list(
     .scidb_version = NULL,
     .db = NULL,
@@ -256,14 +264,34 @@ ScidbConnection <- R6::R6Class(
     }
   )
   ,
+  # public ----
   public = list(
+    #' @description 
+    #' Create a new ScidbConnection instance
+    #' 
+    #' This function is only for package internal use. 
+    #' Please call `arrayop::db_connect` to get a ScidbConnection object
+    #' @return A ScidbConenction instance
     initialize = function(){
       
     },
+    #' @description 
+    #' Whether this connection object is configured with connection arguments
+    #' @return A boolean. TRUE if `db_connect` is called or FALSE otherwise.
     has_connected = function() {
       .not_empty(.conn_args)
     }
     ,
+    #' @description 
+    #' Connect to scidb with a list of connection arguments
+    #' 
+    #' Calling this function will update the current connection object's internal state.
+    #' If the connection has timed out, just call this function without args will
+    #' re-establish the connection with previously configured connection args.
+    #' @param connection_args NULL or a list of connection args. 
+    #' Default NULL means using the previous connection args. 
+    #' A list of connection args follow the same names as params in `db_connect`.
+    #' @return The same connection object with updated internal state.
     connect = function(connection_args = NULL) {
       if(is.null(connection_args)){
         connection_args = conn_args()
@@ -284,24 +312,54 @@ ScidbConnection <- R6::R6Class(
       }
       invisible(self)
     },
+    #' @description 
+    #' Return an R data frame of the currently connected SciDB server version
+    #' @return A data frame. One row and three numeric columns: "major", "minor", "patch"
     scidb_version = function() .scidb_version,
+    #' @description 
+    #' Return a list of connection args used to establish the scidb connection
+    #' 
+    #' Connection args follow the same names as `db_connect` args.
+    #' @return A named list of connection args
     conn_args = function() .conn_args,
+    #' @description 
+    #' Download a data frame of the query result with all dimensions and attributes
+    #' @param afl_str A string of AFL expression
+    #' @return R data frame
     query_all = function(afl_str){
       assert_single_str(afl_str)
       private$.iquery(afl_str, return = TRUE, only_attributes = FALSE)
     }
     ,
+    #' @description 
+    #' Download a data frame of the query result with all attributes
+    #' @param afl_str A string of AFL expression
+    #' @return R data frame
     query = function(afl_str){
       assert_single_str(afl_str)
       private$.iquery(afl_str, return = TRUE, only_attributes = TRUE)
     }
     ,
+    #' @description 
+    #' Execute AFL expression without result
+    #' 
+    #' Use this for pure side effect and no result is downloaded.
+    #' E.g. create arrays, remove arrays, remove array versions, update arrays.
+    #' @param afl_str A string of AFL expression
     execute = function(afl_str) {
       assert_single_str(afl_str)
       private$.iquery(afl_str, return = FALSE)
       invisible(self)
     }
     ,
+    #' @description 
+    #' Create a new scidb array and return the arrayOp instance for it
+    #' @param name Scidb array name. E.g. 'myNamespace.myArray'. If no namespace
+    #' in array name, it will be created in the 'public' namespace.
+    #' @param schema_template A scidb schema string or an arrayOp instance, used
+    #' as the schema template for the newly created array. 
+    #' @param .temp Boolean. Whether to create the array as a scidb temporary array
+    #' @return An arrayOp instance of the newly created array
     create_array = function(name, schema_template, .temp = FALSE) {
       assert_single_str(name)
       assert_inherits(schema_template, c("character", "ArrayOpBase"))
@@ -317,6 +375,13 @@ ScidbConnection <- R6::R6Class(
       self$array(name)
     }
     ,
+    #' @description 
+    #' Get an ArrayOp instance of an existing scidb array
+    #' 
+    #' The scidb array denoted by the array_name must exsit in scidb.
+    #' @param array_name Scidb array name. E.g. 'myNamespace.myArray'. If no namespace
+    #' in array name, it will be searched in the 'public' namespace.
+    #' @return An arrayOp instance
     array = function(array_name) {
       assert_single_str(array_name, "ERROR: param 'array_name' must be a single string")
       array_name = trimws(array_name)
@@ -327,6 +392,23 @@ ScidbConnection <- R6::R6Class(
       set_array_op_conn(result)
     }
     ,
+    #' @description 
+    #' Create an ArrayOp instance from array schema
+    #' 
+    #' Useful in creating an arrayOp as a template for other arrayOp operations.
+    #' If an array name provided in the schema_str, the array of the same name
+    #' does not have to exist in scidb. Obviously, you cannnot download data from
+    #' a non-existent array, but it can be used as template for other operations.
+    #' 
+    #' @param schema_str A scidb-format array schema. The array name is optional.
+    #' E.g. `<fa:int32, fb:string COMPRESSION 'zlib'> [i;j]` creates an arrayOp
+    #' with the specified attributes and dimensions, and an empty afl string.
+    #' E.g. `myArray <fa:int32, fb:string COMPRESSION 'zlib'> [i;j]` creates an arrayOp
+    #' with the specified attributes and dimensions, and encapsulates an afl string of "myArray".
+    #' The array named "myArray" does not need to exist in scidb since this is done
+    #' only in local R env without checking in scidb.
+    #' 
+    #' @return An arrayOp instance
     array_from_schema = function(schema_str) {
       assert_single_str(schema_str, "ERROR: param 'schema_str' must be a single string")
       result = private$new_arrayop_from_schema_string(
@@ -335,6 +417,13 @@ ScidbConnection <- R6::R6Class(
       set_array_op_conn(result)
     }
     ,
+    #' @description 
+    #' Create an arrayOp instance from an AFL expression
+    #' 
+    #' Implemented with scidb 'show' operator.
+    #' @param afl_str A AFL expression string. Can be any array operation in AFL 
+    #' except for a scidb array name.
+    #' @return An arrayOp instance with schema from scidb
     afl_expr = function(afl_str) {
       assert_single_str(afl_str, "ERROR: param 'afl_str' must be a single string")
       escapedAfl = gsub("'", "\\\\'", afl_str)
@@ -346,6 +435,38 @@ ScidbConnection <- R6::R6Class(
       result
     }
     ,
+    #' @description 
+    #' Get an arrayOp instance from an R data frame
+    #' 
+    #' Implemented by scidb 'build' operator or SciDBR `scidb::as.scidb` function
+    #' which uploads a data frame to scidb. 
+    #' If the number of cells (nrow * ncolumns) of the data frame is smaller than the 'build_or_upload_threshold',
+    #' use 'build' operator to create a build literal array; otherwise,
+    #' a persistent scidb array is created by uploading the R data frame into scidb.
+    #' @param df an R data frame
+    #' @param template The array schema template can be NULL, an arrayOp, or a scidb 
+    #' schema string. If NULL, inferr scidb data types from the classes of data frame columns.
+    #' If arrayOp, use the actual scidb field types for matching columns of the R data frame.
+    #' If schmea string, infer field types the same way as an arrayOp instance.
+    #' @param build_or_upload_threshold An integer, below which the scidb 'build' 
+    #' operator is used to create a build literal; otherwise, upload the data frame
+    #' into scidb with SciDBR's `scidb::as.scidb` function.
+    #' @param build_dim_spec The build dimension spec if 'build' operator is chosen.
+    #' Can be either a simple field name or a full dimension spec. 
+    #' E.g. "z", or "z=0:*:0:100"
+    #' @param as_scidb_data_frame Boolean. If FALSE (default), create a scidb
+    #' data frame (no explicit dimensions); otherwise, create a regular scidb array.
+    #' Applicable for 'build' literal only.
+    #' @param skip_scidb_schema_check Boolean. If FALSE (default), check with scidb
+    #' to determine the exact schema of result arrayOp; otherwise, infer the schema
+    #' locally (which is not accurate; but saves a round trip to scidb server and 
+    #' work in most cases if not used as an template).
+    #' @param force_template_schema Boolean. If FALSE (default), do not change 
+    #' the result arrayOp schema to be compatible with the template using 'redimension'
+    #' operator. If TRUE, force the result arrayOp to use the same schema as the 
+    #' template, which must be provided (not NULL).
+    #' @param ... other params used in `upload_df` function.
+    #' @return An arrayOp instance that encapsulates a build literal or uploaded R data frame(s)
     array_from_df = function(
       df, 
       template = NULL,
@@ -375,6 +496,39 @@ ScidbConnection <- R6::R6Class(
       }
     }
     ,
+    #' @description 
+    #' Get an arrayOp instance from uploaded R data frame
+    #' 
+    #' Implemented by SciDBR `scidb::as.scidb` function which uploads a 
+    #' data frame or vector(s) to scidb. 
+    #' 
+    #' By default, the uploaded R data frame is saved to scidb as a persistent array.
+    #' If `upload_by_vecotr = TRUE`, multiple scidb arrays are created, each for 
+    #' one of the R data frame column by uploading individual vectors, which is
+    #' faster but suffers from bugs in ScidbR. 
+    #' @param df an R data frame
+    #' @param template The array schema template can be NULL, an arrayOp, or a scidb 
+    #' schema string. If NULL, inferr scidb data types from the classes of data frame columns.
+    #' If arrayOp, use the actual scidb field types for matching columns of the R data frame.
+    #' If schmea string, infer field types the same way as an arrayOp instance.
+    #' @param name A string as the uploaded scidb array name, only applicable when
+    #' `upload_by_vector = FALSE` in which case a single scidb array is created.
+    #' @param force_template_schema Boolean. If FALSE (default), do not change 
+    #' the result arrayOp schema to be compatible with the template using 'redimension'
+    #' operator. If TRUE, force the result arrayOp to use the same schema as the 
+    #' template, which must be provided (not NULL).
+    #' @param upload_by_vector Boolean. If TRUE, upload R data frame by its vectors,
+    #' which is faster than upload R data frame as a whole but suffers from unresolved 
+    #' ScidbR bugs. If FALSE (default), upload R data frame as a whole as a sicdb array.
+    #' @param .use_aio_input Boolean, default FALSE. Whether to use 'aio_input' to 
+    #' import the uploaded data frame on scidb server side. If TRUE, 'aio_input'
+    #' is faster than the default 'input' operator, but suffers from some bugs in 
+    #' the 'aio_input' scidb plugin.
+    #' @param .temp Boolean, default FALSE. Whether to save the uploaded data frame
+    #' as a temporary scidb array. 
+    #' @param .gc Boolean, default TRUE. Whether to remove the uploaded scidb array
+    #' once the encapsulating arrayOp goes out of scodb in R. 
+    #' @return An arrayOp instance that encapsulates a build literal or uploaded R data frame(s)
     upload_df = function(
       df, 
       template = NULL, 
@@ -437,6 +591,30 @@ ScidbConnection <- R6::R6Class(
       set_array_op_conn(result)
     }
     ,
+    #' @description 
+    #' Get an arrayOp instance by compiling an R data frame into a scidb build literal 
+    #' 
+    #' Implemented by scidb 'build' operator. No persistent scidb array will be created.
+    #' @param df an R data frame
+    #' @param template The array schema template can be NULL, an arrayOp, or a scidb 
+    #' schema string. If NULL, inferr scidb data types from the classes of data frame columns.
+    #' If arrayOp, use the actual scidb field types for matching columns of the R data frame.
+    #' If schmea string, infer field types the same way as an arrayOp instance.
+    #' @param build_dim_spec The build dimension spec if 'build' operator is chosen.
+    #' Can be either a simple field name or a full dimension spec. 
+    #' E.g. "z", or "z=0:*:0:100"
+    #' @param as_scidb_data_frame Boolean. If FALSE (default), create a scidb
+    #' data frame (no explicit dimensions); otherwise, create a regular scidb array.
+    #' Applicable for 'build' literal only.
+    #' @param skip_scidb_schema_check Boolean. If FALSE (default), check with scidb
+    #' to determine the exact schema of result arrayOp; otherwise, infer the schema
+    #' locally (which is not accurate; but saves a round trip to scidb server and 
+    #' work in most cases if not used as an template).
+    #' @param force_template_schema Boolean. If FALSE (default), do not change 
+    #' the result arrayOp schema to be compatible with the template using 'redimension'
+    #' operator. If TRUE, force the result arrayOp to use the same schema as the 
+    #' template, which must be provided (not NULL).
+    #' @return An arrayOp instance that encapsulates a build literal or uploaded R data frame(s)
     compile_df = function(
       df, template = NULL, 
       build_dim_spec = dbutils$random_field_name(),
@@ -468,12 +646,64 @@ ScidbConnection <- R6::R6Class(
     }
     ,
     #' @description 
-    #' Get a transient array_op by loading a file with aio_input
+    #' Get an arrayOp instance that encapsulates an array operation using 
+    #' 'aio_input' operator to read content from a file
     #' 
-    #' Mimic data.table::fread 
-    #' @param auto_dcast logical, default F. If TRUE, all non-string fields are 
+    #' Param convenctions similar to `data.table::fread ` function. 
+    #' We can choose if column names/types should be inferred from peaking into
+    #' the file by setting `header = T` and `nrow = 10` for how many rows to peek
+    #' for inference. 
+    #' 
+    #' Unique to scidb, we can control how the file columns are converted and 
+    #' whether to use multiple scidb instances to read multiple files in parallel.
+    #' @param file_path A single string or a string vector, for a local file
+    #' path or a list of paths. If multiple paths provided, the `instances` param
+    #' must be set to the same number as `file_path`.
+    #' @param template The array schema template can be NULL, an arrayOp, or a scidb 
+    #' schema string. If NULL, inferr scidb data types by peeking into the file
+    #' and read a small data frame of `nrows` with `data.table::fread`. Sensible
+    #' data type conversion between R and scidb will be performed.
+    #' If arrayOp, use the actual scidb field types for matching file columns.
+    #' If schmea string, infer field types the same way as an arrayOp instance.
+    #' @param header Boolean, default TRUE. Whether to use the first file row
+    #' to infer file column names and data types.
+    #' @param sep A single character string as the field delimiter, default "\t" 
+    #' for TSV files. Set to "," for CSV files.
+    #' @param col.names NULL (default) or a string vector. 
+    #' If `col.names = NULL, header = T`, file column names are inferred from the
+    #' first file row.
+    #' If `col.names = NULL, header = F, tempalte = NULL`, file column names follow the `data.table::fread`
+    #' convention and are named as `V1, V2, ... etc`.
+    #' If `col.names = NULL, header = F, tempalte = anTemplate`, assume file columns
+    #' are in the same order as the template's dimensions + attributes. 
+    #' If set to a string vector, its length must match the actual file columns, 
+    #' and the acutal file column names are replaced with the provided `col.names`, but
+    #' data types are still inferred from the actual file columns.
+    #' @param mutate_fields NULL or a list of R expressions. When `auto_dcast = T`,
+    #' this setting prevails. Similar to `ArrayOpBase$mutate`.
+    #' E.g. `a = b + 2, name = first + "-" + last, chrom = if(chrom == 'x') 23 else if(chrom == 'y') 24 else chrom`
+    #' @param auto_dcast Boolean, default FALSE. If TRUE, all non-string fields are 
     #' dcast'ed with `dcast(ax, int64(null)), where ax is the 0-indexed mapping 
-    #' attribute name (e.g. a0, a1, etc), and int64 is the template field type
+    #' attribute name (e.g. a0, a1, etc), and int64 is the template field type.
+    #' If FALSE, force coerce file columns into scidb types for all non-string fields,
+    #' e.g. double(a0), int32(a1). Error will be thrown if incompatible field content
+    #' is read during execution of this `fread` function, not the `fread` itself since
+    #' it doesn't actually execute any operation.
+    #' 
+    #' Even if `auto_dcast = T` which is useful in many cases when file is not strictly
+    #' formatted, we can still overwrite the `dcast` rule by setting a `mutate_fields` expression
+    #' list, as seen in `ArrayOpBase$mutate`.
+    #' @param nrow An integer, default 10. How many rows to peek into the file to infer
+    #' column names and data types using `data.table::fread`.
+    #' @param instances NULL (default) or an integer vector. For single file path,
+    #' set to NULL. For multiple file paths, set the same number of instances as
+    #' the file paths, each reading from a file path in parallel. 
+    #' @param .aio_settings NULL (default) or a list of extra aio_input settings.
+    #' Basic aio_input settings including path, num_attributes, and header are 
+    #' generated automatically and should not be manually provided. See scidb doc
+    #' on extra aio_input settings.
+    #' @return An arrayOp instance that encapsulates a 'aio_input' operation with
+    #' auto generated field mapping and data type conversion.
     fread = function(file_path, template = NULL, header = TRUE, sep = '\t',
                      col.names = NULL, mutate_fields = NULL, auto_dcast = FALSE, 
                      nrow = 10L, instances = NULL, .aio_settings=NULL) {

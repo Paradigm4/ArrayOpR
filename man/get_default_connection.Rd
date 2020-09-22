@@ -6,6 +6,18 @@
 \usage{
 get_default_connection(.report_error_if_not_connected = TRUE)
 }
+\arguments{
+\item{.report_error_if_not_connected}{Whether to report error if \code{db_connect}
+has not been called before this function. Default TRUE to ensure a valid
+connection object is returned or throw an error. Set to FALSE, if we need to
+test if a connection object exists or not without causing an error.
+
+E.g. \code{conn_obj_available = get_default_connection(F)$has_connected()}}
+}
+\value{
+The default ScidbConnection object. Report error if \code{db_connect} is
+not called prior to this function.
+}
 \description{
 Call \code{arrayop::db_connect} to establish a connection
 }

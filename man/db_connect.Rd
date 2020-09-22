@@ -2,7 +2,7 @@
 % Please edit documentation in R/connection.R
 \name{db_connect}
 \alias{db_connect}
-\title{Connect to SciDB server}
+\title{Connect to SciDB server and get a ScidbConnection object.}
 \usage{
 db_connect(
   username,
@@ -15,6 +15,29 @@ db_connect(
   save_to_default_conn = TRUE
 )
 }
+\arguments{
+\item{username}{SciDB user name}
+
+\item{token}{SciDB user password or token}
+
+\item{port}{Port}
+
+\item{protocol}{Protocol. "https" (preferred, secure) or "http"}
+
+\item{auth_type}{Authentication type}
+
+\item{...}{other optional params used in scidb::scidbconnect}
+
+\item{save_to_default_conn}{A boolean value that determines whether to save
+the connection object as the default in the \code{arrayop} package scope so that
+it can be retrieved anywhere using \code{get_default_connection}.
+
+In rare cases should we need to maintain multiple connection objects, we can
+set \code{save_to_default_conn} to FALSE.}
+}
+\value{
+A Scidbconnection object.
+}
 \description{
-Connect to SciDB server
+Connect to SciDB server and get a ScidbConnection object.
 }

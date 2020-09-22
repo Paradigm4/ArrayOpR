@@ -2,17 +2,18 @@
 % Please edit documentation in R/connection.R
 \name{ScidbConnection}
 \alias{ScidbConnection}
-\title{Create an array_op from a schema string with an optional array name}
+\title{A Scidb connection}
 \description{
-Create an array_op from a schema string with an optional array name
+A connection object that talks to SciDB
 
-Create an array_op from a schema string with an optional array name
+The connection object creates ArrayOp instances, execute AFL queries of arrayOps,
+and download qurey results as R data frames.
 }
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-new}{\code{ScidbConnection$new()}}
-\item \href{#method-is_connected}{\code{ScidbConnection$is_connected()}}
+\item \href{#method-has_connected}{\code{ScidbConnection$has_connected()}}
 \item \href{#method-connect}{\code{ScidbConnection$connect()}}
 \item \href{#method-scidb_version}{\code{ScidbConnection$scidb_version()}}
 \item \href{#method-conn_args}{\code{ScidbConnection$conn_args()}}
@@ -22,19 +23,24 @@ Create an array_op from a schema string with an optional array name
 \item \href{#method-create_array}{\code{ScidbConnection$create_array()}}
 \item \href{#method-array}{\code{ScidbConnection$array()}}
 \item \href{#method-array_from_schema}{\code{ScidbConnection$array_from_schema()}}
-\item \href{#method-array_from_afl}{\code{ScidbConnection$array_from_afl()}}
-\item \href{#method-array_from_stored_afl}{\code{ScidbConnection$array_from_stored_afl()}}
+\item \href{#method-afl_expr}{\code{ScidbConnection$afl_expr()}}
 \item \href{#method-array_from_df}{\code{ScidbConnection$array_from_df()}}
 \item \href{#method-upload_df}{\code{ScidbConnection$upload_df()}}
 \item \href{#method-compile_df}{\code{ScidbConnection$compile_df()}}
 \item \href{#method-fread}{\code{ScidbConnection$fread()}}
-\item \href{#method-clone}{\code{ScidbConnection$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-new"></a>}}
 \if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
+Create a persistent array_op by storing AFL as an array
+
+
+Create a new ScidbConnection instance
+
+This function is only for package internal use.
+Please call \code{arrayop::db_connect} to get a ScidbConnection object
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$new()}\if{html}{\out{</div>}}
 }
@@ -42,154 +48,325 @@ Create an array_op from a schema string with an optional array name
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
+\item{\code{.temp}}{Whether to create a temporary scidb array.
+Only effective when \code{save_array_name = NULL}
+Create an array_op from a schema string with an optional array name}
+
 \item{\code{array_like}}{An array_op, schema string or existing scidb array name}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Returns}{
+A ScidbConenction instance
+}
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-is_connected"></a>}}
-\if{latex}{\out{\hypertarget{method-is_connected}{}}}
-\subsection{Method \code{is_connected()}}{
+\if{html}{\out{<a id="method-has_connected"></a>}}
+\if{latex}{\out{\hypertarget{method-has_connected}{}}}
+\subsection{Method \code{has_connected()}}{
+Whether this connection object is configured with connection arguments
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$is_connected()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$has_connected()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+A boolean. TRUE if \code{db_connect} is called or FALSE otherwise.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-connect"></a>}}
 \if{latex}{\out{\hypertarget{method-connect}{}}}
 \subsection{Method \code{connect()}}{
+Connect to scidb with a list of connection arguments
+
+Calling this function will update the current connection object's internal state.
+If the connection has timed out, just call this function without args will
+re-establish the connection with previously configured connection args.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$connect(connection_args = NULL)}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-scidb_version"></a>}}
-\if{latex}{\out{\hypertarget{method-scidb_version}{}}}
-\subsection{Method \code{scidb_version()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$scidb_version()}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-conn_args"></a>}}
-\if{latex}{\out{\hypertarget{method-conn_args}{}}}
-\subsection{Method \code{conn_args()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$conn_args()}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-query_all"></a>}}
-\if{latex}{\out{\hypertarget{method-query_all}{}}}
-\subsection{Method \code{query_all()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$query_all(afl_str)}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-query"></a>}}
-\if{latex}{\out{\hypertarget{method-query}{}}}
-\subsection{Method \code{query()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$query(afl_str)}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-execute"></a>}}
-\if{latex}{\out{\hypertarget{method-execute}{}}}
-\subsection{Method \code{execute()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$execute(afl_str)}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-create_array"></a>}}
-\if{latex}{\out{\hypertarget{method-create_array}{}}}
-\subsection{Method \code{create_array()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$create_array(name, schema_template, .temp = FALSE)}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-array"></a>}}
-\if{latex}{\out{\hypertarget{method-array}{}}}
-\subsection{Method \code{array()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$array(array_name)}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-array_from_schema"></a>}}
-\if{latex}{\out{\hypertarget{method-array_from_schema}{}}}
-\subsection{Method \code{array_from_schema()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$array_from_schema(schema_str)}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-array_from_afl"></a>}}
-\if{latex}{\out{\hypertarget{method-array_from_afl}{}}}
-\subsection{Method \code{array_from_afl()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$array_from_afl(afl_str)}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-array_from_stored_afl"></a>}}
-\if{latex}{\out{\hypertarget{method-array_from_stored_afl}{}}}
-\subsection{Method \code{array_from_stored_afl()}}{
-Create a persistent array_op by storing AFL as an array
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$array_from_stored_afl(
-  afl_str,
-  save_array_name = NULL,
-  .temp = FALSE,
-  .gc = TRUE
-)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{.temp}}{Whether to create a temporary scidb array.
-Only effective when \code{save_array_name = NULL}}
+\item{\code{connection_args}}{NULL or a list of connection args.
+Default NULL means using the previous connection args.
+A list of connection args follow the same names as params in \code{db_connect}.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+The same connection object with updated internal state.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-scidb_version"></a>}}
+\if{latex}{\out{\hypertarget{method-scidb_version}{}}}
+\subsection{Method \code{scidb_version()}}{
+Return an R data frame of the currently connected SciDB server version
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$scidb_version()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+A data frame. One row and three numeric columns: "major", "minor", "patch"
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-conn_args"></a>}}
+\if{latex}{\out{\hypertarget{method-conn_args}{}}}
+\subsection{Method \code{conn_args()}}{
+Return a list of connection args used to establish the scidb connection
+
+Connection args follow the same names as \code{db_connect} args.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$conn_args()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+A named list of connection args
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-query_all"></a>}}
+\if{latex}{\out{\hypertarget{method-query_all}{}}}
+\subsection{Method \code{query_all()}}{
+Download a data frame of the query result with all dimensions and attributes
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$query_all(afl_str)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{afl_str}}{A string of AFL expression}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+R data frame
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-query"></a>}}
+\if{latex}{\out{\hypertarget{method-query}{}}}
+\subsection{Method \code{query()}}{
+Download a data frame of the query result with all attributes
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$query(afl_str)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{afl_str}}{A string of AFL expression}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+R data frame
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-execute"></a>}}
+\if{latex}{\out{\hypertarget{method-execute}{}}}
+\subsection{Method \code{execute()}}{
+Execute AFL expression without result
+
+Use this for pure side effect and no result is downloaded.
+E.g. create arrays, remove arrays, remove array versions, update arrays.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$execute(afl_str)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{afl_str}}{A string of AFL expression}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-create_array"></a>}}
+\if{latex}{\out{\hypertarget{method-create_array}{}}}
+\subsection{Method \code{create_array()}}{
+Create a new scidb array and return the arrayOp instance for it
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$create_array(name, schema_template, .temp = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{name}}{Scidb array name. E.g. 'myNamespace.myArray'. If no namespace
+in array name, it will be created in the 'public' namespace.}
+
+\item{\code{schema_template}}{A scidb schema string or an arrayOp instance, used
+as the schema template for the newly created array.}
+
+\item{\code{.temp}}{Boolean. Whether to create the array as a scidb temporary array}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+An arrayOp instance of the newly created array
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-array"></a>}}
+\if{latex}{\out{\hypertarget{method-array}{}}}
+\subsection{Method \code{array()}}{
+Get an ArrayOp instance of an existing scidb array
+
+The scidb array denoted by the array_name must exsit in scidb.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$array(array_name)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{array_name}}{Scidb array name. E.g. 'myNamespace.myArray'. If no namespace
+in array name, it will be searched in the 'public' namespace.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+An arrayOp instance
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-array_from_schema"></a>}}
+\if{latex}{\out{\hypertarget{method-array_from_schema}{}}}
+\subsection{Method \code{array_from_schema()}}{
+Create an ArrayOp instance from array schema
+
+Useful in creating an arrayOp as a template for other arrayOp operations.
+If an array name provided in the schema_str, the array of the same name
+does not have to exist in scidb. Obviously, you cannnot download data from
+a non-existent array, but it can be used as template for other operations.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$array_from_schema(schema_str)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{schema_str}}{A scidb-format array schema. The array name is optional.
+E.g. \verb{<fa:int32, fb:string COMPRESSION 'zlib'> [i;j]} creates an arrayOp
+with the specified attributes and dimensions, and an empty afl string.
+E.g. \verb{myArray <fa:int32, fb:string COMPRESSION 'zlib'> [i;j]} creates an arrayOp
+with the specified attributes and dimensions, and encapsulates an afl string of "myArray".
+The array named "myArray" does not need to exist in scidb since this is done
+only in local R env without checking in scidb.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+An arrayOp instance
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-afl_expr"></a>}}
+\if{latex}{\out{\hypertarget{method-afl_expr}{}}}
+\subsection{Method \code{afl_expr()}}{
+Create an arrayOp instance from an AFL expression
+
+Implemented with scidb 'show' operator.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$afl_expr(afl_str)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{afl_str}}{A AFL expression string. Can be any array operation in AFL
+except for a scidb array name.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+An arrayOp instance with schema from scidb
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-array_from_df"></a>}}
 \if{latex}{\out{\hypertarget{method-array_from_df}{}}}
 \subsection{Method \code{array_from_df()}}{
+Get an arrayOp instance from an R data frame
+
+Implemented by scidb 'build' operator or SciDBR \code{scidb::as.scidb} function
+which uploads a data frame to scidb.
+If the number of cells (nrow * ncolumns) of the data frame is smaller than the 'build_or_upload_threshold',
+use 'build' operator to create a build literal array; otherwise,
+a persistent scidb array is created by uploading the R data frame into scidb.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$array_from_df(
   df,
   template = NULL,
   build_or_upload_threshold = 8000L,
   build_dim_spec = .random_field_name(),
+  as_scidb_data_frame = FALSE,
   skip_scidb_schema_check = FALSE,
   force_template_schema = FALSE,
   ...
 )}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{df}}{an R data frame}
+
+\item{\code{template}}{The array schema template can be NULL, an arrayOp, or a scidb
+schema string. If NULL, inferr scidb data types from the classes of data frame columns.
+If arrayOp, use the actual scidb field types for matching columns of the R data frame.
+If schmea string, infer field types the same way as an arrayOp instance.}
+
+\item{\code{build_or_upload_threshold}}{An integer, below which the scidb 'build'
+operator is used to create a build literal; otherwise, upload the data frame
+into scidb with SciDBR's \code{scidb::as.scidb} function.}
+
+\item{\code{build_dim_spec}}{The build dimension spec if 'build' operator is chosen.
+Can be either a simple field name or a full dimension spec.
+E.g. "z", or "z=0:*:0:100"}
+
+\item{\code{as_scidb_data_frame}}{Boolean. If FALSE (default), create a scidb
+data frame (no explicit dimensions); otherwise, create a regular scidb array.
+Applicable for 'build' literal only.}
+
+\item{\code{skip_scidb_schema_check}}{Boolean. If FALSE (default), check with scidb
+to determine the exact schema of result arrayOp; otherwise, infer the schema
+locally (which is not accurate; but saves a round trip to scidb server and
+work in most cases if not used as an template).}
+
+\item{\code{force_template_schema}}{Boolean. If FALSE (default), do not change
+the result arrayOp schema to be compatible with the template using 'redimension'
+operator. If TRUE, force the result arrayOp to use the same schema as the
+template, which must be provided (not NULL).}
+
+\item{\code{...}}{other params used in \code{upload_df} function.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+An arrayOp instance that encapsulates a build literal or uploaded R data frame(s)
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-upload_df"></a>}}
 \if{latex}{\out{\hypertarget{method-upload_df}{}}}
 \subsection{Method \code{upload_df()}}{
+Get an arrayOp instance from uploaded R data frame
+
+Implemented by SciDBR \code{scidb::as.scidb} function which uploads a
+data frame or vector(s) to scidb.
+
+By default, the uploaded R data frame is saved to scidb as a persistent array.
+If \code{upload_by_vecotr = TRUE}, multiple scidb arrays are created, each for
+one of the R data frame column by uploading individual vectors, which is
+faster but suffers from bugs in ScidbR.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$upload_df(
   df,
@@ -203,29 +380,111 @@ Only effective when \code{save_array_name = NULL}}
 )}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{df}}{an R data frame}
+
+\item{\code{template}}{The array schema template can be NULL, an arrayOp, or a scidb
+schema string. If NULL, inferr scidb data types from the classes of data frame columns.
+If arrayOp, use the actual scidb field types for matching columns of the R data frame.
+If schmea string, infer field types the same way as an arrayOp instance.}
+
+\item{\code{name}}{A string as the uploaded scidb array name, only applicable when
+\code{upload_by_vector = FALSE} in which case a single scidb array is created.}
+
+\item{\code{force_template_schema}}{Boolean. If FALSE (default), do not change
+the result arrayOp schema to be compatible with the template using 'redimension'
+operator. If TRUE, force the result arrayOp to use the same schema as the
+template, which must be provided (not NULL).}
+
+\item{\code{upload_by_vector}}{Boolean. If TRUE, upload R data frame by its vectors,
+which is faster than upload R data frame as a whole but suffers from unresolved
+ScidbR bugs. If FALSE (default), upload R data frame as a whole as a sicdb array.}
+
+\item{\code{.use_aio_input}}{Boolean, default FALSE. Whether to use 'aio_input' to
+import the uploaded data frame on scidb server side. If TRUE, 'aio_input'
+is faster than the default 'input' operator, but suffers from some bugs in
+the 'aio_input' scidb plugin.}
+
+\item{\code{.temp}}{Boolean, default FALSE. Whether to save the uploaded data frame
+as a temporary scidb array.}
+
+\item{\code{.gc}}{Boolean, default TRUE. Whether to remove the uploaded scidb array
+once the encapsulating arrayOp goes out of scodb in R.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+An arrayOp instance that encapsulates a build literal or uploaded R data frame(s)
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-compile_df"></a>}}
 \if{latex}{\out{\hypertarget{method-compile_df}{}}}
 \subsection{Method \code{compile_df()}}{
+Get an arrayOp instance by compiling an R data frame into a scidb build literal
+
+Implemented by scidb 'build' operator. No persistent scidb array will be created.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$compile_df(
   df,
   template = NULL,
   build_dim_spec = dbutils$random_field_name(),
   force_template_schema = FALSE,
+  as_scidb_data_frame = FALSE,
   skip_scidb_schema_check = FALSE
 )}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{df}}{an R data frame}
+
+\item{\code{template}}{The array schema template can be NULL, an arrayOp, or a scidb
+schema string. If NULL, inferr scidb data types from the classes of data frame columns.
+If arrayOp, use the actual scidb field types for matching columns of the R data frame.
+If schmea string, infer field types the same way as an arrayOp instance.}
+
+\item{\code{build_dim_spec}}{The build dimension spec if 'build' operator is chosen.
+Can be either a simple field name or a full dimension spec.
+E.g. "z", or "z=0:*:0:100"}
+
+\item{\code{force_template_schema}}{Boolean. If FALSE (default), do not change
+the result arrayOp schema to be compatible with the template using 'redimension'
+operator. If TRUE, force the result arrayOp to use the same schema as the
+template, which must be provided (not NULL).}
+
+\item{\code{as_scidb_data_frame}}{Boolean. If FALSE (default), create a scidb
+data frame (no explicit dimensions); otherwise, create a regular scidb array.
+Applicable for 'build' literal only.}
+
+\item{\code{skip_scidb_schema_check}}{Boolean. If FALSE (default), check with scidb
+to determine the exact schema of result arrayOp; otherwise, infer the schema
+locally (which is not accurate; but saves a round trip to scidb server and
+work in most cases if not used as an template).}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+An arrayOp instance that encapsulates a build literal or uploaded R data frame(s)
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-fread"></a>}}
 \if{latex}{\out{\hypertarget{method-fread}{}}}
 \subsection{Method \code{fread()}}{
-Get a transient array_op by loading a file with aio_input
+Get an arrayOp instance that encapsulates an array operation using
+'aio_input' operator to read content from a file
 
-Mimic data.table::fread
+Param convenctions similar to \code{data.table::fread } function.
+We can choose if column names/types should be inferred from peaking into
+the file by setting \code{header = T} and \code{nrow = 10} for how many rows to peek
+for inference.
+
+Unique to scidb, we can control how the file columns are converted and
+whether to use multiple scidb instances to read multiple files in parallel.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$fread(
   file_path,
@@ -244,28 +503,63 @@ Mimic data.table::fread
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{auto_dcast}}{logical, default F. If TRUE, all non-string fields are
-dcast'ed with `dcast(ax, int64(null)), where ax is the 0-indexed mapping
-attribute name (e.g. a0, a1, etc), and int64 is the template field type}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$clone(deep = FALSE)}\if{html}{\out{</div>}}
-}
+\item{\code{file_path}}{A single string or a string vector, for a local file
+path or a list of paths. If multiple paths provided, the \code{instances} param
+must be set to the same number as \code{file_path}.}
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
+\item{\code{template}}{The array schema template can be NULL, an arrayOp, or a scidb
+schema string. If NULL, inferr scidb data types by peeking into the file
+and read a small data frame of \code{nrows} with \code{data.table::fread}. Sensible
+data type conversion between R and scidb will be performed.
+If arrayOp, use the actual scidb field types for matching file columns.
+If schmea string, infer field types the same way as an arrayOp instance.}
+
+\item{\code{header}}{Boolean, default TRUE. Whether to use the first file row
+to infer file column names and data types.}
+
+\item{\code{sep}}{A single character string as the field delimiter, default "\t"
+for TSV files. Set to "," for CSV files.}
+
+\item{\code{col.names}}{NULL (default) or a string vector.
+If \verb{col.names = NULL, header = T}, file column names are inferred from the
+first file row.
+If \verb{col.names = NULL, header = F, tempalte = NULL}, file column names follow the \code{data.table::fread}
+convention and are named as \verb{V1, V2, ... etc}.
+If \verb{col.names = NULL, header = F, tempalte = anTemplate}, assume file columns
+are in the same order as the template's dimensions + attributes.
+If set to a string vector, its length must match the actual file columns,
+and the acutal file column names are replaced with the provided \code{col.names}, but
+data types are still inferred from the actual file columns.}
+
+\item{\code{mutate_fields}}{NULL or a list of R expressions. When \code{auto_dcast = T},
+this setting prevails. Similar to \code{ArrayOpBase$mutate}.
+E.g. \verb{a = b + 2, name = first + "-" + last, chrom = if(chrom == 'x') 23 else if(chrom == 'y') 24 else chrom}}
+
+\item{\code{auto_dcast}}{Boolean, default FALSE. If TRUE, all non-string fields are
+dcast'ed with \verb{dcast(ax, int64(null)), where ax is the 0-indexed mapping  attribute name (e.g. a0, a1, etc), and int64 is the template field type. If FALSE, force coerce file columns into scidb types for all non-string fields, e.g. double(a0), int32(a1). Error will be thrown if incompatible field content is read during execution of this }fread\verb{function, not the}fread` itself since
+it doesn't actually execute any operation.
+
+Even if \code{auto_dcast = T} which is useful in many cases when file is not strictly
+formatted, we can still overwrite the \code{dcast} rule by setting a \code{mutate_fields} expression
+list, as seen in \code{ArrayOpBase$mutate}.}
+
+\item{\code{nrow}}{An integer, default 10. How many rows to peek into the file to infer
+column names and data types using \code{data.table::fread}.}
+
+\item{\code{instances}}{NULL (default) or an integer vector. For single file path,
+set to NULL. For multiple file paths, set the same number of instances as
+the file paths, each reading from a file path in parallel.}
+
+\item{\code{.aio_settings}}{NULL (default) or a list of extra aio_input settings.
+Basic aio_input settings including path, num_attributes, and header are
+generated automatically and should not be manually provided. See scidb doc
+on extra aio_input settings.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+An arrayOp instance that encapsulates a 'aio_input' operation with
+auto generated field mapping and data type conversion.
 }
 }
 }
