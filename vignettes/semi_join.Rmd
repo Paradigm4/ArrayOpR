@@ -1,0 +1,200 @@
+---
+title: "Semi Join"
+author: "Paradigm4"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+
+---
+
+```{r, child='shared/_setup.Rmd'}
+```
+
+
+# Create an array
+
+We first create a `RefArray` with content from `ArrayContent` data frame
+```{r}
+ArrayContent = data.frame(
+  da=1:20, db=101:120,
+  lower = letters[1:20], 
+  upper = LETTERS[1:20],
+  f_int32 = -20:-1, 
+  f_int64 = 1:20 * 10.0, 
+  f_bool = c(T,NA,F,NA,F), 
+  f_double = c(3.14, 2.0, NA, 0, -99)
+)
+
+RefArray = conn$
+  array_from_df(ArrayContent, 
+  template =  "<lower:string COMPRESSION 'zlib', upper:string, f_int32:int32, f_int64:int64, f_bool: bool, f_double: double> 
+      [da=0:*:0:*; db=0:*:0:*]", 
+  force_template_schema = T)$ # Ensure RefArray has the exact schema as the template
+  persist(.gc = FALSE)
+
+RefArray$to_afl()
+RefArray$to_df_all()
+```
+
+# Overview
+
+We can get an arrayOp with the same schema as `RefArray` but filtered content.
+The filtering criteria can be from either an R data frame or an arrayOp instance.
+
+Let's define a function to show the semi join result arrayOp afl and download 
+the data frame.
+
+```{r}
+show = function(result_array_op){
+  print(result_array_op$to_afl())
+  result_array_op$to_df_all() # also download dimensions
+}
+```
+
+# Filter mode
+
+When the filtering criteria is from an R data frame and its cell count is relative
+small to fit in a scidb build literal, we can use `mode = 'filter'`.
+
+## By one field
+```{r}
+RefArray$semi_join(
+  data.frame(da = c(3,5,8,11)), # number of cells <= filter_threshold
+  filter_threshold=10, upload_threshold=20) %>%
+  show
+
+# No matched cells
+RefArray$semi_join(
+  data.frame(da =  c(-10, -11, -12)),
+  filter_threshold=10, upload_threshold=20) %>%
+  show
+```
+## By two fields
+```{r}
+RefArray$semi_join(
+  data.frame(
+    f_int32 =  c(-20, -17, -16),
+    lower = c("no_match", "d", "e")
+  ),
+  filter_threshold = 10,
+  upload_threshold = 20
+) %>%
+  show
+
+
+RefArray$semi_join(
+  data.frame(da =  c(-1, 4, 5),
+             lower = c("no_match", "d", "e")),
+  filter_threshold = 10,
+  upload_threshold = 20
+) %>%
+  show
+
+# Set lower/upper bounds to range query array dimensions
+RefArray$semi_join(
+  data.frame(da_low = c(1, 3), da_hi = c(5, 8)),
+  lower_bound = list('da' = 'da_low'),
+  upper_bound = list('da' = 'da_hi'),
+  filter_threshold = 10,
+  upload_threshold = 20
+) %>%
+  show
+
+# Set lower/upper bounds to on different dimensions
+RefArray$semi_join(
+  data.frame(da = c(1, 3), db = c(105, 108)),
+  lower_bound = list('da' = 'da'),
+  upper_bound = list('db' = 'db'),
+  filter_threshold = 10,
+  upload_threshold = 20
+) %>%
+  show
+```
+# cross_between mode
+
+When the query data frame has cell count greater than `filter_threshold`, but 
+smaller than `upload_threshold`, the data frame is converted to a build literal.
+Or if its greater than `upload_threshold`, the data frame is uploaded as a persistent 
+scidb array first.
+
+In both case, if the arrayOp from the query data frame has more than one attribute,
+a `cross_between` mode is automatically chosen.
+
+```{r}
+RefArray$semi_join(
+  data.frame(da = c(1:5, -1), db = c(101:105, -1)),
+  filter_threshold = 10,
+  upload_threshold = 20
+) %>%
+  show
+
+RefArray$semi_join(
+  data.frame(da_low = c(1,3), da_hi = c(5, 8)),
+  lower_bound = list(da = 'da_low'), 
+  upper_bound = list(da = 'da_hi'),
+  filter_threshold = 10,
+  upload_threshold = 20
+) %>%
+  show
+
+# The query is already an arrayOp, then the threshold is irrelevant
+# cross_between mode is chosen if the query arrayOp has more than one 
+# attribute
+RefArray$semi_join(
+  conn$array_from_df(
+    data.frame(da_low = c(1, 3), da_hi = c(5, 8)),
+    "<da_low:int64, da_hi:int64> [anything]"
+  ),
+  lower_bound = list(da = 'da_low'),
+  upper_bound = list(da = 'da_hi'),
+) %>%
+  show
+
+
+# Explicitly set `field_mapping` to an empty list if the matching fields are 
+# supposed to be used as bounds instead of exact matching
+RefArray$semi_join(
+  data.frame(da = c(1, 3), db = c(105, 108)),
+  lower_bound = list(da = 'da'),
+  upper_bound = list(db = 'db'),
+  field_mapping = list(),
+  filter_threshold = 2,
+  upload_threshold = 20
+) %>%
+  show
+
+RefArray$semi_join(
+  conn$array_from_df(
+    data.frame(da = c(1, 3), db = c(105, 108)),
+    template = RefArray
+  ),
+  lower_bound = list(da = 'da'),
+  upper_bound = list(db = 'db'),
+  field_mapping = list()
+) %>%
+  show
+
+```
+
+# index_lookup mode
+
+If the query arrayOp has only one attribute, 'index_lookup' mode is automatically 
+chosen unless otherwise provided.
+
+```{r}
+
+# by attribute
+RefArray$semi_join(
+  data.frame(lower = letters[5:15]),
+  filter_threshold = 5,
+  upload_threshold = 20
+) %>% show
+
+# by dimension
+RefArray$semi_join(
+  data.frame(da = 1:15),
+  filter_threshold = 5,
+  upload_threshold = 20
+) %>% show
+
+```
+
