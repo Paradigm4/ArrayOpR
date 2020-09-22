@@ -181,7 +181,6 @@ If the query arrayOp has only one attribute, 'index_lookup' mode is automaticall
 chosen unless otherwise provided.
 
 ```{r}
-
 # by attribute
 RefArray$semi_join(
   data.frame(lower = letters[5:15]),
@@ -196,5 +195,10 @@ RefArray$semi_join(
   upload_threshold = 20
 ) %>% show
 
+```
+
+```{r, echo=FALSE}
+# Clena up
+RefArray$remove_array()
 ```
 
