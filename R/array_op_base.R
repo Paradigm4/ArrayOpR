@@ -73,6 +73,15 @@ ArrayOpBase <- R6::R6Class(
       private$conn = connection
     }
     ,
+    # Hold references to the provided objects
+    # Held obj refs accumulate
+    # This is necessary to prevent R GC remove scidbr loaded arrays
+    hold_refs = function(objs){
+      key = ".refs"
+      # if get_meta(key) is NULL, c(NULL, objs) still works
+      private$set_meta(key, c(private$get_meta(key), objs))
+    }
+    ,
     # set the metadata to indicate the schema from this array_op instance is 
     # returned from SciDB rather than locally inferred in R
     confirm_schema_synced = function(){
@@ -1519,7 +1528,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
                              lower_bound = lower_bound,
                              upper_bound = upper_bound)
       # Add to ref count to avoid R's GC
-      result$.private$set_meta('.ref', dataArray)
+      result$.private$hold_refs(dataArray)
       return(result)
     }
     ,
@@ -2140,13 +2149,18 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' @description 
     #' A finalize function executed when the 'self' instance is garbage collected in R
     #' 
-    #' If an arrayOp is marked as .gc = T, then it should be removed from scidb
+    #' If an arrayOp is marked as .gc = T, then it will be removed from scidb
     #' when this function is executed. 
+    #' 
+    #' We don't normally call this function except in testing.
     finalize = function() {
-      refKey = '.ref'
+      refKey = '.refs'
+      # private$metaList[[refKey]] = NULL
+      # private$metaList = NULL
       refObj = private$get_meta(refKey)
       if(!is.null(refObj)) {
         
+        # Try to remove the scidbR object if its obj@meta$remove == TRUE
         removeSciDbRObj = function(obj) {
           # printf("cleaning up: %s [gc=%s]\n%s", obj@name, obj@meta$remove, obj@meta$schema)
           if(!is.null(obj@meta$remove) && obj@meta$remove){
@@ -2155,15 +2169,17 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
             try(scidb::iquery(obj@meta$db, sprintf("remove(%s)", obj@name)), silent = T)
           }
         }
-        
+
         cleanUpObj = function(obj) {
           if("scidb" %in% class(obj)) removeSciDbRObj(obj)
+          # recursivlly call this function if another arrayOp is involved
+          else if(inherits(obj, "ArrayOpBase")) obj$finalize()
         }
-        
+
         # printf("finialize arrayop: %s", self$to_afl())
-        if(is.list(refObj)) sapply(refObj, cleanUpObj)
-        else cleanUpObj(refObj)
-        
+        if(length(refObj) > 1) sapply(refObj, cleanUpObj)
+        else cleanUpObj(refObj[[1]])
+
         private$set_meta(refKey, NULL)
       }
     }

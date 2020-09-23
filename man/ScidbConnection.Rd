@@ -34,9 +34,6 @@ and download qurey results as R data frames.
 \if{html}{\out{<a id="method-new"></a>}}
 \if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
-Create a persistent array_op by storing AFL as an array
-
-
 Create a new ScidbConnection instance
 
 This function is only for package internal use.
@@ -48,10 +45,6 @@ Please call \code{arrayop::db_connect} to get a ScidbConnection object
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{.temp}}{Whether to create a temporary scidb array.
-Only effective when \code{save_array_name = NULL}
-Create an array_op from a schema string with an optional array name}
-
 \item{\code{array_like}}{An array_op, schema string or existing scidb array name}
 }
 \if{html}{\out{</div>}}

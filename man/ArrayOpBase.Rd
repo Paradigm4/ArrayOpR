@@ -1153,8 +1153,10 @@ NULL
 \subsection{Method \code{finalize()}}{
 A finalize function executed when the 'self' instance is garbage collected in R
 
-If an arrayOp is marked as .gc = T, then it should be removed from scidb
+If an arrayOp is marked as .gc = T, then it will be removed from scidb
 when this function is executed.
+
+We don't normally call this function except in testing.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$finalize()}\if{html}{\out{</div>}}
 }

@@ -66,7 +66,7 @@ test_that("upload data frame: no template, by vectors", {
   
   # uploaded data frame will have an artificial dimension
   expect_equal(uploaded$to_df(), df)
-  columnArrays = uploaded$.private$get_meta(".ref")
+  columnArrays = uploaded$.private$get_meta(".refs")
   for(arr in columnArrays){
     arr$remove_array()
   }
@@ -136,7 +136,7 @@ test_that("upload data frame with GC setting", {
   df = data.frame(a = letters[1:5], b = 1:5, z = 11:15)
   
   gc_on = function() {
-    name = "Rarrayop_test_upload_array_gc_on"
+    name = dbutils$random_array_name() 
     arr = conn$upload_df(df, template, name = name, .gc = TRUE)
     expect_true(!is.null(
       conn$array(name) # array with name must exist

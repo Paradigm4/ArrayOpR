@@ -13,7 +13,7 @@ Check if temporary arrays are auto deleted after R's gc()
 
 ```{r}
 conn = arrayop::get_default_connection()
-listArrays = conn$array_from_afl("list()")
+listArrays = conn$afl_expr("list()")
 ```
 
 ```{r}

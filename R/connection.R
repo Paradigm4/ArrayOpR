@@ -105,7 +105,6 @@ ScidbConnection <- R6::R6Class(
     upload_df_or_vector = function(v, ...) {
       uploaded = scidb::as.scidb(private$.db, v, ...)
       res = array_op_from_scidbr_obj(uploaded)
-      res$.private$set_meta('.ref', uploaded) # prevent GC
       res
     },
     # generate afl by recursively 'join' two arrays
@@ -126,16 +125,22 @@ ScidbConnection <- R6::R6Class(
       }
       joinedItems
     },
+    # Create an arrayOp from a scidbR object
+    # 
+    # Hold reference to the scidbR object to avoid premature removal of the bound
+    # array
     array_op_from_scidbr_obj = function(obj) {
-      array_from_schema(obj@meta$schema)$spawn(
+      result = array_from_schema(obj@meta$schema)$spawn(
         obj@name
       )$.private$confirm_schema_synced()
+      result$.private$hold_refs(obj)
+      result
     }
     ,
-    #' @description 
-    #' Create a persistent array_op by storing AFL as an array
-    #' @param .temp Whether to create a temporary scidb array.
-    #' Only effective when `save_array_name = NULL`
+    # @description 
+    # Create a persistent array_op by storing AFL as an array
+    # @param .temp Whether to create a temporary scidb array.
+    # Only effective when `save_array_name = NULL`
     array_from_stored_afl = function(
       afl_str, 
       # save_array_name = dbutils$random_array_name(),
@@ -153,11 +158,10 @@ ScidbConnection <- R6::R6Class(
       
       result = array_op_from_scidbr_obj(storedArray)
       result$.private$confirm_schema_synced()
-      result$.private$set_meta('.ref', storedArray)
       set_array_op_conn(result)
     }
     ,
-    #' Create an array_op from a schema string with an optional array name
+    # Create an array_op from a schema string with an optional array name
     new_arrayop_from_schema_string = function(schema_str, .symbol) {
       # Return all matched substrings in 'x'
       # groups in pattern are ignored. The full pattern is looked up
@@ -574,7 +578,7 @@ ScidbConnection <- R6::R6Class(
         } else {
           joinAfl = join_arrays_by_two(vectorArrayNames)
           .result = afl_expr(joinAfl)
-          .result$.private$set_meta('.ref', vectorArrays)
+          .result$.private$hold_refs(vectorArrays)
           .result
         }
       }
@@ -586,8 +590,11 @@ ScidbConnection <- R6::R6Class(
           use_aio_input = .use_aio_input, temp = .temp, gc = .gc
         )
       }
-      if(force_template_schema)
-        result = result$change_schema(array_template)
+      if(force_template_schema){
+        oldResult = result
+        result = oldResult$change_schema(array_template)
+        result$.private$hold_refs(oldResult)
+      }
       set_array_op_conn(result)
     }
     ,
