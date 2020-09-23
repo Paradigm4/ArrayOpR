@@ -17,13 +17,28 @@ print.ArrayOpBase = function(op) {
   sprintf("%s %s", op$to_afl(), op$to_schema_str())
 }
 
-#' Base class of all ArrayOp classes
+#' ArrayOp base class that encapsulates a scidb array or array operations
 #' 
-#' ArrayOp classes denote scidb array operations and operands, hence the name. 
-#' Operands can be plain scidb array names or operations on arrays.
+#' @description 
+#' ArrayOp class instances denote scidb array operations and operands, hence the name. 
 #' 
+#' Operands can be plain scidb array names or (potentially nested) operations on arrays.
+#' 
+#' Most ArrayOp class methods return a new ArrayOp instance and the original 
+#' instance on which methods are invoked from remains the same, 
+#' i.e. ArrayOp instances are immutable.
+#' 
+#' @details 
 #' One ArrayOp operation may involve one or multiple scidb operators and any number of operands.
 #' in another operation. Operands and Opreration results can all be denoted by ArrayOp.
+#' 
+#' Sub-classes of ArrayOpBase deal with any syntax or operator changes in different 
+#' SciDB version so that the ArrayOpBase class can provide a unified API on all 
+#' supported SciDB versions. Currently SciDB V18 and V19 are supported.
+#' 
+#' Users of `arrayop` package shouldn't be concerned with a specific sub-class since
+#' the `ScidbConnection` object automatically chooses the correct class version
+#' and creates instances based on the scidb version it connects to.
 #' 
 #' Get arrayOp instances from the default ScidbConnection object.
 #' See `arrayop::get_default_connection` for details.

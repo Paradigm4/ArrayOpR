@@ -2,18 +2,27 @@
 % Please edit documentation in R/array_op_base.R
 \name{ArrayOpBase}
 \alias{ArrayOpBase}
-\title{Base class of all ArrayOp classes}
+\title{ArrayOp base class that encapsulates a scidb array or array operations}
 \description{
-Base class of all ArrayOp classes
+ArrayOp class instances denote scidb array operations and operands, hence the name.
 
-Base class of all ArrayOp classes
+Operands can be plain scidb array names or (potentially nested) operations on arrays.
+
+Most ArrayOp class methods return a new ArrayOp instance and the original
+instance on which methods are invoked from remains the same,
+i.e. ArrayOp instances are immutable.
 }
 \details{
-ArrayOp classes denote scidb array operations and operands, hence the name.
-Operands can be plain scidb array names or operations on arrays.
-
 One ArrayOp operation may involve one or multiple scidb operators and any number of operands.
 in another operation. Operands and Opreration results can all be denoted by ArrayOp.
+
+Sub-classes of ArrayOpBase deal with any syntax or operator changes in different
+SciDB version so that the ArrayOpBase class can provide a unified API on all
+supported SciDB versions. Currently SciDB V18 and V19 are supported.
+
+Users of \code{arrayop} package shouldn't be concerned with a specific sub-class since
+the \code{ScidbConnection} object automatically chooses the correct class version
+and creates instances based on the scidb version it connects to.
 
 Get arrayOp instances from the default ScidbConnection object.
 See \code{arrayop::get_default_connection} for details.
@@ -76,6 +85,7 @@ SciDB data frame (array with hidden dimensions; not to be confused with R data f
 \item \href{#method-cell_count}{\code{ArrayOpBase$cell_count()}}
 \item \href{#method-summarize_array}{\code{ArrayOpBase$summarize_array()}}
 \item \href{#method-versions}{\code{ArrayOpBase$versions()}}
+\item \href{#method-get_version_snapshot}{\code{ArrayOpBase$get_version_snapshot()}}
 \item \href{#method-is_persistent}{\code{ArrayOpBase$is_persistent()}}
 \item \href{#method-exists_persistent_array}{\code{ArrayOpBase$exists_persistent_array()}}
 \item \href{#method-array_meta_data}{\code{ArrayOpBase$array_meta_data()}}
@@ -1013,6 +1023,32 @@ Return a data frame of all self's versions
 
 \subsection{Returns}{
 An R data frame with columns: version_id and timestamp
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-get_version_snapshot"></a>}}
+\if{latex}{\out{\hypertarget{method-get_version_snapshot}{}}}
+\subsection{Method \code{get_version_snapshot()}}{
+Get an arrayOp instance that encapsulates a version snapshot of a persistent
+scidb array
+
+The function does not perform version check in scidb. It only construct
+an arrayOp locally to represent a specific version. If a non-existent
+version_id is later used in scidb related operations, an error will be
+thrown by SciDB.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$get_version_snapshot(version_id)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{version_id}}{A number of the array version_id}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+An arrayOp instance with the same schema as self
 }
 }
 \if{html}{\out{<hr>}}
