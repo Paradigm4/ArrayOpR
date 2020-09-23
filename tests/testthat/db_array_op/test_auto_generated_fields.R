@@ -170,7 +170,8 @@ test_that("set both auto-incremented fields and anti-collision fields", {
       set_auto_fields(SourceArray,
                       source_auto_increment = c(z=0),
                       target_auto_increment = c(f_int64=121),
-                      anti_collision_field = 'db')$
+                      anti_collision_field = 'db',
+                      source_anti_collision_dim_spec = "0:*:0:256")$
       to_df() ,
     data.frame(da = c(1:3,1:3,1L), db = c(2:4, 3:5, 4), f_str = LETTERS[4:10], f_int32 = 4:10, f_int64 = 21:27)
   )
