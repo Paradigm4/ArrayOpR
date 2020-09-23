@@ -4,12 +4,87 @@
 \alias{DBUtils}
 \title{Database utility class}
 \description{
-Database utility class
-
-Database utility class
+Common scidb operations
 }
 \details{
-Common scidb operations
+Please access this singleton instance via \code{arrayop::dbutils}.
+No instance creation is needed.
+
+The default connection is used. So we need to call \code{arrayop::db_connect} first
+before any of the \code{dbutils} db related function is available.
+
+We can call \code{dbutils$set_conn(another_scidb_connection_obj)} to set a different
+ScidbConnection object, which should be extremely rare.
+}
+\examples{
+
+## ------------------------------------------------
+## Method `DBUtils$sanitize_names`
+## ------------------------------------------------
+
+names(myDataFrame) <- dbutils$sanitize_names(names(myDataFrame))
+
+
+## ------------------------------------------------
+## Method `DBUtils$db_namespaces`
+## ------------------------------------------------
+
+dbutils$db_namespace()$to_df()
+
+## ------------------------------------------------
+## Method `DBUtils$db_users`
+## ------------------------------------------------
+
+dbutils$db_users()$to_df()
+
+
+## ------------------------------------------------
+## Method `DBUtils$db_roles`
+## ------------------------------------------------
+
+dbutils$db_roles()$to_df()
+
+## ------------------------------------------------
+## Method `DBUtils$db_operators`
+## ------------------------------------------------
+
+dbutils$db_operators()$to_df()
+
+## ------------------------------------------------
+## Method `DBUtils$db_instances`
+## ------------------------------------------------
+
+dbutils$db_instances()$to_df()
+
+## ------------------------------------------------
+## Method `DBUtils$db_queries`
+## ------------------------------------------------
+
+dbutils$db_queries()$to_df()
+
+## ------------------------------------------------
+## Method `DBUtils$db_macros`
+## ------------------------------------------------
+
+dbutils$db_macros()$to_df()
+
+## ------------------------------------------------
+## Method `DBUtils$db_types`
+## ------------------------------------------------
+
+dbutils$db_types()$to_df()
+
+## ------------------------------------------------
+## Method `DBUtils$db_libraries`
+## ------------------------------------------------
+
+dbutils$db_libraries()$to_df()
+
+## ------------------------------------------------
+## Method `DBUtils$db_aggregates`
+## ------------------------------------------------
+
+dbutils$db_aggregates()$to_df()
 }
 \section{Methods}{
 \subsection{Public methods}{
@@ -44,60 +119,143 @@ Generate a random array name so it does not collides with existing array names
 \if{html}{\out{<div class="r">}}\preformatted{DBUtils$random_array_name(prefix = "Rarrayop_", n = 10L)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{prefix}}{A string used as the prefix of generated array name}
+
+\item{\code{n}}{An integer, length of the random characters in array name
+excluding the prefix}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A string of 'prefix' + n random chars
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-random_field_name"></a>}}
 \if{latex}{\out{\hypertarget{method-random_field_name}{}}}
 \subsection{Method \code{random_field_name()}}{
+Generate a random field name
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DBUtils$random_field_name(n = 10L)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{n}}{An integer, length of the random characters in the field name}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A string
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-set_conn"></a>}}
 \if{latex}{\out{\hypertarget{method-set_conn}{}}}
 \subsection{Method \code{set_conn()}}{
+Set a \code{ScidbConnection} object that \code{dbutils} uses for db operations
+
+No need to set the connection in most cases. The default conneciton object
+is used.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DBUtils$set_conn(new_conn)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{new_conn}}{A \code{ScidbConnection} object}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+NULL
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-get_conn"></a>}}
 \if{latex}{\out{\hypertarget{method-get_conn}{}}}
 \subsection{Method \code{get_conn()}}{
+Get the \code{ScidbConnection} object the \code{dbutils} is using
+
+If no \code{set_conn} call is made, by default it returns the default
+\code{ScidbConnection} object, identical to \code{get_default_connection()}
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DBUtils$get_conn()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+A \code{ScidbConnection} object
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-clear_cache"></a>}}
 \if{latex}{\out{\hypertarget{method-clear_cache}{}}}
 \subsection{Method \code{clear_cache()}}{
+Clear cached arrayOp instances
+
+For performance concerns, \code{dbutils} caches every arrayOp it retrieves from
+scidb.
+
+Call this function if there are array changes in scidb after the scidb
+connection is established
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DBUtils$clear_cache()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+NULL
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-list_arrays_in_ns"></a>}}
 \if{latex}{\out{\hypertarget{method-list_arrays_in_ns}{}}}
 \subsection{Method \code{list_arrays_in_ns()}}{
+Returns an ArrayOp instance of the "list arrays" opeartion in a
+scidb namespace
+
+Implemented by scidb \code{list(ns:myNamespace)}.
+
+Throw an error if the namespace does not exist in scidb.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DBUtils$list_arrays_in_ns(ns = "public")}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{ns}}{String, a scidb namespace}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+An ArrayOp instance
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-load_array_ops_from_namespace"></a>}}
 \if{latex}{\out{\hypertarget{method-load_array_ops_from_namespace}{}}}
 \subsection{Method \code{load_array_ops_from_namespace()}}{
+Return a list of arrayOp instances from a namespace
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DBUtils$load_array_ops_from_namespace(ns = "public")}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{ns}}{String, a scidb namespace}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A named list of arrayOp instances where names are array names
+(without namespace prefix) and values are arrayOp instances
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-sanitize_names"></a>}}
@@ -107,6 +265,9 @@ Sanitize (data frame or scidb array) names
 
 First replace any non-alphanumerical letter to _
 Then trim off any leading or trailing underscores.
+
+This is useful when data frames or files contain characters not supported
+as scidb field names.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DBUtils$sanitize_names(original_names)}\if{html}{\out{</div>}}
 }
@@ -114,29 +275,67 @@ Then trim off any leading or trailing underscores.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{original_names}}{A character vector}
+\item{\code{original_names}}{A string vector}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-A character vector of sanitized names
+A string vector of sanitized names
 }
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{names(myDataFrame) <- dbutils$sanitize_names(names(myDataFrame))
+
+}
+\if{html}{\out{</div>}}
+
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-sanitize_names_for"></a>}}
 \if{latex}{\out{\hypertarget{method-sanitize_names_for}{}}}
 \subsection{Method \code{sanitize_names_for()}}{
+Sanitize names for an R object
+
+\code{sanitize_names_for(myObj)} is equvilant to
+\code{names(myObj) <- sanitize_names(names(myObj))}
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DBUtils$sanitize_names_for(obj)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{obj}}{An R object whose names are not NULL. Applicable to data frames
+and any R object that meets the requirement \code{!is.null(names(obj))}}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+The same obj with sanitized names (in-place modification)
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-db_namespaces"></a>}}
 \if{latex}{\out{\hypertarget{method-db_namespaces}{}}}
 \subsection{Method \code{db_namespaces()}}{
+Return an ArrayOp instance that encapsualtes all namespaces in scidb
+
+The namespaces visible to us is determined by our scidb role and previlige.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DBUtils$db_namespaces()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+An arrayOp instance
+}
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{dbutils$db_namespace()$to_df()
+}
+\if{html}{\out{</div>}}
+
 }
 
 }
@@ -144,8 +343,23 @@ A character vector of sanitized names
 \if{html}{\out{<a id="method-db_users"></a>}}
 \if{latex}{\out{\hypertarget{method-db_users}{}}}
 \subsection{Method \code{db_users()}}{
+Return an ArrayOp instance that encapsualtes all users in scidb
+
+The scidb users visible to us is determined by our scidb role and previlige.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DBUtils$db_users()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+An arrayOp instance
+}
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{dbutils$db_users()$to_df()
+
+}
+\if{html}{\out{</div>}}
+
 }
 
 }
@@ -153,8 +367,22 @@ A character vector of sanitized names
 \if{html}{\out{<a id="method-db_roles"></a>}}
 \if{latex}{\out{\hypertarget{method-db_roles}{}}}
 \subsection{Method \code{db_roles()}}{
+Return an ArrayOp instance that encapsualtes all user roles in scidb
+
+The roles visible to us is determined by our scidb role and previlige.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DBUtils$db_roles()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+An arrayOp instance
+}
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{dbutils$db_roles()$to_df()
+}
+\if{html}{\out{</div>}}
+
 }
 
 }
@@ -162,8 +390,20 @@ A character vector of sanitized names
 \if{html}{\out{<a id="method-db_operators"></a>}}
 \if{latex}{\out{\hypertarget{method-db_operators}{}}}
 \subsection{Method \code{db_operators()}}{
+Return an ArrayOp instance that encapsualtes all scidb operators
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DBUtils$db_operators()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+An arrayOp instance
+}
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{dbutils$db_operators()$to_df()
+}
+\if{html}{\out{</div>}}
+
 }
 
 }
@@ -171,8 +411,20 @@ A character vector of sanitized names
 \if{html}{\out{<a id="method-db_instances"></a>}}
 \if{latex}{\out{\hypertarget{method-db_instances}{}}}
 \subsection{Method \code{db_instances()}}{
+Return an ArrayOp instance that encapsualtes scidb instances
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DBUtils$db_instances()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+An arrayOp instance
+}
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{dbutils$db_instances()$to_df()
+}
+\if{html}{\out{</div>}}
+
 }
 
 }
@@ -180,8 +432,20 @@ A character vector of sanitized names
 \if{html}{\out{<a id="method-db_queries"></a>}}
 \if{latex}{\out{\hypertarget{method-db_queries}{}}}
 \subsection{Method \code{db_queries()}}{
+Return an ArrayOp instance that encapsualtes running scidb queries
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DBUtils$db_queries()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+An arrayOp instance
+}
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{dbutils$db_queries()$to_df()
+}
+\if{html}{\out{</div>}}
+
 }
 
 }
@@ -189,8 +453,20 @@ A character vector of sanitized names
 \if{html}{\out{<a id="method-db_macros"></a>}}
 \if{latex}{\out{\hypertarget{method-db_macros}{}}}
 \subsection{Method \code{db_macros()}}{
+Return an ArrayOp instance that encapsualtes all scidb macros
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DBUtils$db_macros()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+An arrayOp instance
+}
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{dbutils$db_macros()$to_df()
+}
+\if{html}{\out{</div>}}
+
 }
 
 }
@@ -198,8 +474,20 @@ A character vector of sanitized names
 \if{html}{\out{<a id="method-db_types"></a>}}
 \if{latex}{\out{\hypertarget{method-db_types}{}}}
 \subsection{Method \code{db_types()}}{
+Return an ArrayOp instance that encapsualtes all scidb data types
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DBUtils$db_types()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+An arrayOp instance
+}
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{dbutils$db_types()$to_df()
+}
+\if{html}{\out{</div>}}
+
 }
 
 }
@@ -207,8 +495,20 @@ A character vector of sanitized names
 \if{html}{\out{<a id="method-db_libraries"></a>}}
 \if{latex}{\out{\hypertarget{method-db_libraries}{}}}
 \subsection{Method \code{db_libraries()}}{
+Return an ArrayOp instance that encapsualtes all scidb libraries
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DBUtils$db_libraries()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+An arrayOp instance
+}
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{dbutils$db_libraries()$to_df()
+}
+\if{html}{\out{</div>}}
+
 }
 
 }
@@ -216,8 +516,20 @@ A character vector of sanitized names
 \if{html}{\out{<a id="method-db_aggregates"></a>}}
 \if{latex}{\out{\hypertarget{method-db_aggregates}{}}}
 \subsection{Method \code{db_aggregates()}}{
+Return an ArrayOp instance that encapsualtes all scidb aggregate functions
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DBUtils$db_aggregates()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+An arrayOp instance
+}
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{dbutils$db_aggregates()$to_df()
+}
+\if{html}{\out{</div>}}
+
 }
 
 }

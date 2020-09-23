@@ -667,8 +667,8 @@ ScidbConnection <- R6::R6Class(
     #' If schmea string, infer field types the same way as an arrayOp instance.
     #' @param header Boolean, default TRUE. Whether to use the first file row
     #' to infer file column names and data types.
-    #' @param sep A single character string as the field delimiter, default "\t" 
-    #' for TSV files. Set to "," for CSV files.
+    #' @param sep A single character string as the field delimiter, default `"\t"` 
+    #' for TSV files. Set to `","` for CSV files.
     #' @param col.names NULL (default) or a string vector. 
     #' If `col.names = NULL, header = T`, file column names are inferred from the
     #' first file row.

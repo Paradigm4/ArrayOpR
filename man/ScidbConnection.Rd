@@ -517,8 +517,8 @@ If schmea string, infer field types the same way as an arrayOp instance.}
 \item{\code{header}}{Boolean, default TRUE. Whether to use the first file row
 to infer file column names and data types.}
 
-\item{\code{sep}}{A single character string as the field delimiter, default "\t"
-for TSV files. Set to "," for CSV files.}
+\item{\code{sep}}{A single character string as the field delimiter, default \code{"\\t"}
+for TSV files. Set to \code{","} for CSV files.}
 
 \item{\code{col.names}}{NULL (default) or a string vector.
 If \verb{col.names = NULL, header = T}, file column names are inferred from the

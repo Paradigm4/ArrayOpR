@@ -4,16 +4,10 @@
 \alias{AFLUtils}
 \title{AFL utility functions}
 \description{
-AFL utility functions
-
-AFL utility functions
-}
-\details{
-Normally you don't need these functions. But they are flexible in constructing
-high-order AFL expressions.
-}
-\seealso{
-See \code{\link{e}} for more.
+Normally we don't need these functions.
+But in case we do, they are flexible in constructing high-order
+AFL expressions, e.g. AFL raw string or expressions generated in one place and
+used in other places with or without modification.
 }
 \section{Methods}{
 \subsection{Public methods}{
@@ -38,7 +32,15 @@ Convert filter expression(s) to AFL filter
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{e}}{An R expression vector of length 1 or more}
+\item{\code{e}}{A list of R expression(s). If more than one expression is provided,
+they will be joined with logic AND.}
+
+\item{\code{regex_func}}{A string of regex function implementation, default 'regex'.
+Due to scidb compatiblity issue with its dependencies, the regex function from boost library may not be available
+Currently supported options include 'rsub', and 'regex'}
+
+\item{\code{ignore_case}}{A Boolean, default TRUE. If TRUE, ignore case in string match patterns.
+Otherwise, perform case-sensitive regex matches.}
 }
 \if{html}{\out{</div>}}
 }
@@ -50,7 +52,7 @@ An AFL filter string
 \if{html}{\out{<a id="method-args_to_expressions"></a>}}
 \if{latex}{\out{\hypertarget{method-args_to_expressions}{}}}
 \subsection{Method \code{args_to_expressions()}}{
-Convert API ... args to an R expression vector
+Convert API ... args to an R expression vector (deprecated)
 
 Some API functions include ... arg to represent arbitrary search criteria.
 This provides flexibility and simplifies API function signatures, but only supports limited advanced search,
@@ -65,14 +67,14 @@ Eg. value_range = c(1, 9) => c(value >= 1, value <= 9)
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{...}}{API ellipsis arg}
+\item{\code{...}}{API ellipsis args}
 
 \item{\code{.dots}}{Explicitly provide a parameter list. If not NULL, the ellipsis params are ignored}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-R expression vector
+A list of AFL expressions in R
 }
 }
 \if{html}{\out{<hr>}}
@@ -149,6 +151,8 @@ e.g. joining a new field vector and expression vector for the \code{apply} opera
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{...}}{Multiple string vectors}
+
+\item{\code{sep}}{A single character string, defaullt ",", as field separator.}
 }
 \if{html}{\out{</div>}}
 }
@@ -157,12 +161,13 @@ e.g. joining a new field vector and expression vector for the \code{apply} opera
 \if{html}{\out{<a id="method-validate_filter_expr"></a>}}
 \if{latex}{\out{\hypertarget{method-validate_filter_expr}{}}}
 \subsection{Method \code{validate_filter_expr()}}{
-Validate a filter expression ('filter_expr' must be a single R call expression)
+Validate a filter expression
 
 Current only report errors on:
 \enumerate{
-\item Name symbols that are not existing schema fields
-\item Non-atomic 'values'
+\item Name symbols that are not known schema fields, defined by
+param \code{all_fields}
+\item Non-atomic R 'values' in the expression
 }
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{AFLUtils$validate_filter_expr(filter_expr, all_fields)}\if{html}{\out{</div>}}
@@ -171,7 +176,9 @@ Current only report errors on:
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{filter_expr}}{An rlang::expr}
+\item{\code{filter_expr}}{AFL captured as a single R expression}
+
+\item{\code{all_fields}}{A list of strings as the scope of valid fields}
 }
 \if{html}{\out{</div>}}
 }

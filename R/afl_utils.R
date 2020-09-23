@@ -102,16 +102,24 @@ afl <- function(..., envir = parent.frame()) {
 
 #' AFL utility functions
 #' 
-#' 
-#' Normally you don't need these functions. But they are flexible in constructing
-#' high-order AFL expressions.
+#' @description 
+#' Normally we don't need these functions. 
+#' But in case we do, they are flexible in constructing high-order 
+#' AFL expressions, e.g. AFL raw string or expressions generated in one place and
+#' used in other places with or without modification.
 AFLUtils <- R6::R6Class(
   "AFLUtils", cloneable = F, portable = F,
   public = list(
     #' @description 
     #' Convert filter expression(s) to AFL filter
     #' 
-    #' @param e An R expression vector of length 1 or more
+    #' @param e A list of R expression(s). If more than one expression is provided,
+    #' they will be joined with logic AND. 
+    #' @param regex_func A string of regex function implementation, default 'regex'.
+    #' Due to scidb compatiblity issue with its dependencies, the regex function from boost library may not be available
+    #' Currently supported options include 'rsub', and 'regex'
+    #' @param ignore_case A Boolean, default TRUE. If TRUE, ignore case in string match patterns. 
+    #' Otherwise, perform case-sensitive regex matches.
     #' @return An AFL filter string
     e_to_afl = function(e, regex_func = 'regex', ignore_case = TRUE) {
     
@@ -242,7 +250,7 @@ AFLUtils <- R6::R6Class(
     }
     ,
     #' @description 
-    #' Convert API ... args to an R expression vector
+    #' Convert API ... args to an R expression vector (deprecated)
     #' 
     #' Some API functions include ... arg to represent arbitrary search criteria. 
     #' This provides flexibility and simplifies API function signatures, but only supports limited advanced search,
@@ -251,10 +259,9 @@ AFLUtils <- R6::R6Class(
     #' 
     #' Eg. name_contains = 'str' => name %contains% 'str'
     #' Eg. value_range = c(1, 9) => c(value >= 1, value <= 9)
-    #' @seealso See \code{\link{e}} for more.
-    #' @param ... API ellipsis arg
+    #' @param ... API ellipsis args
     #' @param .dots Explicitly provide a parameter list. If not NULL, the ellipsis params are ignored
-    #' @return R expression vector
+    #' @return A list of AFL expressions in R
     args_to_expressions = function(..., .dots = NULL) {
       rangeExpr <- function(name, value) {
         if (is.numeric(value)) {
@@ -381,17 +388,20 @@ AFLUtils <- R6::R6Class(
     #' This function is useful in concatenating multiple vectors in parallel, 
     #' e.g. joining a new field vector and expression vector for the `apply` operator.
     #' @param ... Multiple string vectors
+    #' @param sep A single character string, defaullt ",", as field separator.
     join_fields = function(..., sep = ',') {
       paste(..., sep = sep, collapse = sep)
     }
     ,
     #' @description 
-    #' Validate a filter expression ('filter_expr' must be a single R call expression)
+    #' Validate a filter expression
     #'
     #' Current only report errors on:
-    #'   1. Name symbols that are not existing schema fields
-    #'   2. Non-atomic 'values'
-    #' @param filter_expr An rlang::expr
+    #'   1. Name symbols that are not known schema fields, defined by 
+    #'   param `all_fields`
+    #'   2. Non-atomic R 'values' in the expression
+    #' @param filter_expr AFL captured as a single R expression
+    #' @param all_fields A list of strings as the scope of valid fields
     #' @return A list object with named elements:
     #'  success:bool, absent_fields: c(''), error_msgs: c('')
     validate_filter_expr = function(filter_expr, all_fields) {
