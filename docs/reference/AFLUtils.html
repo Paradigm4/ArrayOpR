@@ -40,8 +40,10 @@
 
 
 <meta property="og:title" content="AFL utility functions — AFLUtils" />
-<meta property="og:description" content="AFL utility functions
-AFL utility functions" />
+<meta property="og:description" content="Normally we don't need these functions.
+But in case we do, they are flexible in constructing high-order
+AFL expressions, e.g. AFL raw string or expressions generated in one place and
+used in other places with or without modification." />
 
 
 
@@ -130,19 +132,14 @@ AFL utility functions" />
     </div>
 
     <div class="ref-description">
-    <p>AFL utility functions</p>
-<p>AFL utility functions</p>
+    <p>Normally we don't need these functions.
+But in case we do, they are flexible in constructing high-order
+AFL expressions, e.g. AFL raw string or expressions generated in one place and
+used in other places with or without modification.</p>
     </div>
 
 
 
-    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
-
-    <p>Normally you don't need these functions. But they are flexible in constructing
-high-order AFL expressions.</p>
-    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
-
-    <div class='dont-index'><p>See <code>e</code> for more.</p></div>
     <h2 class="hasAnchor" id="methods"><a class="anchor" href="#methods"></a>Methods</h2>
 
     
@@ -163,14 +160,22 @@ high-order AFL expressions.</p>
 
 <h3>Arguments</h3>
 <p><div class="arguments"></p><dl>
-<dt><code>e</code></dt><dd><p>An R expression vector of length 1 or more</p></dd>
+<dt><code>e</code></dt><dd><p>A list of R expression(s). If more than one expression is provided,
+they will be joined with logic AND.</p></dd>
+
+<dt><code>regex_func</code></dt><dd><p>A string of regex function implementation, default 'regex'.
+Due to scidb compatiblity issue with its dependencies, the regex function from boost library may not be available
+Currently supported options include 'rsub', and 'regex'</p></dd>
+
+<dt><code>ignore_case</code></dt><dd><p>A Boolean, default TRUE. If TRUE, ignore case in string match patterns.
+Otherwise, perform case-sensitive regex matches.</p></dd>
 
 </dl><p></div></p>
 <h3>Returns</h3>
 <p>An AFL filter string</p>
 <p><hr>
 <a id="method-args_to_expressions"></a></p><h3>Method <code>args_to_expressions()</code></h3>
-<p>Convert API ... args to an R expression vector</p>
+<p>Convert API ... args to an R expression vector (deprecated)</p>
 <p>Some API functions include ... arg to represent arbitrary search criteria.
 This provides flexibility and simplifies API function signatures, but only supports limited advanced search,
 e.g. xxx_contains, xxx_range, xxx_not.</p>
@@ -180,13 +185,13 @@ Eg. value_range = c(1, 9) =&gt; c(value &gt;= 1, value &lt;= 9)</p><h3>Usage</h3
 
 <h3>Arguments</h3>
 <p><div class="arguments"></p><dl>
-<dt><code>...</code></dt><dd><p>API ellipsis arg</p></dd>
+<dt><code>...</code></dt><dd><p>API ellipsis args</p></dd>
 
 <dt><code>.dots</code></dt><dd><p>Explicitly provide a parameter list. If not NULL, the ellipsis params are ignored</p></dd>
 
 </dl><p></div></p>
 <h3>Returns</h3>
-<p>R expression vector</p>
+<p>A list of AFL expressions in R</p>
 <p><hr>
 <a id="method-e"></a></p><h3>Method <code>e()</code></h3>
 <p>Create a list of R expressions</p>
@@ -236,20 +241,25 @@ e.g. joining a new field vector and expression vector for the <code>apply</code>
 <p><div class="arguments"></p><dl>
 <dt><code>...</code></dt><dd><p>Multiple string vectors</p></dd>
 
+<dt><code>sep</code></dt><dd><p>A single character string, defaullt ",", as field separator.</p></dd>
+
 </dl><p></div></p>
 <p><hr>
 <a id="method-validate_filter_expr"></a></p><h3>Method <code>validate_filter_expr()</code></h3>
-<p>Validate a filter expression ('filter_expr' must be a single R call expression)</p>
+<p>Validate a filter expression</p>
 <p>Current only report errors on:</p><ol>
-<li><p>Name symbols that are not existing schema fields</p></li>
-<li><p>Non-atomic 'values'</p></li>
+<li><p>Name symbols that are not known schema fields, defined by
+param <code>all_fields</code></p></li>
+<li><p>Non-atomic R 'values' in the expression</p></li>
 </ol>
 <h3>Usage</h3>
 <p><div class="r"></p><pre><span class='no'>AFLUtils</span>$<span class='fu'>validate_filter_expr</span>(<span class='no'>filter_expr</span>, <span class='no'>all_fields</span>)</pre><p></div></p>
 
 <h3>Arguments</h3>
 <p><div class="arguments"></p><dl>
-<dt><code>filter_expr</code></dt><dd><p>An rlang::expr</p></dd>
+<dt><code>filter_expr</code></dt><dd><p>AFL captured as a single R expression</p></dd>
+
+<dt><code>all_fields</code></dt><dd><p>A list of strings as the scope of valid fields</p></dd>
 
 </dl><p></div></p>
 <h3>Returns</h3>

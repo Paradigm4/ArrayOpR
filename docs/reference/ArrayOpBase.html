@@ -973,8 +973,9 @@ extra 'execute()' and cannot be undone.</p><h3>Usage</h3>
 <p><hr>
 <a id="method-finalize"></a></p><h3>Method <code>finalize()</code></h3>
 <p>A finalize function executed when the 'self' instance is garbage collected in R</p>
-<p>If an arrayOp is marked as .gc = T, then it should be removed from scidb
-when this function is executed.</p><h3>Usage</h3>
+<p>If an arrayOp is marked as .gc = T, then it will be removed from scidb
+when this function is executed.</p>
+<p>We don't normally call this function except in testing.</p><h3>Usage</h3>
 <p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>finalize</span>()</pre><p></div></p>
 
 

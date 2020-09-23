@@ -163,8 +163,6 @@ and download qurey results as R data frames.</p>
 </ul>
 <p><hr>
 <a id="method-new"></a></p><h3>Method <code>new()</code></h3>
-<p>Create a persistent array_op by storing AFL as an array</p>
-
 <p>Create a new ScidbConnection instance</p>
 <p>This function is only for package internal use.
 Please call <code><a href='db_connect.html'>arrayop::db_connect</a></code> to get a ScidbConnection object</p><h3>Usage</h3>
@@ -172,10 +170,6 @@ Please call <code><a href='db_connect.html'>arrayop::db_connect</a></code> to ge
 
 <h3>Arguments</h3>
 <p><div class="arguments"></p><dl>
-<dt><code>.temp</code></dt><dd><p>Whether to create a temporary scidb array.
-Only effective when <code>save_array_name = NULL</code>
-Create an array_op from a schema string with an optional array name</p></dd>
-
 <dt><code>array_like</code></dt><dd><p>An array_op, schema string or existing scidb array name</p></dd>
 
 </dl><p></div></p>
@@ -516,8 +510,8 @@ If schmea string, infer field types the same way as an arrayOp instance.</p></dd
 <dt><code>header</code></dt><dd><p>Boolean, default TRUE. Whether to use the first file row
 to infer file column names and data types.</p></dd>
 
-<dt><code>sep</code></dt><dd><p>A single character string as the field delimiter, default ""
-for TSV files. Set to "," for CSV files.</p></dd>
+<dt><code>sep</code></dt><dd><p>A single character string as the field delimiter, default <code>"\t"</code>
+for TSV files. Set to <code>","</code> for CSV files.</p></dd>
 
 <dt><code>col.names</code></dt><dd><p>NULL (default) or a string vector.
 If <code>col.names = NULL, header = T</code>, file column names are inferred from the
