@@ -2026,6 +2026,23 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     }
     ,
     #' @description 
+    #' Get an arrayOp instance that encapsulates a version snapshot of a persistent 
+    #' scidb array
+    #' 
+    #' The function does not perform version check in scidb. It only construct
+    #' an arrayOp locally to represent a specific version. If a non-existent
+    #' version_id is later used in scidb related operations, an error will be 
+    #' thrown by SciDB.
+    #' 
+    #' @param version_id A number of the array version_id
+    #' @return An arrayOp instance with the same schema as self
+    get_version_snapshot = function(version_id) {
+      assertf(self$is_persistent(), "get_version_snapshot only works on persistent arrays")
+      assert_single_num(version_id)
+      self$spawn(sprintf("%s@%s", self$to_afl(), version_id))
+    }
+    ,
+    #' @description 
     #' Returns whether the current arraOp instance encapsulates a persistent scidb
     #' array namne that may or may not exist on the scidb server
     #' 
