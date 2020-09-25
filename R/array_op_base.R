@@ -587,12 +587,13 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       assert_not_has_len(dfNonMatchingCols, "ERROR: ArrayOp$build_new: df column(s) '%s' not found in template %s",
         paste(dfNonMatchingCols, collapse = ','), self$to_afl())
       
-      builtDtypes = private$get_field_types(builtAttrs, .raw = T)
+      builtDtypes = private$get_field_types(builtAttrs)
+      builtDtypesRaw = private$get_field_types(builtAttrs, .raw = TRUE)
       
       attrStr = paste(builtAttrs, builtDtypes, collapse = ',', sep = ':')
       # convert columns to escaped strings
       colStrs = lapply(builtAttrs, function(x) {
-        colScidbType = builtDtypes[[x]]
+        colScidbType = builtDtypesRaw[[x]]
         vec = df[[x]]
         switch(
           colScidbType,

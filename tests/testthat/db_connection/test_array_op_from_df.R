@@ -6,11 +6,9 @@ context("persistent array_op from uploaded data frame")
 
 test_that("upload data frame: no template", {
   df = data.frame(a = letters[1:5], b = 1:5, z = 11:15 * 1.2)
-  uploaded = conn$upload_df(df, .gc = F)
-  
+  uploaded = conn$upload_df(df)
   # uploaded data frame will have an artificial dimension
   expect_equal(uploaded$to_df(), df)
-  uploaded$remove_array()
 })
 
 test_that("various types of template", {
@@ -62,23 +60,27 @@ test_that("upload data frame: by a single vector", {
 
 test_that("upload data frame: no template, by vectors", {
   df = data.frame(a = letters[1:5], b = 1:5, z = 11:15 * 1.2)
-  uploaded = conn$upload_df(df, upload_by_vector = T, .gc = F)
+  uploaded = conn$upload_df(df, upload_by_vector = T, .gc = T)
   
+  gc()
   # uploaded data frame will have an artificial dimension
   expect_equal(uploaded$to_df(), df)
-  columnArrays = uploaded$.private$get_meta(".refs")
-  for(arr in columnArrays){
-    arr$remove_array()
-  }
+  
+  uploaded$finalize() # this should clean up all uploaded vector arrays
+  expect_error(uploaded$cell_count())
+  # columnArrays = uploaded$.private$get_meta(".refs")
+  # for(arr in columnArrays){
+  #   arr$remove_array()
+  # }
 })
 
 test_that("upload data frame with a template", {
   df = data.frame(a = letters[1:5], b = 1:5, z = 11:15)
   uploaded = conn$upload_df(
     df, 
-    template = "<a:string, b:int32, extra:bool> [z]", 
+    template = "<a:string compression 'zlib', b:int32, extra:bool> [z]", 
   )
-  
+  # expect_match(uploaded$to_schema_str(), "compression 'zlib'", ignore.case = T)
   expect_equal(uploaded$to_df(), df)
 })
 
@@ -132,22 +134,34 @@ test_that("upload data frame by vectors", {
 
 
 test_that("upload data frame with GC setting", {
-  template = "<a:string, b:int32, extra:bool> [z]"
+  template = conn$array_from_schema(
+    "<a:string compression 'zlib', b:int32 not null> [z]"
+  )
+    
   df = data.frame(a = letters[1:5], b = 1:5, z = 11:15)
   
   gc_on = function() {
     name = dbutils$random_array_name() 
+    name2 = dbutils$random_array_name() 
     arr = conn$upload_df(df, template, name = name, .gc = TRUE)
+    arr2 = conn$upload_df(df, template, name = name2, force_template_schema = T, .gc = TRUE)
     expect_true(!is.null(
       conn$array(name) # array with name must exist
     ))
+    # because arr2 involves a redimension using 'template' as schema template
+    expect_match(arr2$to_afl(), "compression 'zlib'", ignore.case = T)
+    expect_match(arr2$to_schema_str(), "compression 'zlib'", ignore.case = T)
+    expect_match(arr2$to_afl(), "not null", ignore.case = T)
+    expect_match(arr2$to_schema_str(), "not null", ignore.case = T)
+    
     rm(arr)
     gc()
     expect_error(conn$array(name)) # array should be removed during GC
+    expect_equal(arr2$cell_count(), nrow(df))
   }
   
   gc_off = function() {
-    name = "Rarrayop_test_upload_array_gc_off"
+    name = dbutils$random_array_name()
     arr = conn$upload_df(df, template, name = name, .gc = F)
     expect_true(!is.null(
       conn$array(name) # array with name must exist
@@ -155,11 +169,9 @@ test_that("upload data frame with GC setting", {
     rm(arr)
     gc()
     
-    retried = conn$array(name)
-    expect_identical(retried$to_afl(), name) # array should still exists
+    retried = conn$array(name) # array should still exists
     
     retried$remove_array()
-    expect_error(conn$array(name)) # now the array should be removed 
   }
   
   gc_on()
@@ -183,12 +195,15 @@ test_that("upload data frame with other scidbR settings", {
   ))
   
   uploaded = conn$upload_df(df, schema, .temp = F, .use_aio_input = F)
-  # Template can also be a list of data types 
-  uploaded2 = conn$upload_df(df, template$.private$get_field_types(), .temp = T, .use_aio_input = T)
   
-  templateMatchedDTypes = template$.private$get_field_types(names(df), .raw = T)
-  expect_identical(uploaded$.private$get_field_types(uploaded$attrs), templateMatchedDTypes)
-  expect_identical(uploaded2$.private$get_field_types(uploaded2$attrs), templateMatchedDTypes)
+  # Template can also be a list of data types 
+  # aio_input mode does not support compound data types, e.g. <a: string CMOPRESSION 'zlib'>
+  uploaded2 = conn$upload_df(df, template$raw_dtypes, .temp = T, .use_aio_input = T)
+  
+  expect_identical(uploaded$dtypes[uploaded$attrs], template$dtypes[uploaded$attrs])
+  expect_identical(uploaded2$dtypes[uploaded2$attrs], template$raw_dtypes[uploaded2$attrs])
+  # templateMatchedDTypes = template$.private$get_field_types(names(df), .raw = T)
+  # expect_identical(uploaded2$.private$get_field_types(uploaded2$attrs), templateMatchedDTypes)
   
   # R date time conversion is cubersome. We replace it with the scidb parsed values.
   df = dplyr::mutate(df, f_datetime = as.POSIXct(f_datetime))
@@ -219,7 +234,7 @@ test_that("transient array_op from build literal", {
   # While the data frame below will work in build literal, it would NOT work in upload mode (because of bugs from SciDBR package)
   
   #template = conn$array_from_schema("new <a:string, b:int32, extra:bool> [z]")
-  template = "new <a:string, b:int32, extra:bool> [z]"
+  template = "new <a:string compression 'zlib', b:int32 not null, extra:bool> [z]"
   df = data.frame(
     b = 1:5, z = 11:15,
     a = c(
@@ -236,6 +251,9 @@ test_that("transient array_op from build literal", {
   
   expect_equal(arr$to_df() %>% dplyr::arrange(z), df)
   expect_equal(arr2$to_df() %>% dplyr::arrange(z), df)
+  
+  expect_match(arr$to_afl(), "compression 'zlib'", ignore.case = T)
+  expect_match(arr$to_afl(), "not null", ignore.case = T)
   
 })
 
