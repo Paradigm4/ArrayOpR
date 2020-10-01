@@ -99,7 +99,10 @@ DBUtils = R6::R6Class(
       arrayRecordsDf = list_arrays_in_ns(ns)$transmute(name, schema)$to_df()
       .conn = get_conn()
       new_named_list(
-        sapply(arrayRecordsDf$schema, .conn$array_from_schema),
+        sapply(arrayRecordsDf$schema, function(schemaStr) {
+           arr = .conn$array_from_schema(schemaStr) # schemaStr doesn't have namespace
+           arr$spawn(sprintf("%s.%s", ns, arr$to_afl()))
+          }),
         names = arrayRecordsDf$name
       )
     }
