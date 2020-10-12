@@ -26,9 +26,16 @@ This is a convenience function for AFL generation.
 Any \code{a | op_name(b)} call will be translated to \code{op_name(a, b)} in R, then translated to AFL:
 \code{op_name(a, b)}
 
+Any \code{a | op_name } call will be translated to \code{op_name(a)} in R, then translated to AFL:
+\code{op_name(a)}
+
+Where \code{a}, \code{b} can be any ArrayOpBase instance, array name or array opertion or AFL expression;
+\code{op_name} can be any scidb operator or function name.
+
 Using this syntax, we can chain multiple AFL operators
 
-E.g. \code{'array' | filter('a > 3 and b < 4') | project('a', 'b')}
+E.g.1. \code{'array' | filter('a > 3 and b < 4') | project('a', 'b')}
 will be translated into: \verb{project(filter(array, a > 3 and b < 4), 'a', 'b')}
-Use NULL if no 2nd operand is needed. E.g. \code{'array' | op_count} => \code{op_count(array)}
+
+E.g.2.\code{'array' | filter(a > 3) | op_count} => \code{op_count(filter(array, a > 3))}
 }

@@ -6,16 +6,6 @@
 ##########################################
 
 
-
-
-
-
-# AFL Expressions denoted by R Expressions ------------------------------------------------------------------------
-
-
-
-
-
 # Construct AFL expressions ---------------------------------------------------------------------------------------
 
 #' Create AFL expressions from R expressions
@@ -25,11 +15,18 @@
 #' Any ```a | op_name(b)``` call will be translated to `op_name(a, b)` in R, then translated to AFL:
 #'   `op_name(a, b)`
 #'   
+#' Any ```a | op_name ``` call will be translated to `op_name(a)` in R, then translated to AFL:
+#'   `op_name(a)`
+#' 
+#' Where `a`, `b` can be any ArrayOpBase instance, array name or array opertion or AFL expression;
+#' `op_name` can be any scidb operator or function name.
+#'   
 #' Using this syntax, we can chain multiple AFL operators
 #' 
-#' E.g. `'array' | filter('a > 3 and b < 4') | project('a', 'b')`
+#' E.g.1. `'array' | filter('a > 3 and b < 4') | project('a', 'b')`
 #' will be translated into: `project(filter(array, a > 3 and b < 4), 'a', 'b')`
-#' Use NULL if no 2nd operand is needed. E.g. `'array' | op_count` => `op_count(array)`
+#' 
+#' E.g.2.`'array' | filter(a > 3) | op_count` => `op_count(filter(array, a > 3))`
 #' @param ... In the ellipsis arg, any R functions right after a pipe sign `|`` is converted to 
 #' a scidb operator of the same name. 
 #' All regular functions are first evaluated in the calling environment, and then convereted to strings 

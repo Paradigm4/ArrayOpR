@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">arrayop</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.1</span>
       </span>
     </div>
 
@@ -162,10 +162,14 @@ NULL is ignored.</p></td>
 
     <p>Any <code>a | op_name(b)</code> call will be translated to <code>op_name(a, b)</code> in R, then translated to AFL:
 <code>op_name(a, b)</code></p>
+<p>Any <code>a | op_name </code> call will be translated to <code>op_name(a)</code> in R, then translated to AFL:
+<code>op_name(a)</code></p>
+<p>Where <code>a</code>, <code>b</code> can be any ArrayOpBase instance, array name or array opertion or AFL expression;
+<code>op_name</code> can be any scidb operator or function name.</p>
 <p>Using this syntax, we can chain multiple AFL operators</p>
-<p>E.g. <code>'array' | filter('a &gt; 3 and b &lt; 4') | project('a', 'b')</code>
-will be translated into: <code>project(filter(array, a &gt; 3 and b &lt; 4), 'a', 'b')</code>
-Use NULL if no 2nd operand is needed. E.g. <code>'array' | op_count</code> =&gt; <code>op_count(array)</code></p>
+<p>E.g.1. <code>'array' | filter('a &gt; 3 and b &lt; 4') | project('a', 'b')</code>
+will be translated into: <code>project(filter(array, a &gt; 3 and b &lt; 4), 'a', 'b')</code></p>
+<p>E.g.2.<code>'array' | filter(a &gt; 3) | op_count</code> =&gt; <code>op_count(filter(array, a &gt; 3))</code></p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
