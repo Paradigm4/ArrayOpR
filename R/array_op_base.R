@@ -1825,22 +1825,42 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     }
     ,
     #' @description 
-    #' Create an arrayOp instance by persisting self's AFL if self is an array
-    #' operation or return self if self is already a persistent array in scidb
+    #' Persist array operation as scidb array
     #' 
-    #' @param save_array_name NULL or String. The array name to save self's AFL as, only applicable
-    #' if self is an array operation. If NULL, the array name is randomly generated.
+    #' If `self` is a persistent array and no `save_array_name` provided, then 
+    #' `self` is returned. 
+    #' 
+    #' Otherwise, save self's AFL as a new scidb array. This includes two cases: 
+    #'   1. `self` is persistent and `save_array_name` is provided, i.e. explicit persistence
+    #'   2. `self` is array operation(s), then a new array is created regardless of `save_array_name`
+    #'   
+    #' From users perspective, 
+    #' 
+    #'  1. When we need to ensure a handle to a persistent array and do not care
+    #'   whether it is a new or existing array, we should leave out 
+    #'   `save_array_name` to avoid unnecessary array copying. E.g. `conn$array_from_df`
+    #'   may return a build literal or uploaded persistent array, call
+    #'   `conn$array_from_df(...)$persist()` to ensure a persistent array.
+    #'  2. When we need to backup an array, then provide a `save_array_name` explicitly.
+    #'  
+    #'  Parameters `.gc` and `.temp` are only applicable when a new array is created.
+    #' 
+    #' @param save_array_name NULL or String. The new array name to save self's AFL as.
+    #' If NULL, the array name is randomly generated when a new array is created.
     #' @param .temp Boolean, default FALSE. Whether to creaet a temporary scidb array.
     #' @param .gc Boolean, default TRUE. Whether to remove the persisted scidb array
-    #' once the encapsulating arrayOp goes out of scodb in R. 
+    #' once the encapsulating arrayOp goes out of scodb in R. Set to FALSE if we
+    #' need to keep the array indefinitely.
     #' @return A new arrayOp instance or self
     persist = function(
       save_array_name = NULL,
       .temp = FALSE,
       .gc = TRUE
     ){
+      if(!is.null(save_array_name))
+        assert_single_str(save_array_name)
       # No need to store an already persistent arrary
-      if(self$is_persistent()) return(self) 
+      if(self$is_persistent() && is.null(save_array_name)) return(self) 
       private$conn$private$array_from_stored_afl(
         private$to_df_afl(),
         save_array_name = save_array_name,
