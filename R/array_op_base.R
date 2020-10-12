@@ -146,14 +146,14 @@ ArrayOpBase <- R6::R6Class(
                    sprintf("Invalid key field(s): [{.value}] on the %s operand", side))
     }
     ,
-    validate_join_params = function(left, right, on_left, on_right, settings) {
-      private$validate_join_operand('left', left, on_left)
-      private$validate_join_operand('right', right, on_right)
+    validate_join_params = function(left, right, by.x, by.y, settings) {
+      private$validate_join_operand('left', left, by.x)
+      private$validate_join_operand('right', right, by.y)
       
       # Assert left and right keys lengths match
-      assert(length(on_left) == length(on_right),
-        "ArrayOp join: on_left[%s field(s)] and on_right[%s field(s)] must have the same length.",
-        length(on_left), length(on_right))
+      assert(length(by.x) == length(by.y),
+        "ArrayOp join: by.x[%s field(s)] and by.y[%s field(s)] must have the same length.",
+        length(by.x), length(by.y))
       
       # Validate settings
       if(.not_empty(settings)){
@@ -215,9 +215,9 @@ ArrayOpBase <- R6::R6Class(
     # 
     # Currently implemented with scidb `equi_join` operator.
     # @param right The other ArrayOp instance to join with.
-    # @param on_left R character vector. Join keys from the left (self).
-    # @param on_right R character vector. Join keys from the `right`. Must be of the same length as `on_left`
-    # @param on_both Join keys on both operand.
+    # @param by.x R character vector. Join keys from the left (self).
+    # @param by.y R character vector. Join keys from the `right`. Must be of the same length as `by.x`
+    # @param by Join keys on both operand.
     # @param settings `equi_join` settings, a named list where both key and values are strings. 
     # @param .dim_mode How to reshape the resultant ArrayOp. Same meaning as in `ArrayOp$reshape` function. 
     # By default, dim_mode = 'keep', the artificial dimensions, namely `instance_id` and `value_no` from `equi_join`
@@ -226,16 +226,16 @@ ArrayOpBase <- R6::R6Class(
     # client code. It exists only for test purposes. 
     # @return A new arrayOp 
     join = function(left, right, 
-                    on_left = NULL, on_right = NULL, on_both = NULL, 
+                    by.x = NULL, by.y = NULL, by = NULL, 
                     join_mode = 'equi_join',
                     settings = NULL, 
                     left_alias = '_L', right_alias = '_R') {
-      if(.is_empty(on_left) && .is_empty(on_right) && .is_empty(on_both)){
-        on_both = left$dims_n_attrs %n% right$dims_n_attrs
+      if(.is_empty(by.x) && .is_empty(by.y) && .is_empty(by)){
+        by = left$dims_n_attrs %n% right$dims_n_attrs
       }
-      if(.not_empty(on_both)){
-        on_left = on_both %u% on_left
-        on_right = on_both %u% on_right
+      if(.not_empty(by)){
+        by.x = by %u% by.x
+        by.y = by %u% by.y
       }
       switch(join_mode,
              'equi_join' = private$equi_join,
@@ -244,7 +244,7 @@ ArrayOpBase <- R6::R6Class(
       )(
         left$.private$auto_select(), 
         right$.private$auto_select(), 
-        on_left, on_right, settings = settings, 
+        by.x, by.y, settings = settings, 
         .left_alias = left_alias, .right_alias = right_alias)
     }
     ,
@@ -279,17 +279,17 @@ ArrayOpBase <- R6::R6Class(
       }
     }
     ,
-    equi_join = function(left, right, on_left, on_right, settings = NULL,
+    equi_join = function(left, right, by.x, by.y, settings = NULL,
       .left_alias = '_L', .right_alias = '_R') {
       # Validate join params
-      private$validate_join_params(left, right, on_left, on_right, settings)
+      private$validate_join_params(left, right, by.x, by.y, settings)
       
       # Validate selected fields
       hasSelected = .not_empty(left$selected) || .not_empty(right$selected)
       assertf(hasSelected, "There should be selected fields of equi_join operands.")
       
       # Create setting items
-      mergedSettings <- c(list(left_names = on_left, right_names = on_right), settings)
+      mergedSettings <- c(list(left_names = by.x, right_names = by.y), settings)
       # Values of setting items cannot be quoted.
       # But the whole 'key=value' needs single quotation according to equi_join plugin specs
       settingItems = mapply(function(k, v) private$to_equi_join_setting_item_str(k, v, .left_alias, .right_alias), 
@@ -300,17 +300,17 @@ ArrayOpBase <- R6::R6Class(
       
       # Join two operands
       joinExpr <- sprintf(private$equi_join_template(.left_alias, .right_alias),
-        left$.private$to_join_operand_afl(on_left, keep_dimensions = keep_dimensions), 
-        right$.private$to_join_operand_afl(on_right, keep_dimensions = keep_dimensions),
+        left$.private$to_join_operand_afl(by.x, keep_dimensions = keep_dimensions), 
+        right$.private$to_join_operand_afl(by.y, keep_dimensions = keep_dimensions),
         paste(settingItems, collapse = ', '))
       
       
       dims = list(instance_id = 'int64', value_no = 'int64')
-      attrs = as.character(unique(c(left$selected, right$selected %-% on_right)))
+      attrs = as.character(unique(c(left$selected, right$selected %-% by.y)))
       dtypes = .remove_null_values(c(dims, c(left$dtypes, right$dtypes)[attrs]))
       
       selectedFields = private$disambiguate_join_fields(
-        left$selected, right$selected %-% on_right,
+        left$selected, right$selected %-% by.y,
         .left_alias, .right_alias
       )
       joinedOp = private$create_new(joinExpr, names(dims), attrs, dtypes = dtypes)
@@ -320,7 +320,7 @@ ArrayOpBase <- R6::R6Class(
       )
     }
     ,
-    cross_join = function(left, right, on_left, on_right, settings = NULL,  
+    cross_join = function(left, right, by.x, by.y, settings = NULL,  
       .left_alias = '_L', .right_alias = '_R') {
       # Scidb cross_join operator only allows join on operands' dimensions
       assert_keys_are_all_dimensions = function(side, operand, keys){
@@ -331,29 +331,29 @@ ArrayOpBase <- R6::R6Class(
       }
       # Validate join params
       # left = self
-      private$validate_join_params(left, right, on_left, on_right, settings)
-      assert_keys_are_all_dimensions('left', left, on_left)
-      assert_keys_are_all_dimensions('right', right, on_right)
+      private$validate_join_params(left, right, by.x, by.y, settings)
+      assert_keys_are_all_dimensions('left', left, by.x)
+      assert_keys_are_all_dimensions('right', right, by.y)
       # Construct the AFL
-      joinDims = paste(sprintf(", %s.%s, %s.%s", .left_alias, on_left, .right_alias, on_right), collapse = '')
+      joinDims = paste(sprintf(", %s.%s, %s.%s", .left_alias, by.x, .right_alias, by.y), collapse = '')
       aflStr = sprintf("cross_join(%s as %s, %s as %s %s)", 
                        # left$to_afl(), 
-                       left$.private$to_join_operand_afl(on_left, keep_dimensions = TRUE), 
+                       left$.private$to_join_operand_afl(by.x, keep_dimensions = TRUE), 
                        .left_alias,
                        # right$to_afl(),
-                       right$.private$to_join_operand_afl(on_right, keep_dimensions = TRUE),
+                       right$.private$to_join_operand_afl(by.y, keep_dimensions = TRUE),
                        .right_alias, 
                        joinDims)
       attrs = c(left$attrs, right$attrs)
-      dims = c(left$dims, right$dims %-% on_right)
+      dims = c(left$dims, right$dims %-% by.y)
       dtypes = c(left$.private$get_field_types(),
-                 right$.private$get_field_types(right$dims_n_attrs %-% on_right))
+                 right$.private$get_field_types(right$dims_n_attrs %-% by.y))
       dim_specs = c(left$.private$get_dim_specs(), 
-                    right$.private$get_dim_specs(right$dims %-% on_right))
+                    right$.private$get_dim_specs(right$dims %-% by.y))
       joinedOp = private$create_new(aflStr, dims = dims, attrs = attrs, dtypes = dtypes, dim_specs = dim_specs)
       
       selectedFields = private$disambiguate_join_fields(
-        left$selected, right$selected %-% on_right,
+        left$selected, right$selected %-% by.y,
         .left_alias, .right_alias
       )
       # cross_join keeps operands' dimensions, no need to apply dimensions as attributes
@@ -758,8 +758,8 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       joinOp = private$join(
         operand$select(reserved_fields %u% (self$dims %n% operand$dims_n_attrs)),
         self$select(self$dims), 
-        on_left = operandKeyFields, 
-        on_right = templateKeyFields, 
+        by.x = operandKeyFields, 
+        by.y = templateKeyFields, 
         settings = .join_setting)
       joinOp$change_schema(self, strict = FALSE, .setting = .redimension_setting)
     }
@@ -864,7 +864,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       }
       joined = private$join(redimenedSource$select(redimenedSource$dims_n_attrs), 
                             groupedTarget$select(targetAltIdMax), 
-                            on_both = regularTargetDims,
+                            by = regularTargetDims,
                             settings = joinSetting)
       
       # Finally calculate the values of anti_collision_field
@@ -1311,11 +1311,11 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' If no fields are selected, then all fields are treated as selected. 
     #' 
     #' @param right An arrayOp instance
-    #' @param on_left NULL or a string vector as join keys. If set to NULL, join
+    #' @param by.x NULL or a string vector as join keys. If set to NULL, join
     #' keys are inferred as shared fields of 'left' and 'right'.
-    #' @param on_right NULL or a string vector as join keys. If set to NULL, join
+    #' @param by.y NULL or a string vector as join keys. If set to NULL, join
     #' keys are inferred as shared fields of 'left' and 'right'.
-    #' @param on_both NULL or a string vector as join keys. If set to NULL, join
+    #' @param by NULL or a string vector as join keys. If set to NULL, join
     #' keys are inferred as shared fields of 'left' and 'right'. If not NULL,
     #' must be fields of both operands.
     #' @param left_alias Alias for left array to resolve potential conflicting fields in result
@@ -1326,14 +1326,14 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' @param settings A named list as join settings. E.g. ` list(algorithm = "'hash_replicate_right'")`
     #' @return A new arrayOp instance 
     inner_join = function(right, 
-                          on_left = NULL, on_right = NULL, on_both = NULL, 
+                          by.x = NULL, by.y = NULL, by = NULL, 
                           left_alias = '_L', right_alias = '_R',
                           join_mode = 'equi_join',
                           settings = NULL
                           ) {
       
       private$join(self, right,
-                   on_left = on_left, on_right = on_right, on_both = on_both,
+                   by.x = by.x, by.y = by.y, by = by,
                    left_alias = left_alias, right_alias = right_alias,
                    join_mode = join_mode,
                    settings = settings
@@ -1348,11 +1348,11 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' If no fields are selected, then all fields are treated as selected. 
     #' 
     #' @param right An arrayOp instance
-    #' @param on_left NULL or a string vector as join keys. If set to NULL, join
+    #' @param by.x NULL or a string vector as join keys. If set to NULL, join
     #' keys are inferred as shared fields of 'left' and 'right'.
-    #' @param on_right NULL or a string vector as join keys. If set to NULL, join
+    #' @param by.y NULL or a string vector as join keys. If set to NULL, join
     #' keys are inferred as shared fields of 'left' and 'right'.
-    #' @param on_both NULL or a string vector as join keys. If set to NULL, join
+    #' @param by NULL or a string vector as join keys. If set to NULL, join
     #' keys are inferred as shared fields of 'left' and 'right'. If not NULL,
     #' must be fields of both operands.
     #' @param left_alias Alias for left array to resolve potential conflicting fields in result
@@ -1360,13 +1360,13 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' @param settings A named list as join settings. E.g. ` list(algorithm = "'hash_replicate_right'")`
     #' @return A new arrayOp instance 
     left_join = function(right, 
-                         on_left = NULL, on_right = NULL, on_both = NULL, 
+                         by.x = NULL, by.y = NULL, by = NULL, 
                          left_alias = '_L', right_alias = '_R',
                          settings = NULL
                          ) {
       joinSettings = utils::modifyList(as.list(settings), list(left_outer = 1))
       private$join(self, right,
-                   on_left = on_left, on_right = on_right, on_both = on_both,
+                   by.x = by.x, by.y = by.y, by = by,
                    left_alias = left_alias, right_alias = right_alias,
                    settings = joinSettings,
                    join_mode = 'equi_join'
@@ -1381,11 +1381,11 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' If no fields are selected, then all fields are treated as selected. 
     #' 
     #' @param right An arrayOp instance
-    #' @param on_left NULL or a string vector as join keys. If set to NULL, join
+    #' @param by.x NULL or a string vector as join keys. If set to NULL, join
     #' keys are inferred as shared fields of 'left' and 'right'.
-    #' @param on_right NULL or a string vector as join keys. If set to NULL, join
+    #' @param by.y NULL or a string vector as join keys. If set to NULL, join
     #' keys are inferred as shared fields of 'left' and 'right'.
-    #' @param on_both NULL or a string vector as join keys. If set to NULL, join
+    #' @param by NULL or a string vector as join keys. If set to NULL, join
     #' keys are inferred as shared fields of 'left' and 'right'. If not NULL,
     #' must be fields of both operands.
     #' @param left_alias Alias for left array to resolve potential conflicting fields in result
@@ -1393,13 +1393,13 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' @param settings A named list as join settings. E.g. ` list(algorithm = "'hash_replicate_right'")`
     #' @return A new arrayOp instance 
     right_join = function(right, 
-                          on_left = NULL, on_right = NULL, on_both = NULL, 
+                          by.x = NULL, by.y = NULL, by = NULL, 
                           left_alias = '_L', right_alias = '_R',
                           settings = NULL
                           ) {
       joinSettings = utils::modifyList(as.list(settings), list(right_outer=1))
       private$join(self, right,
-                   on_left = on_left, on_right = on_right, on_both = on_both,
+                   by.x = by.x, by.y = by.y, by = by,
                    left_alias = left_alias, right_alias = right_alias,
                    settings = joinSettings,
                    join_mode = 'equi_join'
@@ -1414,11 +1414,11 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' If no fields are selected, then all fields are treated as selected. 
     #' 
     #' @param right An arrayOp instance
-    #' @param on_left NULL or a string vector as join keys. If set to NULL, join
+    #' @param by.x NULL or a string vector as join keys. If set to NULL, join
     #' keys are inferred as shared fields of 'left' and 'right'.
-    #' @param on_right NULL or a string vector as join keys. If set to NULL, join
+    #' @param by.y NULL or a string vector as join keys. If set to NULL, join
     #' keys are inferred as shared fields of 'left' and 'right'.
-    #' @param on_both NULL or a string vector as join keys. If set to NULL, join
+    #' @param by NULL or a string vector as join keys. If set to NULL, join
     #' keys are inferred as shared fields of 'left' and 'right'. If not NULL,
     #' must be fields of both operands.
     #' @param left_alias Alias for left array to resolve potential conflicting fields in result
@@ -1426,13 +1426,13 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' @param settings A named list as join settings. E.g. `list(algorithm = "'hash_replicate_right'")`
     #' @return A new arrayOp instance 
     full_join = function(right, 
-                          on_left = NULL, on_right = NULL, on_both = NULL, 
+                          by.x = NULL, by.y = NULL, by = NULL, 
                           left_alias = '_L', right_alias = '_R',
                           settings = NULL
                           ) {
       joinSettings = utils::modifyList(as.list(settings), list(left_outer = 1, right_outer=1))
       private$join(self, right,
-                   on_left = on_left, on_right = on_right, on_both = on_both,
+                   by.x = by.x, by.y = by.y, by = by,
                    left_alias = left_alias, right_alias = right_alias,
                    settings = joinSettings,
                    join_mode = 'equi_join'

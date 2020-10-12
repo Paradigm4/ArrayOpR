@@ -388,9 +388,9 @@ For both left and right arrays, only selected fields are included in the result 
 If no fields are selected, then all fields are treated as selected.</p><h3>Usage</h3>
 <p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>inner_join</span>(
   <span class='no'>right</span>,
-  <span class='kw'>on_left</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>on_right</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>on_both</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>by.x</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>by.y</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>by</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>left_alias</span> <span class='kw'>=</span> <span class='st'>"_L"</span>,
   <span class='kw'>right_alias</span> <span class='kw'>=</span> <span class='st'>"_R"</span>,
   <span class='kw'>join_mode</span> <span class='kw'>=</span> <span class='st'>"equi_join"</span>,
@@ -401,13 +401,13 @@ If no fields are selected, then all fields are treated as selected.</p><h3>Usage
 <p><div class="arguments"></p><dl>
 <dt><code>right</code></dt><dd><p>An arrayOp instance</p></dd>
 
-<dt><code>on_left</code></dt><dd><p>NULL or a string vector as join keys. If set to NULL, join
+<dt><code>by.x</code></dt><dd><p>NULL or a string vector as join keys. If set to NULL, join
 keys are inferred as shared fields of 'left' and 'right'.</p></dd>
 
-<dt><code>on_right</code></dt><dd><p>NULL or a string vector as join keys. If set to NULL, join
+<dt><code>by.y</code></dt><dd><p>NULL or a string vector as join keys. If set to NULL, join
 keys are inferred as shared fields of 'left' and 'right'.</p></dd>
 
-<dt><code>on_both</code></dt><dd><p>NULL or a string vector as join keys. If set to NULL, join
+<dt><code>by</code></dt><dd><p>NULL or a string vector as join keys. If set to NULL, join
 keys are inferred as shared fields of 'left' and 'right'. If not NULL,
 must be fields of both operands.</p></dd>
 
@@ -432,9 +432,9 @@ For both left and right arrays, only selected fields are included in the result 
 If no fields are selected, then all fields are treated as selected.</p><h3>Usage</h3>
 <p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>left_join</span>(
   <span class='no'>right</span>,
-  <span class='kw'>on_left</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>on_right</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>on_both</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>by.x</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>by.y</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>by</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>left_alias</span> <span class='kw'>=</span> <span class='st'>"_L"</span>,
   <span class='kw'>right_alias</span> <span class='kw'>=</span> <span class='st'>"_R"</span>,
   <span class='kw'>settings</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
@@ -444,13 +444,13 @@ If no fields are selected, then all fields are treated as selected.</p><h3>Usage
 <p><div class="arguments"></p><dl>
 <dt><code>right</code></dt><dd><p>An arrayOp instance</p></dd>
 
-<dt><code>on_left</code></dt><dd><p>NULL or a string vector as join keys. If set to NULL, join
+<dt><code>by.x</code></dt><dd><p>NULL or a string vector as join keys. If set to NULL, join
 keys are inferred as shared fields of 'left' and 'right'.</p></dd>
 
-<dt><code>on_right</code></dt><dd><p>NULL or a string vector as join keys. If set to NULL, join
+<dt><code>by.y</code></dt><dd><p>NULL or a string vector as join keys. If set to NULL, join
 keys are inferred as shared fields of 'left' and 'right'.</p></dd>
 
-<dt><code>on_both</code></dt><dd><p>NULL or a string vector as join keys. If set to NULL, join
+<dt><code>by</code></dt><dd><p>NULL or a string vector as join keys. If set to NULL, join
 keys are inferred as shared fields of 'left' and 'right'. If not NULL,
 must be fields of both operands.</p></dd>
 
@@ -471,9 +471,9 @@ For both left and right arrays, only selected fields are included in the result 
 If no fields are selected, then all fields are treated as selected.</p><h3>Usage</h3>
 <p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>right_join</span>(
   <span class='no'>right</span>,
-  <span class='kw'>on_left</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>on_right</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>on_both</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>by.x</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>by.y</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>by</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>left_alias</span> <span class='kw'>=</span> <span class='st'>"_L"</span>,
   <span class='kw'>right_alias</span> <span class='kw'>=</span> <span class='st'>"_R"</span>,
   <span class='kw'>settings</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
@@ -483,13 +483,13 @@ If no fields are selected, then all fields are treated as selected.</p><h3>Usage
 <p><div class="arguments"></p><dl>
 <dt><code>right</code></dt><dd><p>An arrayOp instance</p></dd>
 
-<dt><code>on_left</code></dt><dd><p>NULL or a string vector as join keys. If set to NULL, join
+<dt><code>by.x</code></dt><dd><p>NULL or a string vector as join keys. If set to NULL, join
 keys are inferred as shared fields of 'left' and 'right'.</p></dd>
 
-<dt><code>on_right</code></dt><dd><p>NULL or a string vector as join keys. If set to NULL, join
+<dt><code>by.y</code></dt><dd><p>NULL or a string vector as join keys. If set to NULL, join
 keys are inferred as shared fields of 'left' and 'right'.</p></dd>
 
-<dt><code>on_both</code></dt><dd><p>NULL or a string vector as join keys. If set to NULL, join
+<dt><code>by</code></dt><dd><p>NULL or a string vector as join keys. If set to NULL, join
 keys are inferred as shared fields of 'left' and 'right'. If not NULL,
 must be fields of both operands.</p></dd>
 

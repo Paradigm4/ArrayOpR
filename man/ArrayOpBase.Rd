@@ -314,9 +314,9 @@ If no fields are selected, then all fields are treated as selected.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$inner_join(
   right,
-  on_left = NULL,
-  on_right = NULL,
-  on_both = NULL,
+  by.x = NULL,
+  by.y = NULL,
+  by = NULL,
   left_alias = "_L",
   right_alias = "_R",
   join_mode = "equi_join",
@@ -329,13 +329,13 @@ If no fields are selected, then all fields are treated as selected.
 \describe{
 \item{\code{right}}{An arrayOp instance}
 
-\item{\code{on_left}}{NULL or a string vector as join keys. If set to NULL, join
+\item{\code{by.x}}{NULL or a string vector as join keys. If set to NULL, join
 keys are inferred as shared fields of 'left' and 'right'.}
 
-\item{\code{on_right}}{NULL or a string vector as join keys. If set to NULL, join
+\item{\code{by.y}}{NULL or a string vector as join keys. If set to NULL, join
 keys are inferred as shared fields of 'left' and 'right'.}
 
-\item{\code{on_both}}{NULL or a string vector as join keys. If set to NULL, join
+\item{\code{by}}{NULL or a string vector as join keys. If set to NULL, join
 keys are inferred as shared fields of 'left' and 'right'. If not NULL,
 must be fields of both operands.}
 
@@ -367,9 +367,9 @@ If no fields are selected, then all fields are treated as selected.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$left_join(
   right,
-  on_left = NULL,
-  on_right = NULL,
-  on_both = NULL,
+  by.x = NULL,
+  by.y = NULL,
+  by = NULL,
   left_alias = "_L",
   right_alias = "_R",
   settings = NULL
@@ -381,13 +381,13 @@ If no fields are selected, then all fields are treated as selected.
 \describe{
 \item{\code{right}}{An arrayOp instance}
 
-\item{\code{on_left}}{NULL or a string vector as join keys. If set to NULL, join
+\item{\code{by.x}}{NULL or a string vector as join keys. If set to NULL, join
 keys are inferred as shared fields of 'left' and 'right'.}
 
-\item{\code{on_right}}{NULL or a string vector as join keys. If set to NULL, join
+\item{\code{by.y}}{NULL or a string vector as join keys. If set to NULL, join
 keys are inferred as shared fields of 'left' and 'right'.}
 
-\item{\code{on_both}}{NULL or a string vector as join keys. If set to NULL, join
+\item{\code{by}}{NULL or a string vector as join keys. If set to NULL, join
 keys are inferred as shared fields of 'left' and 'right'. If not NULL,
 must be fields of both operands.}
 
@@ -415,9 +415,9 @@ If no fields are selected, then all fields are treated as selected.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$right_join(
   right,
-  on_left = NULL,
-  on_right = NULL,
-  on_both = NULL,
+  by.x = NULL,
+  by.y = NULL,
+  by = NULL,
   left_alias = "_L",
   right_alias = "_R",
   settings = NULL
@@ -429,13 +429,13 @@ If no fields are selected, then all fields are treated as selected.
 \describe{
 \item{\code{right}}{An arrayOp instance}
 
-\item{\code{on_left}}{NULL or a string vector as join keys. If set to NULL, join
+\item{\code{by.x}}{NULL or a string vector as join keys. If set to NULL, join
 keys are inferred as shared fields of 'left' and 'right'.}
 
-\item{\code{on_right}}{NULL or a string vector as join keys. If set to NULL, join
+\item{\code{by.y}}{NULL or a string vector as join keys. If set to NULL, join
 keys are inferred as shared fields of 'left' and 'right'.}
 
-\item{\code{on_both}}{NULL or a string vector as join keys. If set to NULL, join
+\item{\code{by}}{NULL or a string vector as join keys. If set to NULL, join
 keys are inferred as shared fields of 'left' and 'right'. If not NULL,
 must be fields of both operands.}
 

@@ -257,10 +257,10 @@ Array aliases are important to disambiguate overlapping fields.
 
 ```{r}
 # `db` as join key, `fa` exists in both arrays and will be suffixed with array aliaes in the result
-L$left_join(R, on_both = c('db'), left_alias = "_LL", right_alias = "_RR")$to_df()
+L$left_join(R, by = c('db'), left_alias = "_LL", right_alias = "_RR")$to_df()
 
 # different join keys
-L$right_join(R, on_left = "lda", on_right = "rda", left_alias = "_LL", right_alias = "_RR")$to_df()
+L$right_join(R, by.x = "lda", by.y = "rda", left_alias = "_LL", right_alias = "_RR")$to_df()
 ```
 
 ## Join mode
@@ -277,8 +277,8 @@ Two constraints with `cross_join` mode:
 
 ```{r}
 L$inner_join(R, 
-             on_left = c('db', 'lda'), 
-             on_right = c('db', 'rda'), 
+             by.x = c('db', 'lda'), 
+             by.y = c('db', 'rda'), 
              join_mode = 'cross_join', left_alias = "_LL", right_alias = "_RR")$
   to_df()
 ```

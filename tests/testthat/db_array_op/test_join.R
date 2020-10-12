@@ -19,27 +19,27 @@ test_that("join with no conflicting field names", {
   
   test_inner_join = function() {
     df_equal(
-      L$inner_join(R, on_left = 'lfa', on_right = 'rfa')$to_df(), 
+      L$inner_join(R, by.x = 'lfa', by.y = 'rfa')$to_df(), 
       dplyr::inner_join(leftDf, rightDf, by = c('lfa'='rfa'))
     )
     
     df_equal(
-      L$inner_join(R, on_left = 'lda', on_right = 'rda')$to_df(), 
+      L$inner_join(R, by.x = 'lda', by.y = 'rda')$to_df(), 
       dplyr::inner_join(leftDf, rightDf, by = c('lda'='rda'))
     )
     
     df_equal(
-      L$inner_join(R, on_left = c('lda', 'ldb'), on_right = c('rda', 'rdb'))$to_df(), 
+      L$inner_join(R, by.x = c('lda', 'ldb'), by.y = c('rda', 'rdb'))$to_df(), 
       dplyr::inner_join(leftDf, rightDf, by = c('lda'='rda', 'ldb'='rdb'))
     )
     
     df_equal(
-      L$inner_join(R, on_left = c('lfa', 'lfb'), on_right = c('rfa', 'rfb'))$to_df(), 
+      L$inner_join(R, by.x = c('lfa', 'lfb'), by.y = c('rfa', 'rfb'))$to_df(), 
       dplyr::inner_join(leftDf, rightDf, by = c('lfa'='rfa', 'lfb'='rfb'))
     )
     
     df_equal(
-      L$inner_join(R, on_left = c('lda', 'lfa'), on_right = c('rda', 'rfa'))$to_df(), 
+      L$inner_join(R, by.x = c('lda', 'lfa'), by.y = c('rda', 'rfa'))$to_df(), 
       dplyr::inner_join(leftDf, rightDf, by = c('lda'='rda', 'lfa'='rfa'))
     )
   }
@@ -48,12 +48,12 @@ test_that("join with no conflicting field names", {
   test_select_fields = function() {
     
     df_equal(
-      L$select('lfa', 'lfb')$inner_join(R, on_left = 'lfa', on_right = 'rfa')$to_df(), 
+      L$select('lfa', 'lfb')$inner_join(R, by.x = 'lfa', by.y = 'rfa')$to_df(), 
       leftDf %>% dplyr::select(lfa, lfb) %>% dplyr::inner_join(rightDf, by = c('lfa'='rfa'))
     )
     
     df_equal(
-      L$select('lfb')$inner_join(R$select('rfb'), on_left = 'lfa', on_right = 'rfa')$to_df(), 
+      L$select('lfb')$inner_join(R$select('rfb'), by.x = 'lfa', by.y = 'rfa')$to_df(), 
       leftDf %>% 
         dplyr::select(lfa, lfb) %>% 
         dplyr::inner_join(rightDf %>% dplyr::select(rfa, rfb), 
@@ -62,14 +62,14 @@ test_that("join with no conflicting field names", {
     )
     
     df_equal(
-      L$select('ldb')$inner_join(R, on_left = 'lfa', on_right = 'rfa')$to_df(), 
+      L$select('ldb')$inner_join(R, by.x = 'lfa', by.y = 'rfa')$to_df(), 
       leftDf %>% dplyr::select(lfa, ldb) %>% 
         dplyr::inner_join(rightDf, by = c('lfa'='rfa')) %>%
         dplyr::select(-lfa)
     )
     
     df_equal(
-      L$select('lfb')$inner_join(R, on_left = 'lfa', on_right = 'rfa')$to_df(), 
+      L$select('lfb')$inner_join(R, by.x = 'lfa', by.y = 'rfa')$to_df(), 
       leftDf %>% dplyr::select(lfa, lfb) %>% 
         dplyr::inner_join(rightDf, by = c('lfa'='rfa')) %>%
         dplyr::select(-lfa)
@@ -77,12 +77,12 @@ test_that("join with no conflicting field names", {
     
     # Special cases where only dimensions are selcted and joined on
     df_equal(
-      L$select('lda')$inner_join(R, on_left = 'lda', on_right = 'rda')$to_df(), 
+      L$select('lda')$inner_join(R, by.x = 'lda', by.y = 'rda')$to_df(), 
       leftDf %>% dplyr::select(lda) %>% 
         dplyr::inner_join(rightDf, by = c('lda'='rda'))
     )
     df_equal(
-      L$select('lda')$inner_join(R$select('rda'), on_left = 'lda', on_right = 'rda')$to_df(), 
+      L$select('lda')$inner_join(R$select('rda'), by.x = 'lda', by.y = 'rda')$to_df(), 
       leftDf %>% dplyr::select(lda) %>% 
         dplyr::inner_join(
           rightDf %>% dplyr::select(rda), # rda will not be in the result
@@ -95,23 +95,23 @@ test_that("join with no conflicting field names", {
   test_select_fields_dry = function() {
     
     expect_identical(
-      L$inner_join(R, on_left = 'lfa', on_right = 'rfa')$selected, 
+      L$inner_join(R, by.x = 'lfa', by.y = 'rfa')$selected, 
       c('lda', 'ldb', 'lfa', 'lfb', 'rda', 'rdb', 'rfb')
     )
     expect_identical(
-      L$inner_join(R$select('rda'), on_left = 'lfa', on_right = 'rfa')$selected, 
+      L$inner_join(R$select('rda'), by.x = 'lfa', by.y = 'rfa')$selected, 
       c('lda', 'ldb', 'lfa', 'lfb', 'rda')
     )
     expect_identical(
-      L$select('lfa', 'lfb')$inner_join(R, on_left = 'lfa', on_right = 'rfa')$selected, 
+      L$select('lfa', 'lfb')$inner_join(R, by.x = 'lfa', by.y = 'rfa')$selected, 
       c('lfa', 'lfb', 'rda', 'rdb', 'rfb')
     )
     expect_identical(
-      L$select('lfa', 'lfb')$inner_join(R$select('rfb'), on_left = 'lfa', on_right = 'rfa')$selected, 
+      L$select('lfa', 'lfb')$inner_join(R$select('rfb'), by.x = 'lfa', by.y = 'rfa')$selected, 
       c('lfa', 'lfb', 'rfb')
     )
     expect_identical(
-      L$select('lfa', 'lfb')$inner_join(R$select('rfb', 'rfa'), on_left = 'lfa', on_right = 'rfa')$selected, 
+      L$select('lfa', 'lfb')$inner_join(R$select('rfb', 'rfa'), by.x = 'lfa', by.y = 'rfa')$selected, 
       c('lfa', 'lfb', 'rfb')
     )
   }
@@ -121,27 +121,27 @@ test_that("join with no conflicting field names", {
     if(conn$query("op_scidbversion()")$major <= 18) return()
 
     expect_match(
-      L$inner_join(R, on_left = 'lfa', on_right = 'rfa', settings = list(algorithm = "'hash_replicate_right'"))$to_afl(), 
+      L$inner_join(R, by.x = 'lfa', by.y = 'rfa', settings = list(algorithm = "'hash_replicate_right'"))$to_afl(), 
       "algorithm:'hash_replicate_right'"
     )
 
     expect_match(
-      L$left_join(R, on_left = 'lfa', on_right = 'rfa', settings = list(algorithm = "'hash_replicate_right'"))$to_afl(), 
+      L$left_join(R, by.x = 'lfa', by.y = 'rfa', settings = list(algorithm = "'hash_replicate_right'"))$to_afl(), 
       "algorithm:'hash_replicate_right'"
     )
     
     expect_match(
-      L$right_join(R, on_left = 'lfa', on_right = 'rfa', settings = list(algorithm = "'hash_replicate_right'"))$to_afl(), 
+      L$right_join(R, by.x = 'lfa', by.y = 'rfa', settings = list(algorithm = "'hash_replicate_right'"))$to_afl(), 
       "algorithm:'hash_replicate_right'"
     )
     
     expect_match(
-      L$full_join(R, on_left = 'lfa', on_right = 'rfa', settings = list(algorithm = "'hash_replicate_right'"))$to_afl(), 
+      L$full_join(R, by.x = 'lfa', by.y = 'rfa', settings = list(algorithm = "'hash_replicate_right'"))$to_afl(), 
       "algorithm:'hash_replicate_right'"
     )
     
     expect_match(
-      L$inner_join(R, on_left = 'lfa', on_right = 'rfa', settings = list(keep_dimensions=1))$to_afl(), 
+      L$inner_join(R, by.x = 'lfa', by.y = 'rfa', settings = list(keep_dimensions=1))$to_afl(), 
       "keep_dimensions:1"
     )
   }
@@ -149,7 +149,7 @@ test_that("join with no conflicting field names", {
   # left join
   test_left_join = function() {
     df_equal(
-      L$left_join(R, on_left = 'lfa', on_right = 'rfa')$to_df(), 
+      L$left_join(R, by.x = 'lfa', by.y = 'rfa')$to_df(), 
       dplyr::left_join(leftDf, rightDf, by = c('lfa'='rfa'))
     )
   }
@@ -157,7 +157,7 @@ test_that("join with no conflicting field names", {
   # right join
   test_right_join = function(){
     df_equal(
-      L$right_join(R, on_left = 'lfa', on_right = 'rfa')$to_df(), 
+      L$right_join(R, by.x = 'lfa', by.y = 'rfa')$to_df(), 
       dplyr::right_join(leftDf, rightDf, by = c('lfa'='rfa'))
     )
   }
@@ -165,7 +165,7 @@ test_that("join with no conflicting field names", {
   # full join
   test_right_join = function(){
     df_equal(
-      L$full_join(R, on_left = 'lfa', on_right = 'rfa')$to_df(), 
+      L$full_join(R, by.x = 'lfa', by.y = 'rfa')$to_df(), 
       dplyr::full_join(leftDf, rightDf, by = c('lfa'='rfa'))
     )
   }
@@ -208,26 +208,26 @@ test_that("join with conflicting field names", {
   
   test_joins_with_conflicted_fields = function() {
     df_equal(
-      L$inner_join(R, on_both = c('db', 'fa'))$to_df(), 
+      L$inner_join(R, by = c('db', 'fa'))$to_df(), 
       dplyr::inner_join(leftDf, rightDf, by = c('fa', 'db') )
     )
     df_equal(
-      L$inner_join(R, on_both = c('db'), left_alias = "_LL", right_alias = "_RR")$to_df(), 
+      L$inner_join(R, by = c('db'), left_alias = "_LL", right_alias = "_RR")$to_df(), 
       dplyr::inner_join(leftDf, rightDf, by = c('db'), suffix = c('_LL', '_RR'))
     )
     df_equal(
-      L$left_join(R, on_both = c('db'), left_alias = "_LL", right_alias = "_RR")$to_df(), 
+      L$left_join(R, by = c('db'), left_alias = "_LL", right_alias = "_RR")$to_df(), 
       dplyr::left_join(leftDf, rightDf, by = c('db'), suffix = c('_LL', '_RR'))
     )
     df_equal(
-      L$right_join(R, on_both = c('db'), left_alias = "_LL", right_alias = "_RR")$to_df(), 
+      L$right_join(R, by = c('db'), left_alias = "_LL", right_alias = "_RR")$to_df(), 
       dplyr::right_join(leftDf, rightDf, by = c('db'), suffix = c('_LL', '_RR'))
     )
     
     # No need to disambiguate fields if only one side is selected
     # here `fa` is only selected in left
     df_equal(
-      L$select('fa')$inner_join(R$select('db'), on_left = c('db', 'lda'), on_right = c('db', 'rda'))$to_df(), 
+      L$select('fa')$inner_join(R$select('db'), by.x = c('db', 'lda'), by.y = c('db', 'rda'))$to_df(), 
       dplyr::inner_join(
         leftDf %>% dplyr::select(fa, db, lda), 
         rightDf %>% dplyr::select(db, rda), 
@@ -239,18 +239,18 @@ test_that("join with conflicting field names", {
   
   test_cross_join_mode = function() {
     df_equal(
-      L$inner_join(R, on_both = c('db'), join_mode = 'cross_join', left_alias = "_LL", right_alias = "_RR")$to_df(), 
+      L$inner_join(R, by = c('db'), join_mode = 'cross_join', left_alias = "_LL", right_alias = "_RR")$to_df(), 
       dplyr::inner_join(leftDf, rightDf, by = c('db'), suffix = c('_LL', '_RR'))
     )
     df_equal(
-      L$inner_join(R, on_left = c('db', 'lda'), on_right = c('db', 'rda'), join_mode = 'cross_join', left_alias = "_LL", right_alias = "_RR")$to_df(), 
+      L$inner_join(R, by.x = c('db', 'lda'), by.y = c('db', 'rda'), join_mode = 'cross_join', left_alias = "_LL", right_alias = "_RR")$to_df(), 
       dplyr::inner_join(leftDf, rightDf, by = c('db'='db', 'lda'='rda'), suffix = c('_LL', '_RR'))
     )
     
     # No need to disambiguate fields if only one side is selected
     # here `fa` is only selected in left
     df_equal(
-      L$select('fa')$inner_join(R$select('db'), join_mode = 'cross_join', on_left = c('db', 'lda'), on_right = c('db', 'rda'))$to_df(), 
+      L$select('fa')$inner_join(R$select('db'), join_mode = 'cross_join', by.x = c('db', 'lda'), by.y = c('db', 'rda'))$to_df(), 
       dplyr::inner_join(
         leftDf %>% dplyr::select(fa, db, lda), 
         rightDf %>% dplyr::select(db, rda), 
@@ -259,11 +259,11 @@ test_that("join with conflicting field names", {
     )
     
     # cross_join only takes dimensions as join keys
-    expect_error(L$inner_join(R, join_mode = 'cross_join', on_both = c('db', 'fa')), 'fa') 
+    expect_error(L$inner_join(R, join_mode = 'cross_join', by = c('db', 'fa')), 'fa') 
     
     # cross_join only performs inner_join
-    expect_error(L$left_join(R, join_mode = 'cross_join', on_both = c('db')), 'join_mode') 
-    expect_error(L$right_join(R, join_mode = 'cross_join', on_both = c('db')), 'join_mode') 
+    expect_error(L$left_join(R, join_mode = 'cross_join', by = c('db')), 'join_mode') 
+    expect_error(L$right_join(R, join_mode = 'cross_join', by = c('db')), 'join_mode') 
     
   }
   
@@ -292,13 +292,13 @@ test_that("join with three operands", {
   select = dplyr::select
   
   df_equal(
-    a1$inner_join(a2, on_both = 'da')$inner_join(a3, on_both = 'db')$to_df(),
+    a1$inner_join(a2, by = 'da')$inner_join(a3, by = 'db')$to_df(),
     df1 %>% inner_join(df2, by = 'da', suffix = c('_L', '_R')) %>% inner_join(df3, by = 'db')
   )
   df_equal(
     a1$select('da', 'fa', 'db')$
-      inner_join(a2$select('da'), on_both = 'da')$
-      inner_join(a3$select('fe'), on_both = 'db')$
+      inner_join(a2$select('da'), by = 'da')$
+      inner_join(a3$select('fe'), by = 'db')$
       to_df(),
     df1 %>% 
       inner_join(df2 %>% select(-fa), by = 'da') %>% # remove fa from df2 other it will be suffixed with .y
