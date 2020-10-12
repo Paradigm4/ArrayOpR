@@ -76,7 +76,7 @@ i.e. ArrayOp instances are immutable." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">arrayop</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.1</span>
       </span>
     </div>
 
@@ -193,6 +193,7 @@ SciDB data frame (array with hidden dimensions; not to be confused with R data f
 <li><p><a href='#method-inner_join'><code>ArrayOpBase$inner_join()</code></a></p></li>
 <li><p><a href='#method-left_join'><code>ArrayOpBase$left_join()</code></a></p></li>
 <li><p><a href='#method-right_join'><code>ArrayOpBase$right_join()</code></a></p></li>
+<li><p><a href='#method-full_join'><code>ArrayOpBase$full_join()</code></a></p></li>
 <li><p><a href='#method-semi_join'><code>ArrayOpBase$semi_join()</code></a></p></li>
 <li><p><a href='#method-group_by'><code>ArrayOpBase$group_by()</code></a></p></li>
 <li><p><a href='#method-summarize'><code>ArrayOpBase$summarize()</code></a></p></li>
@@ -213,8 +214,8 @@ SciDB data frame (array with hidden dimensions; not to be confused with R data f
 <li><p><a href='#method-limit'><code>ArrayOpBase$limit()</code></a></p></li>
 <li><p><a href='#method-cell_count'><code>ArrayOpBase$cell_count()</code></a></p></li>
 <li><p><a href='#method-summarize_array'><code>ArrayOpBase$summarize_array()</code></a></p></li>
-<li><p><a href='#method-versions'><code>ArrayOpBase$versions()</code></a></p></li>
-<li><p><a href='#method-get_version_snapshot'><code>ArrayOpBase$get_version_snapshot()</code></a></p></li>
+<li><p><a href='#method-list_versions'><code>ArrayOpBase$list_versions()</code></a></p></li>
+<li><p><a href='#method-version'><code>ArrayOpBase$version()</code></a></p></li>
 <li><p><a href='#method-is_persistent'><code>ArrayOpBase$is_persistent()</code></a></p></li>
 <li><p><a href='#method-exists_persistent_array'><code>ArrayOpBase$exists_persistent_array()</code></a></p></li>
 <li><p><a href='#method-array_meta_data'><code>ArrayOpBase$array_meta_data()</code></a></p></li>
@@ -503,6 +504,45 @@ must be fields of both operands.</p></dd>
 <h3>Returns</h3>
 <p>A new arrayOp instance</p>
 <p><hr>
+<a id="method-full_join"></a></p><h3>Method <code>full_join()</code></h3>
+<p>Full join two arrays: 'self' (left) and 'right'</p>
+<p>Similar to <code><a href='https://dplyr.tidyverse.org/reference/mutate-joins.html'>dplyr::full_join</a></code>, the result arrayOp performs a full join.
+For both left and right arrays, only selected fields are included in the result arrayOp.
+If no fields are selected, then all fields are treated as selected.</p><h3>Usage</h3>
+<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>full_join</span>(
+  <span class='no'>right</span>,
+  <span class='kw'>by.x</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>by.y</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>by</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>left_alias</span> <span class='kw'>=</span> <span class='st'>"_L"</span>,
+  <span class='kw'>right_alias</span> <span class='kw'>=</span> <span class='st'>"_R"</span>,
+  <span class='kw'>settings</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
+)</pre><p></div></p>
+
+<h3>Arguments</h3>
+<p><div class="arguments"></p><dl>
+<dt><code>right</code></dt><dd><p>An arrayOp instance</p></dd>
+
+<dt><code>by.x</code></dt><dd><p>NULL or a string vector as join keys. If set to NULL, join
+keys are inferred as shared fields of 'left' and 'right'.</p></dd>
+
+<dt><code>by.y</code></dt><dd><p>NULL or a string vector as join keys. If set to NULL, join
+keys are inferred as shared fields of 'left' and 'right'.</p></dd>
+
+<dt><code>by</code></dt><dd><p>NULL or a string vector as join keys. If set to NULL, join
+keys are inferred as shared fields of 'left' and 'right'. If not NULL,
+must be fields of both operands.</p></dd>
+
+<dt><code>left_alias</code></dt><dd><p>Alias for left array to resolve potential conflicting fields in result</p></dd>
+
+<dt><code>right_alias</code></dt><dd><p>Alias for right array to resolve potential conflicting fields in result</p></dd>
+
+<dt><code>settings</code></dt><dd><p>A named list as join settings. E.g. <code><a href='https://rdrr.io/r/base/list.html'>list(algorithm = "'hash_replicate_right'")</a></code></p></dd>
+
+</dl><p></div></p>
+<h3>Returns</h3>
+<p>A new arrayOp instance</p>
+<p><hr>
 <a id="method-semi_join"></a></p><h3>Method <code>semi_join()</code></h3>
 <p>Return an arrayOp instance with same schema as self and content cells that
 match the cells of 'df_or_arrayop'.</p>
@@ -717,23 +757,41 @@ are selected, or the selcted fields only.</p>
 <p>self</p>
 <p><hr>
 <a id="method-persist"></a></p><h3>Method <code>persist()</code></h3>
-<p>Create an arrayOp instance by persisting self's AFL if self is an array
-operation or return self if self is already a persistent array in scidb</p><h3>Usage</h3>
+<p>Persist array operation as scidb array</p>
+<p>If <code>self</code> is a persistent array and no <code>save_array_name</code> provided, then
+<code>self</code> is returned.</p>
+<p>Otherwise, save self's AFL as a new scidb array. This includes two cases:</p><ol>
+<li><p><code>self</code> is persistent and <code>save_array_name</code> is provided, i.e. explicit persistence</p></li>
+<li><p><code>self</code> is array operation(s), then a new array is created regardless of <code>save_array_name</code></p></li>
+</ol>
+
+<p>From users perspective,</p><ol>
+<li><p>When we need to ensure a handle to a persistent array and do not care
+whether it is a new or existing array, we should leave out
+<code>save_array_name</code> to avoid unnecessary array copying. E.g. <code>conn$array_from_df</code>
+may return a build literal or uploaded persistent array, call
+<code>conn$array_from_df(...)$persist()</code> to ensure a persistent array.</p></li>
+<li><p>When we need to backup an array, then provide a <code>save_array_name</code> explicitly.</p></li>
+</ol>
+
+<p>Parameters <code>.gc</code> and <code>.temp</code> are only applicable when a new array is created.</p><h3>Usage</h3>
 <p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>persist</span>(<span class='kw'>save_array_name</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>.temp</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>.gc</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</pre><p></div></p>
 
 <h3>Arguments</h3>
 <p><div class="arguments"></p><dl>
-<dt><code>save_array_name</code></dt><dd><p>NULL or String. The array name to save self's AFL as, only applicable
-if self is an array operation. If NULL, the array name is randomly generated.</p></dd>
+<dt><code>save_array_name</code></dt><dd><p>NULL or String. The new array name to save self's AFL as.
+If NULL, the array name is randomly generated when a new array is created.</p></dd>
 
 <dt><code>.temp</code></dt><dd><p>Boolean, default FALSE. Whether to creaet a temporary scidb array.</p></dd>
 
 <dt><code>.gc</code></dt><dd><p>Boolean, default TRUE. Whether to remove the persisted scidb array
-once the encapsulating arrayOp goes out of scodb in R.</p></dd>
+once the encapsulating arrayOp goes out of scodb in R. Set to FALSE if we
+need to keep the array indefinitely.</p></dd>
 
 </dl><p></div></p>
 <h3>Returns</h3>
-<p>A new arrayOp instance or self</p>
+<p>A new arrayOp instance or self; or throw an exception if
+<code>save_array_name</code> is provided and the array already exists</p>
 <p><hr>
 <a id="method-change_schema"></a></p><h3>Method <code>change_schema()</code></h3>
 <p>Create a new ArrayOp instance whose schema is the same as the <code>template</code>.</p>
@@ -888,21 +946,21 @@ SciDB data frames have hidden dimensions that start with <code>$</code></p><h3>U
 
 </dl><p></div></p>
 <p><hr>
-<a id="method-versions"></a></p><h3>Method <code>versions()</code></h3>
+<a id="method-list_versions"></a></p><h3>Method <code>list_versions()</code></h3>
 <p>Return a data frame of all self's versions</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>versions</span>()</pre><p></div></p>
+<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>list_versions</span>()</pre><p></div></p>
 
 <h3>Returns</h3>
 <p>An R data frame with columns: version_id and timestamp</p>
 <p><hr>
-<a id="method-get_version_snapshot"></a></p><h3>Method <code>get_version_snapshot()</code></h3>
+<a id="method-version"></a></p><h3>Method <code><a href='https://rdrr.io/r/base/Version.html'>version()</a></code></h3>
 <p>Get an arrayOp instance that encapsulates a version snapshot of a persistent
 scidb array</p>
 <p>The function does not perform version check in scidb. It only construct
 an arrayOp locally to represent a specific version. If a non-existent
 version_id is later used in scidb related operations, an error will be
 thrown by SciDB.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>get_version_snapshot</span>(<span class='no'>version_id</span>)</pre><p></div></p>
+<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'><a href='https://rdrr.io/r/base/Version.html'>version</a></span>(<span class='no'>version_id</span>)</pre><p></div></p>
 
 <h3>Arguments</h3>
 <p><div class="arguments"></p><dl>

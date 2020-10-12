@@ -45,7 +45,12 @@ They also both have:
 
 Regular arrays have at least one explicit dimensions.
 SciDB data frames have no explit dimension, but internally two hidden dimensions whose names starts with a dollar sign $.
-  
+
+```{r, echo=F}  
+for(array_name in c("test_CO2", "test_CO2_empty", "test_CO2_empty_df", "test_CO2_stored")){
+  try(conn$execute(arrayop::afl(array_name | remove)), silent = T)
+}
+```
 
 ```{r}
 # Upload a data frame to scidb
@@ -238,6 +243,7 @@ In this case, `fa` and `db` are join keys since they exist in both arrays.
 L$inner_join(R)$to_df()
 L$left_join(R)$to_df()
 L$right_join(R)$to_df()
+L$full_join(R)$to_df()
 ```
 
 We can specify which fields to keep with `array_op$select`. 
@@ -439,9 +445,18 @@ Since we just modified `arr_stored` several times.
 Let's check out how many versions it has so far and delete the version history.
 
 ```{r}
-arr_stored$versions()
+arr_stored$list_versions()
+
+# Check how many cells in each version
+for(version_id in 1:3){
+  print(sprintf("Version-%d has %d cells", version_id, arr_stored$version(version_id)$cell_count()))
+}
+```
+
+Remove all but the latest version.
+```{r}
 arr_stored$remove_versions()
-arr_stored$versions()
+arr_stored$list_versions()
 ```
 
 
@@ -470,7 +485,7 @@ More commonly, we want to load data from file into an existing array.
 In this case, we provide a template (either array_op or schema string), 
 only the columns whose name matches the template's fields are imported.
 
-**NOTE:** `template` field types will superceedes actual file column types. 
+**NOTE:** `template` field types superceedes actual file column types. 
 If `header=T`, column names can still be inferred.
 
 ```{r, eval=F}

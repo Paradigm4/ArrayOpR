@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">arrayop</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.1</span>
       </span>
     </div>
 
@@ -86,7 +86,7 @@
       <h1 data-toc-skip>Semi Join</h1>
                         <h4 class="author">Paradigm4</h4>
             
-            <h4 class="date">2020-09-22</h4>
+            <h4 class="date">2020-10-12</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/Paradigm4/ArrayOpR/blob/master/vignettes/semi_join.Rmd"><code>vignettes/semi_join.Rmd</code></a></small>
       <div class="hidden name"><code>semi_join.Rmd</code></div>
@@ -117,7 +117,7 @@
   <span class="fu">persist</span>(<span class="kw">.gc</span> <span class="kw">=</span> <span class="fl">FALSE</span>)
 
 <span class="no">RefArray</span>$<span class="fu">to_afl</span>()
-<span class="co">#&gt; [1] "R_array8e13fd528ae1600805493128656362"</span>
+<span class="co">#&gt; [1] "Rarrayop__gGPMNbCvrF_"</span>
 <span class="no">RefArray</span>$<span class="fu">to_df_all</span>()</pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
@@ -146,7 +146,7 @@
   <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span>(<span class="kw">da</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">3</span>,<span class="fl">5</span>,<span class="fl">8</span>,<span class="fl">11</span>)), <span class="co"># number of cells &lt;= filter_threshold</span>
   <span class="kw">filter_threshold</span><span class="kw">=</span><span class="fl">10</span>, <span class="kw">upload_threshold</span><span class="kw">=</span><span class="fl">20</span>) <span class="kw">%&gt;%</span>
   <span class="no">show</span>
-<span class="co">#&gt; [1] "filter(R_array8e13fd528ae1600805493128656362,da=3 or da=5 or da=8 or da=11)"</span></pre></body></html></div>
+<span class="co">#&gt; [1] "filter(Rarrayop__gGPMNbCvrF_,da=3 or da=5 or da=8 or da=11)"</span></pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
 {"columns":[{"label":["da"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["db"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["lower"],"name":[3],"type":["chr"],"align":["left"]},{"label":["upper"],"name":[4],"type":["chr"],"align":["left"]},{"label":["f_int32"],"name":[5],"type":["int"],"align":["right"]},{"label":["f_int64"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["f_bool"],"name":[7],"type":["lgl"],"align":["right"]},{"label":["f_double"],"name":[8],"type":["dbl"],"align":["right"]}],"data":[{"1":"3","2":"103","3":"c","4":"C","5":"-18","6":"30","7":"FALSE","8":"NA"},{"1":"5","2":"105","3":"e","4":"E","5":"-16","6":"50","7":"FALSE","8":"-99.00"},{"1":"8","2":"108","3":"h","4":"H","5":"-13","6":"80","7":"FALSE","8":"NA"},{"1":"11","2":"111","3":"k","4":"K","5":"-10","6":"110","7":"TRUE","8":"3.14"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
@@ -158,7 +158,7 @@
   <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span>(<span class="kw">da</span> <span class="kw">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(-<span class="fl">10</span>, -<span class="fl">11</span>, -<span class="fl">12</span>)),
   <span class="kw">filter_threshold</span><span class="kw">=</span><span class="fl">10</span>, <span class="kw">upload_threshold</span><span class="kw">=</span><span class="fl">20</span>) <span class="kw">%&gt;%</span>
   <span class="no">show</span>
-<span class="co">#&gt; [1] "filter(R_array8e13fd528ae1600805493128656362,da=-10 or da=-11 or da=-12)"</span></pre></body></html></div>
+<span class="co">#&gt; [1] "filter(Rarrayop__gGPMNbCvrF_,da=-10 or da=-11 or da=-12)"</span></pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
 {"columns":[{"label":["da"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["db"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["lower"],"name":[3],"type":["chr"],"align":["left"]},{"label":["upper"],"name":[4],"type":["chr"],"align":["left"]},{"label":["f_int32"],"name":[5],"type":["int"],"align":["right"]},{"label":["f_int64"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["f_bool"],"name":[7],"type":["lgl"],"align":["right"]},{"label":["f_double"],"name":[8],"type":["dbl"],"align":["right"]}],"data":[],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
@@ -177,7 +177,7 @@
   <span class="kw">upload_threshold</span> <span class="kw">=</span> <span class="fl">20</span>
 ) <span class="kw">%&gt;%</span>
   <span class="no">show</span>
-<span class="co">#&gt; [1] "filter(R_array8e13fd528ae1600805493128656362,(f_int32=-20 and lower='no_match') or (f_int32=-17 and lower='d') or (f_int32=-16 and lower='e'))"</span></pre></body></html></div>
+<span class="co">#&gt; [1] "filter(Rarrayop__gGPMNbCvrF_,(f_int32=-20 and lower='no_match') or (f_int32=-17 and lower='d') or (f_int32=-16 and lower='e'))"</span></pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
 {"columns":[{"label":["da"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["db"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["lower"],"name":[3],"type":["chr"],"align":["left"]},{"label":["upper"],"name":[4],"type":["chr"],"align":["left"]},{"label":["f_int32"],"name":[5],"type":["int"],"align":["right"]},{"label":["f_int64"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["f_bool"],"name":[7],"type":["lgl"],"align":["right"]},{"label":["f_double"],"name":[8],"type":["dbl"],"align":["right"]}],"data":[{"1":"4","2":"104","3":"d","4":"D","5":"-17","6":"40","7":"NA","8":"0"},{"1":"5","2":"105","3":"e","4":"E","5":"-16","6":"50","7":"FALSE","8":"-99"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
@@ -192,7 +192,7 @@
   <span class="kw">upload_threshold</span> <span class="kw">=</span> <span class="fl">20</span>
 ) <span class="kw">%&gt;%</span>
   <span class="no">show</span>
-<span class="co">#&gt; [1] "filter(R_array8e13fd528ae1600805493128656362,(da=-1 and lower='no_match') or (da= 4 and lower='d') or (da= 5 and lower='e'))"</span></pre></body></html></div>
+<span class="co">#&gt; [1] "filter(Rarrayop__gGPMNbCvrF_,(da=-1 and lower='no_match') or (da= 4 and lower='d') or (da= 5 and lower='e'))"</span></pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
 {"columns":[{"label":["da"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["db"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["lower"],"name":[3],"type":["chr"],"align":["left"]},{"label":["upper"],"name":[4],"type":["chr"],"align":["left"]},{"label":["f_int32"],"name":[5],"type":["int"],"align":["right"]},{"label":["f_int64"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["f_bool"],"name":[7],"type":["lgl"],"align":["right"]},{"label":["f_double"],"name":[8],"type":["dbl"],"align":["right"]}],"data":[{"1":"4","2":"104","3":"d","4":"D","5":"-17","6":"40","7":"NA","8":"0"},{"1":"5","2":"105","3":"e","4":"E","5":"-16","6":"50","7":"FALSE","8":"-99"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
@@ -208,7 +208,7 @@
   <span class="kw">upload_threshold</span> <span class="kw">=</span> <span class="fl">20</span>
 ) <span class="kw">%&gt;%</span>
   <span class="no">show</span>
-<span class="co">#&gt; [1] "filter(R_array8e13fd528ae1600805493128656362,(da&gt;=1 and da&lt;=5) or (da&gt;=3 and da&lt;=8))"</span></pre></body></html></div>
+<span class="co">#&gt; [1] "filter(Rarrayop__gGPMNbCvrF_,(da&gt;=1 and da&lt;=5) or (da&gt;=3 and da&lt;=8))"</span></pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
 {"columns":[{"label":["da"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["db"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["lower"],"name":[3],"type":["chr"],"align":["left"]},{"label":["upper"],"name":[4],"type":["chr"],"align":["left"]},{"label":["f_int32"],"name":[5],"type":["int"],"align":["right"]},{"label":["f_int64"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["f_bool"],"name":[7],"type":["lgl"],"align":["right"]},{"label":["f_double"],"name":[8],"type":["dbl"],"align":["right"]}],"data":[{"1":"1","2":"101","3":"a","4":"A","5":"-20","6":"10","7":"TRUE","8":"3.14"},{"1":"2","2":"102","3":"b","4":"B","5":"-19","6":"20","7":"NA","8":"2.00"},{"1":"3","2":"103","3":"c","4":"C","5":"-18","6":"30","7":"FALSE","8":"NA"},{"1":"4","2":"104","3":"d","4":"D","5":"-17","6":"40","7":"NA","8":"0.00"},{"1":"5","2":"105","3":"e","4":"E","5":"-16","6":"50","7":"FALSE","8":"-99.00"},{"1":"6","2":"106","3":"f","4":"F","5":"-15","6":"60","7":"TRUE","8":"3.14"},{"1":"7","2":"107","3":"g","4":"G","5":"-14","6":"70","7":"NA","8":"2.00"},{"1":"8","2":"108","3":"h","4":"H","5":"-13","6":"80","7":"FALSE","8":"NA"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
@@ -224,7 +224,7 @@
   <span class="kw">upload_threshold</span> <span class="kw">=</span> <span class="fl">20</span>
 ) <span class="kw">%&gt;%</span>
   <span class="no">show</span>
-<span class="co">#&gt; [1] "filter(R_array8e13fd528ae1600805493128656362,(da&gt;=1 and db&lt;=105) or (da&gt;=3 and db&lt;=108))"</span></pre></body></html></div>
+<span class="co">#&gt; [1] "filter(Rarrayop__gGPMNbCvrF_,(da&gt;=1 and db&lt;=105) or (da&gt;=3 and db&lt;=108))"</span></pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
 {"columns":[{"label":["da"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["db"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["lower"],"name":[3],"type":["chr"],"align":["left"]},{"label":["upper"],"name":[4],"type":["chr"],"align":["left"]},{"label":["f_int32"],"name":[5],"type":["int"],"align":["right"]},{"label":["f_int64"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["f_bool"],"name":[7],"type":["lgl"],"align":["right"]},{"label":["f_double"],"name":[8],"type":["dbl"],"align":["right"]}],"data":[{"1":"1","2":"101","3":"a","4":"A","5":"-20","6":"10","7":"TRUE","8":"3.14"},{"1":"2","2":"102","3":"b","4":"B","5":"-19","6":"20","7":"NA","8":"2.00"},{"1":"3","2":"103","3":"c","4":"C","5":"-18","6":"30","7":"FALSE","8":"NA"},{"1":"4","2":"104","3":"d","4":"D","5":"-17","6":"40","7":"NA","8":"0.00"},{"1":"5","2":"105","3":"e","4":"E","5":"-16","6":"50","7":"FALSE","8":"-99.00"},{"1":"6","2":"106","3":"f","4":"F","5":"-15","6":"60","7":"TRUE","8":"3.14"},{"1":"7","2":"107","3":"g","4":"G","5":"-14","6":"70","7":"NA","8":"2.00"},{"1":"8","2":"108","3":"h","4":"H","5":"-13","6":"80","7":"FALSE","8":"NA"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
@@ -243,7 +243,7 @@
   <span class="kw">upload_threshold</span> <span class="kw">=</span> <span class="fl">20</span>
 ) <span class="kw">%&gt;%</span>
   <span class="no">show</span>
-<span class="co">#&gt; [1] "cross_between(R_array8e13fd528ae1600805493128656362,project(apply(build(&lt;da:int64,db:int64&gt;[rmFD_], '[(1,101),(2,102),(3,103),(4,104),(5,105),(-1,-1)]', true),_da_low,int64(da),_da_high,int64(da),_db_low,int64(db),_db_high,int64(db)),_da_low,_db_low,_da_high,_db_high))"</span></pre></body></html></div>
+<span class="co">#&gt; [1] "cross_between(Rarrayop__gGPMNbCvrF_,project(apply(build(&lt;da:int64,db:int64&gt;[Gnnh_], '[(1,101),(2,102),(3,103),(4,104),(5,105),(-1,-1)]', true),_da_low,int64(da),_da_high,int64(da),_db_low,int64(db),_db_high,int64(db)),_da_low,_db_low,_da_high,_db_high))"</span></pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
 {"columns":[{"label":["da"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["db"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["lower"],"name":[3],"type":["chr"],"align":["left"]},{"label":["upper"],"name":[4],"type":["chr"],"align":["left"]},{"label":["f_int32"],"name":[5],"type":["int"],"align":["right"]},{"label":["f_int64"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["f_bool"],"name":[7],"type":["lgl"],"align":["right"]},{"label":["f_double"],"name":[8],"type":["dbl"],"align":["right"]}],"data":[{"1":"1","2":"101","3":"a","4":"A","5":"-20","6":"10","7":"TRUE","8":"3.14"},{"1":"2","2":"102","3":"b","4":"B","5":"-19","6":"20","7":"NA","8":"2.00"},{"1":"3","2":"103","3":"c","4":"C","5":"-18","6":"30","7":"FALSE","8":"NA"},{"1":"4","2":"104","3":"d","4":"D","5":"-17","6":"40","7":"NA","8":"0.00"},{"1":"5","2":"105","3":"e","4":"E","5":"-16","6":"50","7":"FALSE","8":"-99.00"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
@@ -258,7 +258,7 @@
   <span class="kw">upload_threshold</span> <span class="kw">=</span> <span class="fl">20</span>
 ) <span class="kw">%&gt;%</span>
   <span class="no">show</span>
-<span class="co">#&gt; [1] "filter(R_array8e13fd528ae1600805493128656362,(da&gt;=1 and da&lt;=5) or (da&gt;=3 and da&lt;=8))"</span></pre></body></html></div>
+<span class="co">#&gt; [1] "filter(Rarrayop__gGPMNbCvrF_,(da&gt;=1 and da&lt;=5) or (da&gt;=3 and da&lt;=8))"</span></pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
 {"columns":[{"label":["da"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["db"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["lower"],"name":[3],"type":["chr"],"align":["left"]},{"label":["upper"],"name":[4],"type":["chr"],"align":["left"]},{"label":["f_int32"],"name":[5],"type":["int"],"align":["right"]},{"label":["f_int64"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["f_bool"],"name":[7],"type":["lgl"],"align":["right"]},{"label":["f_double"],"name":[8],"type":["dbl"],"align":["right"]}],"data":[{"1":"1","2":"101","3":"a","4":"A","5":"-20","6":"10","7":"TRUE","8":"3.14"},{"1":"2","2":"102","3":"b","4":"B","5":"-19","6":"20","7":"NA","8":"2.00"},{"1":"3","2":"103","3":"c","4":"C","5":"-18","6":"30","7":"FALSE","8":"NA"},{"1":"4","2":"104","3":"d","4":"D","5":"-17","6":"40","7":"NA","8":"0.00"},{"1":"5","2":"105","3":"e","4":"E","5":"-16","6":"50","7":"FALSE","8":"-99.00"},{"1":"6","2":"106","3":"f","4":"F","5":"-15","6":"60","7":"TRUE","8":"3.14"},{"1":"7","2":"107","3":"g","4":"G","5":"-14","6":"70","7":"NA","8":"2.00"},{"1":"8","2":"108","3":"h","4":"H","5":"-13","6":"80","7":"FALSE","8":"NA"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
@@ -277,7 +277,7 @@
   <span class="kw">upper_bound</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">da</span> <span class="kw">=</span> <span class="st">'da_hi'</span>),
 ) <span class="kw">%&gt;%</span>
   <span class="no">show</span>
-<span class="co">#&gt; [1] "cross_between(R_array8e13fd528ae1600805493128656362,project(apply(build(&lt;da_low:int64,da_hi:int64&gt;[Tmos_], '[(1,5),(3,8)]', true),_da_low,da_low,_da_high,da_hi,_db_low,-4611686018427387902,_db_high,4611686018427387903),_da_low,_db_low,_da_high,_db_high))"</span></pre></body></html></div>
+<span class="co">#&gt; [1] "cross_between(Rarrayop__gGPMNbCvrF_,project(apply(build(&lt;da_low:int64,da_hi:int64&gt;[OZXO_], '[(1,5),(3,8)]', true),_da_low,da_low,_da_high,da_hi,_db_low,-4611686018427387902,_db_high,4611686018427387903),_da_low,_db_low,_da_high,_db_high))"</span></pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
 {"columns":[{"label":["da"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["db"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["lower"],"name":[3],"type":["chr"],"align":["left"]},{"label":["upper"],"name":[4],"type":["chr"],"align":["left"]},{"label":["f_int32"],"name":[5],"type":["int"],"align":["right"]},{"label":["f_int64"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["f_bool"],"name":[7],"type":["lgl"],"align":["right"]},{"label":["f_double"],"name":[8],"type":["dbl"],"align":["right"]}],"data":[{"1":"1","2":"101","3":"a","4":"A","5":"-20","6":"10","7":"TRUE","8":"3.14"},{"1":"2","2":"102","3":"b","4":"B","5":"-19","6":"20","7":"NA","8":"2.00"},{"1":"3","2":"103","3":"c","4":"C","5":"-18","6":"30","7":"FALSE","8":"NA"},{"1":"4","2":"104","3":"d","4":"D","5":"-17","6":"40","7":"NA","8":"0.00"},{"1":"5","2":"105","3":"e","4":"E","5":"-16","6":"50","7":"FALSE","8":"-99.00"},{"1":"6","2":"106","3":"f","4":"F","5":"-15","6":"60","7":"TRUE","8":"3.14"},{"1":"7","2":"107","3":"g","4":"G","5":"-14","6":"70","7":"NA","8":"2.00"},{"1":"8","2":"108","3":"h","4":"H","5":"-13","6":"80","7":"FALSE","8":"NA"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
@@ -296,7 +296,7 @@
   <span class="kw">upload_threshold</span> <span class="kw">=</span> <span class="fl">20</span>
 ) <span class="kw">%&gt;%</span>
   <span class="no">show</span>
-<span class="co">#&gt; [1] "cross_between(R_array8e13fd528ae1600805493128656362,project(apply(build(&lt;da:int64,db:int64&gt;[soGA_], '[(1,105),(3,108)]', true),_da_low,da,_da_high,4611686018427387903,_db_low,-4611686018427387902,_db_high,db),_da_low,_db_low,_da_high,_db_high))"</span></pre></body></html></div>
+<span class="co">#&gt; [1] "cross_between(Rarrayop__gGPMNbCvrF_,project(apply(build(&lt;da:int64,db:int64&gt;[tqsg_], '[(1,105),(3,108)]', true),_da_low,da,_da_high,4611686018427387903,_db_low,-4611686018427387902,_db_high,db),_da_low,_db_low,_da_high,_db_high))"</span></pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
 {"columns":[{"label":["da"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["db"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["lower"],"name":[3],"type":["chr"],"align":["left"]},{"label":["upper"],"name":[4],"type":["chr"],"align":["left"]},{"label":["f_int32"],"name":[5],"type":["int"],"align":["right"]},{"label":["f_int64"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["f_bool"],"name":[7],"type":["lgl"],"align":["right"]},{"label":["f_double"],"name":[8],"type":["dbl"],"align":["right"]}],"data":[{"1":"1","2":"101","3":"a","4":"A","5":"-20","6":"10","7":"TRUE","8":"3.14"},{"1":"2","2":"102","3":"b","4":"B","5":"-19","6":"20","7":"NA","8":"2.00"},{"1":"3","2":"103","3":"c","4":"C","5":"-18","6":"30","7":"FALSE","8":"NA"},{"1":"4","2":"104","3":"d","4":"D","5":"-17","6":"40","7":"NA","8":"0.00"},{"1":"5","2":"105","3":"e","4":"E","5":"-16","6":"50","7":"FALSE","8":"-99.00"},{"1":"6","2":"106","3":"f","4":"F","5":"-15","6":"60","7":"TRUE","8":"3.14"},{"1":"7","2":"107","3":"g","4":"G","5":"-14","6":"70","7":"NA","8":"2.00"},{"1":"8","2":"108","3":"h","4":"H","5":"-13","6":"80","7":"FALSE","8":"NA"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
@@ -313,7 +313,7 @@
   <span class="kw">field_mapping</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>()
 ) <span class="kw">%&gt;%</span>
   <span class="no">show</span>
-<span class="co">#&gt; [1] "cross_between(R_array8e13fd528ae1600805493128656362,project(apply(build(&lt;da:int64,db:int64&gt;[iaWr_], '[(1,105),(3,108)]', true),_da_low,da,_da_high,4611686018427387903,_db_low,-4611686018427387902,_db_high,db),_da_low,_db_low,_da_high,_db_high))"</span></pre></body></html></div>
+<span class="co">#&gt; [1] "cross_between(Rarrayop__gGPMNbCvrF_,project(apply(build(&lt;da:int64,db:int64&gt;[jDWP_], '[(1,105),(3,108)]', true),_da_low,da,_da_high,4611686018427387903,_db_low,-4611686018427387902,_db_high,db),_da_low,_db_low,_da_high,_db_high))"</span></pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
 {"columns":[{"label":["da"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["db"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["lower"],"name":[3],"type":["chr"],"align":["left"]},{"label":["upper"],"name":[4],"type":["chr"],"align":["left"]},{"label":["f_int32"],"name":[5],"type":["int"],"align":["right"]},{"label":["f_int64"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["f_bool"],"name":[7],"type":["lgl"],"align":["right"]},{"label":["f_double"],"name":[8],"type":["dbl"],"align":["right"]}],"data":[{"1":"1","2":"101","3":"a","4":"A","5":"-20","6":"10","7":"TRUE","8":"3.14"},{"1":"2","2":"102","3":"b","4":"B","5":"-19","6":"20","7":"NA","8":"2.00"},{"1":"3","2":"103","3":"c","4":"C","5":"-18","6":"30","7":"FALSE","8":"NA"},{"1":"4","2":"104","3":"d","4":"D","5":"-17","6":"40","7":"NA","8":"0.00"},{"1":"5","2":"105","3":"e","4":"E","5":"-16","6":"50","7":"FALSE","8":"-99.00"},{"1":"6","2":"106","3":"f","4":"F","5":"-15","6":"60","7":"TRUE","8":"3.14"},{"1":"7","2":"107","3":"g","4":"G","5":"-14","6":"70","7":"NA","8":"2.00"},{"1":"8","2":"108","3":"h","4":"H","5":"-13","6":"80","7":"FALSE","8":"NA"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
@@ -330,7 +330,7 @@
   <span class="kw">filter_threshold</span> <span class="kw">=</span> <span class="fl">5</span>,
   <span class="kw">upload_threshold</span> <span class="kw">=</span> <span class="fl">20</span>
 ) <span class="kw">%&gt;%</span> <span class="no">show</span>
-<span class="co">#&gt; [1] "project(filter(index_lookup(R_array8e13fd528ae1600805493128656362,project(apply(build(&lt;lower:string&gt;[StLO_], '[(\\'e\\'),(\\'f\\'),(\\'g\\'),(\\'h\\'),(\\'i\\'),(\\'j\\'),(\\'k\\'),(\\'l\\'),(\\'m\\'),(\\'n\\'),(\\'o\\')]', true),alt_lower_,lower),alt_lower_),lower,index_lower),index_lower is not null),lower,upper,f_int32,f_int64,f_bool,f_double)"</span></pre></body></html></div>
+<span class="co">#&gt; [1] "project(filter(index_lookup(Rarrayop__gGPMNbCvrF_,project(apply(build(&lt;lower:string&gt;[xPLi_], '[(\\'e\\'),(\\'f\\'),(\\'g\\'),(\\'h\\'),(\\'i\\'),(\\'j\\'),(\\'k\\'),(\\'l\\'),(\\'m\\'),(\\'n\\'),(\\'o\\')]', true),alt_lower_,lower),alt_lower_),lower,index_lower),index_lower is not null),lower,upper,f_int32,f_int64,f_bool,f_double)"</span></pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
 {"columns":[{"label":["da"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["db"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["lower"],"name":[3],"type":["chr"],"align":["left"]},{"label":["upper"],"name":[4],"type":["chr"],"align":["left"]},{"label":["f_int32"],"name":[5],"type":["int"],"align":["right"]},{"label":["f_int64"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["f_bool"],"name":[7],"type":["lgl"],"align":["right"]},{"label":["f_double"],"name":[8],"type":["dbl"],"align":["right"]}],"data":[{"1":"12","2":"112","3":"l","4":"L","5":"-9","6":"120","7":"NA","8":"2.00"},{"1":"13","2":"113","3":"m","4":"M","5":"-8","6":"130","7":"FALSE","8":"NA"},{"1":"14","2":"114","3":"n","4":"N","5":"-7","6":"140","7":"NA","8":"0.00"},{"1":"15","2":"115","3":"o","4":"O","5":"-6","6":"150","7":"FALSE","8":"-99.00"},{"1":"5","2":"105","3":"e","4":"E","5":"-16","6":"50","7":"FALSE","8":"-99.00"},{"1":"6","2":"106","3":"f","4":"F","5":"-15","6":"60","7":"TRUE","8":"3.14"},{"1":"7","2":"107","3":"g","4":"G","5":"-14","6":"70","7":"NA","8":"2.00"},{"1":"8","2":"108","3":"h","4":"H","5":"-13","6":"80","7":"FALSE","8":"NA"},{"1":"9","2":"109","3":"i","4":"I","5":"-12","6":"90","7":"NA","8":"0.00"},{"1":"10","2":"110","3":"j","4":"J","5":"-11","6":"100","7":"FALSE","8":"-99.00"},{"1":"11","2":"111","3":"k","4":"K","5":"-10","6":"110","7":"TRUE","8":"3.14"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
@@ -343,7 +343,7 @@
   <span class="kw">filter_threshold</span> <span class="kw">=</span> <span class="fl">5</span>,
   <span class="kw">upload_threshold</span> <span class="kw">=</span> <span class="fl">20</span>
 ) <span class="kw">%&gt;%</span> <span class="no">show</span>
-<span class="co">#&gt; [1] "project(filter(index_lookup(apply(R_array8e13fd528ae1600805493128656362,attr_da,da),project(apply(build(&lt;da:int64&gt;[RamO_], '[(1),(2),(3),(4),(5),(6),(7),(8),(9),(10),(11),(12),(13),(14),(15)]', true),alt_da_,da),alt_da_),attr_da,index_da),index_da is not null),lower,upper,f_int32,f_int64,f_bool,f_double)"</span></pre></body></html></div>
+<span class="co">#&gt; [1] "project(filter(index_lookup(apply(Rarrayop__gGPMNbCvrF_,attr_da,da),project(apply(build(&lt;da:int64&gt;[aSlE_], '[(1),(2),(3),(4),(5),(6),(7),(8),(9),(10),(11),(12),(13),(14),(15)]', true),alt_da_,da),alt_da_),attr_da,index_da),index_da is not null),lower,upper,f_int32,f_int64,f_bool,f_double)"</span></pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
 {"columns":[{"label":["da"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["db"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["lower"],"name":[3],"type":["chr"],"align":["left"]},{"label":["upper"],"name":[4],"type":["chr"],"align":["left"]},{"label":["f_int32"],"name":[5],"type":["int"],"align":["right"]},{"label":["f_int64"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["f_bool"],"name":[7],"type":["lgl"],"align":["right"]},{"label":["f_double"],"name":[8],"type":["dbl"],"align":["right"]}],"data":[{"1":"12","2":"112","3":"l","4":"L","5":"-9","6":"120","7":"NA","8":"2.00"},{"1":"13","2":"113","3":"m","4":"M","5":"-8","6":"130","7":"FALSE","8":"NA"},{"1":"14","2":"114","3":"n","4":"N","5":"-7","6":"140","7":"NA","8":"0.00"},{"1":"15","2":"115","3":"o","4":"O","5":"-6","6":"150","7":"FALSE","8":"-99.00"},{"1":"1","2":"101","3":"a","4":"A","5":"-20","6":"10","7":"TRUE","8":"3.14"},{"1":"2","2":"102","3":"b","4":"B","5":"-19","6":"20","7":"NA","8":"2.00"},{"1":"3","2":"103","3":"c","4":"C","5":"-18","6":"30","7":"FALSE","8":"NA"},{"1":"4","2":"104","3":"d","4":"D","5":"-17","6":"40","7":"NA","8":"0.00"},{"1":"5","2":"105","3":"e","4":"E","5":"-16","6":"50","7":"FALSE","8":"-99.00"},{"1":"6","2":"106","3":"f","4":"F","5":"-15","6":"60","7":"TRUE","8":"3.14"},{"1":"7","2":"107","3":"g","4":"G","5":"-14","6":"70","7":"NA","8":"2.00"},{"1":"8","2":"108","3":"h","4":"H","5":"-13","6":"80","7":"FALSE","8":"NA"},{"1":"9","2":"109","3":"i","4":"I","5":"-12","6":"90","7":"NA","8":"0.00"},{"1":"10","2":"110","3":"j","4":"J","5":"-11","6":"100","7":"FALSE","8":"-99.00"},{"1":"11","2":"111","3":"k","4":"K","5":"-10","6":"110","7":"TRUE","8":"3.14"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}

@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">arrayop</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.1</span>
       </span>
     </div>
 
@@ -86,7 +86,7 @@
       <h1 data-toc-skip>Get Started</h1>
                         <h4 class="author">Paradigm4</h4>
             
-            <h4 class="date">2020-09-22</h4>
+            <h4 class="date">2020-10-12</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/Paradigm4/ArrayOpR/blob/master/vignettes/arrayop.Rmd"><code>vignettes/arrayop.Rmd</code></a></small>
       <div class="hidden name"><code>arrayop.Rmd</code></div>
@@ -167,7 +167,7 @@
 <span class="no">arr_uploaded</span>$<span class="fu">array_meta_data</span>()</pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["name"],"name":[1],"type":["chr"],"align":["left"]},{"label":["uaid"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["aid"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["schema"],"name":[4],"type":["chr"],"align":["left"]},{"label":["availability"],"name":[5],"type":["lgl"],"align":["right"]},{"label":["temporary"],"name":[6],"type":["lgl"],"align":["right"]},{"label":["namespace"],"name":[7],"type":["chr"],"align":["left"]},{"label":["distribution"],"name":[8],"type":["chr"],"align":["left"]},{"label":["etcomp"],"name":[9],"type":["chr"],"align":["left"]}],"data":[{"1":"test_CO2","2":"118842","3":"118843","4":"test_CO2<Plant:string,Type:string,Treatment:string,conc:double,uptake:double> [i=1:84:0:10000]","5":"TRUE","6":"FALSE","7":"public","8":"hashed","9":"none"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+{"columns":[{"label":["name"],"name":[1],"type":["chr"],"align":["left"]},{"label":["uaid"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["aid"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["schema"],"name":[4],"type":["chr"],"align":["left"]},{"label":["availability"],"name":[5],"type":["lgl"],"align":["right"]},{"label":["temporary"],"name":[6],"type":["lgl"],"align":["right"]},{"label":["namespace"],"name":[7],"type":["chr"],"align":["left"]},{"label":["distribution"],"name":[8],"type":["chr"],"align":["left"]},{"label":["etcomp"],"name":[9],"type":["chr"],"align":["left"]}],"data":[{"1":"test_CO2","2":"134130","3":"134131","4":"test_CO2<Plant:string,Type:string,Treatment:string,conc:double,uptake:double> [i=1:84:0:10000]","5":"TRUE","6":"FALSE","7":"public","8":"hashed","9":"none"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
 <div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="no">arr_uploaded</span>$<span class="fu">summarize_array</span>()</pre></body></html></div>
@@ -185,9 +185,9 @@
 <span class="co">#&gt; [1] "test_CO2 &lt;Plant:string,Type:string,Treatment:string,conc:double,uptake:double&gt; [i=1:84:0:10000]"</span>
 
 <span class="no">arr_compiled</span>$<span class="fu">to_afl</span>()
-<span class="co">#&gt; [1] "build(&lt;Plant:string,Type:string,Treatment:string,conc:double,uptake:double&gt;[XdtgxQRsCA_], '[(\\'Qn1\\',\\'Quebec\\',\\'nonchilled\\',95,16),(\\'Qn1\\',\\'Quebec\\',\\'nonchilled\\',175,30.4),(\\'Qn1\\',\\'Quebec\\',\\'nonchilled\\',250,34.8),(\\'Qn1\\',\\'Quebec\\',\\'nonchilled\\',350,37.2)]', true)"</span>
+<span class="co">#&gt; [1] "build(&lt;Plant:string,Type:string,Treatment:string,conc:double,uptake:double&gt;[ouOICQXbpi_], '[(\\'Qn1\\',\\'Quebec\\',\\'nonchilled\\',95,16),(\\'Qn1\\',\\'Quebec\\',\\'nonchilled\\',175,30.4),(\\'Qn1\\',\\'Quebec\\',\\'nonchilled\\',250,34.8),(\\'Qn1\\',\\'Quebec\\',\\'nonchilled\\',350,37.2)]', true)"</span>
 <span class="no">arr_compiled</span>$<span class="fu">to_schema_str</span>()
-<span class="co">#&gt; [1] "&lt;Plant:string,Type:string,Treatment:string,conc:double,uptake:double&gt; [XdtgxQRsCA_=0:*:0:100000]"</span>
+<span class="co">#&gt; [1] "&lt;Plant:string,Type:string,Treatment:string,conc:double,uptake:double&gt; [ouOICQXbpi_=0:*:0:100000]"</span>
 <span class="no">arr_compiled</span>$<span class="fu">is_persistent</span>()
 <span class="co">#&gt; [1] FALSE</span>
 
@@ -307,7 +307,7 @@
 <div class="sourceCode" id="cb15"><html><body><pre class="r"><span class="no">dataArray</span> <span class="kw">=</span> <span class="no">conn</span>$<span class="fu">array_from_df</span>(<span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span>(<span class="kw">Plant</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"Qn1"</span>, <span class="st">"Qn2"</span>, <span class="st">"Qn3"</span>), <span class="kw">Treatment</span> <span class="kw">=</span> <span class="st">"treated-mutated"</span>))
 <span class="no">result</span> <span class="kw">=</span> <span class="no">arr_stored</span>$<span class="fu">mutate_by</span>(<span class="no">dataArray</span>, <span class="kw">keys</span> <span class="kw">=</span> <span class="st">"Plant"</span>, <span class="kw">updated_fields</span> <span class="kw">=</span> <span class="st">"Treatment"</span>)
 <span class="no">result</span>$<span class="fu">to_afl</span>()
-<span class="co">#&gt; [1] "project(join(project(redimension(project(equi_join(project(build(&lt;Plant:string,Treatment:string&gt;[Hufz_], '[(\\'Qn1\\',\\'treated-mutated\\'),(\\'Qn2\\',\\'treated-mutated\\'),(\\'Qn3\\',\\'treated-mutated\\')]', true),Treatment,Plant) as _L, project(apply(test_CO2_stored,i,i),i,Plant) as _R, left_names:_L.Plant, right_names:_R.Plant),Treatment,i),&lt;Treatment:string&gt; [i=1:84:0:10000]),Treatment),project(test_CO2_stored,Plant,Type,conc,uptake)),Plant,Type,Treatment,conc,uptake)"</span>
+<span class="co">#&gt; [1] "project(join(project(redimension(project(equi_join(project(build(&lt;Plant:string,Treatment:string&gt;[PTDi_], '[(\\'Qn1\\',\\'treated-mutated\\'),(\\'Qn2\\',\\'treated-mutated\\'),(\\'Qn3\\',\\'treated-mutated\\')]', true),Treatment,Plant) as _L, project(apply(test_CO2_stored,i,i),i,Plant) as _R, left_names:_L.Plant, right_names:_R.Plant),Treatment,i),&lt;Treatment:string&gt; [i=1:84:0:10000]),Treatment),project(test_CO2_stored,Plant,Type,conc,uptake)),Plant,Type,Treatment,conc,uptake)"</span>
 <span class="no">result</span>$<span class="fu">to_df</span>()</pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
@@ -385,22 +385,28 @@
 {"columns":[{"label":["lda"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["db"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["fa"],"name":[3],"type":["chr"],"align":["left"]},{"label":["lfb"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["rda"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["rfb"],"name":[6],"type":["dbl"],"align":["right"]}],"data":[{"1":"NA","2":"18","3":"H","4":"NA","5":"8","6":"25.12"},{"1":"NA","2":"19","3":"I","4":"NA","5":"9","6":"28.26"},{"1":"NA","2":"20","3":"J","4":"NA","5":"10","6":"31.40"},{"1":"3","2":"13","3":"C","4":"9.42","5":"3","6":"9.42"},{"1":"4","2":"14","3":"D","4":"12.56","5":"4","6":"12.56"},{"1":"5","2":"15","3":"E","4":"15.70","5":"5","6":"15.70"},{"1":"NA","2":"16","3":"F","4":"NA","5":"6","6":"18.84"},{"1":"NA","2":"17","3":"G","4":"NA","5":"7","6":"21.98"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
+<div class="sourceCode" id="cb24"><html><body><pre class="r"><span class="no">L</span>$<span class="fu">full_join</span>(<span class="no">R</span>)$<span class="fu">to_df</span>()</pre></body></html></div>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["lda"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["db"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["fa"],"name":[3],"type":["chr"],"align":["left"]},{"label":["lfb"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["rda"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["rfb"],"name":[6],"type":["dbl"],"align":["right"]}],"data":[{"1":"NA","2":"18","3":"H","4":"NA","5":"8","6":"25.12"},{"1":"NA","2":"17","3":"G","4":"NA","5":"7","6":"21.98"},{"1":"2","2":"12","3":"B","4":"6.28","5":"NA","6":"NA"},{"1":"3","2":"13","3":"C","4":"9.42","5":"3","6":"9.42"},{"1":"NA","2":"16","3":"F","4":"NA","5":"6","6":"18.84"},{"1":"5","2":"15","3":"E","4":"15.70","5":"5","6":"15.70"},{"1":"1","2":"11","3":"A","4":"3.14","5":"NA","6":"NA"},{"1":"NA","2":"20","3":"J","4":"NA","5":"10","6":"31.40"},{"1":"4","2":"14","3":"D","4":"12.56","5":"4","6":"12.56"},{"1":"NA","2":"19","3":"I","4":"NA","5":"9","6":"28.26"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
 <p>We can specify which fields to keep with <code>array_op$select</code>. By default, all fields are selected, except that the join keys only exist once in the result even if they are selected on both operands.</p>
-<div class="sourceCode" id="cb24"><html><body><pre class="r"><span class="no">L</span>$<span class="fu">select</span>(<span class="st">"lfb"</span>, <span class="st">"lda"</span>)$
+<div class="sourceCode" id="cb25"><html><body><pre class="r"><span class="no">L</span>$<span class="fu">select</span>(<span class="st">"lfb"</span>, <span class="st">"lda"</span>)$
   <span class="fu">inner_join</span>(<span class="no">R</span>)$<span class="fu">to_df</span>()</pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
 {"columns":[{"label":["lfb"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["lda"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["rda"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["rfb"],"name":[4],"type":["dbl"],"align":["right"]}],"data":[{"1":"9.42","2":"3","3":"3","4":"9.42"},{"1":"12.56","2":"4","3":"4","4":"12.56"},{"1":"15.70","2":"5","3":"5","4":"15.70"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
-<div class="sourceCode" id="cb25"><html><body><pre class="r">
+<div class="sourceCode" id="cb26"><html><body><pre class="r">
 <span class="no">L</span>$<span class="fu">inner_join</span>(<span class="no">R</span>$<span class="fu">select</span>(<span class="st">"rda"</span>, <span class="st">"rfb"</span>))$<span class="fu">to_df</span>()</pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
 {"columns":[{"label":["lda"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["db"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["fa"],"name":[3],"type":["chr"],"align":["left"]},{"label":["lfb"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["rda"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["rfb"],"name":[6],"type":["dbl"],"align":["right"]}],"data":[{"1":"3","2":"13","3":"C","4":"9.42","5":"3","6":"9.42"},{"1":"4","2":"14","3":"D","4":"12.56","5":"4","6":"12.56"},{"1":"5","2":"15","3":"E","4":"15.70","5":"5","6":"15.70"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
-<div class="sourceCode" id="cb26"><html><body><pre class="r">
+<div class="sourceCode" id="cb27"><html><body><pre class="r">
 <span class="no">L</span>$<span class="fu">select</span>(<span class="st">"lfb"</span>, <span class="st">"db"</span>)$<span class="fu">inner_join</span>(<span class="no">R</span>$<span class="fu">select</span>(<span class="st">"rfb"</span>))$<span class="fu">to_df</span>()</pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
@@ -408,14 +414,14 @@
   </script>
 </div>
 <p>We can specify the join keys and aliases explicitly. Array aliases are important to disambiguate overlapping fields.</p>
-<div class="sourceCode" id="cb27"><html><body><pre class="r"><span class="co"># `db` as join key, `fa` exists in both arrays and will be suffixed with array aliaes in the result</span>
+<div class="sourceCode" id="cb28"><html><body><pre class="r"><span class="co"># `db` as join key, `fa` exists in both arrays and will be suffixed with array aliaes in the result</span>
 <span class="no">L</span>$<span class="fu">left_join</span>(<span class="no">R</span>, <span class="kw">by</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">'db'</span>), <span class="kw">left_alias</span> <span class="kw">=</span> <span class="st">"_LL"</span>, <span class="kw">right_alias</span> <span class="kw">=</span> <span class="st">"_RR"</span>)$<span class="fu">to_df</span>()</pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
 {"columns":[{"label":["lda"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["db"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["fa_LL"],"name":[3],"type":["chr"],"align":["left"]},{"label":["lfb"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["rda"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["fa_RR"],"name":[6],"type":["chr"],"align":["left"]},{"label":["rfb"],"name":[7],"type":["dbl"],"align":["right"]}],"data":[{"1":"2","2":"12","3":"B","4":"6.28","5":"NA","6":"NA","7":"NA"},{"1":"3","2":"13","3":"C","4":"9.42","5":"3","6":"C","7":"9.42"},{"1":"1","2":"11","3":"A","4":"3.14","5":"NA","6":"NA","7":"NA"},{"1":"4","2":"14","3":"D","4":"12.56","5":"4","6":"D","7":"12.56"},{"1":"5","2":"15","3":"E","4":"15.70","5":"5","6":"E","7":"15.70"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
-<div class="sourceCode" id="cb28"><html><body><pre class="r">
+<div class="sourceCode" id="cb29"><html><body><pre class="r">
 <span class="co"># different join keys</span>
 <span class="no">L</span>$<span class="fu">right_join</span>(<span class="no">R</span>, <span class="kw">by.x</span> <span class="kw">=</span> <span class="st">"lda"</span>, <span class="kw">by.y</span> <span class="kw">=</span> <span class="st">"rda"</span>, <span class="kw">left_alias</span> <span class="kw">=</span> <span class="st">"_LL"</span>, <span class="kw">right_alias</span> <span class="kw">=</span> <span class="st">"_RR"</span>)$<span class="fu">to_df</span>()</pre></body></html></div>
 <div data-pagedtable="false">
@@ -433,7 +439,7 @@
 <li>join keys must be dimensions on both operands.</li>
 <li>only <code>inner_join</code> is supported.</li>
 </ol>
-<div class="sourceCode" id="cb29"><html><body><pre class="r"><span class="no">L</span>$<span class="fu">inner_join</span>(<span class="no">R</span>,
+<div class="sourceCode" id="cb30"><html><body><pre class="r"><span class="no">L</span>$<span class="fu">inner_join</span>(<span class="no">R</span>,
              <span class="kw">by.x</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">'db'</span>, <span class="st">'lda'</span>),
              <span class="kw">by.y</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">'db'</span>, <span class="st">'rda'</span>),
              <span class="kw">join_mode</span> <span class="kw">=</span> <span class="st">'cross_join'</span>, <span class="kw">left_alias</span> <span class="kw">=</span> <span class="st">"_LL"</span>, <span class="kw">right_alias</span> <span class="kw">=</span> <span class="st">"_RR"</span>)$
@@ -447,13 +453,13 @@
 <div id="custom-settings" class="section level2">
 <h2 class="hasAnchor">
 <a href="#custom-settings" class="anchor"></a>Custom settings</h2>
-<div class="sourceCode" id="cb30"><html><body><pre class="r"><span class="no">result</span> <span class="kw">=</span> <span class="no">L</span>$<span class="fu">inner_join</span>(<span class="no">R</span>,
+<div class="sourceCode" id="cb31"><html><body><pre class="r"><span class="no">result</span> <span class="kw">=</span> <span class="no">L</span>$<span class="fu">inner_join</span>(<span class="no">R</span>,
              <span class="kw">settings</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(
                <span class="kw">algorithm</span> <span class="kw">=</span> <span class="st">"'hash_replicate_right'"</span>, <span class="co"># string setting item</span>
                <span class="kw">hash_join_threshold</span> <span class="kw">=</span> <span class="fl">1024</span> <span class="co"># numeric setting item</span>
          ))
 <span class="no">result</span>$<span class="fu">to_afl</span>()
-<span class="co">#&gt; [1] "project(equi_join(project(apply(R_array8b83396368f1600805476707995259,lda,lda),lda,fa,lfb) as _L, project(apply(R_array8b863695d311600805476707995259,rda,rda),rda,fa,rfb) as _R, left_names:(_L.db,_L.fa), right_names:(_R.db,_R.fa), algorithm:'hash_replicate_right', hash_join_threshold:1024),lda,db,fa,lfb,rda,rfb)"</span>
+<span class="co">#&gt; [1] "project(equi_join(project(apply(Rarrayop__ZiErdvpiKO_,lda,lda),lda,fa,lfb) as _L, project(apply(Rarrayop__AdPERdioDE_,rda,rda),rda,fa,rfb) as _R, left_names:(_L.db,_L.fa), right_names:(_R.db,_R.fa), algorithm:'hash_replicate_right', hash_join_threshold:1024),lda,db,fa,lfb,rda,rfb)"</span>
 <span class="no">result</span>$<span class="fu">to_df</span>()</pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
@@ -472,20 +478,20 @@
 <li>insert the updated source into the target array</li>
 </ol>
 <p>Let’s see an example. First, create a target array with 3 attrs and 2 dimensions; and a source array with some data. Notice we set the source array’s <code>build_dim_spec = 'z'</code> so that we can refer to it later.</p>
-<div class="sourceCode" id="cb31"><html><body><pre class="r"><span class="no">AutoFieldsContent</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span>(<span class="kw">da</span><span class="kw">=</span><span class="fl">1</span>:<span class="fl">10</span>, <span class="kw">db</span><span class="kw">=</span><span class="fl">1</span>:<span class="fl">10</span>, <span class="kw">f_str</span> <span class="kw">=</span> <span class="no">letters</span>[<span class="fl">1</span>:<span class="fl">10</span>], <span class="kw">f_int32</span><span class="kw">=</span><span class="fl">1</span>:<span class="fl">10</span>, <span class="kw">f_int64</span><span class="kw">=</span><span class="fl">11</span>:<span class="fl">20</span>)
+<div class="sourceCode" id="cb32"><html><body><pre class="r"><span class="no">AutoFieldsContent</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span>(<span class="kw">da</span><span class="kw">=</span><span class="fl">1</span>:<span class="fl">10</span>, <span class="kw">db</span><span class="kw">=</span><span class="fl">1</span>:<span class="fl">10</span>, <span class="kw">f_str</span> <span class="kw">=</span> <span class="no">letters</span>[<span class="fl">1</span>:<span class="fl">10</span>], <span class="kw">f_int32</span><span class="kw">=</span><span class="fl">1</span>:<span class="fl">10</span>, <span class="kw">f_int64</span><span class="kw">=</span><span class="fl">11</span>:<span class="fl">20</span>)
 <span class="no">target</span> <span class="kw">=</span> <span class="no">conn</span>$<span class="fu">array_from_df</span>(<span class="no">AutoFieldsContent</span>,
                             <span class="kw">template</span> <span class="kw">=</span> <span class="st">"&lt;f_str:string, f_int32:int32, f_int64:int64&gt; [da=0:*:0:1000; db=0:*:0:1000]"</span>,
                             <span class="kw">force_template_schema</span> <span class="kw">=</span> <span class="no">T</span>)$
               <span class="fu">persist</span>(<span class="kw">.temp</span><span class="kw">=</span><span class="no">T</span>, <span class="kw">.gc</span> <span class="kw">=</span> <span class="no">F</span>)
 <span class="no">empty_target</span> <span class="kw">=</span> <span class="no">conn</span>$<span class="fu">create_array</span>(<span class="no">dbutils</span>$<span class="fu">random_array_name</span>(), <span class="no">target</span>, <span class="kw">.temp</span> <span class="kw">=</span> <span class="no">T</span>)
 <span class="no">source</span> <span class="kw">=</span>  <span class="no">conn</span>$<span class="fu">compile_df</span>(<span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span>(<span class="kw">f_str</span> <span class="kw">=</span> <span class="no">LETTERS</span>[<span class="fl">1</span>:<span class="fl">3</span>]), <span class="kw">template</span> <span class="kw">=</span> <span class="no">target</span>, <span class="kw">build_dim_spec</span> <span class="kw">=</span> <span class="st">"z"</span>)</pre></body></html></div>
-<div class="sourceCode" id="cb32"><html><body><pre class="r"><span class="no">source</span>$<span class="fu">set_auto_fields</span>(<span class="no">target</span>)$<span class="fu">to_df</span>() <span class="co"># same as below</span></pre></body></html></div>
+<div class="sourceCode" id="cb33"><html><body><pre class="r"><span class="no">source</span>$<span class="fu">set_auto_fields</span>(<span class="no">target</span>)$<span class="fu">to_df</span>() <span class="co"># same as below</span></pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
 {"columns":[{"label":["f_str"],"name":[1],"type":["chr"],"align":["left"]},{"label":["da"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["db"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["f_int32"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["f_int64"],"name":[5],"type":["dbl"],"align":["right"]}],"data":[{"1":"A","2":"11","3":"11","4":"11","5":"21"},{"1":"B","2":"12","3":"12","4":"12","5":"22"},{"1":"C","2":"13","3":"13","4":"13","5":"23"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
-<div class="sourceCode" id="cb33"><html><body><pre class="r"><span class="co"># source$set_auto_fields(target, source_auto_increment=c(z=0), target_auto_increment=c(da=0, db=0, f_int32=0))$to_df()</span>
+<div class="sourceCode" id="cb34"><html><body><pre class="r"><span class="co"># source$set_auto_fields(target, source_auto_increment=c(z=0), target_auto_increment=c(da=0, db=0, f_int32=0))$to_df()</span>
 
 <span class="co"># # target_auto_increment does not matter if the target array is not empty</span>
 <span class="no">source</span>$<span class="fu">set_auto_fields</span>(<span class="no">target</span>, <span class="kw">source_auto_increment</span><span class="kw">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="kw">z</span><span class="kw">=</span><span class="fl">0</span>), <span class="kw">target_auto_increment</span><span class="kw">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="kw">da</span><span class="kw">=</span><span class="fl">1</span>, <span class="kw">db</span><span class="kw">=</span><span class="fl">2</span>, <span class="kw">f_int32</span><span class="kw">=</span><span class="fl">3</span>))$<span class="fu">to_df</span>()</pre></body></html></div>
@@ -494,7 +500,7 @@
 {"columns":[{"label":["f_str"],"name":[1],"type":["chr"],"align":["left"]},{"label":["da"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["db"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["f_int32"],"name":[4],"type":["dbl"],"align":["right"]}],"data":[{"1":"A","2":"11","3":"11","4":"11"},{"1":"B","2":"12","3":"12","4":"12"},{"1":"C","2":"13","3":"13","4":"13"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
-<div class="sourceCode" id="cb34"><html><body><pre class="r">
+<div class="sourceCode" id="cb35"><html><body><pre class="r">
 <span class="co"># # target_auto_increment affects the initial field values if the target array is empty</span>
 <span class="no">source</span>$<span class="fu">set_auto_fields</span>(<span class="no">empty_target</span>, <span class="kw">source_auto_increment</span><span class="kw">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="kw">z</span><span class="kw">=</span><span class="fl">0</span>), <span class="kw">target_auto_increment</span><span class="kw">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="kw">da</span><span class="kw">=</span><span class="fl">1</span>, <span class="kw">db</span><span class="kw">=</span><span class="fl">2</span>, <span class="kw">f_int32</span><span class="kw">=</span><span class="fl">3</span>))$<span class="fu">to_df</span>()</pre></body></html></div>
 <div data-pagedtable="false">
@@ -502,7 +508,7 @@
 {"columns":[{"label":["f_str"],"name":[1],"type":["chr"],"align":["left"]},{"label":["da"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["db"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["f_int32"],"name":[4],"type":["dbl"],"align":["right"]}],"data":[{"1":"A","2":"1","3":"2","4":"3"},{"1":"B","2":"2","3":"3","4":"4"},{"1":"C","2":"3","3":"4","4":"5"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
-<div class="sourceCode" id="cb35"><html><body><pre class="r">
+<div class="sourceCode" id="cb36"><html><body><pre class="r">
 <span class="co"># By default, both source and target auto increment start from 0</span>
 <span class="co"># The only dimension in source is used as the source_auto_increment field; otherwise, we need to specify the source field</span>
 <span class="co"># All the missing fields are assumed the target_auto_increment fields unless provided otherwise.</span>
@@ -512,20 +518,20 @@
 {"columns":[{"label":["f_str"],"name":[1],"type":["chr"],"align":["left"]},{"label":["da"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["db"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["f_int32"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["f_int64"],"name":[5],"type":["dbl"],"align":["right"]}],"data":[{"1":"A","2":"0","3":"0","4":"0","5":"0"},{"1":"B","2":"1","3":"1","4":"1","5":"1"},{"1":"C","2":"2","3":"2","4":"2","5":"2"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
-<div class="sourceCode" id="cb36"><html><body><pre class="r"><span class="no">source</span>$<span class="fu">set_auto_fields</span>(<span class="no">empty_target</span>, <span class="kw">target_auto_increment</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"da"</span>, <span class="st">"db"</span>))$<span class="fu">to_df</span>()</pre></body></html></div>
+<div class="sourceCode" id="cb37"><html><body><pre class="r"><span class="no">source</span>$<span class="fu">set_auto_fields</span>(<span class="no">empty_target</span>, <span class="kw">target_auto_increment</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"da"</span>, <span class="st">"db"</span>))$<span class="fu">to_df</span>()</pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
 {"columns":[{"label":["f_str"],"name":[1],"type":["chr"],"align":["left"]},{"label":["da"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["db"],"name":[3],"type":["dbl"],"align":["right"]}],"data":[{"1":"A","2":"0","3":"0"},{"1":"B","2":"1","3":"1"},{"1":"C","2":"2","3":"2"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
 <p>In a less common case, we may need to populate a dimension field to avoid cell coordinate collisions.</p>
-<div class="sourceCode" id="cb37"><html><body><pre class="r"><span class="no">AutoFieldsContent</span></pre></body></html></div>
+<div class="sourceCode" id="cb38"><html><body><pre class="r"><span class="no">AutoFieldsContent</span></pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
 {"columns":[{"label":["da"],"name":[1],"type":["int"],"align":["right"]},{"label":["db"],"name":[2],"type":["int"],"align":["right"]},{"label":["f_str"],"name":[3],"type":["fctr"],"align":["left"]},{"label":["f_int32"],"name":[4],"type":["int"],"align":["right"]},{"label":["f_int64"],"name":[5],"type":["int"],"align":["right"]}],"data":[{"1":"1","2":"1","3":"a","4":"1","5":"11"},{"1":"2","2":"2","3":"b","4":"2","5":"12"},{"1":"3","2":"3","3":"c","4":"3","5":"13"},{"1":"4","2":"4","3":"d","4":"4","5":"14"},{"1":"5","2":"5","3":"e","4":"5","5":"15"},{"1":"6","2":"6","3":"f","4":"6","5":"16"},{"1":"7","2":"7","3":"g","4":"7","5":"17"},{"1":"8","2":"8","3":"h","4":"8","5":"18"},{"1":"9","2":"9","3":"i","4":"9","5":"19"},{"1":"10","2":"10","3":"j","4":"10","5":"20"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
-<div class="sourceCode" id="cb38"><html><body><pre class="r"><span class="no">conn</span>$
+<div class="sourceCode" id="cb39"><html><body><pre class="r"><span class="no">conn</span>$
     <span class="fu">compile_df</span>(<span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span>(<span class="kw">f_str</span> <span class="kw">=</span> <span class="no">LETTERS</span>[<span class="fl">4</span>:<span class="fl">10</span>], <span class="kw">f_int32</span> <span class="kw">=</span> <span class="fl">4</span>:<span class="fl">10</span>, <span class="kw">da</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">1</span>,<span class="fl">4</span>,<span class="fl">5</span>)), <span class="kw">template</span> <span class="kw">=</span> <span class="no">target</span>)$
     <span class="fu">set_auto_fields</span>(<span class="no">target</span>,
                     <span class="kw">anti_collision_field</span> <span class="kw">=</span> <span class="st">'db'</span>)$
@@ -535,7 +541,7 @@
 {"columns":[{"label":["da"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["db"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["f_str"],"name":[3],"type":["chr"],"align":["left"]},{"label":["f_int32"],"name":[4],"type":["int"],"align":["right"]}],"data":[{"1":"1","2":"2","3":"D","4":"4"},{"1":"1","2":"3","3":"F","4":"6"},{"1":"1","2":"4","3":"H","4":"8"},{"1":"2","2":"3","3":"E","4":"5"},{"1":"2","2":"4","3":"G","4":"7"},{"1":"4","2":"5","3":"I","4":"9"},{"1":"5","2":"6","3":"J","4":"10"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
-<div class="sourceCode" id="cb39"><html><body><pre class="r"><span class="no">conn</span>$
+<div class="sourceCode" id="cb40"><html><body><pre class="r"><span class="no">conn</span>$
     <span class="fu">compile_df</span>(<span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span>(<span class="kw">f_str</span> <span class="kw">=</span> <span class="no">LETTERS</span>[<span class="fl">4</span>:<span class="fl">10</span>], <span class="kw">f_int32</span> <span class="kw">=</span> <span class="fl">4</span>:<span class="fl">10</span>, <span class="kw">da</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">1</span>,<span class="fl">4</span>,<span class="fl">5</span>)), <span class="kw">template</span> <span class="kw">=</span> <span class="no">empty_target</span>)$
     <span class="fu">set_auto_fields</span>(<span class="no">empty_target</span>,
                     <span class="kw">anti_collision_field</span> <span class="kw">=</span> <span class="st">'db'</span>)$
@@ -547,7 +553,7 @@
 </div>
 <p>Notice there are no duplicated tuples of (da, db) so they can be safely inserted into the target array without coordinate collisions.</p>
 <p>We can comibne the two types of auto fields in one run and update the target array.</p>
-<div class="sourceCode" id="cb40"><html><body><pre class="r"><span class="no">conn</span>$
+<div class="sourceCode" id="cb41"><html><body><pre class="r"><span class="no">conn</span>$
     <span class="fu">compile_df</span>(<span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span>(<span class="kw">f_str</span> <span class="kw">=</span> <span class="no">LETTERS</span>[<span class="fl">4</span>:<span class="fl">10</span>], <span class="kw">da</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">1</span>,<span class="fl">4</span>,<span class="fl">5</span>)), <span class="kw">template</span> <span class="kw">=</span> <span class="no">target</span>, <span class="kw">build_dim_spec</span> <span class="kw">=</span> <span class="st">"z"</span>)$
     <span class="fu">set_auto_fields</span>(<span class="no">target</span>,
                     <span class="kw">source_auto_increment</span> <span class="kw">=</span> <span class="st">"z"</span>,
@@ -564,7 +570,7 @@
 {"columns":[{"label":["da"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["db"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["f_str"],"name":[3],"type":["chr"],"align":["left"]},{"label":["f_int32"],"name":[4],"type":["int"],"align":["right"]},{"label":["f_int64"],"name":[5],"type":["dbl"],"align":["right"]}],"data":[{"1":"1","2":"1","3":"a","4":"1","5":"11"},{"1":"1","2":"2","3":"D","4":"NA","5":"21"},{"1":"1","2":"3","3":"F","4":"NA","5":"23"},{"1":"1","2":"4","3":"H","4":"NA","5":"25"},{"1":"2","2":"2","3":"b","4":"2","5":"12"},{"1":"2","2":"3","3":"E","4":"NA","5":"22"},{"1":"2","2":"4","3":"G","4":"NA","5":"24"},{"1":"3","2":"3","3":"c","4":"3","5":"13"},{"1":"4","2":"4","3":"d","4":"4","5":"14"},{"1":"4","2":"5","3":"I","4":"NA","5":"26"},{"1":"5","2":"5","3":"e","4":"5","5":"15"},{"1":"5","2":"6","3":"J","4":"NA","5":"27"},{"1":"6","2":"6","3":"f","4":"6","5":"16"},{"1":"7","2":"7","3":"g","4":"7","5":"17"},{"1":"8","2":"8","3":"h","4":"8","5":"18"},{"1":"9","2":"9","3":"i","4":"9","5":"19"},{"1":"10","2":"10","3":"j","4":"10","5":"20"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
-<div class="sourceCode" id="cb41"><html><body><pre class="r"><span class="no">conn</span>$
+<div class="sourceCode" id="cb42"><html><body><pre class="r"><span class="no">conn</span>$
     <span class="fu">compile_df</span>(<span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span>(<span class="kw">f_str</span> <span class="kw">=</span> <span class="no">LETTERS</span>[<span class="fl">4</span>:<span class="fl">10</span>], <span class="kw">da</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">1</span>,<span class="fl">4</span>,<span class="fl">5</span>)), <span class="kw">template</span> <span class="kw">=</span> <span class="no">target</span>, <span class="kw">build_dim_spec</span> <span class="kw">=</span> <span class="st">"z"</span>)$
     <span class="fu">set_auto_fields</span>(<span class="no">empty_target</span>,
                     <span class="kw">source_auto_increment</span> <span class="kw">=</span> <span class="st">"z"</span>,
@@ -581,7 +587,7 @@
 {"columns":[{"label":["da"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["db"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["f_str"],"name":[3],"type":["chr"],"align":["left"]},{"label":["f_int32"],"name":[4],"type":["int"],"align":["right"]},{"label":["f_int64"],"name":[5],"type":["dbl"],"align":["right"]}],"data":[{"1":"1","2":"0","3":"D","4":"NA","5":"0"},{"1":"1","2":"1","3":"F","4":"NA","5":"2"},{"1":"1","2":"2","3":"H","4":"NA","5":"4"},{"1":"2","2":"0","3":"E","4":"NA","5":"1"},{"1":"2","2":"1","3":"G","4":"NA","5":"3"},{"1":"4","2":"0","3":"I","4":"NA","5":"5"},{"1":"5","2":"0","3":"J","4":"NA","5":"6"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
-<div class="sourceCode" id="cb42"><html><body><pre class="r"><span class="co"># clean up</span>
+<div class="sourceCode" id="cb43"><html><body><pre class="r"><span class="co"># clean up</span>
 <span class="fu"><a href="https://rdrr.io/r/base/try.html">try</a></span>({
   <span class="no">target</span>$<span class="fu">remove_array</span>()
   <span class="no">empty_target</span>$<span class="fu">remove_array</span>()
@@ -593,7 +599,7 @@
 <div id="group-by-and-then-summarize" class="section level2">
 <h2 class="hasAnchor">
 <a href="#group-by-and-then-summarize" class="anchor"></a>Group by and then Summarize</h2>
-<div class="sourceCode" id="cb43"><html><body><pre class="r"><span class="co"># Tip: Call `dbutils$db_aggregates()$to_df()` to see supported aggregate functions</span>
+<div class="sourceCode" id="cb44"><html><body><pre class="r"><span class="co"># Tip: Call `dbutils$db_aggregates()$to_df()` to see supported aggregate functions</span>
 <span class="no">arr_existing</span>$
   <span class="fu">group_by</span>(<span class="st">"Plant"</span>, <span class="st">"Type"</span>)$
   <span class="fu">summarize</span>(<span class="kw">count</span> <span class="kw">=</span> <span class="fu">count</span>(),
@@ -606,7 +612,7 @@
 {"columns":[{"label":["Plant"],"name":[1],"type":["chr"],"align":["left"]},{"label":["Type"],"name":[2],"type":["chr"],"align":["left"]},{"label":["count"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["uptake_sd"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["conc_avg"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["uptake_max"],"name":[6],"type":["dbl"],"align":["right"]}],"data":[{"1":"Qn1","2":"Quebec","3":"7","4":"8.214766","5":"435","6":"39.7"},{"1":"Mc1","2":"Mississippi","3":"7","4":"4.118657","5":"435","6":"22.2"},{"1":"Qc1","2":"Quebec","3":"7","4":"8.334609","5":"435","6":"38.7"},{"1":"Qn3","2":"Quebec","3":"7","4":"10.349948","5":"435","6":"45.5"},{"1":"Mc2","2":"Mississippi","3":"7","4":"2.186974","5":"435","6":"14.4"},{"1":"Qn2","2":"Quebec","3":"7","4":"11.004069","5":"435","6":"44.3"},{"1":"Mn1","2":"Mississippi","3":"7","4":"8.694251","5":"435","6":"35.5"},{"1":"Mc3","2":"Mississippi","3":"7","4":"3.049044","5":"435","6":"19.9"},{"1":"Mn3","2":"Mississippi","3":"7","4":"6.484707","5":"435","6":"28.5"},{"1":"Qc3","2":"Quebec","3":"7","4":"10.321083","5":"435","6":"41.4"},{"1":"Qc2","2":"Quebec","3":"7","4":"11.336960","5":"435","6":"42.4"},{"1":"Mn2","2":"Mississippi","3":"7","4":"7.652855","5":"435","6":"32.4"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
-<div class="sourceCode" id="cb44"><html><body><pre class="r">
+<div class="sourceCode" id="cb45"><html><body><pre class="r">
 <span class="co"># Aggregation result is still an array_op. So we can carry on.</span>
 <span class="no">arr_existing</span>$
   <span class="fu">group_by</span>(<span class="st">"Plant"</span>, <span class="st">"Type"</span>)$
@@ -626,7 +632,7 @@
 <h2 class="hasAnchor">
 <a href="#summarize-without-group_by-fields" class="anchor"></a>Summarize without group_by fields</h2>
 <p>Sometimes we need to get stats on array fields for all cells without any group_by fields, e.g. find the max/min value of a field.</p>
-<div class="sourceCode" id="cb45"><html><body><pre class="r"><span class="no">arr_existing</span>$<span class="fu">summarize</span>(
+<div class="sourceCode" id="cb46"><html><body><pre class="r"><span class="no">arr_existing</span>$<span class="fu">summarize</span>(
   <span class="fu">count</span>(), <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span>(<span class="no">conc</span>), <span class="fu">stdev</span>(<span class="no">uptake</span>),
   <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span>(<span class="no">i</span>) <span class="co"># this is a dimension </span>
 )$<span class="fu">to_df</span>()</pre></body></html></div>
@@ -641,17 +647,26 @@
 <h1 class="hasAnchor">
 <a href="#versions" class="anchor"></a>Versions</h1>
 <p>Since we just modified <code>arr_stored</code> several times. Let’s check out how many versions it has so far and delete the version history.</p>
-<div class="sourceCode" id="cb46"><html><body><pre class="r"><span class="no">arr_stored</span>$<span class="fu">versions</span>()</pre></body></html></div>
+<div class="sourceCode" id="cb47"><html><body><pre class="r"><span class="no">arr_stored</span>$<span class="fu">list_versions</span>()</pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["version_id"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["timestamp"],"name":[2],"type":["S3: POSIXct"],"align":["right"]}],"data":[{"1":"1","2":"2020-09-22 20:11:17"},{"1":"2","2":"2020-09-22 20:11:20"},{"1":"3","2":"2020-09-22 20:11:20"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+{"columns":[{"label":["version_id"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["timestamp"],"name":[2],"type":["S3: POSIXct"],"align":["right"]}],"data":[{"1":"1","2":"2020-10-12 18:35:49"},{"1":"2","2":"2020-10-12 18:35:52"},{"1":"3","2":"2020-10-12 18:35:52"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
-<div class="sourceCode" id="cb47"><html><body><pre class="r"><span class="no">arr_stored</span>$<span class="fu">remove_versions</span>()
-<span class="no">arr_stored</span>$<span class="fu">versions</span>()</pre></body></html></div>
+<div class="sourceCode" id="cb48"><html><body><pre class="r">
+<span class="co"># Check how many cells in each version</span>
+<span class="kw">for</span>(<span class="no">version_id</span> <span class="kw">in</span> <span class="fl">1</span>:<span class="fl">3</span>){
+  <span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/sprintf.html">sprintf</a></span>(<span class="st">"Version-%d has %d cells"</span>, <span class="no">version_id</span>, <span class="no">arr_stored</span>$<span class="fu"><a href="https://rdrr.io/r/base/Version.html">version</a></span>(<span class="no">version_id</span>)$<span class="fu">cell_count</span>()))
+}
+<span class="co">#&gt; [1] "Version-1 has 12 cells"</span>
+<span class="co">#&gt; [1] "Version-2 has 12 cells"</span>
+<span class="co">#&gt; [1] "Version-3 has 3 cells"</span></pre></body></html></div>
+<p>Remove all but the latest version.</p>
+<div class="sourceCode" id="cb49"><html><body><pre class="r"><span class="no">arr_stored</span>$<span class="fu">remove_versions</span>()
+<span class="no">arr_stored</span>$<span class="fu">list_versions</span>()</pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["version_id"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["timestamp"],"name":[2],"type":["S3: POSIXct"],"align":["right"]}],"data":[{"1":"3","2":"2020-09-22 20:11:20"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+{"columns":[{"label":["version_id"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["timestamp"],"name":[2],"type":["S3: POSIXct"],"align":["right"]}],"data":[{"1":"3","2":"2020-10-12 18:35:52"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
 </div>
@@ -660,7 +675,7 @@
 <a href="#read-files" class="anchor"></a>Read Files</h1>
 <p><code>fread</code> method of a connection object takes a file path or multiple file paths as input, with other params, and returns an array_op which can be further processed to modify existing arrays or join with other arrays.</p>
 <p>If we need to read data from all file columns, use <code>fread</code> without a template. This behaves similarly to <code><a href="https://Rdatatable.gitlab.io/data.table/reference/fread.html">data.table::fread</a></code>.</p>
-<div class="sourceCode" id="cb48"><html><body><pre class="r"><span class="co"># file column names and types are inferred by peeking into a few lines into the file</span>
+<div class="sourceCode" id="cb50"><html><body><pre class="r"><span class="co"># file column names and types are inferred by peeking into a few lines into the file</span>
 <span class="no">conn</span>$<span class="fu">fread</span>(<span class="st">"/file/path"</span>, <span class="kw">header</span> <span class="kw">=</span> <span class="no">T</span>, <span class="kw">sep</span> <span class="kw">=</span> <span class="st">"\t"</span>) <span class="co"># default sep is "\t"</span>
 
 <span class="co"># col.names are V1, V2, ... types are inferred.</span>
@@ -670,17 +685,17 @@
 <span class="no">conn</span>$<span class="fu">fread</span>(<span class="st">"/file/path"</span>, <span class="kw">header</span> <span class="kw">=</span> <span class="no">T</span>, <span class="kw">col.names</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"chrom"</span>, <span class="st">"pos"</span>, <span class="st">"ref"</span>, <span class="st">"alt"</span>))
 <span class="no">conn</span>$<span class="fu">fread</span>(<span class="st">"/file/path"</span>, <span class="kw">header</span> <span class="kw">=</span> <span class="no">F</span>, <span class="kw">col.names</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"chrom"</span>, <span class="st">"pos"</span>, <span class="st">"ref"</span>, <span class="st">"alt"</span>)) <span class="co"># same as above, but read the first row of data</span></pre></body></html></div>
 <p>More commonly, we want to load data from file into an existing array. In this case, we provide a template (either array_op or schema string), only the columns whose name matches the template’s fields are imported.</p>
-<p><strong>NOTE:</strong> <code>template</code> field types will superceedes actual file column types. If <code>header=T</code>, column names can still be inferred.</p>
-<div class="sourceCode" id="cb49"><html><body><pre class="r"><span class="no">conn</span>$<span class="fu">fread</span>(<span class="st">"/file/path"</span>, <span class="kw">template</span> <span class="kw">=</span> <span class="no">templateArray</span>, <span class="kw">header</span> <span class="kw">=</span> <span class="no">T</span>)
+<p><strong>NOTE:</strong> <code>template</code> field types superceedes actual file column types. If <code>header=T</code>, column names can still be inferred.</p>
+<div class="sourceCode" id="cb51"><html><body><pre class="r"><span class="no">conn</span>$<span class="fu">fread</span>(<span class="st">"/file/path"</span>, <span class="kw">template</span> <span class="kw">=</span> <span class="no">templateArray</span>, <span class="kw">header</span> <span class="kw">=</span> <span class="no">T</span>)
 <span class="co"># template can also be a schema string </span>
 <span class="co"># When header = F, we need to provide the correct col.names so they match the template fields.</span>
 <span class="no">conn</span>$<span class="fu">fread</span>(<span class="st">"/file/path"</span>, <span class="kw">template</span> <span class="kw">=</span> <span class="st">"&lt;ref:string, alt:string&gt; [chrom;pos]"</span>,
            <span class="kw">header</span> <span class="kw">=</span> <span class="no">F</span>, <span class="kw">col.names</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"chrom"</span>, <span class="st">"pos"</span>, <span class="st">"extra_col1"</span>, <span class="st">"ref"</span>, <span class="st">"alt"</span>, <span class="st">"extra_col2"</span>)) <span class="co"># extra_cols ignored</span></pre></body></html></div>
 <p>In examples above, <code>fread</code> generates AFL where fields are coerced to the template data types. If no template provided, we can think of the data.frame read from <code>nrows</code> lines of the file as a template. But no all files are perfectly formatted. We often need to error handle ill-formatted fields or missing data.</p>
 <p><code>auto_dcast</code> param, if set TRUE, will cast all numerical fields using <code>dcast(a1, double(null))</code> where <code>double</code> can be any numerical types, and <code>a1</code> is the matching field.</p>
-<div class="sourceCode" id="cb50"><html><body><pre class="r"><span class="no">conn</span>$<span class="fu">fread</span>(<span class="st">"/file/path"</span>, <span class="kw">template</span> <span class="kw">=</span> <span class="no">myArray</span>, <span class="kw">header</span> <span class="kw">=</span> <span class="no">T</span>, <span class="kw">auto_dcast</span> <span class="kw">=</span> <span class="no">T</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb52"><html><body><pre class="r"><span class="no">conn</span>$<span class="fu">fread</span>(<span class="st">"/file/path"</span>, <span class="kw">template</span> <span class="kw">=</span> <span class="no">myArray</span>, <span class="kw">header</span> <span class="kw">=</span> <span class="no">T</span>, <span class="kw">auto_dcast</span> <span class="kw">=</span> <span class="no">T</span>)</pre></body></html></div>
 <p>In case of special field casting, we can provide mutate imported fields on the fly. <code>@</code> is replaced with raw imported string fields, e.g. a0, a1, a2, …</p>
-<div class="sourceCode" id="cb51"><html><body><pre class="r"><span class="no">conn</span>$<span class="fu">fread</span>(<span class="st">"/file/path"</span>, <span class="kw">template</span> <span class="kw">=</span> <span class="no">myArray</span>, <span class="kw">header</span> <span class="kw">=</span> <span class="no">T</span>,
+<div class="sourceCode" id="cb53"><html><body><pre class="r"><span class="no">conn</span>$<span class="fu">fread</span>(<span class="st">"/file/path"</span>, <span class="kw">template</span> <span class="kw">=</span> <span class="no">myArray</span>, <span class="kw">header</span> <span class="kw">=</span> <span class="no">T</span>,
            <span class="kw">mutate_fields</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="st">'chrom'</span> <span class="kw">=</span> <span class="st">"iif(@='X', 23, iif(@='Y', 24, dcast(@, int64(null))))"</span>))
 
 <span class="co"># We can still dcast other numeric fields while casting `chrom` differently</span>
@@ -701,27 +716,27 @@
 <li>
 <code>execute</code> if we do not expect results</li>
 </ol>
-<div class="sourceCode" id="cb52"><html><body><pre class="r"><span class="no">conn</span>$<span class="fu">query</span>(<span class="st">"list('operators')"</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb54"><html><body><pre class="r"><span class="no">conn</span>$<span class="fu">query</span>(<span class="st">"list('operators')"</span>)</pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
 {"columns":[{"label":["name"],"name":[1],"type":["chr"],"align":["left"]},{"label":["library"],"name":[2],"type":["chr"],"align":["left"]}],"data":[{"1":"add_attributes","2":"scidb"},{"1":"add_instances","2":"system"},{"1":"add_user_to_role","2":"namespaces"},{"1":"aggregate","2":"scidb"},{"1":"aio_input","2":"accelerated_io_tools"},{"1":"aio_save","2":"accelerated_io_tools"},{"1":"apply","2":"scidb"},{"1":"attributes","2":"scidb"},{"1":"avg_rank","2":"scidb"},{"1":"bernoulli","2":"scidb"},{"1":"between","2":"scidb"},{"1":"build","2":"scidb"},{"1":"cancel","2":"scidb"},{"1":"cast","2":"scidb"},{"1":"change_user","2":"namespaces"},{"1":"consume","2":"scidb"},{"1":"create_array","2":"scidb"},{"1":"create_namespace","2":"namespaces"},{"1":"create_role","2":"namespaces"},{"1":"create_user","2":"namespaces"},{"1":"cross_between","2":"scidb"},{"1":"cross_join","2":"scidb"},{"1":"cumulate","2":"scidb"},{"1":"delete","2":"scidb"},{"1":"dimensions","2":"scidb"},{"1":"drop_namespace","2":"namespaces"},{"1":"drop_role","2":"namespaces"},{"1":"drop_user","2":"namespaces"},{"1":"drop_user_from_role","2":"namespaces"},{"1":"echo","2":"scidb"},{"1":"equi_join","2":"equi_join"},{"1":"filter","2":"scidb"},{"1":"flatten","2":"scidb"},{"1":"grouped_aggregate","2":"grouped_aggregate"},{"1":"help","2":"scidb"},{"1":"index_lookup","2":"scidb"},{"1":"input","2":"scidb"},{"1":"insert","2":"scidb"},{"1":"join","2":"scidb"},{"1":"limit","2":"scidb"},{"1":"list","2":"scidb"},{"1":"list_array_residency","2":"system"},{"1":"list_instances","2":"system"},{"1":"load_library","2":"scidb"},{"1":"load_module","2":"scidb"},{"1":"lock_arrays","2":"scidb"},{"1":"merge","2":"scidb"},{"1":"move_array_to_namespace","2":"namespaces"},{"1":"mquery","2":"scidb"},{"1":"parse","2":"accelerated_io_tools"},{"1":"project","2":"scidb"},{"1":"quantile","2":"scidb"},{"1":"rank","2":"scidb"},{"1":"redimension","2":"scidb"},{"1":"regrid","2":"scidb"},{"1":"remove","2":"scidb"},{"1":"remove_instances","2":"system"},{"1":"remove_versions","2":"scidb"},{"1":"rename","2":"scidb"},{"1":"repart","2":"scidb"},{"1":"reshape","2":"scidb"},{"1":"save","2":"scidb"},{"1":"scan","2":"scidb"},{"1":"secure_scan","2":"secure_scan"},{"1":"set_namespace","2":"namespaces"},{"1":"set_role_permissions","2":"namespaces"},{"1":"show","2":"scidb"},{"1":"show_namespace","2":"namespaces"},{"1":"show_role_permissions","2":"namespaces"},{"1":"show_roles_for_user","2":"namespaces"},{"1":"show_user","2":"namespaces"},{"1":"show_user_permissions","2":"namespaces"},{"1":"show_users_in_role","2":"namespaces"},{"1":"slice","2":"scidb"},{"1":"sort","2":"scidb"},{"1":"split","2":"accelerated_io_tools"},{"1":"store","2":"scidb"},{"1":"stream","2":"stream"},{"1":"subarray","2":"scidb"},{"1":"substitute","2":"scidb"},{"1":"summarize","2":"scidb"},{"1":"sync","2":"system"},{"1":"test_clear_cache","2":"scidb"},{"1":"transpose","2":"scidb"},{"1":"unfold","2":"scidb"},{"1":"uniq","2":"scidb"},{"1":"unload_library","2":"scidb"},{"1":"unpack","2":"scidb"},{"1":"unregister_instances","2":"system"},{"1":"variable_window","2":"scidb"},{"1":"versions","2":"scidb"},{"1":"window","2":"scidb"},{"1":"xgrid","2":"scidb"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
-<div class="sourceCode" id="cb53"><html><body><pre class="r"><span class="no">conn</span>$<span class="fu">query</span>(<span class="st">"op_scidbversion()"</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb55"><html><body><pre class="r"><span class="no">conn</span>$<span class="fu">query</span>(<span class="st">"op_scidbversion()"</span>)</pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
 {"columns":[{"label":["major"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["minor"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["patch"],"name":[3],"type":["dbl"],"align":["right"]}],"data":[{"1":"19","2":"11","3":"5"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
 <p>Let’s create an array <code>temp_array</code> in the <code>public</code> namespace for later examples.</p>
-<div class="sourceCode" id="cb54"><html><body><pre class="r"><span class="no">conn</span>$<span class="fu">execute</span>(<span class="st">"create array public.temp_array &lt;a:int32, b:string, c:bool&gt; [z]"</span>)
+<div class="sourceCode" id="cb56"><html><body><pre class="r"><span class="no">conn</span>$<span class="fu">execute</span>(<span class="st">"create array public.temp_array &lt;a:int32, b:string, c:bool&gt; [z]"</span>)
 <span class="no">conn</span>$<span class="fu">query</span>(<span class="st">"show(temp_array)"</span>) <span class="co"># query(...) returns result attribtues only</span></pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
 {"columns":[{"label":["schema"],"name":[1],"type":["chr"],"align":["left"]},{"label":["distribution"],"name":[2],"type":["chr"],"align":["left"]},{"label":["etcomp"],"name":[3],"type":["chr"],"align":["left"]}],"data":[{"1":"temp_array<a:int32,b:string,c:bool> [z=0:*:0:*]","2":"hashed","3":"none"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
-<div class="sourceCode" id="cb55"><html><body><pre class="r"><span class="no">conn</span>$<span class="fu">query_all</span>(<span class="st">"show(temp_array)"</span>) <span class="co"># query_all(...) returns result dimesions and attributes</span></pre></body></html></div>
+<div class="sourceCode" id="cb57"><html><body><pre class="r"><span class="no">conn</span>$<span class="fu">query_all</span>(<span class="st">"show(temp_array)"</span>) <span class="co"># query_all(...) returns result dimesions and attributes</span></pre></body></html></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
 {"columns":[{"label":["i"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["schema"],"name":[2],"type":["chr"],"align":["left"]},{"label":["distribution"],"name":[3],"type":["chr"],"align":["left"]},{"label":["etcomp"],"name":[4],"type":["chr"],"align":["left"]}],"data":[{"1":"0","2":"temp_array<a:int32,b:string,c:bool> [z=0:*:0:*]","3":"hashed","4":"none"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
@@ -740,7 +755,7 @@
 <code><a href="../reference/afl.html">afl(a | b(c))</a></code> is converted to <code>b(a, c)</code>
 </li>
 </ul>
-<div class="sourceCode" id="cb56"><html><body><pre class="r"><span class="no">conn</span>$<span class="fu">query</span>(<span class="fu"><a href="../reference/afl.html">afl</a></span>(
+<div class="sourceCode" id="cb58"><html><body><pre class="r"><span class="no">conn</span>$<span class="fu">query</span>(<span class="fu"><a href="../reference/afl.html">afl</a></span>(
   <span class="st">"'operators'"</span> <span class="kw">|</span> <span class="no">list</span> <span class="kw">|</span> <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span>(<span class="st">"library != 'scidb'"</span>) <span class="kw">|</span> <span class="fu">limit</span>(<span class="fl">10</span>)
 ))</pre></body></html></div>
 <div data-pagedtable="false">
@@ -754,7 +769,7 @@
 <h1 class="hasAnchor">
 <a href="#remove-arrays" class="anchor"></a>Remove arrays</h1>
 <p><strong>NOTE:</strong> removed arrays cannot be recovered. Always double check and back up if necessary before entering the danger zone.</p>
-<div class="sourceCode" id="cb57"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/try.html">try</a></span>(<span class="no">conn</span>$<span class="fu">execute</span>(<span class="st">"remove(temp_array)"</span>), <span class="kw">silent</span> <span class="kw">=</span> <span class="no">T</span>) <span class="co"># manually remove</span>
+<div class="sourceCode" id="cb59"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/try.html">try</a></span>(<span class="no">conn</span>$<span class="fu">execute</span>(<span class="st">"remove(temp_array)"</span>), <span class="kw">silent</span> <span class="kw">=</span> <span class="no">T</span>) <span class="co"># manually remove</span>
 
 <span class="kw">for</span>(<span class="no">x</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="no">arr_uploaded</span>,
            <span class="no">arr_created</span>,
