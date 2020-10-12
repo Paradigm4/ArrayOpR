@@ -34,6 +34,7 @@ assert_single_number <- function(obj, ...) {
   assert(is.numeric(obj) && length(obj) == 1, ...)
 }
 
+
 # %s in errorMsgFmt will be replaced the concatenated fields; only one %s is allowed. 
 # Extra format placeholders should be denoted by %%s, %%d, etc. due to the extra layer of indirection.
 assert_no_fields <- function(fields, errorMsgFmt = "Field(s) not empty: %s", ..., sep = ','){

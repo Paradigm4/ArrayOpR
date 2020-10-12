@@ -144,7 +144,7 @@ ScidbConnection <- R6::R6Class(
     array_from_stored_afl = function(
       afl_str, 
       # save_array_name = dbutils$random_array_name(),
-      save_array_name = NULL,
+      save_array_name = dbutils$random_array_name(),
       .temp = FALSE,
       .gc = TRUE
     ) {
@@ -152,13 +152,10 @@ ScidbConnection <- R6::R6Class(
       if(!is.null(save_array_name))
         assert_single_str(save_array_name, "ERROR: param 'save_array_name' must be a single string or NULL")
       
-      storedAfl = scidb::scidb(.db, afl_str)
-      storedArray = scidb::store(.db, expr = storedAfl, name = save_array_name, 
-                                 temp = .temp, gc = .gc)
-      
-      result = array_op_from_scidbr_obj(storedArray)
-      result$.private$confirm_schema_synced()
-      set_array_op_conn(result)
+      newArray = self$create_array(save_array_name, self$afl_expr(afl_str), .temp = .temp)
+      self$execute(afl(afl_str | store(save_array_name)))
+      newArray$.private$set_gc(.gc)
+      newArray
     }
     ,
     # Create an array_op from a schema string with an optional array name
@@ -430,6 +427,13 @@ ScidbConnection <- R6::R6Class(
     #' @return An arrayOp instance with schema from scidb
     afl_expr = function(afl_str) {
       assert_single_str(afl_str, "ERROR: param 'afl_str' must be a single string")
+      
+      # If afl_str is a scidb array name
+      if(!grepl("\\(", afl_str) && 
+        grepl("^((\\w+)\\.)?(\\w+)$", afl_str)) 
+        return(self$array(afl_str))
+      
+      # If afl_str is array operation
       escapedAfl = gsub("'", "\\\\'", afl_str)
       schema = query(sprintf("project(show('%s', 'afl'), schema)", escapedAfl))
       schemaArray = array_from_schema(schema[["schema"]])

@@ -108,3 +108,19 @@ assert_single_num = function(
     .class_names = paste(class(value), collapse = ',')
   )
 }
+
+assert_single_bool = function(
+  value, 
+  error_fmt = "{.symbol} should be a boolean, ie. length-1 logical vector, but got length-{.length} {.class_names}", 
+  .nframe = 0,
+  .symbol = deparse(substitute(value))
+) {
+  assertf(
+    length(value) == 1 && is.logical(value),
+    error_fmt = error_fmt,
+    .nframe = .nframe + 1,
+    .symbol = .symbol,
+    .length = length(value),
+    .class_names = paste(class(value), collapse = ',')
+  )
+}

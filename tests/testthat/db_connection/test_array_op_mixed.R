@@ -46,12 +46,10 @@ test_that("Store AFL as scidb array and return arrayOp", {
   randomName = dbutils$random_array_name()
   
   stored = uploaded$filter(f_double > 0)$persist(randomName, .temp = T, .gc = F)
-  # 'overwrite' an existing array
-  stored = uploaded$filter(f_double < 0)$persist(randomName)
-  
-  expect_equal(
-    stored$to_df(),
-    dplyr::filter(df, f_double < 0)
+  # Cannot 'overwrite' an existing array
+  expect_error(
+    uploaded$filter(f_double < 0)$persist(randomName),
+    "already exists"
   )
   
   # Cleanup

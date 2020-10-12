@@ -82,6 +82,21 @@ ArrayOpBase <- R6::R6Class(
       private$set_meta(key, c(private$get_meta(key), objs))
     }
     ,
+    # Set gc to TRUE or FALSE
+    set_gc = function(if_gc){
+      assert_single_bool(if_gc)
+      key = ".gc"
+      # if get_meta(key) is NULL, c(NULL, objs) still works
+      private$set_meta(key, if_gc)
+    }
+    ,
+    # Whether the arrayOp should be gc'ed. Default FALSE
+    is_gc = function(){
+      key = ".gc"
+      # if get_meta(key) is NULL, c(NULL, objs) still works
+      private$get_meta(key) %?% FALSE
+    }
+    ,
     # set the metadata to indicate the schema from this array_op instance is 
     # returned from SciDB rather than locally inferred in R
     confirm_schema_synced = function(){
@@ -1851,7 +1866,8 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' @param .gc Boolean, default TRUE. Whether to remove the persisted scidb array
     #' once the encapsulating arrayOp goes out of scodb in R. Set to FALSE if we
     #' need to keep the array indefinitely.
-    #' @return A new arrayOp instance or self
+    #' @return A new arrayOp instance or self; or throw an exception if 
+    #' `save_array_name` is provided and the array already exists
     persist = function(
       save_array_name = NULL,
       .temp = FALSE,
@@ -1863,7 +1879,7 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
       if(self$is_persistent() && is.null(save_array_name)) return(self) 
       private$conn$private$array_from_stored_afl(
         private$to_df_afl(),
-        save_array_name = save_array_name,
+        save_array_name = save_array_name %?% dbutils$random_array_name(),
         .temp = .temp,
         .gc = .gc
       )
@@ -2210,9 +2226,13 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' 
     #' We don't normally call this function except in testing.
     finalize = function() {
+      # arrayop managed gc 
+      if(private$is_gc() && self$exists_persistent_array()){
+        self$remove_array()
+      }
+      
+      # Extra referenced objects where gc managed by ScidbR
       refKey = '.refs'
-      # private$metaList[[refKey]] = NULL
-      # private$metaList = NULL
       refObj = private$get_meta(refKey)
       if(!is.null(refObj)) {
         

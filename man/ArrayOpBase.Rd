@@ -85,8 +85,8 @@ SciDB data frame (array with hidden dimensions; not to be confused with R data f
 \item \href{#method-limit}{\code{ArrayOpBase$limit()}}
 \item \href{#method-cell_count}{\code{ArrayOpBase$cell_count()}}
 \item \href{#method-summarize_array}{\code{ArrayOpBase$summarize_array()}}
-\item \href{#method-versions}{\code{ArrayOpBase$versions()}}
-\item \href{#method-get_version_snapshot}{\code{ArrayOpBase$get_version_snapshot()}}
+\item \href{#method-list_versions}{\code{ArrayOpBase$list_versions()}}
+\item \href{#method-version}{\code{ArrayOpBase$version()}}
 \item \href{#method-is_persistent}{\code{ArrayOpBase$is_persistent()}}
 \item \href{#method-exists_persistent_array}{\code{ArrayOpBase$exists_persistent_array()}}
 \item \href{#method-array_meta_data}{\code{ArrayOpBase$array_meta_data()}}
@@ -808,8 +808,28 @@ self
 \if{html}{\out{<a id="method-persist"></a>}}
 \if{latex}{\out{\hypertarget{method-persist}{}}}
 \subsection{Method \code{persist()}}{
-Create an arrayOp instance by persisting self's AFL if self is an array
-operation or return self if self is already a persistent array in scidb
+Persist array operation as scidb array
+
+If \code{self} is a persistent array and no \code{save_array_name} provided, then
+\code{self} is returned.
+
+Otherwise, save self's AFL as a new scidb array. This includes two cases:
+\enumerate{
+\item \code{self} is persistent and \code{save_array_name} is provided, i.e. explicit persistence
+\item \code{self} is array operation(s), then a new array is created regardless of \code{save_array_name}
+}
+
+From users perspective,
+\enumerate{
+\item When we need to ensure a handle to a persistent array and do not care
+whether it is a new or existing array, we should leave out
+\code{save_array_name} to avoid unnecessary array copying. E.g. \code{conn$array_from_df}
+may return a build literal or uploaded persistent array, call
+\code{conn$array_from_df(...)$persist()} to ensure a persistent array.
+\item When we need to backup an array, then provide a \code{save_array_name} explicitly.
+}
+
+Parameters \code{.gc} and \code{.temp} are only applicable when a new array is created.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$persist(save_array_name = NULL, .temp = FALSE, .gc = TRUE)}\if{html}{\out{</div>}}
 }
@@ -817,18 +837,20 @@ operation or return self if self is already a persistent array in scidb
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{save_array_name}}{NULL or String. The array name to save self's AFL as, only applicable
-if self is an array operation. If NULL, the array name is randomly generated.}
+\item{\code{save_array_name}}{NULL or String. The new array name to save self's AFL as.
+If NULL, the array name is randomly generated when a new array is created.}
 
 \item{\code{.temp}}{Boolean, default FALSE. Whether to creaet a temporary scidb array.}
 
 \item{\code{.gc}}{Boolean, default TRUE. Whether to remove the persisted scidb array
-once the encapsulating arrayOp goes out of scodb in R.}
+once the encapsulating arrayOp goes out of scodb in R. Set to FALSE if we
+need to keep the array indefinitely.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-A new arrayOp instance or self
+A new arrayOp instance or self; or throw an exception if
+\code{save_array_name} is provided and the array already exists
 }
 }
 \if{html}{\out{<hr>}}
@@ -1062,12 +1084,12 @@ Implemented by scidb 'summarize' operator
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-versions"></a>}}
-\if{latex}{\out{\hypertarget{method-versions}{}}}
-\subsection{Method \code{versions()}}{
+\if{html}{\out{<a id="method-list_versions"></a>}}
+\if{latex}{\out{\hypertarget{method-list_versions}{}}}
+\subsection{Method \code{list_versions()}}{
 Return a data frame of all self's versions
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$versions()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$list_versions()}\if{html}{\out{</div>}}
 }
 
 \subsection{Returns}{
@@ -1075,9 +1097,9 @@ An R data frame with columns: version_id and timestamp
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-get_version_snapshot"></a>}}
-\if{latex}{\out{\hypertarget{method-get_version_snapshot}{}}}
-\subsection{Method \code{get_version_snapshot()}}{
+\if{html}{\out{<a id="method-version"></a>}}
+\if{latex}{\out{\hypertarget{method-version}{}}}
+\subsection{Method \code{version()}}{
 Get an arrayOp instance that encapsulates a version snapshot of a persistent
 scidb array
 
@@ -1086,7 +1108,7 @@ an arrayOp locally to represent a specific version. If a non-existent
 version_id is later used in scidb related operations, an error will be
 thrown by SciDB.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$get_version_snapshot(version_id)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$version(version_id)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

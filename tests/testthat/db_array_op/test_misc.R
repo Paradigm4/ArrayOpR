@@ -18,6 +18,7 @@ test_that("persist arrays so they can be reused", {
   arrayBuild = conn$compile_df(dataFrame)
   arrayBuildPersisted = arrayBuild$persist(.gc = F)
   arrayBuildPersistedTemp = arrayBuild$persist(.temp = T, .gc = F)
+  arrayBuildPersistedGc = arrayBuild$persist(.gc = T)
   
   expect_identical(arrayStored$persist(), arrayStored)
   expect_identical(arrayBuildPersisted$is_persistent(), T)  
@@ -25,6 +26,14 @@ test_that("persist arrays so they can be reused", {
   
   expect_identical(arrayBuildPersisted$array_meta_data()$temporary, FALSE)
   expect_identical(arrayBuildPersistedTemp$array_meta_data()$temporary, TRUE)
+  
+  arrayBuildPersisted$finalize()
+  arrayBuildPersistedTemp$finalize()
+  arrayBuildPersistedGc$finalize()
+  
+  expect_identical(arrayBuildPersisted$exists_persistent_array(), T)
+  expect_identical(arrayBuildPersistedTemp$exists_persistent_array(), T)
+  expect_identical(arrayBuildPersistedGc$exists_persistent_array(), F)
   
   arrayBuildPersisted$remove_array()
   arrayBuildPersistedTemp$remove_array()
@@ -40,7 +49,7 @@ test_that("verify persistent array existence", {
   
   arr$remove_array()
   
-  expect_true(!arr$exists_persistent_array())
+  expect_identical(arr$exists_persistent_array(), F)
 })
 
 # drop_dims ---- 

@@ -241,7 +241,7 @@ test_that("index_lookup, 1 attribute, upload", {
   assert_df_match(
     RefArray$semi_join(df, filter_threshold = 2, upload_threshold = 5),
     dplyr::semi_join(ArrayContent, df),
-    c("index_lookup", "Rarryop|R_array")
+    "index_lookup"
   )
   assert_df_match(
     RefArray$semi_join(conn$array_from_df(df, RefArray), upload_threshold=0),
