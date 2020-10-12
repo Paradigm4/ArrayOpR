@@ -2080,8 +2080,8 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' @description 
     #' Return a data frame of all self's versions
     #' @return An R data frame with columns: version_id and timestamp
-    versions = function(){
-      assertf(self$is_persistent(), "versions only works on persistent arrays")
+    list_versions = function(){
+      assertf(self$is_persistent(), "list_versions only works on persistent arrays")
       private$conn$query(afl(self | versions))
     }
     ,
@@ -2096,8 +2096,8 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     #' 
     #' @param version_id A number of the array version_id
     #' @return An arrayOp instance with the same schema as self
-    get_version_snapshot = function(version_id) {
-      assertf(self$is_persistent(), "get_version_snapshot only works on persistent arrays")
+    version = function(version_id) {
+      assertf(self$is_persistent(), "version only works on persistent arrays")
       assert_single_num(version_id)
       self$spawn(sprintf("%s@%s", self$to_afl(), version_id))
     }

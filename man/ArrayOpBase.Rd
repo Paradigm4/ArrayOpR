@@ -64,6 +64,7 @@ SciDB data frame (array with hidden dimensions; not to be confused with R data f
 \item \href{#method-inner_join}{\code{ArrayOpBase$inner_join()}}
 \item \href{#method-left_join}{\code{ArrayOpBase$left_join()}}
 \item \href{#method-right_join}{\code{ArrayOpBase$right_join()}}
+\item \href{#method-full_join}{\code{ArrayOpBase$full_join()}}
 \item \href{#method-semi_join}{\code{ArrayOpBase$semi_join()}}
 \item \href{#method-group_by}{\code{ArrayOpBase$group_by()}}
 \item \href{#method-summarize}{\code{ArrayOpBase$summarize()}}
@@ -444,6 +445,54 @@ must be fields of both operands.}
 \item{\code{right_alias}}{Alias for right array to resolve potential conflicting fields in result}
 
 \item{\code{settings}}{A named list as join settings. E.g. \code{ list(algorithm = "'hash_replicate_right'")}}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A new arrayOp instance
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-full_join"></a>}}
+\if{latex}{\out{\hypertarget{method-full_join}{}}}
+\subsection{Method \code{full_join()}}{
+Full join two arrays: 'self' (left) and 'right'
+
+Similar to \code{dplyr::full_join}, the result arrayOp performs a full join.
+For both left and right arrays, only selected fields are included in the result arrayOp.
+If no fields are selected, then all fields are treated as selected.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$full_join(
+  right,
+  by.x = NULL,
+  by.y = NULL,
+  by = NULL,
+  left_alias = "_L",
+  right_alias = "_R",
+  settings = NULL
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{right}}{An arrayOp instance}
+
+\item{\code{by.x}}{NULL or a string vector as join keys. If set to NULL, join
+keys are inferred as shared fields of 'left' and 'right'.}
+
+\item{\code{by.y}}{NULL or a string vector as join keys. If set to NULL, join
+keys are inferred as shared fields of 'left' and 'right'.}
+
+\item{\code{by}}{NULL or a string vector as join keys. If set to NULL, join
+keys are inferred as shared fields of 'left' and 'right'. If not NULL,
+must be fields of both operands.}
+
+\item{\code{left_alias}}{Alias for left array to resolve potential conflicting fields in result}
+
+\item{\code{right_alias}}{Alias for right array to resolve potential conflicting fields in result}
+
+\item{\code{settings}}{A named list as join settings. E.g. \code{list(algorithm = "'hash_replicate_right'")}}
 }
 \if{html}{\out{</div>}}
 }
