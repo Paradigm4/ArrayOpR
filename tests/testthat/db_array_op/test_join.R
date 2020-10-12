@@ -124,6 +124,21 @@ test_that("join with no conflicting field names", {
       L$inner_join(R, on_left = 'lfa', on_right = 'rfa', settings = list(algorithm = "'hash_replicate_right'"))$to_afl(), 
       "algorithm:'hash_replicate_right'"
     )
+
+    expect_match(
+      L$left_join(R, on_left = 'lfa', on_right = 'rfa', settings = list(algorithm = "'hash_replicate_right'"))$to_afl(), 
+      "algorithm:'hash_replicate_right'"
+    )
+    
+    expect_match(
+      L$right_join(R, on_left = 'lfa', on_right = 'rfa', settings = list(algorithm = "'hash_replicate_right'"))$to_afl(), 
+      "algorithm:'hash_replicate_right'"
+    )
+    
+    expect_match(
+      L$full_join(R, on_left = 'lfa', on_right = 'rfa', settings = list(algorithm = "'hash_replicate_right'"))$to_afl(), 
+      "algorithm:'hash_replicate_right'"
+    )
     
     expect_match(
       L$inner_join(R, on_left = 'lfa', on_right = 'rfa', settings = list(keep_dimensions=1))$to_afl(), 
@@ -144,6 +159,14 @@ test_that("join with no conflicting field names", {
     df_equal(
       L$right_join(R, on_left = 'lfa', on_right = 'rfa')$to_df(), 
       dplyr::right_join(leftDf, rightDf, by = c('lfa'='rfa'))
+    )
+  }
+  
+  # full join
+  test_right_join = function(){
+    df_equal(
+      L$full_join(R, on_left = 'lfa', on_right = 'rfa')$to_df(), 
+      dplyr::full_join(leftDf, rightDf, by = c('lfa'='rfa'))
     )
   }
   

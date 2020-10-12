@@ -1364,10 +1364,11 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
                          left_alias = '_L', right_alias = '_R',
                          settings = NULL
                          ) {
+      joinSettings = utils::modifyList(as.list(settings), list(left_outer = 1))
       private$join(self, right,
                    on_left = on_left, on_right = on_right, on_both = on_both,
                    left_alias = left_alias, right_alias = right_alias,
-                   settings = list(left_outer=1),
+                   settings = joinSettings,
                    join_mode = 'equi_join'
                    )  
     }
@@ -1396,10 +1397,44 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
                           left_alias = '_L', right_alias = '_R',
                           settings = NULL
                           ) {
+      joinSettings = utils::modifyList(as.list(settings), list(right_outer=1))
       private$join(self, right,
                    on_left = on_left, on_right = on_right, on_both = on_both,
                    left_alias = left_alias, right_alias = right_alias,
-                   settings = list(right_outer=1),
+                   settings = joinSettings,
+                   join_mode = 'equi_join'
+                   )  
+    }
+    ,
+    #' @description 
+    #' Full join two arrays: 'self' (left) and 'right' 
+    #' 
+    #' Similar to `dplyr::full_join`, the result arrayOp performs a full join.
+    #' For both left and right arrays, only selected fields are included in the result arrayOp.
+    #' If no fields are selected, then all fields are treated as selected. 
+    #' 
+    #' @param right An arrayOp instance
+    #' @param on_left NULL or a string vector as join keys. If set to NULL, join
+    #' keys are inferred as shared fields of 'left' and 'right'.
+    #' @param on_right NULL or a string vector as join keys. If set to NULL, join
+    #' keys are inferred as shared fields of 'left' and 'right'.
+    #' @param on_both NULL or a string vector as join keys. If set to NULL, join
+    #' keys are inferred as shared fields of 'left' and 'right'. If not NULL,
+    #' must be fields of both operands.
+    #' @param left_alias Alias for left array to resolve potential conflicting fields in result
+    #' @param right_alias Alias for right array to resolve potential conflicting fields in result
+    #' @param settings A named list as join settings. E.g. `list(algorithm = "'hash_replicate_right'")`
+    #' @return A new arrayOp instance 
+    full_join = function(right, 
+                          on_left = NULL, on_right = NULL, on_both = NULL, 
+                          left_alias = '_L', right_alias = '_R',
+                          settings = NULL
+                          ) {
+      joinSettings = utils::modifyList(as.list(settings), list(left_outer = 1, right_outer=1))
+      private$join(self, right,
+                   on_left = on_left, on_right = on_right, on_both = on_both,
+                   left_alias = left_alias, right_alias = right_alias,
+                   settings = joinSettings,
                    join_mode = 'equi_join'
                    )  
     }
