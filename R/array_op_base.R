@@ -1788,6 +1788,46 @@ Only dimensions are matched in this mode. Attributes are ignored even if they ar
     }
     ,
     #' @description 
+    #' Create a new ArrayOp instance that encapsulates a delete operation 
+    #' 
+    #' Implemented by scidb `delete` operator.
+    #' 
+    #' Operators for any type of fields include `==`, `!=`, 
+    #' `%in%`, `%not_in%`.
+    #' To test whether a field is null, use unary operators: `is_null`, `not_null`.
+    #'
+    #' Special binary operators for string fields include:
+    #' `%contains%`, `%starts_with%`, `%ends_with%`, `%like%`, where 
+    #' only `%like%` takes a regular expression and other operators escape any special
+    #' characters in the right operand.
+    #' 
+    #' Operators for numeric fields include: `>`, `<`, `>=`, `<=`
+    #' 
+    #' @param ... Filter expression(s) in R syntax. 
+    #' These expression(s) are not evaluated in R but first captured then converted to scidb expressions with appropriate syntax.
+    #' @param .expr A single R expression, or a list of R exprs, or NULL. 
+    #' If provided, `...` is ignored. Mutiple exprs are joined by 'and'.
+    #' This param is useful when we want to pass an already captured R expression. 
+    #' @param .regex_func A string of regex function implementation, default 'regex'.
+    #' Due to scidb compatiblity issue with its dependencies, the regex function from boost library may not be available
+    #' Currently supported options include 'rsub', and 'regex'
+    #' @param .ignore_case A Boolean, default TRUE. If TRUE, ignore case in string match patterns. 
+    #' Otherwise, perform case-sensitive regex matches.
+    #' @return A new arrayOp 
+    delete_cells = function(..., .expr = NULL,
+                     .regex_func = getOption('arrayop.regex_func', default = 'regex'), 
+                     .ignore_case = getOption('arrayop.ignore_case', default = TRUE)) {
+      filterExpr = .expr %?% aflutils$e_merge(aflutils$e(...))
+      # No actual filter expression
+      if(.is_empty(filterExpr)) return(self$spawn(afl(self | delete("false"))))
+      
+      self$spawn(afl(self | 
+                       delete(aflutils$e_to_afl(filterExpr, 
+                                                regex_func = .regex_func, 
+                                                ignore_case = .ignore_case))))
+    }
+    ,
+    #' @description 
     #' Create a new ArrayOp instance with selected fields
     #' 
     #' NOTE: this does NOT change the to_afl output, but explicitly state which field(s) should be retained if used in
