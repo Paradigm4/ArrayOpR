@@ -377,6 +377,31 @@ ScidbConnection <- R6::R6Class(
     }
     ,
     #' @description 
+    #' Execute multiple AFL statments wrapped in one `mquery` with transcation gurantee
+    #' 
+    #' `mquery` currently only supports top operators `insert` and `delete`
+    #' @param ... AFL strings and/or arrayOp isntances. `arrayOp$to_afl()` will 
+    #' be called to generate AFL strings. 
+    #' @param .dry_run A single boolean value, default FALSE. If TRUE, only print
+    #' out the mquery; otherwise execute it in scidb without returns. 
+    #' @examples 
+    #' conn$execute_mquery(
+    #'   target$filter(conc < 50)$update(target),
+    #'   target$delete_cells(Plant %contains% "3", uptake > 10)
+    #' )
+    execute_mquery = function(..., .dry_run = FALSE) {
+      stmts = c(...)
+      lapply(stmts, function(x) assert_inherits(x, c("character", "ArrayOpBase")))
+      stmtStrs = sapply(stmts, function(x) if(is.character(x)) x else x$to_afl())
+      mqueryStmt = afl(as.character(stmtStrs) | mquery)
+      if(.dry_run) {
+        cat(glue("About to execute mquery:\n{mqueryStmt}"))
+      } else {
+        self$execute(mqueryStmt)
+      }
+    }
+    ,
+    #' @description 
     #' Get an ArrayOp instance of an existing scidb array
     #' 
     #' The scidb array denoted by the array_name must exsit in scidb.

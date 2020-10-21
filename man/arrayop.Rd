@@ -5,15 +5,15 @@
 \alias{arrayop}
 \title{ArrayOp: A package for Object-Oriented SciDB Array Operations/Operands}
 \description{
-ArrayOp abstracts away AFL generation by unifying array operations and array operands.
+ArrayOp package provides high-level, intutive API functions for data wrangling
+and hide detailed AFL generation from you.
 }
-\section{ArrayOpBase class and its sub-classes}{
-
-content1
+\details{
+Synopsis
+\enumerate{
+\item Create to scidb
+\item Get arrayOp isntances
+\item Invoke verbs on arrayOp instances
+\item Or in rare cases, manually create AFL statements
 }
-
-\section{Repo classes}{
-
-content2
 }
-

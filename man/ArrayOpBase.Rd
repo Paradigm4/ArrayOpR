@@ -71,6 +71,7 @@ SciDB data frame (array with hidden dimensions; not to be confused with R data f
 \item \href{#method-set_auto_fields}{\code{ArrayOpBase$set_auto_fields()}}
 \item \href{#method-update}{\code{ArrayOpBase$update()}}
 \item \href{#method-overwrite}{\code{ArrayOpBase$overwrite()}}
+\item \href{#method-delete_cells}{\code{ArrayOpBase$delete_cells()}}
 \item \href{#method-select}{\code{ArrayOpBase$select()}}
 \item \href{#method-to_df_all}{\code{ArrayOpBase$to_df_all()}}
 \item \href{#method-to_df}{\code{ArrayOpBase$to_df()}}
@@ -732,6 +733,56 @@ Must be a persitent array either preexist or does not exist in scidb.}
 }
 \subsection{Returns}{
 A new arrayOp that encapsulates the overwrite operation
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-delete_cells"></a>}}
+\if{latex}{\out{\hypertarget{method-delete_cells}{}}}
+\subsection{Method \code{delete_cells()}}{
+Create a new ArrayOp instance that encapsulates a delete operation
+
+Implemented by scidb \code{delete} operator.
+
+Operators for any type of fields include \code{==}, \code{!=},
+\code{\%in\%}, \verb{\%not_in\%}.
+To test whether a field is null, use unary operators: \code{is_null}, \code{not_null}.
+
+Special binary operators for string fields include:
+\verb{\%contains\%}, \verb{\%starts_with\%}, \verb{\%ends_with\%}, \verb{\%like\%}, where
+only \verb{\%like\%} takes a regular expression and other operators escape any special
+characters in the right operand.
+
+Operators for numeric fields include: \code{>}, \code{<}, \code{>=}, \code{<=}
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ArrayOpBase$delete_cells(
+  ...,
+  .expr = NULL,
+  .regex_func = getOption("arrayop.regex_func", default = "regex"),
+  .ignore_case = getOption("arrayop.ignore_case", default = TRUE)
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{Filter expression(s) in R syntax.
+These expression(s) are not evaluated in R but first captured then converted to scidb expressions with appropriate syntax.}
+
+\item{\code{.expr}}{A single R expression, or a list of R exprs, or NULL.
+If provided, \code{...} is ignored. Mutiple exprs are joined by 'and'.
+This param is useful when we want to pass an already captured R expression.}
+
+\item{\code{.regex_func}}{A string of regex function implementation, default 'regex'.
+Due to scidb compatiblity issue with its dependencies, the regex function from boost library may not be available
+Currently supported options include 'rsub', and 'regex'}
+
+\item{\code{.ignore_case}}{A Boolean, default TRUE. If TRUE, ignore case in string match patterns.
+Otherwise, perform case-sensitive regex matches.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A new arrayOp
 }
 }
 \if{html}{\out{<hr>}}

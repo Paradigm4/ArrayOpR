@@ -76,7 +76,7 @@ i.e. ArrayOp instances are immutable." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">arrayop</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2</span>
       </span>
     </div>
 
@@ -203,6 +203,7 @@ SciDB data frame (array with hidden dimensions; not to be confused with R data f
 <li><p><a href='#method-set_auto_fields'><code>ArrayOpBase$set_auto_fields()</code></a></p></li>
 <li><p><a href='#method-update'><code>ArrayOpBase$update()</code></a></p></li>
 <li><p><a href='#method-overwrite'><code>ArrayOpBase$overwrite()</code></a></p></li>
+<li><p><a href='#method-delete_cells'><code>ArrayOpBase$delete_cells()</code></a></p></li>
 <li><p><a href='#method-select'><code>ArrayOpBase$select()</code></a></p></li>
 <li><p><a href='#method-to_df_all'><code>ArrayOpBase$to_df_all()</code></a></p></li>
 <li><p><a href='#method-to_df'><code>ArrayOpBase$to_df()</code></a></p></li>
@@ -717,6 +718,44 @@ Must be a persitent array either preexist or does not exist in scidb.</p></dd>
 </dl><p></div></p>
 <h3>Returns</h3>
 <p>A new arrayOp that encapsulates the overwrite operation</p>
+<p><hr>
+<a id="method-delete_cells"></a></p><h3>Method <code>delete_cells()</code></h3>
+<p>Create a new ArrayOp instance that encapsulates a delete operation</p>
+<p>Implemented by scidb <code>delete</code> operator.</p>
+<p>Operators for any type of fields include <code>==</code>, <code>!=</code>,
+<code>%in%</code>, <code>%not_in%</code>.
+To test whether a field is null, use unary operators: <code>is_null</code>, <code>not_null</code>.</p>
+<p>Special binary operators for string fields include:
+<code>%contains%</code>, <code>%starts_with%</code>, <code>%ends_with%</code>, <code>%like%</code>, where
+only <code>%like%</code> takes a regular expression and other operators escape any special
+characters in the right operand.</p>
+<p>Operators for numeric fields include: <code>&gt;</code>, <code>&lt;</code>, <code>&gt;=</code>, <code>&lt;=</code></p><h3>Usage</h3>
+<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>delete_cells</span>(
+  <span class='no'>...</span>,
+  <span class='kw'>.expr</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>.regex_func</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"arrayop.regex_func"</span>, <span class='kw'>default</span> <span class='kw'>=</span> <span class='st'>"regex"</span>),
+  <span class='kw'>.ignore_case</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"arrayop.ignore_case"</span>, <span class='kw'>default</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
+)</pre><p></div></p>
+
+<h3>Arguments</h3>
+<p><div class="arguments"></p><dl>
+<dt><code>...</code></dt><dd><p>Filter expression(s) in R syntax.
+These expression(s) are not evaluated in R but first captured then converted to scidb expressions with appropriate syntax.</p></dd>
+
+<dt><code>.expr</code></dt><dd><p>A single R expression, or a list of R exprs, or NULL.
+If provided, <code>...</code> is ignored. Mutiple exprs are joined by 'and'.
+This param is useful when we want to pass an already captured R expression.</p></dd>
+
+<dt><code>.regex_func</code></dt><dd><p>A string of regex function implementation, default 'regex'.
+Due to scidb compatiblity issue with its dependencies, the regex function from boost library may not be available
+Currently supported options include 'rsub', and 'regex'</p></dd>
+
+<dt><code>.ignore_case</code></dt><dd><p>A Boolean, default TRUE. If TRUE, ignore case in string match patterns.
+Otherwise, perform case-sensitive regex matches.</p></dd>
+
+</dl><p></div></p>
+<h3>Returns</h3>
+<p>A new arrayOp</p>
 <p><hr>
 <a id="method-select"></a></p><h3>Method <code>select()</code></h3>
 <p>Create a new ArrayOp instance with selected fields</p>

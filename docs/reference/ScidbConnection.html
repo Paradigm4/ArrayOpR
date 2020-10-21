@@ -74,7 +74,7 @@ and download qurey results as R data frames." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">arrayop</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2</span>
       </span>
     </div>
 
@@ -156,6 +156,7 @@ and download qurey results as R data frames.</p>
 <li><p><a href='#method-query'><code>ScidbConnection$query()</code></a></p></li>
 <li><p><a href='#method-execute'><code>ScidbConnection$execute()</code></a></p></li>
 <li><p><a href='#method-create_array'><code>ScidbConnection$create_array()</code></a></p></li>
+<li><p><a href='#method-execute_mquery'><code>ScidbConnection$execute_mquery()</code></a></p></li>
 <li><p><a href='#method-array'><code>ScidbConnection$array()</code></a></p></li>
 <li><p><a href='#method-array_from_schema'><code>ScidbConnection$array_from_schema()</code></a></p></li>
 <li><p><a href='#method-afl_expr'><code>ScidbConnection$afl_expr()</code></a></p></li>
@@ -271,6 +272,27 @@ as the schema template for the newly created array.</p></dd>
 </dl><p></div></p>
 <h3>Returns</h3>
 <p>An arrayOp instance of the newly created array</p>
+<p><hr>
+<a id="method-execute_mquery"></a></p><h3>Method <code>execute_mquery()</code></h3>
+<p>Execute multiple AFL statments wrapped in one <code>mquery</code> with transcation gurantee</p>
+<p><code>mquery</code> currently only supports top operators <code>insert</code> and <code>delete</code></p><h3>Usage</h3>
+<p><div class="r"></p><pre><span class='no'>ScidbConnection</span>$<span class='fu'>execute_mquery</span>(<span class='no'>...</span>, <span class='kw'>.dry_run</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre><p></div></p>
+
+<h3>Arguments</h3>
+<p><div class="arguments"></p><dl>
+<dt><code>...</code></dt><dd><p>AFL strings and/or arrayOp isntances. <code>arrayOp$to_afl()</code> will
+be called to generate AFL strings.</p></dd>
+
+<dt><code>.dry_run</code></dt><dd><p>A single boolean value, default FALSE. If TRUE, only print
+out the mquery; otherwise execute it in scidb without returns.</p></dd>
+
+</dl><p></div></p>
+<h3>Examples</h3>
+<p><div class="r example copy"></p><pre><span class='no'>conn</span>$<span class='fu'>execute_mquery</span>(
+  <span class='no'>target</span>$<span class='fu'><a href='https://rdrr.io/r/stats/filter.html'>filter</a></span>(<span class='no'>conc</span> <span class='kw'>&lt;</span> <span class='fl'>50</span>)$<span class='fu'><a href='https://rdrr.io/r/stats/update.html'>update</a></span>(<span class='no'>target</span>),
+  <span class='no'>target</span>$<span class='fu'>delete_cells</span>(<span class='no'>Plant</span> <span class='kw'>%contains%</span> <span class='st'>"3"</span>, <span class='no'>uptake</span> <span class='kw'>&gt;</span> <span class='fl'>10</span>)
+)</pre><p></div></p>
+
 <p><hr>
 <a id="method-array"></a></p><h3>Method <code><a href='https://rdrr.io/r/base/array.html'>array()</a></code></h3>
 <p>Get an ArrayOp instance of an existing scidb array</p>
@@ -556,6 +578,16 @@ auto generated field mapping and data type conversion.</p>
 
 
 
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'>
+<span class='co'>## ------------------------------------------------</span>
+<span class='co'>## Method `ScidbConnection$execute_mquery`</span>
+<span class='co'>## ------------------------------------------------</span>
+
+<span class='no'>conn</span>$<span class='fu'>execute_mquery</span>(
+  <span class='no'>target</span>$<span class='fu'><a href='https://rdrr.io/r/stats/filter.html'>filter</a></span>(<span class='no'>conc</span> <span class='kw'>&lt;</span> <span class='fl'>50</span>)$<span class='fu'><a href='https://rdrr.io/r/stats/update.html'>update</a></span>(<span class='no'>target</span>),
+  <span class='no'>target</span>$<span class='fu'>delete_cells</span>(<span class='no'>Plant</span> <span class='kw'>%contains%</span> <span class='st'>"3"</span>, <span class='no'>uptake</span> <span class='kw'>&gt;</span> <span class='fl'>10</span>)
+)</div><div class='output co'>#&gt; <span class='error'>Error in eval(expr, envir, enclos): object 'conn' not found</span></div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

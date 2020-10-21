@@ -9,6 +9,17 @@ A connection object that talks to SciDB
 The connection object creates ArrayOp instances, execute AFL queries of arrayOps,
 and download qurey results as R data frames.
 }
+\examples{
+
+## ------------------------------------------------
+## Method `ScidbConnection$execute_mquery`
+## ------------------------------------------------
+
+conn$execute_mquery(
+  target$filter(conc < 50)$update(target),
+  target$delete_cells(Plant \%contains\% "3", uptake > 10)
+)
+}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
@@ -21,6 +32,7 @@ and download qurey results as R data frames.
 \item \href{#method-query}{\code{ScidbConnection$query()}}
 \item \href{#method-execute}{\code{ScidbConnection$execute()}}
 \item \href{#method-create_array}{\code{ScidbConnection$create_array()}}
+\item \href{#method-execute_mquery}{\code{ScidbConnection$execute_mquery()}}
 \item \href{#method-array}{\code{ScidbConnection$array()}}
 \item \href{#method-array_from_schema}{\code{ScidbConnection$array_from_schema()}}
 \item \href{#method-afl_expr}{\code{ScidbConnection$afl_expr()}}
@@ -205,6 +217,40 @@ as the schema template for the newly created array.}
 \subsection{Returns}{
 An arrayOp instance of the newly created array
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-execute_mquery"></a>}}
+\if{latex}{\out{\hypertarget{method-execute_mquery}{}}}
+\subsection{Method \code{execute_mquery()}}{
+Execute multiple AFL statments wrapped in one \code{mquery} with transcation gurantee
+
+\code{mquery} currently only supports top operators \code{insert} and \code{delete}
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$execute_mquery(..., .dry_run = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{AFL strings and/or arrayOp isntances. \code{arrayOp$to_afl()} will
+be called to generate AFL strings.}
+
+\item{\code{.dry_run}}{A single boolean value, default FALSE. If TRUE, only print
+out the mquery; otherwise execute it in scidb without returns.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{conn$execute_mquery(
+  target$filter(conc < 50)$update(target),
+  target$delete_cells(Plant \%contains\% "3", uptake > 10)
+)
+}
+\if{html}{\out{</div>}}
+
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-array"></a>}}

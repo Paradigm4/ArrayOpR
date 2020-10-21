@@ -1,4 +1,10 @@
 
+# arrayop 1.2
+
+## Major changes
+  * Add [`ArrayOpBase$delete_cells`](https://paradigm4.github.io/ArrayOpR/reference/ArrayOpBase.html#method-delete_cells)
+  * Add [`ScidbConnection$execute_mquery`](https://paradigm4.github.io/ArrayOpR/reference/ScidbConnection.html#method-execute_mquery)
+
 # arrayop 1.1
 
 ## Major changes
