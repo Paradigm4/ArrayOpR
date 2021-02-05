@@ -8,7 +8,8 @@ context('Db tests setup')
 # arrayop.unittest.get_scidb_connection = function() {
 # auth = yaml::yaml.load_file("~/.scidb_auth")
 # # Ensure a scidb conenction
-# arrayop::db_connect(username = auth[["user-name"]], token = auth[["user-password"]], host = "127.0.0.1")
+# # set `save_token = T` for other non-default connection tests
+# arrayop::db_connect(username = auth[["user-name"]], token = auth[["user-password"]], host = "127.0.0.1", save_token=T)
 # }
 
 

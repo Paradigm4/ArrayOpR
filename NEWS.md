@@ -1,4 +1,8 @@
 
+# arrayop 1.3
+## Minor Changes
+  * Add a `save_token = FALSE` param to arrayop::db_connect function, so that by default no user password/token is stored in db connection object unless `save_token = TRUE` (useful in test settings).
+
 # arrayop 1.2
 
 ## Major changes
