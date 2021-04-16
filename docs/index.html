@@ -19,6 +19,8 @@
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
+    
+
     <div class="container template-home">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -31,18 +33,12 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">arrayop</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.4</span>
       </span>
     </div>
 
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
-<li>
-  <a href="index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
-     
-  </a>
-</li>
 <li>
   <a href="articles/arrayop.html">Get started</a>
 </li>
@@ -68,7 +64,7 @@
 <ul class="nav navbar-nav navbar-right">
 <li>
   <a href="https://github.com/Paradigm4/ArrayOpR/">
-    <span class="fab fa fab fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -88,25 +84,29 @@
 <div class="page-header"><h1 class="hasAnchor">
 <a href="#install-arrayopr-package" class="anchor"></a>Install ArrayOpR package</h1></div>
 <p>Run the script below in your R session.</p>
-<div class="sourceCode" id="cb1"><pre class="r"><span class="kw pkg">devtools</span><span class="kw ns">::</span><span class="fu"><a href="https://devtools.r-lib.org//reference/remote-reexports.html">install_github</a></span>(<span class="st">"Paradigm4/ArrayOpR"</span>)
-<span class="co"># devtools::install_github("Paradigm4/ArrayOpR", ref = "nightly") # or a differnt git head other than master</span></pre></div>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org//reference/remote-reexports.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"Paradigm4/ArrayOpR"</span><span class="op">)</span>
+<span class="co"># devtools::install_github("Paradigm4/ArrayOpR", ref = "nightly") # or a differnt git head other than master</span></code></pre></div>
 <p>Use arrayop</p>
-<div class="sourceCode" id="cb2"><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">arrayop</span>)
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/Paradigm4/ArrayOpR" class="external-link">arrayop</a></span><span class="op">)</span>
 
-<span class="no">auth</span> <span class="kw">=</span> <span class="kw pkg">yaml</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/yaml/man/yaml.load.html">yaml.load_file</a></span>(<span class="st">"~/.scidb_auth"</span>)
+<span class="va">auth</span> <span class="op">=</span> <span class="fu">yaml</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/yaml/man/yaml.load.html" class="external-link">yaml.load_file</a></span><span class="op">(</span><span class="st">"~/.scidb_auth"</span><span class="op">)</span>
 <span class="co"># Then connect to scidb. Params host, username and token are all single strings and can be provided in any way</span>
-<span class="no">conn</span> <span class="kw">=</span> <span class="fu"><a href="reference/db_connect.html">db_connect</a></span>(<span class="kw">host</span> <span class="kw">=</span> <span class="st">"localhost"</span>, <span class="kw">username</span> <span class="kw">=</span> <span class="no">auth</span><span class="kw">[[</span><span class="st">"user-name"</span>]], <span class="kw">token</span> <span class="kw">=</span> <span class="no">auth</span><span class="kw">[[</span><span class="st">"user-password"</span>]])</pre></div>
+<span class="va">conn</span> <span class="op">=</span> <span class="fu"><a href="reference/db_connect.html">db_connect</a></span><span class="op">(</span>host <span class="op">=</span> <span class="st">"localhost"</span>, username <span class="op">=</span> <span class="va">auth</span><span class="op">[[</span><span class="st">"user-name"</span><span class="op">]</span><span class="op">]</span>, token <span class="op">=</span> <span class="va">auth</span><span class="op">[[</span><span class="st">"user-password"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></code></pre></div>
 <p>To get the db connection, call <code>get_default_connection</code>, which returns a global connection object under the <code>arrayop</code> package namespace.</p>
-<div class="sourceCode" id="cb3"><pre class="r"><span class="no">conn</span> <span class="kw">=</span> <span class="fu"><a href="reference/get_default_connection.html">get_default_connection</a></span>()
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">conn</span> <span class="op">=</span> <span class="fu"><a href="reference/get_default_connection.html">get_default_connection</a></span><span class="op">(</span><span class="op">)</span>
 
-<span class="co"># If connection is timed out</span>
-<span class="no">conn</span>$<span class="fu">connect</span>() <span class="co"># use the same credential to re-connect</span></pre></div>
+<span class="co"># If connection is timed out. </span>
+<span class="co"># This only works if you save the credentails in the connection, which should only be done in testing mode.</span>
+<span class="va">conn</span><span class="op">$</span><span class="fu">connect</span><span class="op">(</span><span class="op">)</span> <span class="co"># use the same credential to re-connect</span></code></pre></div>
 </div>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <div class="links">
-<h2>Links</h2>
+<h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
 <li>Browse source code at <br><a href="https://github.com/Paradigm4/ArrayOpR/">https://​github.com/​Paradigm4/​ArrayOpR/​</a>
 </li>
@@ -114,30 +114,37 @@
 </li>
 </ul>
 </div>
+
 <div class="license">
-<h2>License</h2>
+<h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
 <li><a href="https://www.r-project.org/Licenses/AGPL-3">AGPL-3</a></li>
 </ul>
 </div>
+
+
 <div class="developers">
-<h2>Developers</h2>
+<h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
 <li> Paradigm4 <br><small class="roles"> Maintainer </small>  </li>
-<li><a href="authors.html">All authors...</a></li>
+<li><a href="authors.html">More on authors...</a></li>
 </ul>
 </div>
+
+
 
   </div>
 </div>
 
 
       <footer><div class="copyright">
-  <p>Developed by  Paradigm4.</p>
+  <p></p>
+<p>Developed by Paradigm4.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.9000.</p>
+  <p></p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 1.6.1.9001.</p>
 </div>
 
       </footer>
@@ -145,6 +152,8 @@
 
   
 
+
+  
 
   </body>
 </html>

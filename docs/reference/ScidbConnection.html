@@ -74,7 +74,7 @@ and download qurey results as R data frames." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">arrayop</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.4</span>
       </span>
     </div>
 
@@ -144,7 +144,7 @@ and download qurey results as R data frames.</p>
     <h2 class="hasAnchor" id="methods"><a class="anchor" href="#methods"></a>Methods</h2>
 
     
-<h3>Public methods</h3>
+<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Public methods</h3>
 
 <ul>
 <li><p><a href='#method-new'><code>ScidbConnection$new()</code></a></p></li>
@@ -166,100 +166,100 @@ and download qurey results as R data frames.</p>
 <li><p><a href='#method-fread'><code>ScidbConnection$fread()</code></a></p></li>
 </ul>
 <p><hr>
-<a id="method-new"></a></p><h3>Method <code>new()</code></h3>
+<a id="method-new"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>new()</code></h3>
 <p>Create a new ScidbConnection instance</p>
 <p>This function is only for package internal use.
-Please call <code><a href='db_connect.html'>arrayop::db_connect</a></code> to get a ScidbConnection object</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ScidbConnection</span>$<span class='fu'>new</span>()</pre><p></div></p>
+Please call <code><a href='db_connect.html'>arrayop::db_connect</a></code> to get a ScidbConnection object</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ScidbConnection</span><span class='op'>$</span><span class='fu'>new</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>array_like</code></dt><dd><p>An array_op, schema string or existing scidb array name</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A ScidbConenction instance</p>
 <p><hr>
-<a id="method-has_connected"></a></p><h3>Method <code>has_connected()</code></h3>
-<p>Whether this connection object is configured with connection arguments</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ScidbConnection</span>$<span class='fu'>has_connected</span>()</pre><p></div></p>
+<a id="method-has_connected"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>has_connected()</code></h3>
+<p>Whether this connection object is configured with connection arguments</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ScidbConnection</span><span class='op'>$</span><span class='fu'>has_connected</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A boolean. TRUE if <code>db_connect</code> is called or FALSE otherwise.</p>
 <p><hr>
-<a id="method-connect"></a></p><h3>Method <code>connect()</code></h3>
+<a id="method-connect"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>connect()</code></h3>
 <p>Connect to scidb with a list of connection arguments</p>
 <p>Calling this function will update the current connection object's internal state.
 If the connection has timed out, just call this function without args will
-re-establish the connection with previously configured connection args.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ScidbConnection</span>$<span class='fu'>connect</span>(<span class='kw'>connection_args</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)</pre><p></div></p>
+re-establish the connection with previously configured connection args.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ScidbConnection</span><span class='op'>$</span><span class='fu'>connect</span><span class='op'>(</span>connection_args <span class='op'>=</span> <span class='cn'>NULL</span>, save_token <span class='op'>=</span> <span class='cn'>FALSE</span>, db <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>connection_args</code></dt><dd><p>NULL or a list of connection args.
 Default NULL means using the previous connection args.
 A list of connection args follow the same names as params in <code>db_connect</code>.</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>The same connection object with updated internal state.</p>
 <p><hr>
-<a id="method-scidb_version"></a></p><h3>Method <code>scidb_version()</code></h3>
-<p>Return an R data frame of the currently connected SciDB server version</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ScidbConnection</span>$<span class='fu'>scidb_version</span>()</pre><p></div></p>
+<a id="method-scidb_version"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>scidb_version()</code></h3>
+<p>Return an R data frame of the currently connected SciDB server version</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ScidbConnection</span><span class='op'>$</span><span class='fu'>scidb_version</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A data frame. One row and three numeric columns: "major", "minor", "patch"</p>
 <p><hr>
-<a id="method-conn_args"></a></p><h3>Method <code>conn_args()</code></h3>
+<a id="method-conn_args"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>conn_args()</code></h3>
 <p>Return a list of connection args used to establish the scidb connection</p>
-<p>Connection args follow the same names as <code>db_connect</code> args.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ScidbConnection</span>$<span class='fu'>conn_args</span>()</pre><p></div></p>
+<p>Connection args follow the same names as <code>db_connect</code> args.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ScidbConnection</span><span class='op'>$</span><span class='fu'>conn_args</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A named list of connection args</p>
 <p><hr>
-<a id="method-query_all"></a></p><h3>Method <code>query_all()</code></h3>
-<p>Download a data frame of the query result with all dimensions and attributes</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ScidbConnection</span>$<span class='fu'>query_all</span>(<span class='no'>afl_str</span>)</pre><p></div></p>
+<a id="method-query_all"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>query_all()</code></h3>
+<p>Download a data frame of the query result with all dimensions and attributes</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ScidbConnection</span><span class='op'>$</span><span class='fu'>query_all</span><span class='op'>(</span><span class='va'>afl_str</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>afl_str</code></dt><dd><p>A string of AFL expression</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>R data frame</p>
 <p><hr>
-<a id="method-query"></a></p><h3>Method <code>query()</code></h3>
-<p>Download a data frame of the query result with all attributes</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ScidbConnection</span>$<span class='fu'>query</span>(<span class='no'>afl_str</span>)</pre><p></div></p>
+<a id="method-query"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>query()</code></h3>
+<p>Download a data frame of the query result with all attributes</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ScidbConnection</span><span class='op'>$</span><span class='fu'>query</span><span class='op'>(</span><span class='va'>afl_str</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>afl_str</code></dt><dd><p>A string of AFL expression</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>R data frame</p>
 <p><hr>
-<a id="method-execute"></a></p><h3>Method <code>execute()</code></h3>
+<a id="method-execute"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>execute()</code></h3>
 <p>Execute AFL expression without result</p>
 <p>Use this for pure side effect and no result is downloaded.
-E.g. create arrays, remove arrays, remove array versions, update arrays.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ScidbConnection</span>$<span class='fu'>execute</span>(<span class='no'>afl_str</span>)</pre><p></div></p>
+E.g. create arrays, remove arrays, remove array versions, update arrays.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ScidbConnection</span><span class='op'>$</span><span class='fu'>execute</span><span class='op'>(</span><span class='va'>afl_str</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>afl_str</code></dt><dd><p>A string of AFL expression</p></dd>
 
 </dl><p></div></p>
 <p><hr>
-<a id="method-create_array"></a></p><h3>Method <code>create_array()</code></h3>
-<p>Create a new scidb array and return the arrayOp instance for it</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ScidbConnection</span>$<span class='fu'>create_array</span>(<span class='no'>name</span>, <span class='no'>schema_template</span>, <span class='kw'>.temp</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre><p></div></p>
+<a id="method-create_array"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>create_array()</code></h3>
+<p>Create a new scidb array and return the arrayOp instance for it</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ScidbConnection</span><span class='op'>$</span><span class='fu'>create_array</span><span class='op'>(</span><span class='va'>name</span>, <span class='va'>schema_template</span>, .temp <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>name</code></dt><dd><p>Scidb array name. E.g. 'myNamespace.myArray'. If no namespace
 in array name, it will be created in the 'public' namespace.</p></dd>
@@ -270,15 +270,15 @@ as the schema template for the newly created array.</p></dd>
 <dt><code>.temp</code></dt><dd><p>Boolean. Whether to create the array as a scidb temporary array</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>An arrayOp instance of the newly created array</p>
 <p><hr>
-<a id="method-execute_mquery"></a></p><h3>Method <code>execute_mquery()</code></h3>
+<a id="method-execute_mquery"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>execute_mquery()</code></h3>
 <p>Execute multiple AFL statments wrapped in one <code>mquery</code> with transcation gurantee</p>
-<p><code>mquery</code> currently only supports top operators <code>insert</code> and <code>delete</code></p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ScidbConnection</span>$<span class='fu'>execute_mquery</span>(<span class='no'>...</span>, <span class='kw'>.dry_run</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre><p></div></p>
+<p><code>mquery</code> currently only supports top operators <code>insert</code> and <code>delete</code></p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ScidbConnection</span><span class='op'>$</span><span class='fu'>execute_mquery</span><span class='op'>(</span><span class='va'>...</span>, .dry_run <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>...</code></dt><dd><p>AFL strings and/or arrayOp isntances. <code>arrayOp$to_afl()</code> will
 be called to generate AFL strings.</p></dd>
@@ -287,36 +287,37 @@ be called to generate AFL strings.</p></dd>
 out the mquery; otherwise execute it in scidb without returns.</p></dd>
 
 </dl><p></div></p>
-<h3>Examples</h3>
-<p><div class="r example copy"></p><pre><span class='no'>conn</span>$<span class='fu'>execute_mquery</span>(
-  <span class='no'>target</span>$<span class='fu'><a href='https://rdrr.io/r/stats/filter.html'>filter</a></span>(<span class='no'>conc</span> <span class='kw'>&lt;</span> <span class='fl'>50</span>)$<span class='fu'><a href='https://rdrr.io/r/stats/update.html'>update</a></span>(<span class='no'>target</span>),
-  <span class='no'>target</span>$<span class='fu'>delete_cells</span>(<span class='no'>Plant</span> <span class='kw'>%contains%</span> <span class='st'>"3"</span>, <span class='no'>uptake</span> <span class='kw'>&gt;</span> <span class='fl'>10</span>)
-)</pre><p></div></p>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Examples</h4>
+<p><div class="r example copy"></p><pre><span class='va'>conn</span><span class='op'>$</span><span class='fu'>execute_mquery</span><span class='op'>(</span>
+  <span class='va'>target</span><span class='op'>$</span><span class='fu'>filter</span><span class='op'>(</span><span class='va'>conc</span> <span class='op'>&lt;</span> <span class='fl'>50</span><span class='op'>)</span><span class='op'>$</span><span class='fu'>update</span><span class='op'>(</span><span class='va'>target</span><span class='op'>)</span>,
+  <span class='va'>target</span><span class='op'>$</span><span class='fu'>delete_cells</span><span class='op'>(</span><span class='va'>Plant</span> <span class='op'>%contains%</span> <span class='st'>"3"</span>, <span class='va'>uptake</span> <span class='op'>&gt;</span> <span class='fl'>10</span><span class='op'>)</span>
+<span class='op'>)</span>
+</pre><p></div></p>
 
 <p><hr>
-<a id="method-array"></a></p><h3>Method <code><a href='https://rdrr.io/r/base/array.html'>array()</a></code></h3>
+<a id="method-array"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code><a href='https://rdrr.io/r/base/array.html'>array()</a></code></h3>
 <p>Get an ArrayOp instance of an existing scidb array</p>
-<p>The scidb array denoted by the array_name must exsit in scidb.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ScidbConnection</span>$<span class='fu'><a href='https://rdrr.io/r/base/array.html'>array</a></span>(<span class='no'>array_name</span>)</pre><p></div></p>
+<p>The scidb array denoted by the array_name must exsit in scidb.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ScidbConnection</span><span class='op'>$</span><span class='fu'>array</span><span class='op'>(</span><span class='va'>array_name</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>array_name</code></dt><dd><p>Scidb array name. E.g. 'myNamespace.myArray'. If no namespace
 in array name, it will be searched in the 'public' namespace.</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>An arrayOp instance</p>
 <p><hr>
-<a id="method-array_from_schema"></a></p><h3>Method <code>array_from_schema()</code></h3>
+<a id="method-array_from_schema"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>array_from_schema()</code></h3>
 <p>Create an ArrayOp instance from array schema</p>
 <p>Useful in creating an arrayOp as a template for other arrayOp operations.
 If an array name provided in the schema_str, the array of the same name
 does not have to exist in scidb. Obviously, you cannnot download data from
-a non-existent array, but it can be used as template for other operations.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ScidbConnection</span>$<span class='fu'>array_from_schema</span>(<span class='no'>schema_str</span>)</pre><p></div></p>
+a non-existent array, but it can be used as template for other operations.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ScidbConnection</span><span class='op'>$</span><span class='fu'>array_from_schema</span><span class='op'>(</span><span class='va'>schema_str</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>schema_str</code></dt><dd><p>A scidb-format array schema. The array name is optional.
 E.g. <code>&lt;fa:int32, fb:string COMPRESSION 'zlib'&gt; [i;j]</code> creates an arrayOp
@@ -327,42 +328,42 @@ The array named "myArray" does not need to exist in scidb since this is done
 only in local R env without checking in scidb.</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>An arrayOp instance</p>
 <p><hr>
-<a id="method-afl_expr"></a></p><h3>Method <code>afl_expr()</code></h3>
+<a id="method-afl_expr"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>afl_expr()</code></h3>
 <p>Create an arrayOp instance from an AFL expression</p>
-<p>Implemented with scidb 'show' operator.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ScidbConnection</span>$<span class='fu'>afl_expr</span>(<span class='no'>afl_str</span>)</pre><p></div></p>
+<p>Implemented with scidb 'show' operator.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ScidbConnection</span><span class='op'>$</span><span class='fu'>afl_expr</span><span class='op'>(</span><span class='va'>afl_str</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>afl_str</code></dt><dd><p>A AFL expression string. Can be any array operation in AFL
 except for a scidb array name.</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>An arrayOp instance with schema from scidb</p>
 <p><hr>
-<a id="method-array_from_df"></a></p><h3>Method <code>array_from_df()</code></h3>
+<a id="method-array_from_df"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>array_from_df()</code></h3>
 <p>Get an arrayOp instance from an R data frame</p>
 <p>Implemented by scidb 'build' operator or SciDBR <code><a href='https://rdrr.io/pkg/scidb/man/as.scidb.html'>scidb::as.scidb</a></code> function
 which uploads a data frame to scidb.
 If the number of cells (nrow * ncolumns) of the data frame is smaller than the 'build_or_upload_threshold',
 use 'build' operator to create a build literal array; otherwise,
-a persistent scidb array is created by uploading the R data frame into scidb.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ScidbConnection</span>$<span class='fu'>array_from_df</span>(
-  <span class='no'>df</span>,
-  <span class='kw'>template</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>build_or_upload_threshold</span> <span class='kw'>=</span> <span class='fl'>8000L</span>,
-  <span class='kw'>build_dim_spec</span> <span class='kw'>=</span> <span class='fu'>.random_field_name</span>(),
-  <span class='kw'>as_scidb_data_frame</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>skip_scidb_schema_check</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>force_template_schema</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='no'>...</span>
-)</pre><p></div></p>
+a persistent scidb array is created by uploading the R data frame into scidb.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ScidbConnection</span><span class='op'>$</span><span class='fu'>array_from_df</span><span class='op'>(</span>
+  <span class='va'>df</span>,
+  template <span class='op'>=</span> <span class='cn'>NULL</span>,
+  build_or_upload_threshold <span class='op'>=</span> <span class='fl'>8000L</span>,
+  build_dim_spec <span class='op'>=</span> <span class='fu'>.random_field_name</span><span class='op'>(</span><span class='op'>)</span>,
+  as_scidb_data_frame <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  skip_scidb_schema_check <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  force_template_schema <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  <span class='va'>...</span>
+<span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>df</code></dt><dd><p>an R data frame</p></dd>
 
@@ -396,29 +397,29 @@ template, which must be provided (not NULL).</p></dd>
 <dt><code>...</code></dt><dd><p>other params used in <code>upload_df</code> function.</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>An arrayOp instance that encapsulates a build literal or uploaded R data frame(s)</p>
 <p><hr>
-<a id="method-upload_df"></a></p><h3>Method <code>upload_df()</code></h3>
+<a id="method-upload_df"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>upload_df()</code></h3>
 <p>Get an arrayOp instance from uploaded R data frame</p>
 <p>Implemented by SciDBR <code><a href='https://rdrr.io/pkg/scidb/man/as.scidb.html'>scidb::as.scidb</a></code> function which uploads a
 data frame or vector(s) to scidb.</p>
 <p>By default, the uploaded R data frame is saved to scidb as a persistent array.
 If <code>upload_by_vecotr = TRUE</code>, multiple scidb arrays are created, each for
 one of the R data frame column by uploading individual vectors, which is
-faster but suffers from bugs in ScidbR.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ScidbConnection</span>$<span class='fu'>upload_df</span>(
-  <span class='no'>df</span>,
-  <span class='kw'>template</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>name</span> <span class='kw'>=</span> <span class='no'>dbutils</span>$<span class='fu'>random_array_name</span>(),
-  <span class='kw'>force_template_schema</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>upload_by_vector</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>.use_aio_input</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>.temp</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>.gc</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>
-)</pre><p></div></p>
+faster but suffers from bugs in ScidbR.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ScidbConnection</span><span class='op'>$</span><span class='fu'>upload_df</span><span class='op'>(</span>
+  <span class='va'>df</span>,
+  template <span class='op'>=</span> <span class='cn'>NULL</span>,
+  name <span class='op'>=</span> <span class='va'>dbutils</span><span class='op'>$</span><span class='fu'>random_array_name</span><span class='op'>(</span><span class='op'>)</span>,
+  force_template_schema <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  upload_by_vector <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  .use_aio_input <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  .temp <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  .gc <span class='op'>=</span> <span class='cn'>TRUE</span>
+<span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>df</code></dt><dd><p>an R data frame</p></dd>
 
@@ -451,22 +452,22 @@ as a temporary scidb array.</p></dd>
 once the encapsulating arrayOp goes out of scodb in R.</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>An arrayOp instance that encapsulates a build literal or uploaded R data frame(s)</p>
 <p><hr>
-<a id="method-compile_df"></a></p><h3>Method <code>compile_df()</code></h3>
+<a id="method-compile_df"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>compile_df()</code></h3>
 <p>Get an arrayOp instance by compiling an R data frame into a scidb build literal</p>
-<p>Implemented by scidb 'build' operator. No persistent scidb array will be created.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ScidbConnection</span>$<span class='fu'>compile_df</span>(
-  <span class='no'>df</span>,
-  <span class='kw'>template</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>build_dim_spec</span> <span class='kw'>=</span> <span class='no'>dbutils</span>$<span class='fu'>random_field_name</span>(),
-  <span class='kw'>force_template_schema</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>as_scidb_data_frame</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>skip_scidb_schema_check</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>
-)</pre><p></div></p>
+<p>Implemented by scidb 'build' operator. No persistent scidb array will be created.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ScidbConnection</span><span class='op'>$</span><span class='fu'>compile_df</span><span class='op'>(</span>
+  <span class='va'>df</span>,
+  template <span class='op'>=</span> <span class='cn'>NULL</span>,
+  build_dim_spec <span class='op'>=</span> <span class='va'>dbutils</span><span class='op'>$</span><span class='fu'>random_field_name</span><span class='op'>(</span><span class='op'>)</span>,
+  force_template_schema <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  as_scidb_data_frame <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  skip_scidb_schema_check <span class='op'>=</span> <span class='cn'>FALSE</span>
+<span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>df</code></dt><dd><p>an R data frame</p></dd>
 
@@ -494,10 +495,10 @@ locally (which is not accurate; but saves a round trip to scidb server and
 work in most cases if not used as an template).</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>An arrayOp instance that encapsulates a build literal or uploaded R data frame(s)</p>
 <p><hr>
-<a id="method-fread"></a></p><h3>Method <code>fread()</code></h3>
+<a id="method-fread"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>fread()</code></h3>
 <p>Get an arrayOp instance that encapsulates an array operation using
 'aio_input' operator to read content from a file</p>
 <p>Param convenctions similar to <code><a href='https://Rdatatable.gitlab.io/data.table/reference/fread.html'>data.table::fread </a></code> function.
@@ -505,21 +506,21 @@ We can choose if column names/types should be inferred from peaking into
 the file by setting <code>header = T</code> and <code>nrow = 10</code> for how many rows to peek
 for inference.</p>
 <p>Unique to scidb, we can control how the file columns are converted and
-whether to use multiple scidb instances to read multiple files in parallel.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ScidbConnection</span>$<span class='fu'>fread</span>(
-  <span class='no'>file_path</span>,
-  <span class='kw'>template</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>header</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>sep</span> <span class='kw'>=</span> <span class='st'>"\t"</span>,
-  <span class='kw'>col.names</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>mutate_fields</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>auto_dcast</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>nrow</span> <span class='kw'>=</span> <span class='fl'>10L</span>,
-  <span class='kw'>instances</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>.aio_settings</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
-)</pre><p></div></p>
+whether to use multiple scidb instances to read multiple files in parallel.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ScidbConnection</span><span class='op'>$</span><span class='fu'>fread</span><span class='op'>(</span>
+  <span class='va'>file_path</span>,
+  template <span class='op'>=</span> <span class='cn'>NULL</span>,
+  header <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  sep <span class='op'>=</span> <span class='st'>"\t"</span>,
+  col.names <span class='op'>=</span> <span class='cn'>NULL</span>,
+  mutate_fields <span class='op'>=</span> <span class='cn'>NULL</span>,
+  auto_dcast <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  nrow <span class='op'>=</span> <span class='fl'>10L</span>,
+  instances <span class='op'>=</span> <span class='cn'>NULL</span>,
+  .aio_settings <span class='op'>=</span> <span class='cn'>NULL</span>
+<span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>file_path</code></dt><dd><p>A single string or a string vector, for a local file
 path or a list of paths. If multiple paths provided, the <code>instances</code> param
@@ -572,7 +573,7 @@ generated automatically and should not be manually provided. See scidb doc
 on extra aio_input settings.</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>An arrayOp instance that encapsulates a 'aio_input' operation with
 auto generated field mapping and data type conversion.</p>
 
@@ -584,10 +585,11 @@ auto generated field mapping and data type conversion.</p>
 <span class='co'>## Method `ScidbConnection$execute_mquery`</span>
 <span class='co'>## ------------------------------------------------</span>
 
-<span class='no'>conn</span>$<span class='fu'>execute_mquery</span>(
-  <span class='no'>target</span>$<span class='fu'><a href='https://rdrr.io/r/stats/filter.html'>filter</a></span>(<span class='no'>conc</span> <span class='kw'>&lt;</span> <span class='fl'>50</span>)$<span class='fu'><a href='https://rdrr.io/r/stats/update.html'>update</a></span>(<span class='no'>target</span>),
-  <span class='no'>target</span>$<span class='fu'>delete_cells</span>(<span class='no'>Plant</span> <span class='kw'>%contains%</span> <span class='st'>"3"</span>, <span class='no'>uptake</span> <span class='kw'>&gt;</span> <span class='fl'>10</span>)
-)</div><div class='output co'>#&gt; <span class='error'>Error in eval(expr, envir, enclos): object 'conn' not found</span></div></pre>
+<span class='va'>conn</span><span class='op'>$</span><span class='fu'>execute_mquery</span><span class='op'>(</span>
+  <span class='va'>target</span><span class='op'>$</span><span class='fu'>filter</span><span class='op'>(</span><span class='va'>conc</span> <span class='op'>&lt;</span> <span class='fl'>50</span><span class='op'>)</span><span class='op'>$</span><span class='fu'>update</span><span class='op'>(</span><span class='va'>target</span><span class='op'>)</span>,
+  <span class='va'>target</span><span class='op'>$</span><span class='fu'>delete_cells</span><span class='op'>(</span><span class='va'>Plant</span> <span class='op'>%contains%</span> <span class='st'>"3"</span>, <span class='va'>uptake</span> <span class='op'>&gt;</span> <span class='fl'>10</span><span class='op'>)</span>
+<span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in eval(expr, envir, enclos): object 'conn' not found</span></div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
@@ -603,7 +605,7 @@ auto generated field mapping and data type conversion.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.9000.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

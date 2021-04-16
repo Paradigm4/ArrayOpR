@@ -25,6 +25,7 @@ which returns a global connection object under the `arrayop` package namespace.
 ```r
 conn = get_default_connection()
 
-# If connection is timed out
+# If connection is timed out. 
+# This only works if you save the credentails in the connection, which should only be done in testing mode.
 conn$connect() # use the same credential to re-connect
 ```

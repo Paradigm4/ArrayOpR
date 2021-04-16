@@ -44,6 +44,8 @@
 
 
 
+
+
 <!-- mathjax -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script>
@@ -55,9 +57,16 @@
 
 
 
+
+  
+
+  
+
   </head>
 
   <body data-spy="scroll" data-target="#toc">
+    
+
     <div class="container template-news">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -71,19 +80,13 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">arrayop</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.4</span>
       </span>
     </div>
 
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
-  <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
-     
-  </a>
-</li>
-<li>
   <a href="../articles/arrayop.html">Get started</a>
 </li>
 <li>
@@ -108,7 +111,7 @@
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/Paradigm4/ArrayOpR/">
-    <span class="fab fa fab fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -129,51 +132,73 @@
       <small>Source: <a href='https://github.com/Paradigm4/ArrayOpR/blob/master/NEWS.md'><code>NEWS.md</code></a></small>
     </div>
 
-    <div id="arrayop-12" class="section level1">
+    <div id="arrayop-1-4" class="section level1">
+<h1 class="page-header" data-toc-text="1.4">
+<a href="#arrayop-1-4" class="anchor"></a>arrayop 1.4</h1>
+<div id="minor-changes" class="section level2">
+<h2 class="hasAnchor">
+<a href="#minor-changes" class="anchor"></a>Minor Changes</h2>
+<ul>
+<li>Add a <code>db</code> param to <code><a href="../reference/db_connect.html">arrayop::db_connect</a></code> function. This works when the clients already have a valid database connection and the username/token params are not required.</li>
+</ul>
+</div>
+</div>
+    <div id="arrayop-1-3" class="section level1">
+<h1 class="page-header" data-toc-text="1.3">
+<a href="#arrayop-1-3" class="anchor"></a>arrayop 1.3</h1>
+<div id="minor-changes-1" class="section level2">
+<h2 class="hasAnchor">
+<a href="#minor-changes-1" class="anchor"></a>Minor Changes</h2>
+<ul>
+<li>Add a <code>save_token = FALSE</code> param to arrayop::db_connect function, so that by default no user password/token is stored in db connection object unless <code>save_token = TRUE</code> (useful in test settings).</li>
+</ul>
+</div>
+</div>
+    <div id="arrayop-1-2" class="section level1">
 <h1 class="page-header" data-toc-text="1.2">
-<a href="#arrayop-12" class="anchor"></a>arrayop 1.2</h1>
+<a href="#arrayop-1-2" class="anchor"></a>arrayop 1.2</h1>
 <div id="major-changes" class="section level2">
 <h2 class="hasAnchor">
 <a href="#major-changes" class="anchor"></a>Major changes</h2>
 <ul>
-<li>Add <a href="https://paradigm4.github.io/ArrayOpR/reference/ArrayOpBase.html#method-delete_cells"><code>ArrayOpBase$delete_cells</code></a>
+<li>Add <a href="https://paradigm4.github.io/ArrayOpR/reference/ArrayOpBase.html#method-delete_cells" class="external-link"><code>ArrayOpBase$delete_cells</code></a>
 </li>
-<li>Add <a href="https://paradigm4.github.io/ArrayOpR/reference/ScidbConnection.html#method-execute_mquery"><code>ScidbConnection$execute_mquery</code></a>
+<li>Add <a href="https://paradigm4.github.io/ArrayOpR/reference/ScidbConnection.html#method-execute_mquery" class="external-link"><code>ScidbConnection$execute_mquery</code></a>
 </li>
 </ul>
 </div>
 </div>
-    <div id="arrayop-11" class="section level1">
+    <div id="arrayop-1-1" class="section level1">
 <h1 class="page-header" data-toc-text="1.1">
-<a href="#arrayop-11" class="anchor"></a>arrayop 1.1</h1>
+<a href="#arrayop-1-1" class="anchor"></a>arrayop 1.1</h1>
 <div id="major-changes-1" class="section level2">
 <h2 class="hasAnchor">
 <a href="#major-changes-1" class="anchor"></a>Major changes</h2>
 <ul>
-<li>Add <a href="https://paradigm4.github.io/ArrayOpR/reference/ArrayOpBase.html#method-full-join-"><code>ArrayOpBase$full_join</code></a>
+<li>Add <a href="https://paradigm4.github.io/ArrayOpR/reference/ArrayOpBase.html#method-full-join-" class="external-link"><code>ArrayOpBase$full_join</code></a>
 </li>
-<li>Change <code>join</code> parameters from <code>on_left, on_right, on_both</code> to <code>by.x, by.y, by</code>, consistent with R <code><a href="https://rdrr.io/r/base/merge.html">base::merge</a></code> function</li>
-<li>Change <a href="https://paradigm4.github.io/ArrayOpR/reference/ArrayOpBase.html#method-persist-"><code>ArrayOpBase$persist</code></a> implementation to avoid confusion of API usage</li>
+<li>Change <code>join</code> parameters from <code>on_left, on_right, on_both</code> to <code>by.x, by.y, by</code>, consistent with R <code><a href="https://rdrr.io/r/base/merge.html" class="external-link">base::merge</a></code> function</li>
+<li>Change <a href="https://paradigm4.github.io/ArrayOpR/reference/ArrayOpBase.html#method-persist-" class="external-link"><code>ArrayOpBase$persist</code></a> implementation to avoid confusion of API usage</li>
 </ul>
 </div>
-<div id="minor-changes" class="section level2">
+<div id="minor-changes-2" class="section level2">
 <h2 class="hasAnchor">
-<a href="#minor-changes" class="anchor"></a>Minor changes</h2>
+<a href="#minor-changes-2" class="anchor"></a>Minor changes</h2>
 <ul>
 <li>Rename version related API
 <ul>
 <li>
-<a href="https://paradigm4.github.io/ArrayOpR/reference/ArrayOpBase.html#method-list-versions-"><code>ArrayOpBase$list_versions</code></a> (was <code>versions</code>)</li>
+<a href="https://paradigm4.github.io/ArrayOpR/reference/ArrayOpBase.html#method-list-versions-" class="external-link"><code>ArrayOpBase$list_versions</code></a> (was <code>versions</code>)</li>
 <li>
-<a href="https://paradigm4.github.io/ArrayOpR/reference/ArrayOpBase.html#method-version-"><code>ArrayOpBase$version</code></a> (was <code>get_version_snapshot</code>)</li>
+<a href="https://paradigm4.github.io/ArrayOpR/reference/ArrayOpBase.html#method-version-" class="external-link"><code>ArrayOpBase$version</code></a> (was <code>get_version_snapshot</code>)</li>
 </ul>
 </li>
 </ul>
 </div>
 </div>
-    <div id="arrayop-10" class="section level1">
+    <div id="arrayop-1-0" class="section level1">
 <h1 class="page-header" data-toc-text="1.0">
-<a href="#arrayop-10" class="anchor"></a>arrayop 1.0</h1>
+<a href="#arrayop-1-0" class="anchor"></a>arrayop 1.0</h1>
 <p>First public release of the <code>arrayop</code> package</p>
 </div>
   </div>
@@ -189,11 +214,11 @@
 
       <footer>
       <div class="copyright">
-  <p>Developed by  Paradigm4.</p>
+  <p><p>Developed by Paradigm4.</p></p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.9000.</p>
+  <p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 1.6.1.9001.</p></p>
 </div>
 
       </footer>
@@ -201,6 +226,8 @@
 
   
 
+
+  
 
   </body>
 </html>

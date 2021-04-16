@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">arrayop</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.4</span>
       </span>
     </div>
 
@@ -148,7 +148,7 @@ ScidbConnection object, which should be extremely rare.</p>
     <h2 class="hasAnchor" id="methods"><a class="anchor" href="#methods"></a>Methods</h2>
 
     
-<h3>Public methods</h3>
+<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Public methods</h3>
 
 <ul>
 <li><p><a href='#method-random_array_name'><code>DBUtils$random_array_name()</code></a></p></li>
@@ -172,11 +172,11 @@ ScidbConnection object, which should be extremely rare.</p>
 <li><p><a href='#method-db_aggregates'><code>DBUtils$db_aggregates()</code></a></p></li>
 </ul>
 <p><hr>
-<a id="method-random_array_name"></a></p><h3>Method <code>random_array_name()</code></h3>
-<p>Generate a random array name so it does not collides with existing array names</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>DBUtils</span>$<span class='fu'>random_array_name</span>(<span class='kw'>prefix</span> <span class='kw'>=</span> <span class='st'>"Rarrayop_"</span>, <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>10L</span>)</pre><p></div></p>
+<a id="method-random_array_name"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>random_array_name()</code></h3>
+<p>Generate a random array name so it does not collides with existing array names</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>DBUtils</span><span class='op'>$</span><span class='fu'>random_array_name</span><span class='op'>(</span>prefix <span class='op'>=</span> <span class='st'>"Rarrayop_"</span>, n <span class='op'>=</span> <span class='fl'>10L</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>prefix</code></dt><dd><p>A string used as the prefix of generated array name</p></dd>
 
@@ -184,218 +184,231 @@ ScidbConnection object, which should be extremely rare.</p>
 excluding the prefix</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A string of 'prefix' + n random chars</p>
 <p><hr>
-<a id="method-random_field_name"></a></p><h3>Method <code>random_field_name()</code></h3>
-<p>Generate a random field name</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>DBUtils</span>$<span class='fu'>random_field_name</span>(<span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>10L</span>)</pre><p></div></p>
+<a id="method-random_field_name"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>random_field_name()</code></h3>
+<p>Generate a random field name</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>DBUtils</span><span class='op'>$</span><span class='fu'>random_field_name</span><span class='op'>(</span>n <span class='op'>=</span> <span class='fl'>10L</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>n</code></dt><dd><p>An integer, length of the random characters in the field name</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A string</p>
 <p><hr>
-<a id="method-set_conn"></a></p><h3>Method <code>set_conn()</code></h3>
+<a id="method-set_conn"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>set_conn()</code></h3>
 <p>Set a <code>ScidbConnection</code> object that <code>dbutils</code> uses for db operations</p>
 <p>No need to set the connection in most cases. The default conneciton object
-is used.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>DBUtils</span>$<span class='fu'>set_conn</span>(<span class='no'>new_conn</span>)</pre><p></div></p>
+is used.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>DBUtils</span><span class='op'>$</span><span class='fu'>set_conn</span><span class='op'>(</span><span class='va'>new_conn</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>new_conn</code></dt><dd><p>A <code>ScidbConnection</code> object</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>NULL</p>
 <p><hr>
-<a id="method-get_conn"></a></p><h3>Method <code>get_conn()</code></h3>
+<a id="method-get_conn"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>get_conn()</code></h3>
 <p>Get the <code>ScidbConnection</code> object the <code>dbutils</code> is using</p>
 <p>If no <code>set_conn</code> call is made, by default it returns the default
-<code>ScidbConnection</code> object, identical to <code><a href='get_default_connection.html'>get_default_connection()</a></code></p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>DBUtils</span>$<span class='fu'>get_conn</span>()</pre><p></div></p>
+<code>ScidbConnection</code> object, identical to <code><a href='get_default_connection.html'>get_default_connection()</a></code></p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>DBUtils</span><span class='op'>$</span><span class='fu'>get_conn</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A <code>ScidbConnection</code> object</p>
 <p><hr>
-<a id="method-clear_cache"></a></p><h3>Method <code>clear_cache()</code></h3>
+<a id="method-clear_cache"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>clear_cache()</code></h3>
 <p>Clear cached arrayOp instances</p>
 <p>For performance concerns, <code>dbutils</code> caches every arrayOp it retrieves from
 scidb.</p>
 <p>Call this function if there are array changes in scidb after the scidb
-connection is established</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>DBUtils</span>$<span class='fu'>clear_cache</span>()</pre><p></div></p>
+connection is established</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>DBUtils</span><span class='op'>$</span><span class='fu'>clear_cache</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>NULL</p>
 <p><hr>
-<a id="method-list_arrays_in_ns"></a></p><h3>Method <code>list_arrays_in_ns()</code></h3>
+<a id="method-list_arrays_in_ns"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>list_arrays_in_ns()</code></h3>
 <p>Returns an ArrayOp instance of the "list arrays" opeartion in a
 scidb namespace</p>
 <p>Implemented by scidb <code><a href='https://rdrr.io/r/base/list.html'>list(ns:myNamespace)</a></code>.</p>
-<p>Throw an error if the namespace does not exist in scidb.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>DBUtils</span>$<span class='fu'>list_arrays_in_ns</span>(<span class='kw'>ns</span> <span class='kw'>=</span> <span class='st'>"public"</span>)</pre><p></div></p>
+<p>Throw an error if the namespace does not exist in scidb.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>DBUtils</span><span class='op'>$</span><span class='fu'>list_arrays_in_ns</span><span class='op'>(</span>ns <span class='op'>=</span> <span class='st'>"public"</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>ns</code></dt><dd><p>String, a scidb namespace</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>An ArrayOp instance</p>
 <p><hr>
-<a id="method-load_array_ops_from_namespace"></a></p><h3>Method <code>load_array_ops_from_namespace()</code></h3>
-<p>Return a list of arrayOp instances from a namespace</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>DBUtils</span>$<span class='fu'>load_array_ops_from_namespace</span>(<span class='kw'>ns</span> <span class='kw'>=</span> <span class='st'>"public"</span>)</pre><p></div></p>
+<a id="method-load_array_ops_from_namespace"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>load_array_ops_from_namespace()</code></h3>
+<p>Return a list of arrayOp instances from a namespace</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>DBUtils</span><span class='op'>$</span><span class='fu'>load_array_ops_from_namespace</span><span class='op'>(</span>ns <span class='op'>=</span> <span class='st'>"public"</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>ns</code></dt><dd><p>String, a scidb namespace</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A named list of arrayOp instances where names are array names
 (without namespace prefix) and values are arrayOp instances</p>
 <p><hr>
-<a id="method-sanitize_names"></a></p><h3>Method <code>sanitize_names()</code></h3>
+<a id="method-sanitize_names"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>sanitize_names()</code></h3>
 <p>Sanitize (data frame or scidb array) names</p>
 <p>First replace any non-alphanumerical letter to _
 Then trim off any leading or trailing underscores.</p>
 <p>This is useful when data frames or files contain characters not supported
-as scidb field names.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>DBUtils</span>$<span class='fu'>sanitize_names</span>(<span class='no'>original_names</span>)</pre><p></div></p>
+as scidb field names.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>DBUtils</span><span class='op'>$</span><span class='fu'>sanitize_names</span><span class='op'>(</span><span class='va'>original_names</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>original_names</code></dt><dd><p>A string vector</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A string vector of sanitized names</p>
-<h3>Examples</h3>
-<p><div class="r example copy"></p><pre><span class='fu'><a href='https://rdrr.io/r/base/names.html'>names</a></span>(<span class='no'>myDataFrame</span>) <span class='kw'>&lt;-</span> <span class='no'>dbutils</span>$<span class='fu'>sanitize_names</span>(<span class='fu'><a href='https://rdrr.io/r/base/names.html'>names</a></span>(<span class='no'>myDataFrame</span>))</pre><p></div></p>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Examples</h4>
+<p><div class="r example copy"></p><pre><span class='fu'><a href='https://rdrr.io/r/base/names.html'>names</a></span><span class='op'>(</span><span class='va'>myDataFrame</span><span class='op'>)</span> <span class='op'>&lt;-</span> <span class='va'>dbutils</span><span class='op'>$</span><span class='fu'>sanitize_names</span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/names.html'>names</a></span><span class='op'>(</span><span class='va'>myDataFrame</span><span class='op'>)</span><span class='op'>)</span>
+
+</pre><p></div></p>
 
 <p><hr>
-<a id="method-sanitize_names_for"></a></p><h3>Method <code>sanitize_names_for()</code></h3>
+<a id="method-sanitize_names_for"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>sanitize_names_for()</code></h3>
 <p>Sanitize names for an R object</p>
 <p><code>sanitize_names_for(myObj)</code> is equvilant to
-<code>names(myObj) &lt;- sanitize_names(names(myObj))</code></p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>DBUtils</span>$<span class='fu'>sanitize_names_for</span>(<span class='no'>obj</span>)</pre><p></div></p>
+<code>names(myObj) &lt;- sanitize_names(names(myObj))</code></p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>DBUtils</span><span class='op'>$</span><span class='fu'>sanitize_names_for</span><span class='op'>(</span><span class='va'>obj</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>obj</code></dt><dd><p>An R object whose names are not NULL. Applicable to data frames
 and any R object that meets the requirement <code>!is.null(names(obj))</code></p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>The same obj with sanitized names (in-place modification)</p>
 <p><hr>
-<a id="method-db_namespaces"></a></p><h3>Method <code>db_namespaces()</code></h3>
+<a id="method-db_namespaces"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>db_namespaces()</code></h3>
 <p>Return an ArrayOp instance that encapsualtes all namespaces in scidb</p>
-<p>The namespaces visible to us is determined by our scidb role and previlige.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>DBUtils</span>$<span class='fu'>db_namespaces</span>()</pre><p></div></p>
+<p>The namespaces visible to us is determined by our scidb role and previlige.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>DBUtils</span><span class='op'>$</span><span class='fu'>db_namespaces</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>An arrayOp instance</p>
-<h3>Examples</h3>
-<p><div class="r example copy"></p><pre><span class='no'>dbutils</span>$<span class='fu'>db_namespace</span>()$<span class='fu'>to_df</span>()</pre><p></div></p>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Examples</h4>
+<p><div class="r example copy"></p><pre><span class='va'>dbutils</span><span class='op'>$</span><span class='fu'>db_namespace</span><span class='op'>(</span><span class='op'>)</span><span class='op'>$</span><span class='fu'>to_df</span><span class='op'>(</span><span class='op'>)</span>
+</pre><p></div></p>
 
 <p><hr>
-<a id="method-db_users"></a></p><h3>Method <code>db_users()</code></h3>
+<a id="method-db_users"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>db_users()</code></h3>
 <p>Return an ArrayOp instance that encapsualtes all users in scidb</p>
-<p>The scidb users visible to us is determined by our scidb role and previlige.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>DBUtils</span>$<span class='fu'>db_users</span>()</pre><p></div></p>
+<p>The scidb users visible to us is determined by our scidb role and previlige.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>DBUtils</span><span class='op'>$</span><span class='fu'>db_users</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>An arrayOp instance</p>
-<h3>Examples</h3>
-<p><div class="r example copy"></p><pre><span class='no'>dbutils</span>$<span class='fu'>db_users</span>()$<span class='fu'>to_df</span>()</pre><p></div></p>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Examples</h4>
+<p><div class="r example copy"></p><pre><span class='va'>dbutils</span><span class='op'>$</span><span class='fu'>db_users</span><span class='op'>(</span><span class='op'>)</span><span class='op'>$</span><span class='fu'>to_df</span><span class='op'>(</span><span class='op'>)</span>
+
+</pre><p></div></p>
 
 <p><hr>
-<a id="method-db_roles"></a></p><h3>Method <code>db_roles()</code></h3>
+<a id="method-db_roles"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>db_roles()</code></h3>
 <p>Return an ArrayOp instance that encapsualtes all user roles in scidb</p>
-<p>The roles visible to us is determined by our scidb role and previlige.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>DBUtils</span>$<span class='fu'>db_roles</span>()</pre><p></div></p>
+<p>The roles visible to us is determined by our scidb role and previlige.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>DBUtils</span><span class='op'>$</span><span class='fu'>db_roles</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>An arrayOp instance</p>
-<h3>Examples</h3>
-<p><div class="r example copy"></p><pre><span class='no'>dbutils</span>$<span class='fu'>db_roles</span>()$<span class='fu'>to_df</span>()</pre><p></div></p>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Examples</h4>
+<p><div class="r example copy"></p><pre><span class='va'>dbutils</span><span class='op'>$</span><span class='fu'>db_roles</span><span class='op'>(</span><span class='op'>)</span><span class='op'>$</span><span class='fu'>to_df</span><span class='op'>(</span><span class='op'>)</span>
+</pre><p></div></p>
 
 <p><hr>
-<a id="method-db_operators"></a></p><h3>Method <code>db_operators()</code></h3>
-<p>Return an ArrayOp instance that encapsualtes all scidb operators</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>DBUtils</span>$<span class='fu'>db_operators</span>()</pre><p></div></p>
+<a id="method-db_operators"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>db_operators()</code></h3>
+<p>Return an ArrayOp instance that encapsualtes all scidb operators</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>DBUtils</span><span class='op'>$</span><span class='fu'>db_operators</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>An arrayOp instance</p>
-<h3>Examples</h3>
-<p><div class="r example copy"></p><pre><span class='no'>dbutils</span>$<span class='fu'>db_operators</span>()$<span class='fu'>to_df</span>()</pre><p></div></p>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Examples</h4>
+<p><div class="r example copy"></p><pre><span class='va'>dbutils</span><span class='op'>$</span><span class='fu'>db_operators</span><span class='op'>(</span><span class='op'>)</span><span class='op'>$</span><span class='fu'>to_df</span><span class='op'>(</span><span class='op'>)</span>
+</pre><p></div></p>
 
 <p><hr>
-<a id="method-db_instances"></a></p><h3>Method <code>db_instances()</code></h3>
-<p>Return an ArrayOp instance that encapsualtes scidb instances</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>DBUtils</span>$<span class='fu'>db_instances</span>()</pre><p></div></p>
+<a id="method-db_instances"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>db_instances()</code></h3>
+<p>Return an ArrayOp instance that encapsualtes scidb instances</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>DBUtils</span><span class='op'>$</span><span class='fu'>db_instances</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>An arrayOp instance</p>
-<h3>Examples</h3>
-<p><div class="r example copy"></p><pre><span class='no'>dbutils</span>$<span class='fu'>db_instances</span>()$<span class='fu'>to_df</span>()</pre><p></div></p>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Examples</h4>
+<p><div class="r example copy"></p><pre><span class='va'>dbutils</span><span class='op'>$</span><span class='fu'>db_instances</span><span class='op'>(</span><span class='op'>)</span><span class='op'>$</span><span class='fu'>to_df</span><span class='op'>(</span><span class='op'>)</span>
+</pre><p></div></p>
 
 <p><hr>
-<a id="method-db_queries"></a></p><h3>Method <code>db_queries()</code></h3>
-<p>Return an ArrayOp instance that encapsualtes running scidb queries</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>DBUtils</span>$<span class='fu'>db_queries</span>()</pre><p></div></p>
+<a id="method-db_queries"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>db_queries()</code></h3>
+<p>Return an ArrayOp instance that encapsualtes running scidb queries</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>DBUtils</span><span class='op'>$</span><span class='fu'>db_queries</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>An arrayOp instance</p>
-<h3>Examples</h3>
-<p><div class="r example copy"></p><pre><span class='no'>dbutils</span>$<span class='fu'>db_queries</span>()$<span class='fu'>to_df</span>()</pre><p></div></p>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Examples</h4>
+<p><div class="r example copy"></p><pre><span class='va'>dbutils</span><span class='op'>$</span><span class='fu'>db_queries</span><span class='op'>(</span><span class='op'>)</span><span class='op'>$</span><span class='fu'>to_df</span><span class='op'>(</span><span class='op'>)</span>
+</pre><p></div></p>
 
 <p><hr>
-<a id="method-db_macros"></a></p><h3>Method <code>db_macros()</code></h3>
-<p>Return an ArrayOp instance that encapsualtes all scidb macros</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>DBUtils</span>$<span class='fu'>db_macros</span>()</pre><p></div></p>
+<a id="method-db_macros"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>db_macros()</code></h3>
+<p>Return an ArrayOp instance that encapsualtes all scidb macros</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>DBUtils</span><span class='op'>$</span><span class='fu'>db_macros</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>An arrayOp instance</p>
-<h3>Examples</h3>
-<p><div class="r example copy"></p><pre><span class='no'>dbutils</span>$<span class='fu'>db_macros</span>()$<span class='fu'>to_df</span>()</pre><p></div></p>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Examples</h4>
+<p><div class="r example copy"></p><pre><span class='va'>dbutils</span><span class='op'>$</span><span class='fu'>db_macros</span><span class='op'>(</span><span class='op'>)</span><span class='op'>$</span><span class='fu'>to_df</span><span class='op'>(</span><span class='op'>)</span>
+</pre><p></div></p>
 
 <p><hr>
-<a id="method-db_types"></a></p><h3>Method <code>db_types()</code></h3>
-<p>Return an ArrayOp instance that encapsualtes all scidb data types</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>DBUtils</span>$<span class='fu'>db_types</span>()</pre><p></div></p>
+<a id="method-db_types"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>db_types()</code></h3>
+<p>Return an ArrayOp instance that encapsualtes all scidb data types</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>DBUtils</span><span class='op'>$</span><span class='fu'>db_types</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>An arrayOp instance</p>
-<h3>Examples</h3>
-<p><div class="r example copy"></p><pre><span class='no'>dbutils</span>$<span class='fu'>db_types</span>()$<span class='fu'>to_df</span>()</pre><p></div></p>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Examples</h4>
+<p><div class="r example copy"></p><pre><span class='va'>dbutils</span><span class='op'>$</span><span class='fu'>db_types</span><span class='op'>(</span><span class='op'>)</span><span class='op'>$</span><span class='fu'>to_df</span><span class='op'>(</span><span class='op'>)</span>
+</pre><p></div></p>
 
 <p><hr>
-<a id="method-db_libraries"></a></p><h3>Method <code>db_libraries()</code></h3>
-<p>Return an ArrayOp instance that encapsualtes all scidb libraries</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>DBUtils</span>$<span class='fu'>db_libraries</span>()</pre><p></div></p>
+<a id="method-db_libraries"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>db_libraries()</code></h3>
+<p>Return an ArrayOp instance that encapsualtes all scidb libraries</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>DBUtils</span><span class='op'>$</span><span class='fu'>db_libraries</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>An arrayOp instance</p>
-<h3>Examples</h3>
-<p><div class="r example copy"></p><pre><span class='no'>dbutils</span>$<span class='fu'>db_libraries</span>()$<span class='fu'>to_df</span>()</pre><p></div></p>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Examples</h4>
+<p><div class="r example copy"></p><pre><span class='va'>dbutils</span><span class='op'>$</span><span class='fu'>db_libraries</span><span class='op'>(</span><span class='op'>)</span><span class='op'>$</span><span class='fu'>to_df</span><span class='op'>(</span><span class='op'>)</span>
+</pre><p></div></p>
 
 <p><hr>
-<a id="method-db_aggregates"></a></p><h3>Method <code>db_aggregates()</code></h3>
-<p>Return an ArrayOp instance that encapsualtes all scidb aggregate functions</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>DBUtils</span>$<span class='fu'>db_aggregates</span>()</pre><p></div></p>
+<a id="method-db_aggregates"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>db_aggregates()</code></h3>
+<p>Return an ArrayOp instance that encapsualtes all scidb aggregate functions</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>DBUtils</span><span class='op'>$</span><span class='fu'>db_aggregates</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>An arrayOp instance</p>
-<h3>Examples</h3>
-<p><div class="r example copy"></p><pre><span class='no'>dbutils</span>$<span class='fu'>db_aggregates</span>()$<span class='fu'>to_df</span>()</pre><p></div></p>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Examples</h4>
+<p><div class="r example copy"></p><pre><span class='va'>dbutils</span><span class='op'>$</span><span class='fu'>db_aggregates</span><span class='op'>(</span><span class='op'>)</span><span class='op'>$</span><span class='fu'>to_df</span><span class='op'>(</span><span class='op'>)</span>
+</pre><p></div></p>
 
 
 
@@ -406,59 +419,70 @@ and any R object that meets the requirement <code>!is.null(names(obj))</code></p
 <span class='co'>## Method `DBUtils$sanitize_names`</span>
 <span class='co'>## ------------------------------------------------</span>
 
-<span class='fu'><a href='https://rdrr.io/r/base/names.html'>names</a></span>(<span class='no'>myDataFrame</span>) <span class='kw'>&lt;-</span> <span class='no'>dbutils</span>$<span class='fu'>sanitize_names</span>(<span class='fu'><a href='https://rdrr.io/r/base/names.html'>names</a></span>(<span class='no'>myDataFrame</span>))</div><div class='output co'>#&gt; <span class='error'>Error in gsub("[^a-zA-Z0-9_]+", "_", original_names): object 'myDataFrame' not found</span></div><div class='input'>
+<span class='fu'><a href='https://rdrr.io/r/base/names.html'>names</a></span><span class='op'>(</span><span class='va'>myDataFrame</span><span class='op'>)</span> <span class='op'>&lt;-</span> <span class='va'>dbutils</span><span class='op'>$</span><span class='fu'>sanitize_names</span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/names.html'>names</a></span><span class='op'>(</span><span class='va'>myDataFrame</span><span class='op'>)</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in gsub("[^a-zA-Z0-9_]+", "_", original_names): object 'myDataFrame' not found</span></div><div class='input'>
 
 <span class='co'>## ------------------------------------------------</span>
 <span class='co'>## Method `DBUtils$db_namespaces`</span>
 <span class='co'>## ------------------------------------------------</span>
 
-<span class='no'>dbutils</span>$<span class='fu'>db_namespace</span>()$<span class='fu'>to_df</span>()</div><div class='output co'>#&gt; <span class='error'>Error in eval(expr, envir, enclos): attempt to apply non-function</span></div><div class='input'>
+<span class='va'>dbutils</span><span class='op'>$</span><span class='fu'>db_namespace</span><span class='op'>(</span><span class='op'>)</span><span class='op'>$</span><span class='fu'>to_df</span><span class='op'>(</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in eval(expr, envir, enclos): attempt to apply non-function</span></div><div class='input'>
 <span class='co'>## ------------------------------------------------</span>
 <span class='co'>## Method `DBUtils$db_users`</span>
 <span class='co'>## ------------------------------------------------</span>
 
-<span class='no'>dbutils</span>$<span class='fu'>db_users</span>()$<span class='fu'>to_df</span>()</div><div class='output co'>#&gt; <span class='error'>Error in assert(default_conn$has_connected(), "please call `arrayop::db_connect` to create a valid connection first"): please call `arrayop::db_connect` to create a valid connection first</span></div><div class='input'>
+<span class='va'>dbutils</span><span class='op'>$</span><span class='fu'>db_users</span><span class='op'>(</span><span class='op'>)</span><span class='op'>$</span><span class='fu'>to_df</span><span class='op'>(</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in assert(default_conn$has_connected(), "please call `arrayop::db_connect` to create a valid connection first"): please call `arrayop::db_connect` to create a valid connection first</span></div><div class='input'>
 
 <span class='co'>## ------------------------------------------------</span>
 <span class='co'>## Method `DBUtils$db_roles`</span>
 <span class='co'>## ------------------------------------------------</span>
 
-<span class='no'>dbutils</span>$<span class='fu'>db_roles</span>()$<span class='fu'>to_df</span>()</div><div class='output co'>#&gt; <span class='error'>Error in assert(default_conn$has_connected(), "please call `arrayop::db_connect` to create a valid connection first"): please call `arrayop::db_connect` to create a valid connection first</span></div><div class='input'>
+<span class='va'>dbutils</span><span class='op'>$</span><span class='fu'>db_roles</span><span class='op'>(</span><span class='op'>)</span><span class='op'>$</span><span class='fu'>to_df</span><span class='op'>(</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in assert(default_conn$has_connected(), "please call `arrayop::db_connect` to create a valid connection first"): please call `arrayop::db_connect` to create a valid connection first</span></div><div class='input'>
 <span class='co'>## ------------------------------------------------</span>
 <span class='co'>## Method `DBUtils$db_operators`</span>
 <span class='co'>## ------------------------------------------------</span>
 
-<span class='no'>dbutils</span>$<span class='fu'>db_operators</span>()$<span class='fu'>to_df</span>()</div><div class='output co'>#&gt; <span class='error'>Error in assert(default_conn$has_connected(), "please call `arrayop::db_connect` to create a valid connection first"): please call `arrayop::db_connect` to create a valid connection first</span></div><div class='input'>
+<span class='va'>dbutils</span><span class='op'>$</span><span class='fu'>db_operators</span><span class='op'>(</span><span class='op'>)</span><span class='op'>$</span><span class='fu'>to_df</span><span class='op'>(</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in assert(default_conn$has_connected(), "please call `arrayop::db_connect` to create a valid connection first"): please call `arrayop::db_connect` to create a valid connection first</span></div><div class='input'>
 <span class='co'>## ------------------------------------------------</span>
 <span class='co'>## Method `DBUtils$db_instances`</span>
 <span class='co'>## ------------------------------------------------</span>
 
-<span class='no'>dbutils</span>$<span class='fu'>db_instances</span>()$<span class='fu'>to_df</span>()</div><div class='output co'>#&gt; <span class='error'>Error in assert(default_conn$has_connected(), "please call `arrayop::db_connect` to create a valid connection first"): please call `arrayop::db_connect` to create a valid connection first</span></div><div class='input'>
+<span class='va'>dbutils</span><span class='op'>$</span><span class='fu'>db_instances</span><span class='op'>(</span><span class='op'>)</span><span class='op'>$</span><span class='fu'>to_df</span><span class='op'>(</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in assert(default_conn$has_connected(), "please call `arrayop::db_connect` to create a valid connection first"): please call `arrayop::db_connect` to create a valid connection first</span></div><div class='input'>
 <span class='co'>## ------------------------------------------------</span>
 <span class='co'>## Method `DBUtils$db_queries`</span>
 <span class='co'>## ------------------------------------------------</span>
 
-<span class='no'>dbutils</span>$<span class='fu'>db_queries</span>()$<span class='fu'>to_df</span>()</div><div class='output co'>#&gt; <span class='error'>Error in assert(default_conn$has_connected(), "please call `arrayop::db_connect` to create a valid connection first"): please call `arrayop::db_connect` to create a valid connection first</span></div><div class='input'>
+<span class='va'>dbutils</span><span class='op'>$</span><span class='fu'>db_queries</span><span class='op'>(</span><span class='op'>)</span><span class='op'>$</span><span class='fu'>to_df</span><span class='op'>(</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in assert(default_conn$has_connected(), "please call `arrayop::db_connect` to create a valid connection first"): please call `arrayop::db_connect` to create a valid connection first</span></div><div class='input'>
 <span class='co'>## ------------------------------------------------</span>
 <span class='co'>## Method `DBUtils$db_macros`</span>
 <span class='co'>## ------------------------------------------------</span>
 
-<span class='no'>dbutils</span>$<span class='fu'>db_macros</span>()$<span class='fu'>to_df</span>()</div><div class='output co'>#&gt; <span class='error'>Error in assert(default_conn$has_connected(), "please call `arrayop::db_connect` to create a valid connection first"): please call `arrayop::db_connect` to create a valid connection first</span></div><div class='input'>
+<span class='va'>dbutils</span><span class='op'>$</span><span class='fu'>db_macros</span><span class='op'>(</span><span class='op'>)</span><span class='op'>$</span><span class='fu'>to_df</span><span class='op'>(</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in assert(default_conn$has_connected(), "please call `arrayop::db_connect` to create a valid connection first"): please call `arrayop::db_connect` to create a valid connection first</span></div><div class='input'>
 <span class='co'>## ------------------------------------------------</span>
 <span class='co'>## Method `DBUtils$db_types`</span>
 <span class='co'>## ------------------------------------------------</span>
 
-<span class='no'>dbutils</span>$<span class='fu'>db_types</span>()$<span class='fu'>to_df</span>()</div><div class='output co'>#&gt; <span class='error'>Error in assert(default_conn$has_connected(), "please call `arrayop::db_connect` to create a valid connection first"): please call `arrayop::db_connect` to create a valid connection first</span></div><div class='input'>
+<span class='va'>dbutils</span><span class='op'>$</span><span class='fu'>db_types</span><span class='op'>(</span><span class='op'>)</span><span class='op'>$</span><span class='fu'>to_df</span><span class='op'>(</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in assert(default_conn$has_connected(), "please call `arrayop::db_connect` to create a valid connection first"): please call `arrayop::db_connect` to create a valid connection first</span></div><div class='input'>
 <span class='co'>## ------------------------------------------------</span>
 <span class='co'>## Method `DBUtils$db_libraries`</span>
 <span class='co'>## ------------------------------------------------</span>
 
-<span class='no'>dbutils</span>$<span class='fu'>db_libraries</span>()$<span class='fu'>to_df</span>()</div><div class='output co'>#&gt; <span class='error'>Error in assert(default_conn$has_connected(), "please call `arrayop::db_connect` to create a valid connection first"): please call `arrayop::db_connect` to create a valid connection first</span></div><div class='input'>
+<span class='va'>dbutils</span><span class='op'>$</span><span class='fu'>db_libraries</span><span class='op'>(</span><span class='op'>)</span><span class='op'>$</span><span class='fu'>to_df</span><span class='op'>(</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in assert(default_conn$has_connected(), "please call `arrayop::db_connect` to create a valid connection first"): please call `arrayop::db_connect` to create a valid connection first</span></div><div class='input'>
 <span class='co'>## ------------------------------------------------</span>
 <span class='co'>## Method `DBUtils$db_aggregates`</span>
 <span class='co'>## ------------------------------------------------</span>
 
-<span class='no'>dbutils</span>$<span class='fu'>db_aggregates</span>()$<span class='fu'>to_df</span>()</div><div class='output co'>#&gt; <span class='error'>Error in assert(default_conn$has_connected(), "please call `arrayop::db_connect` to create a valid connection first"): please call `arrayop::db_connect` to create a valid connection first</span></div></pre>
+<span class='va'>dbutils</span><span class='op'>$</span><span class='fu'>db_aggregates</span><span class='op'>(</span><span class='op'>)</span><span class='op'>$</span><span class='fu'>to_df</span><span class='op'>(</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in assert(default_conn$has_connected(), "please call `arrayop::db_connect` to create a valid connection first"): please call `arrayop::db_connect` to create a valid connection first</span></div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
@@ -474,7 +498,7 @@ and any R object that meets the requirement <code>!is.null(names(obj))</code></p
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.9000.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>
