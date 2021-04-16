@@ -13,17 +13,24 @@
 #' 
 #' In rare cases should we need to maintain multiple connection objects, we can
 #' set `save_to_default_conn` to FALSE.
-#' 
+#' @param save_token Whether to save token/password. Default FALSE. Do not set to TRUE in production env.
+#' @param db A connection object returned by `scidb::scidbconnect`. 
+#' If NULL (NULL), username, token, host, ... params must be provided. 
+#' If set to a valid scidb connection object, then ignore explict params (e.g. username, token, etc.)
+#' and use the connection object directly
 #' @return A Scidbconnection object.
 #' 
 #' @export
-db_connect = function(username, token, 
+db_connect = function(username = NA, token = NA, 
                    host = "127.0.0.1",
                    port = 8083, protocol = "https", auth_type = "scidb",
                    ..., # other optional args for scidb::scidbconnect
                    save_to_default_conn = TRUE,
-                   save_token = FALSE
+                   save_token = FALSE,
+                   db = NULL
 ) {
+  targetEnv = if(save_to_default_conn) default_conn else empty_connection()
+  
   connectionArgs = list(
     host = host,
     username = username,
@@ -33,9 +40,8 @@ db_connect = function(username, token,
     auth_type = auth_type,
     ...
   )
-  
-  targetEnv = if(save_to_default_conn) default_conn else empty_connection()
-  targetEnv$connect(connection_args = connectionArgs, save_token = save_token)
+
+  targetEnv$connect(connection_args = connectionArgs, save_token = save_token, db = db)
   
   invisible(targetEnv)
 }
@@ -294,15 +300,17 @@ ScidbConnection <- R6::R6Class(
     #' Default NULL means using the previous connection args. 
     #' A list of connection args follow the same names as params in `db_connect`.
     #' @return The same connection object with updated internal state.
-    connect = function(connection_args = NULL, save_token = FALSE) {
-      if(is.null(connection_args)){
-        connection_args = conn_args()
-        assert(!is.null(connection_args), 
-                  "ERROR: no 'connection_args' found. Please connect with username, token, etc at least once.")
+    connect = function(connection_args = NULL, save_token = FALSE, db = NULL) {
+      if(is.null(db)){
+        if(is.null(connection_args)){
+          connection_args = conn_args()
+          assert(!is.null(connection_args), 
+                    "ERROR: no 'connection_args' found. Please connect with username, token, etc at least once.")
+        }
+        assert(!is.null(connection_args[["password"]]),
+              "ERROR: no password/token provided. Please call `arrayop::db_connect` to create a scidb connection.")
+        db = do.call(scidb::scidbconnect, connection_args)
       }
-      assert(!is.null(connection_args[["password"]]),
-             "ERROR: no password/token provided. Please call `arrayop::db_connect` to create a scidb connection.")
-      db = do.call(scidb::scidbconnect, connection_args)
       private$.conn_args = if(save_token) connection_args else within(connection_args, rm(password))
       private$.db = db
       private$.scidb_version = query("op_scidbversion()")

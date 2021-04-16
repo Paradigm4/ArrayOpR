@@ -76,7 +76,7 @@ i.e. ArrayOp instances are immutable." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">arrayop</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.4</span>
       </span>
     </div>
 
@@ -185,7 +185,7 @@ SciDB data frame (array with hidden dimensions; not to be confused with R data f
     <h2 class="hasAnchor" id="methods"><a class="anchor" href="#methods"></a>Methods</h2>
 
     
-<h3>Public methods</h3>
+<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Public methods</h3>
 
 <ul>
 <li><p><a href='#method-new'><code>ArrayOpBase$new()</code></a></p></li>
@@ -228,20 +228,20 @@ SciDB data frame (array with hidden dimensions; not to be confused with R data f
 <li><p><a href='#method-finalize'><code>ArrayOpBase$finalize()</code></a></p></li>
 </ul>
 <p><hr>
-<a id="method-new"></a></p><h3>Method <code>new()</code></h3>
+<a id="method-new"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>new()</code></h3>
 <p>Base class initialize function, to be called in sub-class internally.</p>
-<p>Always use <code>ScidbConnection</code> to get array_op instances.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>new</span>(
-  <span class='no'>raw_afl</span>,
-  <span class='kw'>dims</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>as.character</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>()),
-  <span class='kw'>attrs</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>as.character</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>()),
-  <span class='kw'>dtypes</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(),
-  <span class='kw'>dim_specs</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(),
-  <span class='no'>...</span>,
-  <span class='no'>meta_list</span>
-)</pre><p></div></p>
+<p>Always use <code>ScidbConnection</code> to get array_op instances.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>new</span><span class='op'>(</span>
+  <span class='va'>raw_afl</span>,
+  dims <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>as.character</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span>,
+  attrs <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>as.character</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span>,
+  dtypes <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='op'>)</span>,
+  dim_specs <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='op'>)</span>,
+  <span class='va'>...</span>,
+  <span class='va'>meta_list</span>
+<span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>raw_afl</code></dt><dd><p>AFL expression (array name or operations) as string</p></dd>
 
@@ -265,26 +265,26 @@ If provided, other regular parms are not allowed.</p></dd>
 
 </dl><p></div></p>
 <p><hr>
-<a id="method-filter"></a></p><h3>Method <code><a href='https://rdrr.io/r/stats/filter.html'>filter()</a></code></h3>
+<a id="method-filter"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code><a href='https://rdrr.io/r/stats/filter.html'>filter()</a></code></h3>
 <p>Create a new ArrayOp instance with filter expressions</p>
 <p>Similar to <code><a href='https://dplyr.tidyverse.org/reference/filter.html'>dplyr::filter</a></code>, fields are not quoted.</p>
-<p>Operators for any type of fields include <code>==</code>, <code>!=</code>,
-<code>%in%</code>, <code>%not_in%</code>.
+<p>Operators for any type of fields include <code><a href='https://rdrr.io/r/base/Comparison.html'>==</a></code>, <code><a href='https://rdrr.io/r/base/Comparison.html'>!=</a></code>,
+<code><a href='https://rdrr.io/r/base/match.html'>%in%</a></code>, <code>%not_in%</code>.
 To test whether a field is null, use unary operators: <code>is_null</code>, <code>not_null</code>.</p>
 <p>Special binary operators for string fields include:
 <code>%contains%</code>, <code>%starts_with%</code>, <code>%ends_with%</code>, <code>%like%</code>, where
 only <code>%like%</code> takes a regular expression and other operators escape any special
 characters in the right operand.</p>
-<p>Operators for numeric fields include: <code>&gt;</code>, <code>&lt;</code>, <code>&gt;=</code>, <code>&lt;=</code></p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'><a href='https://rdrr.io/r/stats/filter.html'>filter</a></span>(
-  <span class='no'>...</span>,
-  <span class='kw'>.expr</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>.validate_fields</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>.regex_func</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"arrayop.regex_func"</span>, <span class='kw'>default</span> <span class='kw'>=</span> <span class='st'>"regex"</span>),
-  <span class='kw'>.ignore_case</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"arrayop.ignore_case"</span>, <span class='kw'>default</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
-)</pre><p></div></p>
+<p>Operators for numeric fields include: <code>&gt;</code>, <code>&lt;</code>, <code>&gt;=</code>, <code>&lt;=</code></p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>filter</span><span class='op'>(</span>
+  <span class='va'>...</span>,
+  .expr <span class='op'>=</span> <span class='cn'>NULL</span>,
+  .validate_fields <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  .regex_func <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"arrayop.regex_func"</span>, default <span class='op'>=</span> <span class='st'>"regex"</span><span class='op'>)</span>,
+  .ignore_case <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"arrayop.ignore_case"</span>, default <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span>
+<span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>...</code></dt><dd><p>Filter expression(s) in R syntax.
 These expression(s) are not evaluated in R but first captured then converted to scidb expressions with appropriate syntax.</p></dd>
@@ -304,16 +304,16 @@ Currently supported options include 'rsub', and 'regex'</p></dd>
 Otherwise, perform case-sensitive regex matches.</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A new arrayOp</p>
 <p><hr>
-<a id="method-mutate"></a></p><h3>Method <code>mutate()</code></h3>
+<a id="method-mutate"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>mutate()</code></h3>
 <p>Create a new ArrayOp instance with mutated fields</p>
 <p>Similar to <code><a href='https://dplyr.tidyverse.org/reference/mutate.html'>dplyr::mutate</a></code>, fields of source (self) can be removed or added to the result arrayOp
-Any field that are not in the mutate expressions remain unchanged.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>mutate</span>(<span class='no'>...</span>, <span class='kw'>.dots</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>.sync_schema</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</pre><p></div></p>
+Any field that are not in the mutate expressions remain unchanged.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>mutate</span><span class='op'>(</span><span class='va'>...</span>, .dots <span class='op'>=</span> <span class='cn'>NULL</span>, .sync_schema <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>...</code></dt><dd><p>Named R expressions. Names are field names in the result arrayOp and must not be empty.
 Set field = NULL to remove existing fields. E.g. <code>abcd = NULL, def = def</code> removes
@@ -328,16 +328,16 @@ created and can be passed around.</p></dd>
 TRUE will cause a scidb query to get the schema. Set to FALSE to avoid schema checking.</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>a new ArrayOp instance</p>
 <p><hr>
-<a id="method-transmute"></a></p><h3>Method <code>transmute()</code></h3>
+<a id="method-transmute"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>transmute()</code></h3>
 <p>Create a new ArrayOp instance with mutated fields</p>
 <p>Similar to <code><a href='https://dplyr.tidyverse.org/reference/mutate.html'>dplyr::transmute</a></code>, only listed fields are retained in the result arrayOp
-NOTE: Any field that are not in the mutate expressions will be discarded.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>transmute</span>(<span class='no'>...</span>, <span class='kw'>.dots</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>.sync_schema</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</pre><p></div></p>
+NOTE: Any field that are not in the mutate expressions will be discarded.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>transmute</span><span class='op'>(</span><span class='va'>...</span>, .dots <span class='op'>=</span> <span class='cn'>NULL</span>, .sync_schema <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>...</code></dt><dd><p>R expressions. Names are optional.
 For each named expression, the name is used as field name in the result arrayOp.
@@ -352,21 +352,21 @@ created and can be passed around.</p></dd>
 TRUE will cause a scidb query to get the schema. Set to FALSE to avoid schema checking.</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>a new ArrayOp instance</p>
 <p><hr>
-<a id="method-mutate_by"></a></p><h3>Method <code>mutate_by()</code></h3>
+<a id="method-mutate_by"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>mutate_by()</code></h3>
 <p>Create a ArrayOp instance with the same schema of self, but different cells
-from 'data_array' for the 'updated_fields'.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>mutate_by</span>(
-  <span class='no'>data_array</span>,
-  <span class='kw'>keys</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>updated_fields</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>.redimension_setting</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>.join_setting</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
-)</pre><p></div></p>
+from 'data_array' for the 'updated_fields'.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>mutate_by</span><span class='op'>(</span>
+  <span class='va'>data_array</span>,
+  keys <span class='op'>=</span> <span class='cn'>NULL</span>,
+  updated_fields <span class='op'>=</span> <span class='cn'>NULL</span>,
+  .redimension_setting <span class='op'>=</span> <span class='cn'>NULL</span>,
+  .join_setting <span class='op'>=</span> <span class='cn'>NULL</span>
+<span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>data_array</code></dt><dd><p>An ArrayOp instance that have at least two overlapping fields with self.</p></dd>
 
@@ -383,26 +383,26 @@ of these fields are from the 'data_array', NOT 'self'.</p></dd>
 'join' operator. Only applicable when a 'join' is needed.</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A new arrayOp with the same schema as self</p>
 <p><hr>
-<a id="method-inner_join"></a></p><h3>Method <code>inner_join()</code></h3>
+<a id="method-inner_join"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>inner_join()</code></h3>
 <p>Inner join two arrays: 'self' (left) and 'right'</p>
 <p>Similar to <code><a href='https://dplyr.tidyverse.org/reference/mutate-joins.html'>dplyr::inner_join</a></code>, the result arrayOp performs an inner join.
 For both left and right arrays, only selected fields are included in the result arrayOp.
-If no fields are selected, then all fields are treated as selected.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>inner_join</span>(
-  <span class='no'>right</span>,
-  <span class='kw'>by.x</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>by.y</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>by</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>left_alias</span> <span class='kw'>=</span> <span class='st'>"_L"</span>,
-  <span class='kw'>right_alias</span> <span class='kw'>=</span> <span class='st'>"_R"</span>,
-  <span class='kw'>join_mode</span> <span class='kw'>=</span> <span class='st'>"equi_join"</span>,
-  <span class='kw'>settings</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
-)</pre><p></div></p>
+If no fields are selected, then all fields are treated as selected.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>inner_join</span><span class='op'>(</span>
+  <span class='va'>right</span>,
+  by.x <span class='op'>=</span> <span class='cn'>NULL</span>,
+  by.y <span class='op'>=</span> <span class='cn'>NULL</span>,
+  by <span class='op'>=</span> <span class='cn'>NULL</span>,
+  left_alias <span class='op'>=</span> <span class='st'>"_L"</span>,
+  right_alias <span class='op'>=</span> <span class='st'>"_R"</span>,
+  join_mode <span class='op'>=</span> <span class='st'>"equi_join"</span>,
+  settings <span class='op'>=</span> <span class='cn'>NULL</span>
+<span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>right</code></dt><dd><p>An arrayOp instance</p></dd>
 
@@ -427,25 +427,25 @@ with the benifit of non-materializing result in scidb.</p></dd>
 <dt><code>settings</code></dt><dd><p>A named list as join settings. E.g. <code><a href='https://rdrr.io/r/base/list.html'> list(algorithm = "'hash_replicate_right'")</a></code></p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A new arrayOp instance</p>
 <p><hr>
-<a id="method-left_join"></a></p><h3>Method <code>left_join()</code></h3>
+<a id="method-left_join"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>left_join()</code></h3>
 <p>Left join two arrays: 'self' (left) and 'right'</p>
 <p>Similar to <code><a href='https://dplyr.tidyverse.org/reference/mutate-joins.html'>dplyr::left_join</a></code>, the result arrayOp performs a left join.
 For both left and right arrays, only selected fields are included in the result arrayOp.
-If no fields are selected, then all fields are treated as selected.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>left_join</span>(
-  <span class='no'>right</span>,
-  <span class='kw'>by.x</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>by.y</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>by</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>left_alias</span> <span class='kw'>=</span> <span class='st'>"_L"</span>,
-  <span class='kw'>right_alias</span> <span class='kw'>=</span> <span class='st'>"_R"</span>,
-  <span class='kw'>settings</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
-)</pre><p></div></p>
+If no fields are selected, then all fields are treated as selected.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>left_join</span><span class='op'>(</span>
+  <span class='va'>right</span>,
+  by.x <span class='op'>=</span> <span class='cn'>NULL</span>,
+  by.y <span class='op'>=</span> <span class='cn'>NULL</span>,
+  by <span class='op'>=</span> <span class='cn'>NULL</span>,
+  left_alias <span class='op'>=</span> <span class='st'>"_L"</span>,
+  right_alias <span class='op'>=</span> <span class='st'>"_R"</span>,
+  settings <span class='op'>=</span> <span class='cn'>NULL</span>
+<span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>right</code></dt><dd><p>An arrayOp instance</p></dd>
 
@@ -466,25 +466,25 @@ must be fields of both operands.</p></dd>
 <dt><code>settings</code></dt><dd><p>A named list as join settings. E.g. <code><a href='https://rdrr.io/r/base/list.html'> list(algorithm = "'hash_replicate_right'")</a></code></p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A new arrayOp instance</p>
 <p><hr>
-<a id="method-right_join"></a></p><h3>Method <code>right_join()</code></h3>
+<a id="method-right_join"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>right_join()</code></h3>
 <p>Right join two arrays: 'self' (left) and 'right'</p>
 <p>Similar to <code><a href='https://dplyr.tidyverse.org/reference/mutate-joins.html'>dplyr::right_join</a></code>, the result arrayOp performs a right join.
 For both left and right arrays, only selected fields are included in the result arrayOp.
-If no fields are selected, then all fields are treated as selected.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>right_join</span>(
-  <span class='no'>right</span>,
-  <span class='kw'>by.x</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>by.y</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>by</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>left_alias</span> <span class='kw'>=</span> <span class='st'>"_L"</span>,
-  <span class='kw'>right_alias</span> <span class='kw'>=</span> <span class='st'>"_R"</span>,
-  <span class='kw'>settings</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
-)</pre><p></div></p>
+If no fields are selected, then all fields are treated as selected.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>right_join</span><span class='op'>(</span>
+  <span class='va'>right</span>,
+  by.x <span class='op'>=</span> <span class='cn'>NULL</span>,
+  by.y <span class='op'>=</span> <span class='cn'>NULL</span>,
+  by <span class='op'>=</span> <span class='cn'>NULL</span>,
+  left_alias <span class='op'>=</span> <span class='st'>"_L"</span>,
+  right_alias <span class='op'>=</span> <span class='st'>"_R"</span>,
+  settings <span class='op'>=</span> <span class='cn'>NULL</span>
+<span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>right</code></dt><dd><p>An arrayOp instance</p></dd>
 
@@ -505,25 +505,25 @@ must be fields of both operands.</p></dd>
 <dt><code>settings</code></dt><dd><p>A named list as join settings. E.g. <code><a href='https://rdrr.io/r/base/list.html'> list(algorithm = "'hash_replicate_right'")</a></code></p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A new arrayOp instance</p>
 <p><hr>
-<a id="method-full_join"></a></p><h3>Method <code>full_join()</code></h3>
+<a id="method-full_join"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>full_join()</code></h3>
 <p>Full join two arrays: 'self' (left) and 'right'</p>
 <p>Similar to <code><a href='https://dplyr.tidyverse.org/reference/mutate-joins.html'>dplyr::full_join</a></code>, the result arrayOp performs a full join.
 For both left and right arrays, only selected fields are included in the result arrayOp.
-If no fields are selected, then all fields are treated as selected.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>full_join</span>(
-  <span class='no'>right</span>,
-  <span class='kw'>by.x</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>by.y</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>by</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>left_alias</span> <span class='kw'>=</span> <span class='st'>"_L"</span>,
-  <span class='kw'>right_alias</span> <span class='kw'>=</span> <span class='st'>"_R"</span>,
-  <span class='kw'>settings</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
-)</pre><p></div></p>
+If no fields are selected, then all fields are treated as selected.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>full_join</span><span class='op'>(</span>
+  <span class='va'>right</span>,
+  by.x <span class='op'>=</span> <span class='cn'>NULL</span>,
+  by.y <span class='op'>=</span> <span class='cn'>NULL</span>,
+  by <span class='op'>=</span> <span class='cn'>NULL</span>,
+  left_alias <span class='op'>=</span> <span class='st'>"_L"</span>,
+  right_alias <span class='op'>=</span> <span class='st'>"_R"</span>,
+  settings <span class='op'>=</span> <span class='cn'>NULL</span>
+<span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>right</code></dt><dd><p>An arrayOp instance</p></dd>
 
@@ -544,28 +544,28 @@ must be fields of both operands.</p></dd>
 <dt><code>settings</code></dt><dd><p>A named list as join settings. E.g. <code><a href='https://rdrr.io/r/base/list.html'>list(algorithm = "'hash_replicate_right'")</a></code></p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A new arrayOp instance</p>
 <p><hr>
-<a id="method-semi_join"></a></p><h3>Method <code>semi_join()</code></h3>
+<a id="method-semi_join"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>semi_join()</code></h3>
 <p>Return an arrayOp instance with same schema as self and content cells that
 match the cells of 'df_or_arrayop'.</p>
 <p>Similar to <code><a href='https://dplyr.tidyverse.org/reference/filter-joins.html'>dplyr::semi_join</a></code>, the result has the same schema as the left
 operand 'self' and with content filtered by 'df_or_arrayop'.</p>
 <p>params <code>field_mapping</code>, <code>lower_bound</code> and <code>upper_bound</code>, if provided, must be named list,
 where the.names are from the source array (i.e. self), and values are from
-the right operand <code>df_or_arrayop</code></p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>semi_join</span>(
-  <span class='no'>df_or_arrayop</span>,
-  <span class='kw'>field_mapping</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>lower_bound</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>upper_bound</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>mode</span> <span class='kw'>=</span> <span class='st'>"auto"</span>,
-  <span class='kw'>filter_threshold</span> <span class='kw'>=</span> <span class='fl'>200L</span>,
-  <span class='kw'>upload_threshold</span> <span class='kw'>=</span> <span class='fl'>6000L</span>
-)</pre><p></div></p>
+the right operand <code>df_or_arrayop</code></p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>semi_join</span><span class='op'>(</span>
+  <span class='va'>df_or_arrayop</span>,
+  field_mapping <span class='op'>=</span> <span class='cn'>NULL</span>,
+  lower_bound <span class='op'>=</span> <span class='cn'>NULL</span>,
+  upper_bound <span class='op'>=</span> <span class='cn'>NULL</span>,
+  mode <span class='op'>=</span> <span class='st'>"auto"</span>,
+  filter_threshold <span class='op'>=</span> <span class='fl'>200L</span>,
+  upload_threshold <span class='op'>=</span> <span class='fl'>6000L</span>
+<span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>df_or_arrayop</code></dt><dd><p>An R data frame or arrayOp instance.</p></dd>
 
@@ -594,29 +594,29 @@ is compield into a build literal array; otherwise uploaded to scidb as a regular
 Only applicable when 'df_or_arrayop' is an R data frame.</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>An arrayOp instance</p>
 <p><hr>
-<a id="method-group_by"></a></p><h3>Method <code>group_by()</code></h3>
+<a id="method-group_by"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>group_by()</code></h3>
 <p>Create a new arrayOp with 'group by' fields</p>
 <p>The result arrayOp is identical to self except for the 'group_by' fields.
-When called before <code>summarize</code> function, result arrayOp will be converted into <code>grouped_aggregate</code> operation.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>group_by</span>(<span class='no'>...</span>)</pre><p></div></p>
+When called before <code>summarize</code> function, result arrayOp will be converted into <code>grouped_aggregate</code> operation.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>group_by</span><span class='op'>(</span><span class='va'>...</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>...</code></dt><dd><p>field names as strings or string vectors, which will be merged
 into a single string vector with <code><a href='https://rdrr.io/r/base/c.html'>c(...)</a></code></p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>An arrayOp instance with group_by fields</p>
 <p><hr>
-<a id="method-summarize"></a></p><h3>Method <code>summarize()</code></h3>
-<p>Create a new arrayOp with aggregated fields</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>summarize</span>(<span class='no'>...</span>, <span class='kw'>.dots</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)</pre><p></div></p>
+<a id="method-summarize"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>summarize()</code></h3>
+<p>Create a new arrayOp with aggregated fields</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>summarize</span><span class='op'>(</span><span class='va'>...</span>, .dots <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>...</code></dt><dd><p>aggregation expressions in R syntax. Names of expressions are optional.
 If provided, names will be the fields of result arrayOp; otherwise field
@@ -627,26 +627,26 @@ Same syntax as <code>...</code> in 'filter' and 'mutate' functions.</p></dd>
 'mutate' and 'transmute'.</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A new arrayOp instance</p>
 <p><hr>
-<a id="method-set_auto_fields"></a></p><h3>Method <code>set_auto_fields()</code></h3>
+<a id="method-set_auto_fields"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>set_auto_fields()</code></h3>
 <p>Create a new ArrayOp instance that has auto incremented fields and/or anti-collision fields according to a template arrayOp</p>
 <p>If the dimension count, attribute count and data types match between the source(self) and target,
 then no redimension will be performed, otherwise redimension on the source first.</p>
 <p>Redimension mode requires all target fields exist on the source disregard of being attributes or dimensions.
 Redimension mode does not check on whether source data types match the target because auto data conversion
-occurs within scidb where necessary/applicable.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>set_auto_fields</span>(
-  <span class='no'>target</span>,
-  <span class='kw'>source_auto_increment</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>target_auto_increment</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>anti_collision_field</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>join_setting</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>source_anti_collision_dim_spec</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
-)</pre><p></div></p>
+occurs within scidb where necessary/applicable.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>set_auto_fields</span><span class='op'>(</span>
+  <span class='va'>target</span>,
+  source_auto_increment <span class='op'>=</span> <span class='cn'>NULL</span>,
+  target_auto_increment <span class='op'>=</span> <span class='cn'>NULL</span>,
+  anti_collision_field <span class='op'>=</span> <span class='cn'>NULL</span>,
+  join_setting <span class='op'>=</span> <span class='cn'>NULL</span>,
+  source_anti_collision_dim_spec <span class='op'>=</span> <span class='cn'>NULL</span>
+<span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>target</code></dt><dd><p>A target ArrayOp the source data is written to.</p></dd>
 
@@ -677,29 +677,29 @@ In rare cases, we need to set the dimension spec to control the chunk size
 in the 'redimension' operation, e.g. <code>source_anti_collision_dim_spec = "0:*:0:123456"</code></p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A new arrayop instance</p>
 <p><hr>
-<a id="method-update"></a></p><h3>Method <code><a href='https://rdrr.io/r/stats/update.html'>update()</a></code></h3>
+<a id="method-update"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code><a href='https://rdrr.io/r/stats/update.html'>update()</a></code></h3>
 <p>Update the target array with self's content</p>
 <p>Similar behavior to scidb insert operator.
 Require numbers of attributes and dimensions of self and target arrays match.
 Field names are irrelevant.</p>
 <p>This function only returns an arrayOp with the update operation AFL
 encapsulated. No real action is performed in scidb until
-<code>source$update(target)$execute()</code> is called.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'><a href='https://rdrr.io/r/stats/update.html'>update</a></span>(<span class='no'>target</span>)</pre><p></div></p>
+<code>source$update(target)$execute()</code> is called.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>update</span><span class='op'>(</span><span class='va'>target</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>target</code></dt><dd><p>An arrayOp instance where self's content is updated. Must be
 a persistent array, since it is meanlingless to update an array operation.</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A new arrayOp that encapsulates the update operation</p>
 <p><hr>
-<a id="method-overwrite"></a></p><h3>Method <code>overwrite()</code></h3>
+<a id="method-overwrite"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>overwrite()</code></h3>
 <p>Overwrite the target array with self's content</p>
 <p>Similar behavior to scidb store operator.
 Require numbers of attributes and dimensions of self and target arrays match.
@@ -707,37 +707,37 @@ Field names are irrelevant.</p>
 <p>This function only returns an arrayOp with the update operation AFL
 encapsulated. No real action is performed in scidb until
 <code>source$overwrite(target)$execute()</code> is called.</p>
-<p>Warning: Target's content will be erased and filled with self's content.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>overwrite</span>(<span class='no'>target</span>)</pre><p></div></p>
+<p>Warning: Target's content will be erased and filled with self's content.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>overwrite</span><span class='op'>(</span><span class='va'>target</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>target</code></dt><dd><p>An arrayOp instance where self's content is written to.
 Must be a persitent array either preexist or does not exist in scidb.</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A new arrayOp that encapsulates the overwrite operation</p>
 <p><hr>
-<a id="method-delete_cells"></a></p><h3>Method <code>delete_cells()</code></h3>
+<a id="method-delete_cells"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>delete_cells()</code></h3>
 <p>Create a new ArrayOp instance that encapsulates a delete operation</p>
 <p>Implemented by scidb <code>delete</code> operator.</p>
-<p>Operators for any type of fields include <code>==</code>, <code>!=</code>,
-<code>%in%</code>, <code>%not_in%</code>.
+<p>Operators for any type of fields include <code><a href='https://rdrr.io/r/base/Comparison.html'>==</a></code>, <code><a href='https://rdrr.io/r/base/Comparison.html'>!=</a></code>,
+<code><a href='https://rdrr.io/r/base/match.html'>%in%</a></code>, <code>%not_in%</code>.
 To test whether a field is null, use unary operators: <code>is_null</code>, <code>not_null</code>.</p>
 <p>Special binary operators for string fields include:
 <code>%contains%</code>, <code>%starts_with%</code>, <code>%ends_with%</code>, <code>%like%</code>, where
 only <code>%like%</code> takes a regular expression and other operators escape any special
 characters in the right operand.</p>
-<p>Operators for numeric fields include: <code>&gt;</code>, <code>&lt;</code>, <code>&gt;=</code>, <code>&lt;=</code></p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>delete_cells</span>(
-  <span class='no'>...</span>,
-  <span class='kw'>.expr</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>.regex_func</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"arrayop.regex_func"</span>, <span class='kw'>default</span> <span class='kw'>=</span> <span class='st'>"regex"</span>),
-  <span class='kw'>.ignore_case</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"arrayop.ignore_case"</span>, <span class='kw'>default</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
-)</pre><p></div></p>
+<p>Operators for numeric fields include: <code>&gt;</code>, <code>&lt;</code>, <code>&gt;=</code>, <code>&lt;=</code></p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>delete_cells</span><span class='op'>(</span>
+  <span class='va'>...</span>,
+  .expr <span class='op'>=</span> <span class='cn'>NULL</span>,
+  .regex_func <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"arrayop.regex_func"</span>, default <span class='op'>=</span> <span class='st'>"regex"</span><span class='op'>)</span>,
+  .ignore_case <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"arrayop.ignore_case"</span>, default <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span>
+<span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>...</code></dt><dd><p>Filter expression(s) in R syntax.
 These expression(s) are not evaluated in R but first captured then converted to scidb expressions with appropriate syntax.</p></dd>
@@ -754,51 +754,51 @@ Currently supported options include 'rsub', and 'regex'</p></dd>
 Otherwise, perform case-sensitive regex matches.</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A new arrayOp</p>
 <p><hr>
-<a id="method-select"></a></p><h3>Method <code>select()</code></h3>
+<a id="method-select"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>select()</code></h3>
 <p>Create a new ArrayOp instance with selected fields</p>
 <p>NOTE: this does NOT change the to_afl output, but explicitly state which field(s) should be retained if used in
 a parent operation that changes its schema, e.g. <code>inner_join</code>, <code>left_join</code>, <code>right_join</code> and <code>to_df</code>.</p>
 <p>The <code>select</code>ed fields are passed on to derived ArrayOp instances.</p>
 <p>In all join operations, if no field is explicitly <code>select</code>ed, then all fields are assumed be retained.
 In <code>to_df</code>, if no field is explicitly <code>select</code>ed, only the attributes are retrieved as data frame columns.
-In <code>to_df_all</code>, if no field is explicitly <code>select</code>ed, it is equivalent to select all dimensions and attributes.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>select</span>(<span class='no'>...</span>)</pre><p></div></p>
+In <code>to_df_all</code>, if no field is explicitly <code>select</code>ed, it is equivalent to select all dimensions and attributes.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>select</span><span class='op'>(</span><span class='va'>...</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>...</code></dt><dd><p>Which field(s) to retain.</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A new arrayOp</p>
 <p><hr>
-<a id="method-to_df_all"></a></p><h3>Method <code>to_df_all()</code></h3>
-<p>Download query result of self's AFL string with all self's fields.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>to_df_all</span>()</pre><p></div></p>
+<a id="method-to_df_all"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>to_df_all()</code></h3>
+<p>Download query result of self's AFL string with all self's fields.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>to_df_all</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>An R data frame with columns from self's dimensions and
 attributes if no fields are selcted, or the selcted fields.</p>
 <p><hr>
-<a id="method-to_df"></a></p><h3>Method <code>to_df()</code></h3>
-<p>Download query result of self's AFL string with all self's attributes.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>to_df</span>()</pre><p></div></p>
+<a id="method-to_df"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>to_df()</code></h3>
+<p>Download query result of self's AFL string with all self's attributes.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>to_df</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>An R data frame with columns from self's attributes if no fields
 are selected, or the selcted fields only.</p>
 <p><hr>
-<a id="method-execute"></a></p><h3>Method <code>execute()</code></h3>
-<p>Execute the AFL string for pure side effect without result returned.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>execute</span>()</pre><p></div></p>
+<a id="method-execute"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>execute()</code></h3>
+<p>Execute the AFL string for pure side effect without result returned.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>execute</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>self</p>
 <p><hr>
-<a id="method-persist"></a></p><h3>Method <code>persist()</code></h3>
+<a id="method-persist"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>persist()</code></h3>
 <p>Persist array operation as scidb array</p>
 <p>If <code>self</code> is a persistent array and no <code>save_array_name</code> provided, then
 <code>self</code> is returned.</p>
@@ -816,10 +816,10 @@ may return a build literal or uploaded persistent array, call
 <li><p>When we need to backup an array, then provide a <code>save_array_name</code> explicitly.</p></li>
 </ol>
 
-<p>Parameters <code>.gc</code> and <code>.temp</code> are only applicable when a new array is created.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>persist</span>(<span class='kw'>save_array_name</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>.temp</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>.gc</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</pre><p></div></p>
+<p>Parameters <code>.gc</code> and <code>.temp</code> are only applicable when a new array is created.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>persist</span><span class='op'>(</span>save_array_name <span class='op'>=</span> <span class='cn'>NULL</span>, .temp <span class='op'>=</span> <span class='cn'>FALSE</span>, .gc <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>save_array_name</code></dt><dd><p>NULL or String. The new array name to save self's AFL as.
 If NULL, the array name is randomly generated when a new array is created.</p></dd>
@@ -831,18 +831,18 @@ once the encapsulating arrayOp goes out of scodb in R. Set to FALSE if we
 need to keep the array indefinitely.</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A new arrayOp instance or self; or throw an exception if
 <code>save_array_name</code> is provided and the array already exists</p>
 <p><hr>
-<a id="method-change_schema"></a></p><h3>Method <code>change_schema()</code></h3>
+<a id="method-change_schema"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>change_schema()</code></h3>
 <p>Create a new ArrayOp instance whose schema is the same as the <code>template</code>.</p>
 <p>This operation throws away any fields that do not exist in <code>template</code> while keeping the <code>self</code>'s data of the
 matching fields.</p>
-<p>Implemented by scidb <code>redimension</code> operator, but it allows for partial-fields match if <code>strict=F</code>.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>change_schema</span>(<span class='no'>template</span>, <span class='kw'>strict</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>.setting</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)</pre><p></div></p>
+<p>Implemented by scidb <code>redimension</code> operator, but it allows for partial-fields match if <code>strict=F</code>.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>change_schema</span><span class='op'>(</span><span class='va'>template</span>, strict <span class='op'>=</span> <span class='cn'>TRUE</span>, .setting <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>template</code></dt><dd><p>an ArrayOp instance as the schema template.</p></dd>
 
@@ -852,24 +852,24 @@ matching fields.</p>
 E.g. .setting = c('false', 'cells_per_chunk: 1234') ==&gt; redimension(source, template, false, cells_per_chunk: 1234)</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A new arrayOp instance</p>
 <p><hr>
-<a id="method-drop_dims"></a></p><h3>Method <code>drop_dims()</code></h3>
+<a id="method-drop_dims"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>drop_dims()</code></h3>
 <p>Create a new arrayOp by dropping dimensions of 'self'.</p>
 <p>Use <code>mode = 'unpack'</code> to still keep an artificial dimension in result arrayOp.
 The dimension is 0-based, auto-incremented up until <code>self$cell_count() - 1</code>.
 'unpack' mode is useful in taking advantage of this artifical dimension to
 auto populate other fields, e.g. in <code>set_auto_fields</code>.</p>
 <p>Use <code>mode = 'flatten'</code> to return a scidb data frame which has no explicit dimensions.</p>
-<p>Result arrayOp in both modes has attributes of self's attributes and dimensions.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>drop_dims</span>(
-  <span class='kw'>mode</span> <span class='kw'>=</span> <span class='st'>"unpack"</span>,
-  <span class='kw'>.chunk_size</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>.unpack_dim</span> <span class='kw'>=</span> <span class='no'>dbutils</span>$<span class='fu'>random_field_name</span>()
-)</pre><p></div></p>
+<p>Result arrayOp in both modes has attributes of self's attributes and dimensions.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>drop_dims</span><span class='op'>(</span>
+  mode <span class='op'>=</span> <span class='st'>"unpack"</span>,
+  .chunk_size <span class='op'>=</span> <span class='cn'>NULL</span>,
+  .unpack_dim <span class='op'>=</span> <span class='va'>dbutils</span><span class='op'>$</span><span class='fu'>random_field_name</span><span class='op'>(</span><span class='op'>)</span>
+<span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>mode</code></dt><dd><p>String 'unpack' (default) or 'flatten'.</p></dd>
 
@@ -880,37 +880,37 @@ in 'unpack' mode; and 'cells_per_chunk' in 'flatten' mode.</p></dd>
 mode is chosen. NULL defaults to a random field name.</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A new arrayOp instance</p>
 <p><hr>
-<a id="method-sync_schema"></a></p><h3>Method <code>sync_schema()</code></h3>
+<a id="method-sync_schema"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>sync_schema()</code></h3>
 <p>Create a new arrayOp with actual schema from SciDB or 'self' if
 <code>self$is_schema_from_scidb == T</code>.</p>
 <p>Useful in confirmming the schema of complex array operations.
-If the array schema is already retrieved from SciDB, then just return self.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>sync_schema</span>()</pre><p></div></p>
+If the array schema is already retrieved from SciDB, then just return self.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>sync_schema</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>An arrayOp instance</p>
 <p><hr>
-<a id="method-spawn"></a></p><h3>Method <code>spawn()</code></h3>
+<a id="method-spawn"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>spawn()</code></h3>
 <p>Create a new ArrayOp instance using 'self' as a template</p>
 <p>This function is mainly for array schema string generation when
 we want to rename, add, and/or exclude certain fields of self, but still
 keep other unspecified fields unchanged.</p>
 <p>Data types and dimension specs of existing fields are inherited from 'self' unless provided explicitly.
 New field data types default to NAs unless provided explicitly.</p>
-<p>This function is normally used internally for arrayOp generation.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>spawn</span>(
-  <span class='kw'>afl_str</span> <span class='kw'>=</span> <span class='st'>"spawned array_op (as template only)"</span>,
-  <span class='kw'>renamed</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>added</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>excluded</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>dtypes</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>dim_specs</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
-)</pre><p></div></p>
+<p>This function is normally used internally for arrayOp generation.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>spawn</span><span class='op'>(</span>
+  afl_str <span class='op'>=</span> <span class='st'>"spawned array_op (as template only)"</span>,
+  renamed <span class='op'>=</span> <span class='cn'>NULL</span>,
+  added <span class='op'>=</span> <span class='cn'>NULL</span>,
+  excluded <span class='op'>=</span> <span class='cn'>NULL</span>,
+  dtypes <span class='op'>=</span> <span class='cn'>NULL</span>,
+  dim_specs <span class='op'>=</span> <span class='cn'>NULL</span>
+<span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>afl_str</code></dt><dd><p>An AFL expression. In case of using the spawned result as
 a schema template only, the afl_str does not need to be provided. Otherwise,
@@ -929,56 +929,56 @@ where names are field names, values (strings) are data types.</p></dd>
 where names are dimension names, values (strings) are dimension specs in scidb format.</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A new arrayOp instance</p>
 <p><hr>
-<a id="method-to_afl"></a></p><h3>Method <code>to_afl()</code></h3>
+<a id="method-to_afl"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>to_afl()</code></h3>
 <p>AFL string encapsulated by of the self ArrayOp</p>
 <p>AFL can be either an scidb array name or array operation(s) on array(s).</p>
 <p>The ArrayOp instance may have 'selected' fields but they are not reflected in the result.
-'selected' fields are not reflected here, but determines which fields are retained in <code>to_df()</code> calls.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>to_afl</span>()</pre><p></div></p>
+'selected' fields are not reflected here, but determines which fields are retained in <code>to_df()</code> calls.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>to_afl</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>an AFL expression string</p>
 <p><hr>
-<a id="method-to_schema_str"></a></p><h3>Method <code>to_schema_str()</code></h3>
+<a id="method-to_schema_str"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>to_schema_str()</code></h3>
 <p>Return a schema representation of the ArrayOp <code>&lt;attr1:type1 [, attr2:type2 ...]&gt; [dim1 [;dim2]]</code></p>
 <p>Unless <code>sync_schema()</code> is called, the schema may be inferred locally in R to save round trips between R and SciDB server.
-SciDB data frames have hidden dimensions that start with <code>$</code></p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>to_schema_str</span>()</pre><p></div></p>
+SciDB data frames have hidden dimensions that start with <code><a href='https://rdrr.io/r/base/Extract.html'>$</a></code></p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>to_schema_str</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>SciDB schema string</p>
 <p><hr>
-<a id="method-limit"></a></p><h3>Method <code>limit()</code></h3>
+<a id="method-limit"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>limit()</code></h3>
 <p>Create a new arrayOp that encapsulate AFL for the first <code>n</code> cells of 'self'</p>
-<p>We still need to append a <code>to_df</code> call to download the result as data frame.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>limit</span>(<span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>5</span>, <span class='kw'>skip</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)</pre><p></div></p>
+<p>We still need to append a <code>to_df</code> call to download the result as data frame.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>limit</span><span class='op'>(</span>n <span class='op'>=</span> <span class='fl'>5</span>, skip <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>n</code></dt><dd><p>How many cells to take</p></dd>
 
 <dt><code>skip</code></dt><dd><p>How many rows to skip before taking</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A new ArrayOp instance</p>
 <p><hr>
-<a id="method-cell_count"></a></p><h3>Method <code>cell_count()</code></h3>
-<p>Return the number of cells of 'self'</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>cell_count</span>()</pre><p></div></p>
+<a id="method-cell_count"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>cell_count()</code></h3>
+<p>Return the number of cells of 'self'</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>cell_count</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A number of cells if the AFL that 'self' encapsulates is run.</p>
 <p><hr>
-<a id="method-summarize_array"></a></p><h3>Method <code>summarize_array()</code></h3>
+<a id="method-summarize_array"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>summarize_array()</code></h3>
 <p>Return a data frame of the summary of the 'self' array</p>
-<p>Implemented by scidb 'summarize' operator</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>summarize_array</span>(<span class='kw'>by_attribute</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>by_instance</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre><p></div></p>
+<p>Implemented by scidb 'summarize' operator</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>summarize_array</span><span class='op'>(</span>by_attribute <span class='op'>=</span> <span class='cn'>FALSE</span>, by_instance <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>by_attribute</code></dt><dd><p>Summarize by array attributes</p></dd>
 
@@ -988,69 +988,69 @@ SciDB data frames have hidden dimensions that start with <code>$</code></p><h3>U
 
 </dl><p></div></p>
 <p><hr>
-<a id="method-list_versions"></a></p><h3>Method <code>list_versions()</code></h3>
-<p>Return a data frame of all self's versions</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>list_versions</span>()</pre><p></div></p>
+<a id="method-list_versions"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>list_versions()</code></h3>
+<p>Return a data frame of all self's versions</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>list_versions</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>An R data frame with columns: version_id and timestamp</p>
 <p><hr>
-<a id="method-version"></a></p><h3>Method <code><a href='https://rdrr.io/r/base/Version.html'>version()</a></code></h3>
+<a id="method-version"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code><a href='https://rdrr.io/r/base/Version.html'>version()</a></code></h3>
 <p>Get an arrayOp instance that encapsulates a version snapshot of a persistent
 scidb array</p>
 <p>The function does not perform version check in scidb. It only construct
 an arrayOp locally to represent a specific version. If a non-existent
 version_id is later used in scidb related operations, an error will be
-thrown by SciDB.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'><a href='https://rdrr.io/r/base/Version.html'>version</a></span>(<span class='no'>version_id</span>)</pre><p></div></p>
+thrown by SciDB.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>version</span><span class='op'>(</span><span class='va'>version_id</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>version_id</code></dt><dd><p>A number of the array version_id</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>An arrayOp instance with the same schema as self</p>
 <p><hr>
-<a id="method-is_persistent"></a></p><h3>Method <code>is_persistent()</code></h3>
+<a id="method-is_persistent"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>is_persistent()</code></h3>
 <p>Returns whether the current arraOp instance encapsulates a persistent scidb
 array namne that may or may not exist on the scidb server</p>
 <p>No checking with scidb server is performed. Only validate the arrayOp's AFL
 with regex and see if it matches an array name. E.g. "myNamespace.myArray"
-or "myArrayInPublicNamespace".</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>is_persistent</span>()</pre><p></div></p>
+or "myArrayInPublicNamespace".</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>is_persistent</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>TRUE or FALSE</p>
 <p><hr>
-<a id="method-exists_persistent_array"></a></p><h3>Method <code>exists_persistent_array()</code></h3>
+<a id="method-exists_persistent_array"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>exists_persistent_array()</code></h3>
 <p>Returns whether the current arraOp instance encapsulates a persistent scidb
 array that exists on the scidb server</p>
 <p>If current arrayOp encapsulates an array operation, then it returns FALSE
-without checking with scidb server.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>exists_persistent_array</span>()</pre><p></div></p>
+without checking with scidb server.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>exists_persistent_array</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>TRUE or FALSE</p>
 <p><hr>
-<a id="method-array_meta_data"></a></p><h3>Method <code>array_meta_data()</code></h3>
+<a id="method-array_meta_data"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>array_meta_data()</code></h3>
 <p>Download the array meta as an R data frame</p>
 <p>The array metadata is retrieved from executing the scidb 'show' operator
 in the array namespace and match for the current array name.
-Array metadata include fields: "name", "uaid", "aid", "schema", "availability", "temporary",  "namespace", "distribution", "etcomp"</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>array_meta_data</span>()</pre><p></div></p>
+Array metadata include fields: "name", "uaid", "aid", "schema", "availability", "temporary",  "namespace", "distribution", "etcomp"</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>array_meta_data</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>An R data frame</p>
 <p><hr>
-<a id="method-remove_versions"></a></p><h3>Method <code>remove_versions()</code></h3>
+<a id="method-remove_versions"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>remove_versions()</code></h3>
 <p>Remove array versions of self</p>
 <p>Only applicable to persistent arrays.
 <strong>Warning</strong>: This function will be executed effectively in scidb without
-extra 'execute()' and cannot be undone.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>remove_versions</span>(<span class='kw'>version_id</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)</pre><p></div></p>
+extra 'execute()' and cannot be undone.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>remove_versions</span><span class='op'>(</span>version_id <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><dl>
 <dt><code>version_id</code></dt><dd><p>NULL or a number. When set to NULL, all array versions
 are removed except for the latest one. When set to an number, must be
@@ -1058,25 +1058,25 @@ a valid version_id of self, in which case all versions up to the 'version_id'
 are removed.</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>NULL</p>
 <p><hr>
-<a id="method-remove_array"></a></p><h3>Method <code>remove_array()</code></h3>
+<a id="method-remove_array"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>remove_array()</code></h3>
 <p>Remove array versions of self</p>
 <p>Only applicable to persistent arrays.
 <strong>Warning</strong>: This function will be executed effectively in scidb without
-extra 'execute()' and cannot be undone.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>remove_array</span>()</pre><p></div></p>
+extra 'execute()' and cannot be undone.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>remove_array</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>NULL</p>
 <p><hr>
-<a id="method-finalize"></a></p><h3>Method <code>finalize()</code></h3>
+<a id="method-finalize"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>finalize()</code></h3>
 <p>A finalize function executed when the 'self' instance is garbage collected in R</p>
 <p>If an arrayOp is marked as .gc = T, then it will be removed from scidb
 when this function is executed.</p>
-<p>We don't normally call this function except in testing.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ArrayOpBase</span>$<span class='fu'>finalize</span>()</pre><p></div></p>
+<p>We don't normally call this function except in testing.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ArrayOpBase</span><span class='op'>$</span><span class='fu'>finalize</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
 
 
@@ -1096,7 +1096,7 @@ when this function is executed.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.9000.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

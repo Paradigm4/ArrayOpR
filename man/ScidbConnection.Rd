@@ -88,7 +88,7 @@ Calling this function will update the current connection object's internal state
 If the connection has timed out, just call this function without args will
 re-establish the connection with previously configured connection args.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$connect(connection_args = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ScidbConnection$connect(connection_args = NULL, save_token = FALSE, db = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

@@ -5,14 +5,16 @@
 \title{Connect to SciDB server and get a ScidbConnection object.}
 \usage{
 db_connect(
-  username,
-  token,
+  username = NA,
+  token = NA,
   host = "127.0.0.1",
   port = 8083,
   protocol = "https",
   auth_type = "scidb",
   ...,
-  save_to_default_conn = TRUE
+  save_to_default_conn = TRUE,
+  save_token = FALSE,
+  db = NULL
 )
 }
 \arguments{
@@ -34,6 +36,13 @@ it can be retrieved anywhere using \code{get_default_connection}.
 
 In rare cases should we need to maintain multiple connection objects, we can
 set \code{save_to_default_conn} to FALSE.}
+
+\item{save_token}{Whether to save token/password. Default FALSE. Do not set to TRUE in production env.}
+
+\item{db}{A connection object returned by \code{scidb::scidbconnect}.
+If NULL (NULL), username, token, host, ... params must be provided.
+If set to a valid scidb connection object, then ignore explict params (e.g. username, token, etc.)
+and use the connection object directly}
 }
 \value{
 A Scidbconnection object.

@@ -1,3 +1,6 @@
+# arrayop 1.4
+## Minor Changes
+  * Add a `db` param to `arrayop::db_connect` function. This works when the clients already have a valid database connection and the username/token params are not required.
 
 # arrayop 1.3
 ## Minor Changes
